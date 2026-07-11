@@ -47,6 +47,7 @@ OPTIONS
    --dry-run     Parse and print stats without uploading
    --batch-size  Upload batch size (default: 500)
    --clear       DELETE all existing NSW rows before loading (fresh load)
+   --download    Auto-download archive.zip from nswpropertysalesdata.com
 """
 
 import argparse
@@ -65,6 +66,7 @@ import requests
 SUPABASE_URL    = "https://lkxzxeeeqfiymunpqvgt.supabase.co"
 SUPABASE_SECRET = os.environ.get("SUPABASE_SECRET", "")
 
+ARCHIVE_URL     = "https://nswpropertysalesdata.com/data/archive.zip"
 RESIDENTIAL     = "Residence"
 TOWNHOUSE_MIN   = 150   # sqm — strata lots >= this → townhouse, else apartment
 
@@ -264,6 +266,23 @@ def upload(rows, batch_size=500, dry_run=False):
     print(f"\nDone — {total:,}/{len(rows):,} rows uploaded")
 
 
+def download_archive(zip_path):
+    """Download archive.zip from nswpropertysalesdata.com."""
+    print(f"Downloading {ARCHIVE_URL} ...")
+    resp = requests.get(ARCHIVE_URL, stream=True, timeout=120)
+    resp.raise_for_status()
+    total = int(resp.headers.get("content-length", 0))
+    downloaded = 0
+    with open(zip_path, "wb") as f:
+        for chunk in resp.iter_content(chunk_size=1024 * 1024):
+            f.write(chunk)
+            downloaded += len(chunk)
+            if total:
+                pct = downloaded / total * 100
+                print(f"  {downloaded // 1024 // 1024}MB / {total // 1024 // 1024}MB ({pct:.0f}%)", end="\r")
+    print(f"\nDownloaded {downloaded // 1024 // 1024}MB → {zip_path}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--zip",        default="archive.zip")
@@ -272,10 +291,14 @@ def main():
     parser.add_argument("--batch-size", type=int, default=500)
     parser.add_argument("--clear",      action="store_true",
                         help="Delete all existing NSW rows before loading")
+    parser.add_argument("--download",   action="store_true",
+                        help="Auto-download archive.zip from nswpropertysalesdata.com")
     args = parser.parse_args()
 
-    if not os.path.exists(args.zip):
-        print(f"ERROR: {args.zip} not found. Download from https://nswpropertysalesdata.com/")
+    if args.download:
+        download_archive(args.zip)
+    elif not os.path.exists(args.zip):
+        print(f"ERROR: {args.zip} not found. Use --download or place it manually.")
         return
 
     cutoff = date.today() - timedelta(days=args.days)
