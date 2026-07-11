@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GetReal — Property tools for Australians</title>
+    <meta name="description" content="Free tools to help Australians make better decisions about property. No spin. No vested interests.">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="GetReal — Property tools for Australians">
+    <meta property="og:description" content="Free tools to help Australians make better decisions about property. No spin. No vested interests.">
+    <meta property="og:site_name" content="GetReal">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="GetReal — Property tools for Australians">
+    <meta name="twitter:description" content="Free tools to help Australians make better decisions about property. No spin. No vested interests.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .hero { padding: 2.5rem var(--pad-page) 1.25rem; }
+        .hero .eyebrow { margin-bottom: 0.85rem; }
+        .headline {
+            font-size: clamp(1.75rem, 6vw, 2.25rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 0.75rem;
+        }
+        .subline { font-size: 0.9rem; color: var(--muted); font-family: var(--font-mono); }
+        .ticker-wrap { margin-top: 1.25rem; }
+        .tools {
+            padding: 1.25rem var(--pad-page);
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+        .tool-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 1.25rem 1.5rem;
+            display: flex; flex-direction: column; gap: 0.6rem;
+        }
+        .tool-title { font-size: 1.1rem; font-weight: 700; }
+        .tool-tagline { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+        .tool-coming { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); margin-top: 0.25rem; }
+        @media (min-width: 600px) {
+            .hero { padding: 3rem 2rem 1.5rem; }
+            .tools { padding: 1.5rem 2rem; flex-direction: row; }
+            .tool-card { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <a class="brand" href="index.html">
+        <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+            <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+            <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+            <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+        </svg>
+        <span class="brand-name">GetReal</span>
+    </a>
+</header>
+
+<div class="hero">
+    <div class="eyebrow">A side project</div>
+    <div class="headline">Property is<br>complicated enough.</div>
+    <div class="subline">Tools that cut through the noise. Free, for Australians.</div>
+</div>
+
+<div class="ticker-wrap">
+    <div class="ticker-inner">
+        <span class="ticker-item">Parramatta <span>$910,000</span></span>
+        <span class="ticker-item">Blacktown <span>$780,000</span></span>
+        <span class="ticker-item">Bondi <span>$2,450,000</span></span>
+        <span class="ticker-item">Liverpool <span>$720,000</span></span>
+        <span class="ticker-item">Dubbo <span>$410,000</span></span>
+        <span class="ticker-item">Ryde <span>$1,380,000</span></span>
+        <span class="ticker-item">Coffs Harbour <span>$690,000</span></span>
+        <span class="ticker-item">Castle Hill <span>$1,650,000</span></span>
+        <span class="ticker-item">Orange <span>$540,000</span></span>
+        <span class="ticker-item">Armidale <span>$470,000</span></span>
+        <span class="ticker-item">Port Macquarie <span>$730,000</span></span>
+        <span class="ticker-item">Parramatta <span>$910,000</span></span>
+        <span class="ticker-item">Blacktown <span>$780,000</span></span>
+        <span class="ticker-item">Bondi <span>$2,450,000</span></span>
+        <span class="ticker-item">Liverpool <span>$720,000</span></span>
+        <span class="ticker-item">Dubbo <span>$410,000</span></span>
+        <span class="ticker-item">Ryde <span>$1,380,000</span></span>
+        <span class="ticker-item">Coffs Harbour <span>$690,000</span></span>
+        <span class="ticker-item">Castle Hill <span>$1,650,000</span></span>
+        <span class="ticker-item">Orange <span>$540,000</span></span>
+        <span class="ticker-item">Armidale <span>$470,000</span></span>
+        <span class="ticker-item">Port Macquarie <span>$730,000</span></span>
+    </div>
+</div>
+
+<div class="tools">
+    <div class="tool-card">
+        <div class="tag">Tool 01</div>
+        <div class="tool-title">Looking for a property?</div>
+        <div class="tool-tagline">Get real about your budget, or keep dreamin'.</div>
+        <div class="inset">Most property searches start a little optimistic. This tool helps find the middle ground, based on what actually sold.</div>
+        <a class="btn" href="search.html">Check my search</a>
+    </div>
+
+    <div class="tool-card">
+        <div class="tag">Tool 02</div>
+        <div class="tool-title">Paying it off?</div>
+        <div class="tool-tagline">Find out if you're paying the lazy tax.</div>
+        <div class="inset">Banks don't lower your rate unless you make them. We're building something to tell you when it's time to call.</div>
+        <button class="btn" onclick="document.getElementById('comingSoonModal').style.display='flex'">Find out more</button>
+    </div>
+</div>
+
+<div class="footer-note">
+    An experiment. Finding the gaps, building tools to fill them.<br>
+    Some might not get finished. Free for Australians either way.
+</div>
+
+<!-- Coming soon modal -->
+<div id="comingSoonModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9000; align-items:center; justify-content:center; padding:1.5rem;">
+    <div style="background:#111; border:1px solid #2a2a2a; max-width:420px; width:100%; padding:2rem; display:flex; flex-direction:column; gap:1rem; position:relative;">
+        <button onclick="document.getElementById('comingSoonModal').style.display='none'" style="position:absolute; top:0.75rem; right:0.75rem; background:none; border:none; color:#444; font-size:1rem; cursor:pointer; line-height:1; padding:0.25rem;" aria-label="Close">&times;</button>
+        <div class="tag" style="align-self:flex-start;">In the works</div>
+        <div style="font-size:1.1rem; font-weight:700; color:#f0f0f0;">Paying it off?</div>
+        <p style="font-size:0.85rem; color:#c0c0c0; line-height:1.7;">This tool is being built.</p>
+        <div style="font-size:0.75rem; color:#c0c0c0; line-height:1.8; font-family:monospace;">
+            <p>The idea is to track your property value and your mortgage together, and flag when something has changed enough that you should act.</p>
+            <p style="margin-top:0.75rem;">It might be:</p>
+            <p style="margin-top:0.5rem; color:#999;">&gt; Rates have dropped broadly and your bank hasn't passed it on</p>
+            <p style="color:#999;">&gt; Your loan-to-value ratio has improved and you're eligible for a better tier</p>
+            <p style="color:#999;">&gt; Your bank is offering new customers a better deal than you're on</p>
+        </div>
+        <p style="font-size:0.85rem; color:#c0c0c0; line-height:1.7;">The goal is simple. Keep the bastards honest.</p>
+        <button class="btn" onclick="document.getElementById('comingSoonModal').style.display='none'">Got it</button>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property data in Australia — GetReal</title>
+    <meta name="description" content="Property sale records are a public asset. One state publishes them freely. Seven don't. Here's the full picture.">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Property data in Australia — GetReal">
+    <meta property="og:description" content="Only 1 of 8 Australian states publishes property sales data openly. Here's who's sharing and who's hiding.">
+    <meta property="og:site_name" content="GetReal">
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Property data in Australia — GetReal">
+    <meta name="twitter:description" content="Only 1 of 8 Australian states publishes property sales data openly. Here's who's sharing and who's hiding.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0a0a;
+            --card: #111111;
+            --border: #2a2a2a;
+            --text: #f0f0f0;
+            --muted: #999999;
+            --accent: #f5c842;
+            --interactive: #0000ff;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        header {
+            background: #f5f5f5;
+            border-bottom: 2px solid #0a0a0a;
+            padding: 0.85rem 2rem;
+            display: flex;
+            align-items: center;
+        }
+        .brand {
+            display: flex; align-items: center; gap: 0.6rem;
+            text-decoration: none; color: inherit;
+        }
+        .brand-name {
+            color: #18181b; font-family: monospace;
+            letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.95rem;
+        }
+        .back-link {
+            margin-left: auto;
+            font-size: 0.82rem; font-weight: 500;
+            color: #666; text-decoration: none;
+            font-family: monospace;
+        }
+        .back-link:hover { color: #18181b; }
+
+        /* ── Content ── */
+        main {
+            max-width: 700px;
+            margin: 4rem auto;
+            padding: 0 1.5rem 6rem;
+        }
+
+        /*
+         * COLOUR RULE (store here for future reference):
+         * Orange, green and red are reserved for status meaning throughout the UI.
+         * The only 4 colours available for general UI elements are:
+         * white, grey, black, and #0000ff (bright blue).
+         * Note: #0000ff is unreadable on black backgrounds — use white or grey there instead.
+         */
+        .eyebrow {
+            font-family: monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 1.5rem;
+        }
+
+        .lede {
+            font-size: 1.15rem;
+            line-height: 1.75;
+            color: #d0d0d0;
+            margin-bottom: 2.5rem;
+            padding-bottom: 2.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin: 2.5rem 0 0.75rem;
+        }
+
+        p {
+            font-size: 0.97rem;
+            line-height: 1.8;
+            color: #d0d0d0;
+            margin-bottom: 1rem;
+        }
+
+        /* ── State scorecard ── */
+        .scorecard {
+            margin: 2.5rem 0;
+            border: 1px solid var(--border);
+        }
+
+        .scorecard-row {
+            display: grid;
+            grid-template-columns: 80px 1fr auto;
+            align-items: start;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            gap: 1rem;
+        }
+        .scorecard-row:last-child { border-bottom: none; }
+
+        .state-tag {
+            font-family: monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            text-align: center;
+            align-self: start;
+            margin-top: 0.1rem;
+        }
+
+        .state-detail {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #c0c0c0;
+        }
+        .state-detail strong {
+            display: block;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+
+        .status-badge {
+            font-family: monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.25rem 0.6rem;
+            white-space: nowrap;
+            align-self: start;
+            margin-top: 0.1rem;
+        }
+        .status-free    { background: #1a3a1a; color: #4ade80; border: 1px solid #2d5a2d; }
+        .status-paid    { background: #3a1a1a; color: #f87171; border: 1px solid #5a2d2d; }
+        .status-locked  { background: #2a2a1a; color: #fbbf24; border: 1px solid #4a4a2d; }
+        .status-none    { background: #1a1a1a; color: var(--muted); border: 1px solid var(--border); }
+
+        /* ── Pull quote ── */
+        .pull {
+            background: var(--interactive);
+            color: #ffffff;
+            padding: 1rem 1.5rem;
+            margin: 2.5rem 0;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            font-style: italic;
+        }
+
+        /* ── CTA ── */
+        .cta-block {
+            margin-top: 3rem;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            background: var(--card);
+        }
+        .cta-block h2 {
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+        }
+        .cta-block p {
+            margin-bottom: 1.25rem;
+        }
+        .cta-link {
+            display: inline-block;
+            background: var(--text);
+            color: var(--bg);
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+        }
+        .cta-link:hover { background: var(--accent); color: var(--bg); }
+
+        /* ── Contact form ── */
+        .contact-block {
+            margin-top: 3rem;
+            padding: 2rem;
+            border: 1px solid var(--border);
+        }
+        .contact-block h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .contact-block p {
+            font-size: 0.88rem;
+            color: var(--muted);
+            margin-bottom: 1.25rem;
+        }
+        .contact-block label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.35rem;
+        }
+        .contact-block input,
+        .contact-block textarea {
+            width: 100%;
+            background: #0a0a0a;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.92rem;
+            padding: 0.6rem 0.75rem;
+            margin-bottom: 1rem;
+            outline: none;
+            resize: vertical;
+        }
+        .contact-block input:focus,
+        .contact-block textarea:focus {
+            border-color: #555;
+        }
+        .contact-block button {
+            background: var(--text);
+            color: var(--bg);
+            border: none;
+            font-family: monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 0.65rem 1.5rem;
+            cursor: pointer;
+        }
+        .contact-block button:hover { background: #ccc; }
+        .contact-success {
+            display: none;
+            font-size: 0.9rem;
+            color: var(--muted);
+            padding: 1rem 0 0;
+        }
+
+        /* ── Footer ── */
+        .page-footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        .page-footer a { color: var(--muted); }
+        .page-footer a:hover { color: var(--text); }
+
+        @media (max-width: 560px) {
+            .scorecard-row { grid-template-columns: 1fr; gap: 0.5rem; }
+            .status-badge { align-self: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a class="brand" href="index.html">
+        <svg class="brand-mark" width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+            <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+            <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+        </svg>
+        <span class="brand-name">GetReal</span>
+    </a>
+    <a class="back-link" href="search.html">← Back to the tool</a>
+</header>
+
+<main>
+
+    <div class="eyebrow">Data freedom</div>
+
+    <h1>Property data in Australia: who's sharing and who's hiding</h1>
+
+    <p class="lede">
+        GetReal started as a fairly simple idea: build something to help people work out whether
+        their property search was actually realistic. Not based on vibes or hope, but on what
+        properties actually sold for in that suburb. The name is pretty literal. The goal was
+        to get it in front of Australian property searchers as a free tool. It would be properly
+        live right now, except I ran into the data situation described below.
+    </p>
+
+    <h2>The full picture</h2>
+
+    <p>
+        Every time a property changes hands in Australia, the government registers the transfer
+        and records the details. That data exists in every state. The question is who gets to
+        see it. The answer depends entirely on which state you live in.
+    </p>
+
+    <p>
+        Australia has eight states and territories. One publishes its property sales data freely,
+        for anyone, with no restrictions. The other seven lock it behind professional licences,
+        sell it commercially, or don't publish it at all.
+    </p>
+
+    <div class="scorecard">
+
+        <div class="scorecard-row">
+            <div class="state-tag">NSW</div>
+            <div class="state-detail">
+                <strong>Free and open, but incomplete</strong>
+                The NSW Valuer General publishes individual property sale records weekly:
+                address, price, date, property type. Free to download, Creative Commons licensed,
+                updated every week. It's the best government property dataset in the country.
+                <br><br>
+                The catch: it doesn't include bedrooms, bathrooms, or car spaces. The things
+                every buyer actually searches by. Whether that data isn't collected or just isn't
+                released isn't clear, but the gap is real.
+                <br><br>
+                <a href="https://www.valuergeneral.nsw.gov.au/land_values/property_sales_data" target="_blank" rel="noopener" style="color:#0000ff;">NSW Valuer General property sales data</a>
+            </div>
+            <div class="status-badge status-free">Free</div>
+        </div>
+
+        <div class="scorecard-row">
+            <div class="state-tag">VIC</div>
+            <div class="state-detail">
+                <strong>Professional licence only</strong>
+                The same data exists at LANDATA, but access requires a professional licence.
+                Valuers, conveyancers, and estate agents can get it. The general public cannot.
+                Free public access is limited to quarterly suburb-level aggregate medians.
+                <br><br>
+                <a href="https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics" target="_blank" rel="noopener" style="color:#0000ff;">LANDATA property sales statistics</a>
+            </div>
+            <div class="status-badge status-locked">Locked</div>
+        </div>
+
+        <div class="scorecard-row">
+            <div class="state-tag">QLD</div>
+            <div class="state-detail">
+                <strong>Sold commercially</strong>
+                Queensland's valuation and sales (QVAS) data is available from authorised
+                brokers. The full dataset costs approximately $20,000 per year.
+                Per-property searches are also available at a per-transaction fee
+                through the Valuer General's office.
+                <br><br>
+                <a href="https://www.dnrme.qld.gov.au/property/titles-and-valuation/property-sales-data" target="_blank" rel="noopener" style="color:#0000ff;">Queensland property sales data</a>
+            </div>
+            <div class="status-badge status-paid">Paid</div>
+        </div>
+
+        <div class="scorecard-row">
+            <div class="state-tag">SA</div>
+            <div class="state-detail">
+                <strong>Professional licence only</strong>
+                South Australia's property sales data sits in SAILIS, accessible only to
+                licensed professionals. Public access is limited to quarterly aggregate
+                suburb medians from the Valuer General.
+                <br><br>
+                <a href="https://www.sa.gov.au/topics/housing/buying-a-house/property-sales-information" target="_blank" rel="noopener" style="color:#0000ff;">SAILIS property information</a>
+            </div>
+            <div class="status-badge status-locked">Locked</div>
+        </div>
+
+        <div class="scorecard-row">
+            <div class="state-tag">WA</div>
+            <div class="state-detail">
+                <strong>Sold commercially, price on request</strong>
+                Landgate's Sales Evidence dataset is the most detailed in the country.
+                It includes bedroom and bathroom counts alongside price and address.
+                But it's commercial. There's no published price; you have to ask.
+                When pricing isn't public, that's usually a sign it's expensive.
+                <br><br>
+                <a href="https://www0.landgate.wa.gov.au/for-government/data-and-licensing/landgate-data/property-sales-data" target="_blank" rel="noopener" style="color:#0000ff;">Landgate sales evidence data</a>
+            </div>
+            <div class="status-badge status-paid">Paid</div>
+        </div>
+
+        <div class="scorecard-row">
+            <div class="state-tag">ACT</div>
+            <div class="state-detail">
+                <strong>No bulk dataset found</strong>
+                ACTmapi and the ACT Open Data Portal publish spatial and planning data,
+                but no individual property sales records appear in open data.
+                The territory's small market means data flows primarily through
+                commercial providers.
+                <br><br>
+                <a href="https://www.actmapi.act.gov.au/" target="_blank" rel="noopener" style="color:#0000ff;">ACTmapi open data portal</a>
+            </div>
+            <div class="status-badge status-none">None found</div>
+        </div>
+
+        <div class="scorecard-row">
+            <div class="state-tag">TAS</div>
+            <div class="state-detail">
+                <strong>Pay per property report</strong>
+                Tasmania's theLIST system allows per-property lookups for a fee.
+                There is no bulk download option. Aggregate suburb statistics are
+                available from the Real Estate Institute of Tasmania quarterly.
+                <br><br>
+                <a href="https://www.thelist.tas.gov.au/app/content/property/property-sales" target="_blank" rel="noopener" style="color:#0000ff;">theLIST property sales</a>
+            </div>
+            <div class="status-badge status-paid">Paid</div>
+        </div>
+
+        <div class="scorecard-row">
+            <div class="state-tag">NT</div>
+            <div class="state-detail">
+                <strong>Nothing published</strong>
+                The NT Open Data Portal's housing and property group contains 12
+                datasets: all public housing wait lists and infrastructure plans.
+                There are no property sales records of any kind in the public domain.
+                <br><br>
+                <a href="https://data.nt.gov.au/" target="_blank" rel="noopener" style="color:#0000ff;">NT Open Data Portal</a>
+            </div>
+            <div class="status-badge status-none">Nothing</div>
+        </div>
+
+    </div>
+
+    <div class="pull">
+        Property transfer records are created by a government process, funded in part by
+        stamp duty paid to that same government. In most states, you can't see the data
+        your tax helped create.
+    </div>
+
+    <h2>What NSW got right, and what's still missing</h2>
+
+    <p>
+        The NSW Valuer General has published bulk property sales data openly since the early
+        2000s. The data covers every residential and commercial property sale in the state,
+        with over 140,000 records and growing, updated weekly, free to use under Creative Commons.
+        That policy decision has enabled a generation of researchers, journalists, and tools,
+        including this one, to do work that simply isn't possible in other states.
+    </p>
+
+    <p>
+        But the dataset still has a significant gap: it doesn't include bedrooms, bathrooms,
+        or car spaces. These are the attributes every buyer puts into a property search first.
+        It's not clear whether the government collects this information and doesn't release it,
+        or whether it was never captured in the transfer process at all. Either way, the result
+        is that even the best available government data falls short of what buyers actually need.
+        NSW is doing more than anyone else. It could do more still.
+    </p>
+
+    <h2>What this means for GetReal</h2>
+
+    <p>
+        GetReal is built on NSW data because it's the only state where we can legally and freely
+        access individual sale records. NSW users get real suburb comparables: actual addresses,
+        actual prices, actual dates, matched to their search criteria.
+    </p>
+
+    <p>
+        For every other state, we rely on suburb-level median prices and sales volumes. That's
+        useful, but it's not the same. A Victorian or Queenslander using GetReal gets a less
+        precise picture than a NSW user. Not because their state's data doesn't exist, but
+        because their government won't share it.
+    </p>
+
+    <p>
+        We'd like to change that. We're watching what each state publishes, and we'll use
+        it the moment it becomes available.
+    </p>
+
+    <div class="cta-block">
+        <h2>Try the tool</h2>
+        <p>
+            Check whether your property search budget is realistic,
+            using real historical sales data where we have it
+            and the best available estimates where we don't.
+        </p>
+        <a class="cta-link" href="search.html">Check my search →</a>
+    </div>
+
+    <div class="contact-block">
+        <h2>Something wrong on this page?</h2>
+        <p>Data access policies change. If anything here is out of date or incorrect, let us know and we'll fix it.</p>
+        <form name="manifesto-contact" method="POST" data-netlify="true" onsubmit="handleSubmit(event)">
+            <input type="hidden" name="form-name" value="manifesto-contact" />
+            <label for="contact-name">Name (optional)</label>
+            <input type="text" id="contact-name" name="name" autocomplete="name" />
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" name="message" rows="4" required></textarea>
+            <button type="submit">Send</button>
+        </form>
+        <p class="contact-success" id="contactSuccess">Thanks, got it. We'll take a look.</p>
+    </div>
+
+    <div class="page-footer">
+        Research conducted July 2026. Sources:
+        <a href="https://www.valuergeneral.nsw.gov.au/design/bulk_psi_content/bulk_psi" target="_blank">NSW Valuer General</a>,
+        <a href="https://www.landgate.wa.gov.au/location-data-and-services/discovering-landgate-data/sales-evidence-data/" target="_blank">Landgate WA</a>,
+        <a href="https://www.qld.gov.au/environment/land/title/valuation/about/property-sales" target="_blank">QLD Government</a>,
+        <a href="https://actmapi-actgov.opendata.arcgis.com/" target="_blank">ACTmapi</a>,
+        <a href="https://data.nt.gov.au/group/property" target="_blank">NT Open Data Portal</a>.
+        <br><br>
+        <strong>A note on accuracy:</strong> This page reflects one person's best understanding of
+        publicly available information, researched in July 2026. Data access policies change,
+        and some details, particularly around pricing and professional licence conditions,
+        may be out of date or incomplete. If you spot something wrong, please get in touch.
+        We'll update it.
+        <br><br>
+        Not financial advice. <a href="faq.html">FAQs</a> · <a href="index.html">Home</a>
+    </div>
+
+</main>
+
+<script>
+function handleSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(new FormData(form)).toString()
+    }).then(() => {
+        form.style.display = 'none';
+        document.getElementById('contactSuccess').style.display = 'block';
+    }).catch(() => {
+        alert('Something went wrong. Please try again.');
+    });
+}
+</script>
+</body>
+</html>

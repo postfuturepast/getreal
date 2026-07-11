@@ -1,0 +1,16 @@
+# Data files (too large for git)
+archive.zip
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# macOS
+.DS_Store
+
+# Excel source files (regenerate with pipeline)
+*.xlsx
+*.xls

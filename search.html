@@ -1,0 +1,3207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GetReal — Is your property search realistic?</title>
+    <meta name="description" content="Check whether your budget is realistic for the suburbs you're searching. Based on real sold property data across Australia.">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="GetReal — Is your property search realistic?">
+    <meta property="og:description" content="Check whether your budget is realistic for the suburbs you're searching. Based on real sold property data across Australia.">
+    <meta property="og:site_name" content="GetReal">
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="GetReal — Is your property search realistic?">
+    <meta name="twitter:description" content="Check whether your budget is realistic for the suburbs you're searching. Based on real sold property data across Australia.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary: #f5f5f5;
+            --primary-hover: #e0e0e0;
+            --border: #2a2a2a;
+            --bg: #0a0a0a;
+            --card: #111111;
+            --text: #f0f0f0;
+            --muted: #999999;  /* was #666 — bumped for WCAG AA contrast */
+            --accent: #f5c842;
+            /* BSOD blue — change this one value to retheme all interactive highlights */
+            --interactive: #0000ff;
+        }
+
+        /* ── Skip link ───────────────────────────────────── */
+        .skip-link {
+            position: absolute; top: -999px; left: 1rem;
+            background: var(--interactive); color: #fff;
+            font-family: monospace; font-size: 0.8rem; font-weight: 700;
+            padding: 0.5rem 1rem; z-index: 9999; text-decoration: none;
+        }
+        .skip-link:focus { top: 0.5rem; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Header ─────────────────────────────────────── */
+        header {
+            background: #f5f5f5;
+            border-bottom: 2px solid #0a0a0a;
+            padding: 0.85rem 2rem;
+            display: flex;
+            align-items: center;
+        }
+        .brand {
+            display: flex; align-items: center; gap: 0.6rem;
+            text-decoration: none; color: inherit;
+        }
+        .brand-mark { flex-shrink: 0; }
+        .brand-name { color: #18181b; font-family: monospace; letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.95rem; }
+        .indicative-badge {
+            margin-left: auto;
+            font-size: 0.68rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: transparent;
+            padding: 0.28rem 0.7rem;
+            border: 1px solid #18181b;
+            color: #18181b;
+        }
+
+        /* ── Layout ──────────────────────────────────────── */
+        main {
+            max-width: 1100px;
+            margin: 1.5rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 1.25rem;
+        }
+        @media (max-width: 780px) { main { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 1.5rem;
+        }
+
+        /* ── Form ────────────────────────────────────────── */
+        .form-group { margin-bottom: 0.9rem; }
+        label {
+            font-family: monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.3rem;
+            display: block;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border: 1px solid #333;
+            border-radius: 0;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #0a0a0a;
+            background: #f5f5f5;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        input:focus, select:focus { border-color: var(--interactive); background-color: white; box-shadow: 0 0 0 1.5px var(--interactive); }
+        /* Custom select: remove native arrow, add styled chevron */
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7' fill='none'%3E%3Cpath d='M1 1L5.5 6L10 1' stroke='%23555555' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+            padding-right: 2.2rem;
+            cursor: pointer;
+        }
+        select:focus {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7' fill='none'%3E%3Cpath d='M1 1L5.5 6L10 1' stroke='%230000ff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+        }
+        .input-prefix-wrap { position: relative; }
+        .input-prefix-wrap .prefix {
+            position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%);
+            font-size: 0.88rem; color: #555; pointer-events: none; font-weight: 500; font-family: monospace;
+        }
+        .input-prefix-wrap input { padding-left: 1.6rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; }
+        .form-group-label {
+            font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            color: #555; margin-bottom: 0.6rem;
+            font-family: monospace;
+        }
+        .btn {
+            width: 100%;
+            padding: 0.85rem;
+            background: #f5f5f5;
+            color: #0a0a0a;
+            border: none;
+            border-radius: 0;
+            font-family: monospace;
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 1.1rem;
+            transition: background 0.15s;
+        }
+        .btn:hover { background: var(--interactive); color: #ffffff; }
+        .btn:active { background: var(--interactive); color: #ffffff; }
+        .form-error { display: none !important; } /* errors now shown in results panel */
+
+        /* Validation error panel (shown in results card) */
+        .validation-error {
+            display: flex; flex-direction: column;
+            padding: 1.25rem 1.5rem;
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            flex: 1;
+        }
+        .ve-title {
+            font-family: monospace; font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 1rem;
+        }
+        .ve-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+        .ve-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            font-family: monospace; font-size: 0.88rem; color: var(--text);
+        }
+        .ve-dot {
+            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+            background: #f87171;
+        }
+
+        /* ── Results ─────────────────────────────────────── */
+        .results-empty {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: 300px; color: var(--muted); text-align: center;
+        }
+        .results-empty .icon { font-size: 2.2rem; margin-bottom: 0.75rem; opacity: 0.35; }
+        .results-empty p { font-size: 0.9rem; line-height: 1.6; color: var(--muted); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+        #scoreArea { animation: fadeIn 0.3s ease; }
+
+        .score-wrap { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 0.9rem; }
+        .score-ring {
+            width: 120px; height: 120px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; flex-shrink: 0;
+        }
+        .score-ring::before {
+            content: ''; position: absolute; inset: 11px;
+            border-radius: 50%; background: var(--card);
+        }
+        .score-ring span { position: relative; z-index: 1; font-family: monospace; font-size: 2rem; font-weight: 700; }
+        .grade-label {
+            font-family: monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+            line-height: 1.1;
+        }
+        .grade-sub {
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.5;
+            font-family: monospace;
+        }
+
+        .insight {
+            border-radius: 8px; padding: 0.9rem 1rem;
+            font-size: 0.83rem; line-height: 1.6; margin-bottom: 1.25rem;
+        }
+
+        .factors-box {
+            background: #0d0d0d;
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 0.85rem 1rem;
+            margin-top: 1rem;
+        }
+        .factors-title {
+            font-family: monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.65rem;
+        }
+        .factor { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.42rem; font-size: 0.82rem; }
+        .factor-label { width: 82px; color: var(--muted); flex-shrink: 0; font-family: monospace; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+        .factor-track { flex: 1; height: 5px; background: #222; border-radius: 0; overflow: hidden; }
+        .factor-fill { height: 100%; border-radius: 0; transition: width 0.5s ease; }
+        .factor-pct { width: 36px; text-align: right; font-weight: 700; font-size: 0.8rem; font-family: monospace; }
+
+        /* Desktop: fill the results card height with the factor bars */
+        @media (min-width: 781px) {
+            #resultsCard { display: flex; flex-direction: column; }
+            .results-empty { flex: 1; }
+            #scoreArea { flex: 1; display: flex; flex-direction: column; }
+            .factors-box { flex: 1; display: flex; flex-direction: column; }
+            .factor { flex: 1; margin-bottom: 0; min-height: 28px; }
+        }
+
+        .error-box {
+            background: #1a0a0a; border: 1px solid #3a1a1a;
+            border-radius: 0; padding: 0.9rem 1rem;
+            font-size: 0.83rem; color: #f87171; line-height: 1.6;
+        }
+        .coming-soon-box {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center;
+            padding: 2.5rem 1.5rem; gap: 0.8rem;
+        }
+        .coming-soon-box .cs-icon { font-size: 2rem; opacity: 0.25; }
+        .coming-soon-box .cs-state {
+            font-family: monospace; font-size: 0.7rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 0.2rem;
+        }
+        .coming-soon-box .cs-title {
+            font-size: 1.1rem; font-weight: 700; color: var(--text);
+        }
+        .coming-soon-box .cs-body {
+            font-family: monospace; font-size: 0.78rem;
+            color: var(--muted); line-height: 1.6; max-width: 280px;
+        }
+
+        /* ── What-if ─────────────────────────────────────── */
+        .whatif-section { grid-column: 1 / -1; }
+        .section-heading {
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text);
+            margin-bottom: 0.9rem;
+        }
+        .whatif-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--border); }
+        @media (max-width: 900px) { .whatif-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .whatif-card {
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            border-radius: 0;
+            padding: 1.25rem 1.1rem;
+            cursor: pointer;
+            transition: background 0.12s;
+            display: flex; flex-direction: column; gap: 0.85rem;
+        }
+        .whatif-card:last-child { border-right: none; }
+        .whatif-card:hover:not(.wf-disabled) {
+            background: rgba(0, 212, 255, 0.06);
+            outline: 2px solid var(--interactive);
+            outline-offset: -2px;
+        }
+        .wf-disabled { cursor: default; opacity: 0.45; }
+        .wf-header { display: flex; align-items: center; gap: 0.6rem; }
+        .wf-icon {
+            width: 20px; height: 20px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text);
+        }
+        .wf-change {
+            font-family: monospace; font-size: 0.82rem; font-weight: 700;
+            letter-spacing: 0.04em; text-transform: uppercase;
+            color: var(--text);
+        }
+        .wf-desc {
+            font-family: monospace; font-size: 0.72rem;
+            color: var(--muted); line-height: 1.3; padding-left: 0;
+        }
+        .wf-at-min {
+            font-family: monospace; font-size: 0.75rem;
+            color: var(--muted); font-style: italic;
+        }
+        .wf-score-row { display: flex; align-items: baseline; gap: 0.4rem; }
+        .wf-score-num { font-family: monospace; font-size: 2rem; font-weight: 700; line-height: 1; }
+        .wf-delta {
+            font-family: monospace; font-size: 0.68rem; font-weight: 700;
+            padding: 0.1rem 0.4rem;
+        }
+        .d-pos { color: #4ade80; background: rgba(74, 222, 128, 0.12); }
+        .d-neg { color: #f87171; background: rgba(248, 113, 113, 0.12); }
+        .d-zero { color: var(--muted); background: #1a1a1a; }
+        .wf-grade { font-family: monospace; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* ── CVP ─────────────────────────────────────────── */
+        .cvp {
+            grid-column: 1 / -1;
+            padding: 0.5rem 0 0.75rem;
+        }
+        .cvp h2 {
+            font-family: monospace; font-size: 1.1rem; font-weight: 700;
+            letter-spacing: 0.04em; text-transform: uppercase; color: var(--text);
+        }
+        .cvp p {
+            font-size: 0.88rem; color: var(--muted);
+            max-width: 540px; line-height: 1.65;
+        }
+
+        /* ── Comparable properties ───────────────────────── */
+        .comparables-section { grid-column: 1 / -1; }
+        .comparables-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 0; border: 1px solid var(--border); margin-bottom: 0.5rem;
+        }
+        @media (max-width: 600px) { .comparables-grid { grid-template-columns: 1fr; } }
+        .comp-card {
+            background: var(--card);
+            display: flex; flex-direction: column;
+            cursor: pointer; position: relative;
+        }
+        .comp-card::after {
+            content: '';
+            position: absolute; inset: 0;
+            border: 2px solid transparent;
+            pointer-events: none;
+            transition: border-color 0.12s;
+            z-index: 10;
+        }
+        .comp-card:hover::after { border-color: var(--interactive); }
+        .comp-card:first-child { border-right: 1px solid var(--border); }
+        .comp-card:hover .comp-photo-hint { opacity: 1; }
+        .comp-img {
+            height: 200px; background: #0d0d0d;
+            position: relative;
+            border-bottom: 1px solid var(--border); overflow: hidden;
+        }
+        .comp-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+        .comp-label {
+            position: absolute; top: 0.65rem; left: 0.65rem;
+            font-family: monospace; font-size: 0.62rem; font-weight: 700;
+            letter-spacing: 0.07em; text-transform: uppercase;
+            padding: 0.2rem 0.55rem; border-radius: 0; z-index: 2;
+            white-space: nowrap;
+        }
+        .comp-within { background: rgba(0,0,0,0.6); color: #4ade80; border: 1px solid #4ade80; }
+        .comp-above  { background: rgba(0,0,0,0.6); color: #f87171; border: 1px solid #f87171; }
+        .comp-photo-hint {
+            position: absolute; bottom: 0.65rem; right: 0.65rem;
+            font-family: monospace; font-size: 0.6rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            color: #ffffff; opacity: 0; transition: opacity 0.15s;
+            background: rgba(0,0,0,0.75); padding: 0.2rem 0.5rem;
+            z-index: 2; border: 1px solid rgba(255,255,255,0.35);
+        }
+        .comp-body { padding: 1rem 1.1rem; flex: 1; }
+        .comp-price {
+            font-family: monospace; font-size: 1.5rem; font-weight: 700;
+            letter-spacing: -0.02em; color: var(--text); margin-bottom: 0.25rem;
+        }
+        .comp-address {
+            font-family: monospace; font-size: 0.82rem; font-weight: 500;
+            color: var(--text); margin-bottom: 0.15rem;
+        }
+        .comp-date {
+            font-family: monospace; font-size: 0.7rem;
+            color: var(--muted); margin-bottom: 0.65rem;
+        }
+        .comp-specs {
+            display: flex; gap: 1rem; font-family: monospace;
+            font-size: 0.72rem; color: var(--muted);
+            border-top: 1px solid var(--border); padding-top: 0.65rem;
+        }
+        .comp-specs span { display: flex; align-items: center; gap: 0.3rem; }
+        .comparables-note {
+            font-family: monospace; font-size: 0.65rem; color: #444;
+            letter-spacing: 0.04em; text-transform: uppercase;
+            padding: 0.4rem 0;
+        }
+
+        /* ── Indicative note ──────────────────────────────── */
+        .data-freedom-strip {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.78rem;
+            color: #fff;
+            background: #0000ff;
+            padding: 0.75rem 1rem;
+            line-height: 1.5;
+            flex-wrap: wrap;
+        }
+        .df-tag {
+            font-family: monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.15rem 0.45rem;
+            white-space: nowrap;
+        }
+        .data-freedom-strip a {
+            color: #fff;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            white-space: nowrap;
+        }
+        .data-freedom-strip a:hover { opacity: 0.8; }
+
+        .indicative-note {
+            grid-column: 1 / -1;
+            text-align: center;
+            font-size: 0.73rem;
+            color: #444;
+            padding: 0.25rem 0 0.5rem;
+            line-height: 1.6;
+        }
+        .indicative-note a { color: #444; text-decoration: underline; text-underline-offset: 2px; }
+        .indicative-note a:hover { color: var(--muted); }
+
+        .hidden { display: none !important; }
+
+        /* ── Report CTA ───────────────────────────────────── */
+        .report-cta {
+            grid-column: 1 / -1;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 1.25rem 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 1rem;
+        }
+        .report-cta-text h3 { font-family: monospace; font-size: 0.9rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.2rem; }
+        .report-cta-text p  { font-size: 0.8rem; color: var(--muted); font-family: monospace; }
+        .report-cta-btn {
+            flex-shrink: 0; padding: 0.65rem 1.4rem;
+            background: #f5f5f5; color: #0a0a0a;
+            border: none; border-radius: 0;
+            font-family: monospace; font-size: 0.8rem; font-weight: 700;
+            letter-spacing: 0.06em; text-transform: uppercase;
+            cursor: pointer; transition: background 0.15s; white-space: nowrap;
+        }
+        .report-cta-btn:hover { background: var(--interactive); color: #ffffff; }
+        @media (max-width: 600px) {
+            .report-cta { flex-direction: column; align-items: flex-start; }
+            .report-cta-btn { width: 100%; text-align: center; }
+        }
+
+        /* ── Modal ────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 10000;
+            background: rgba(15,23,42,0.6); backdrop-filter: blur(3px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 1rem;
+        }
+        .modal-box {
+            background: #111; border-radius: 0;
+            border: 1px solid #333;
+            padding: 2rem; width: 100%; max-width: 420px;
+            position: relative;
+            animation: modalIn 0.2s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(8px); }
+            to   { opacity: 1; transform: none; }
+        }
+        .modal-close {
+            position: absolute; top: 1rem; right: 1rem;
+            background: #1a1a1a; border: 1px solid #333; border-radius: 0;
+            width: 28px; height: 28px; font-size: 0.85rem;
+            cursor: pointer; color: var(--muted); display: flex;
+            align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: #222; }
+        .modal-box h2 { font-family: monospace; color: var(--text); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.3rem; }
+        .modal-box > p { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.25rem; }
+        .consent-row { display: flex; align-items: flex-start; gap: 0.6rem; margin: 0.9rem 0 1.2rem; }
+        .consent-row input[type=checkbox] { margin-top: 2px; flex-shrink: 0; accent-color: var(--text); width: 15px; height: 15px; }
+        .consent-row span { font-family: monospace; font-size: 0.8rem; color: var(--text); line-height: 1.45; }
+        .modal-fine { font-size: 0.72rem; color: #444; text-align: center; margin-top: 0.75rem; }
+        .modal-error { font-family: monospace; font-size: 0.8rem; color: #f87171; background: #1a0a0a; border: 1px solid #3a1a1a; border-radius: 0; padding: 0.6rem 0.85rem; margin-bottom: 0.75rem; }
+
+        /* ── Lightbox ─────────────────────────────────────── */
+        .lb-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.92);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 1.5rem;
+        }
+        .lb-box {
+            width: 100%; max-width: 900px;
+            display: flex; flex-direction: column; gap: 0;
+            border: 1px solid #333;
+        }
+        .lb-header {
+            background: #111; border-bottom: 1px solid #2a2a2a;
+            padding: 0.7rem 1rem;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .lb-header-left { display: flex; flex-direction: column; gap: 0.1rem; }
+        .lb-price { font-family: monospace; font-size: 1.1rem; font-weight: 700; color: #f0f0f0; }
+        .lb-addr  { font-family: monospace; font-size: 0.72rem; color: #666; }
+        .lb-header-right { display: flex; align-items: center; gap: 1rem; }
+        .lb-counter { font-family: monospace; font-size: 0.72rem; color: #666; }
+        .lb-close {
+            background: #1a1a1a; border: 1px solid #333;
+            color: #aaa; font-family: monospace; font-size: 0.8rem;
+            padding: 0.3rem 0.65rem; cursor: pointer;
+        }
+        .lb-close:hover { color: var(--interactive); border-color: var(--interactive); }
+        .lb-main {
+            position: relative; background: #0a0a0a;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 480px;
+        }
+        .lb-main img {
+            width: 100%; max-height: 520px; object-fit: cover; display: block;
+        }
+        .lb-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.7); border: 1px solid #444;
+            color: #f0f0f0; font-family: monospace; font-size: 1.2rem;
+            width: 42px; height: 42px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color 0.1s, color 0.1s;
+        }
+        .lb-nav:hover { border-color: var(--interactive); color: var(--interactive); }
+        .lb-prev { left: 0.75rem; }
+        .lb-next { right: 0.75rem; }
+        .lb-strip {
+            background: #0d0d0d; border-top: 1px solid #2a2a2a;
+            padding: 0.6rem 1rem; display: flex; gap: 0.5rem;
+            overflow-x: auto;
+        }
+
+        /* ── Focus-visible styles (keyboard nav) ─────────── */
+        .btn:focus-visible,
+        .report-cta-btn:focus-visible,
+        .modal-close:focus-visible,
+        .lb-close:focus-visible,
+        .lb-nav:focus-visible {
+            outline: 2px solid var(--interactive);
+            outline-offset: 2px;
+        }
+        .whatif-card:focus-visible {
+            outline: 2px solid var(--interactive);
+            outline-offset: -2px;
+            background: rgba(0, 212, 255, 0.06);
+        }
+
+        /* ── Mobile — 480px and below ────────────────────── */
+        @media (max-width: 480px) {
+            header { padding: 0.7rem 1rem; }
+            .indicative-badge { display: none; }
+
+            main { padding: 0 0.75rem; margin: 0.75rem auto; gap: 0.75rem; }
+
+            .score-ring { width: 90px; height: 90px; }
+            .score-ring span { font-size: 1.6rem; }
+            .grade-label { font-size: 1.5rem; }
+            .grade-sub { font-size: 0.78rem; }
+
+            .whatif-grid { grid-template-columns: 1fr; }
+            .whatif-card { border-right: none; border-bottom: 1px solid var(--border); }
+            .whatif-card:last-child { border-bottom: none; }
+
+            .lb-main { min-height: 260px; }
+            .lb-main img { max-height: 280px; }
+        }
+
+        /* ── Improve low-contrast note text ──────────────── */
+        .comparables-note { color: #666; }
+        .indicative-note  { color: #666; }
+        .indicative-note a { color: #666; }
+    </style>
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header>
+    <a class="brand" href="#">
+        <svg class="brand-mark" width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+            <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+            <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+        </svg>
+        <span class="brand-name">GetReal</span>
+    </a>
+    <div class="indicative-badge">Indicative</div>
+</header>
+
+<main id="main-content">
+
+    <!-- ── CVP ──────────────────────────────────────────── -->
+    <div class="cvp">
+        <h2>Is your property search realistic?</h2>
+    </div>
+
+    <!-- ── Search Form ───────────────── -->
+    <div class="card">
+
+        <!-- Group 1: The money -->
+        <div class="form-group-label">Your budget</div>
+        <div class="form-group">
+            <label for="budget">Maximum Budget</label>
+            <div class="input-prefix-wrap">
+                <span class="prefix" aria-hidden="true">$</span>
+                <input type="text" id="budget" placeholder="850 000" inputmode="numeric" autocomplete="off" aria-label="Maximum budget in dollars">
+            </div>
+        </div>
+
+        <!-- Group 2: The property -->
+        <div class="form-group-label" style="margin-top:1.1rem">The property</div>
+        <div class="form-group">
+            <label for="stateSelect">State</label>
+            <select id="stateSelect" onchange="onStateChange()">
+                <option value="" disabled selected>Select state…</option>
+                <option value="ACT">ACT</option>
+                <option value="NSW">New South Wales</option>
+                <option value="NT">Northern Territory</option>
+                <option value="QLD">Queensland</option>
+                <option value="SA">South Australia</option>
+                <option value="TAS">Tasmania</option>
+                <option value="VIC">Victoria</option>
+                <option value="WA">Western Australia</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="suburb">Suburb</label>
+            <input type="text" id="suburb" list="suburbList"
+                   placeholder="Select a state first…" autocomplete="off">
+            <datalist id="suburbList"></datalist>
+        </div>
+
+        <div class="form-group">
+            <label for="propertyType">Property Type</label>
+            <select id="propertyType">
+                <option value="" disabled selected>Select type…</option>
+                <option value="house">House</option>
+                <option value="townhouse">Townhouse</option>
+                <option value="apartment">Apartment</option>
+            </select>
+        </div>
+
+        <div class="form-row" style="display:none">
+            <div class="form-group">
+                <select id="bedrooms"><option value="">—</option></select>
+            </div>
+            <div class="form-group">
+                <select id="bathrooms"><option value="">—</option></select>
+            </div>
+            <div class="form-group">
+                <select id="carspaces"><option value="">—</option></select>
+            </div>
+        </div>
+
+        <button class="btn" onclick="runSearch()" aria-label="Run property search">Get Real →</button>
+        <div id="formError" class="form-error hidden"></div>
+    </div>
+
+    <!-- ── Results ───────────────────── -->
+    <div class="card" id="resultsCard" role="region" aria-label="Search results" aria-live="polite">
+
+        <div class="results-empty" id="resultsEmpty">
+            <div class="icon" style="font-size:1.8rem;opacity:0.2" aria-hidden="true">◎</div>
+            <p>Enter your search criteria and click<br><strong>Get Real</strong> to see your score.</p>
+        </div>
+
+        <!-- Validation error panel -->
+        <div id="validationError" class="validation-error hidden" role="alert">
+            <div class="ve-title">Complete your search</div>
+            <ul class="ve-list" id="veList"></ul>
+        </div>
+
+        <!-- Score area (hidden until search) -->
+        <div id="scoreArea" class="hidden" role="status">
+            <div class="score-wrap">
+                <div class="score-ring" id="scoreRing" aria-hidden="true">
+                    <span id="scoreNum">—</span>
+                </div>
+                <div>
+                    <div class="grade-label" id="gradeLabel">—</div>
+                    <div class="grade-sub" id="gradeSub">—</div>
+                </div>
+            </div>
+
+            <div class="insight hidden" id="insightBox"></div>
+
+            <div class="factors-box">
+                <div class="factors-title">What's limiting your search?</div>
+                <div class="factor">
+                    <span class="factor-label">Price</span>
+                    <div class="factor-track"><div class="factor-fill" id="barPrice" style="width:0%"></div></div>
+                    <span class="factor-pct" id="pctPrice">—</span>
+                </div>
+                <div class="factor">
+                    <span class="factor-label">Bedrooms</span>
+                    <div class="factor-track"><div class="factor-fill" id="barBeds" style="width:0%"></div></div>
+                    <span class="factor-pct" id="pctBeds">—</span>
+                </div>
+                <div class="factor">
+                    <span class="factor-label">Bathrooms</span>
+                    <div class="factor-track"><div class="factor-fill" id="barBaths" style="width:0%"></div></div>
+                    <span class="factor-pct" id="pctBaths">—</span>
+                </div>
+                <div class="factor">
+                    <span class="factor-label">Car spaces</span>
+                    <div class="factor-track"><div class="factor-fill" id="barCars" style="width:0%"></div></div>
+                    <span class="factor-pct" id="pctCars">—</span>
+                </div>
+                <div id="nswFactorNote" class="hidden" style="font-family:monospace;font-size:0.65rem;color:#444;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1a1a1a;letter-spacing:0.04em;">
+                    Bedroom, bathroom &amp; car space data — coming soon for NSW
+                </div>
+                <div id="vicFactorNote" class="hidden" style="font-family:monospace;font-size:0.65rem;color:#444;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1a1a1a;letter-spacing:0.04em;">
+                    VIC individual sales records aren't public — bedroom &amp; bathroom breakdown not available · <a href="manifesto.html" style="color:#555;text-decoration:underline;">Why?</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coming soon state -->
+        <div id="comingSoonBox" class="coming-soon-box hidden"></div>
+
+        <!-- Error state -->
+        <div id="errorBox" class="error-box hidden" role="alert"></div>
+    </div>
+
+    <!-- ── What-if section ───────────── -->
+    <div class="whatif-section hidden" id="whatifSection">
+        <div class="section-heading">What if you changed one thing?</div>
+        <div class="whatif-grid" id="whatifGrid"></div>
+    </div>
+
+    <!-- ── Comparable properties ──────── -->
+    <div class="comparables-section hidden" id="comparablesSection">
+        <div class="section-heading">Properties closest to your budget</div>
+        <div class="comparables-grid" id="comparablesGrid"></div>
+        <div class="comparables-note">Sample properties · Connect live data to see real sales with photos</div>
+    </div>
+
+    <!-- ── Comparables unavailable (non-VIC, non-NSW states) ── -->
+    <div id="comparablesUnavailable" class="hidden" style="padding:1rem var(--pad-page); border-top:1px solid var(--border-subtle);">
+        <div style="font-family:monospace; font-size:0.72rem; color:var(--dim); line-height:1.8; background:var(--card); border:1px solid var(--border); padding:1rem 1.25rem;">
+            <span style="color:#555;">◎</span> Individual sale records aren't available for this state yet — so we can't show you real comparable properties.<br>
+            <a href="manifesto.html" style="color:var(--dim); text-decoration:underline; text-underline-offset:2px;">See what data each state publishes and why NSW is different →</a>
+        </div>
+    </div>
+
+    <!-- ── Suburb map (VIC) ── -->
+    <div id="suburbMapSection" class="hidden" style="grid-column:1 / -1; border-top:1px solid var(--border-subtle);">
+        <div style="padding:1rem var(--pad-page) 0.5rem; display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+            <div class="section-heading" style="margin:0;">How does your budget travel?</div>
+            <div style="font-family:monospace; font-size:0.65rem; color:var(--dim); display:flex; gap:1rem;">
+                <span><span style="color:#22c55e;">●</span> Realistic (&gt;60%)</span>
+                <span><span style="color:#f59e0b;">●</span> Competitive (40–60%)</span>
+                <span><span style="color:#ef4444;">●</span> Tight (&lt;40%)</span>
+                <span><span style="color:#0000ff;">●</span> Your search</span>
+            </div>
+        </div>
+        <div id="suburbMap" style="width:100%; height:340px; background:#111;"></div>
+        <div style="padding:0.5rem var(--pad-page); font-family:monospace; font-size:0.65rem; color:var(--dim);">
+            Click a suburb to search it · Score shown at your current budget · <span id="mapDataSource">Valuer-General data</span>
+        </div>
+    </div>
+
+    <!-- ── Report CTA ────────────────── -->
+    <div class="report-cta hidden" id="reportCta">
+        <div class="report-cta-text">
+            <h3>Save your results as a PDF</h3>
+            <p>Share with your partner or mortgage broker</p>
+        </div>
+        <button class="report-cta-btn" onclick="openReportModal()">Generate My Report →</button>
+    </div>
+
+    <!-- ── Data freedom teaser ──────── -->
+    <div class="data-freedom-strip">
+        <span class="df-tag">Data freedom</span>
+        Only 1 of 8 Australian states publishes property sales data openly.
+        <a href="manifesto.html">Who's sharing and who's hiding →</a>
+    </div>
+
+    <!-- ── Indicative note ──────────── -->
+    <div class="indicative-note">
+        Scores are indicative only, based on historical sales data.
+        Sources: <a href="https://www.valuergeneral.nsw.gov.au/design/bulk_psi_content/bulk_psi" target="_blank">NSW Valuer General</a> &amp; <a href="https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series" target="_blank">Valuer-General Victoria</a>.
+        Not financial advice. · <a href="faq.html">FAQs</a> · <a href="manifesto.html">Data freedom</a>
+    </div>
+
+</main>
+
+<script>
+// ================================================================
+// CONFIG — paste your Domain API credentials here when ready
+// ================================================================
+const CONFIG = {
+    USE_LIVE_API:  false,
+    CLIENT_ID:     '',  // from developer.domain.com.au → Your Project
+    CLIENT_SECRET: '',  // from developer.domain.com.au → Your Project
+};
+
+// ================================================================
+// SUPABASE — publishable key (safe to ship in frontend)
+// ================================================================
+const SUPABASE_URL  = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
+const NSW_DAYS      = 390; // 13-month rolling window (matches load_nsw_data.py)
+
+// ================================================================
+// MOCK SUBURB DATA  (~35 popular Australian suburbs)
+// Medians are approximate 2025 estimates for prototype purposes.
+// Will be replaced by live Domain API calls once credentials set.
+// ================================================================
+const SUBURBS = {
+    // ── New South Wales ──────────────────────────────────────────
+    "surry hills":   { state:"NSW", nearby:["darlinghurst","newtown","redfern","paddington"],
+        types:{ house:{median:2100000,annualSales:35}, townhouse:{median:1450000,annualSales:18}, apartment:{median:820000,annualSales:260}, villa:{median:1300000,annualSales:8} }, clearanceRate:0.74 },
+    "newtown":       { state:"NSW", nearby:["surry hills","glebe","marrickville","erskineville"],
+        types:{ house:{median:1750000,annualSales:42}, townhouse:{median:1280000,annualSales:22}, apartment:{median:710000,annualSales:195}, villa:{median:1200000,annualSales:9} }, clearanceRate:0.73 },
+    "bondi":         { state:"NSW", nearby:["bondi junction","coogee","bronte","waverley"],
+        types:{ house:{median:3200000,annualSales:28}, townhouse:{median:2050000,annualSales:14}, apartment:{median:1100000,annualSales:220} }, clearanceRate:0.77 },
+    "manly":         { state:"NSW", nearby:["dee why","freshwater","brookvale","balgowlah"],
+        types:{ house:{median:3500000,annualSales:30}, townhouse:{median:2200000,annualSales:16}, apartment:{median:1200000,annualSales:180} }, clearanceRate:0.76 },
+    "parramatta":    { state:"NSW", nearby:["westmead","merrylands","granville","rydalmere"],
+        types:{ house:{median:1300000,annualSales:58}, townhouse:{median:930000,annualSales:42}, apartment:{median:570000,annualSales:380} }, clearanceRate:0.70 },
+    "chatswood":     { state:"NSW", nearby:["willoughby","artarmon","lane cove","roseville"],
+        types:{ house:{median:2400000,annualSales:30}, townhouse:{median:1600000,annualSales:20}, apartment:{median:820000,annualSales:240} }, clearanceRate:0.72 },
+    "mosman":        { state:"NSW", nearby:["cremorne","neutral bay","kirribilli","balmoral"],
+        types:{ house:{median:4500000,annualSales:22}, townhouse:{median:2700000,annualSales:12}, apartment:{median:1300000,annualSales:95} }, clearanceRate:0.78 },
+    "penrith":       { state:"NSW", nearby:["kingswood","st marys","werrington","emu plains"],
+        types:{ house:{median:980000,annualSales:88}, townhouse:{median:750000,annualSales:55}, apartment:{median:460000,annualSales:195} }, clearanceRate:0.67 },
+    "darlinghurst":  { state:"NSW", nearby:["surry hills","potts point","elizabeth bay","paddington"],
+        types:{ house:{median:2300000,annualSales:18}, townhouse:{median:1550000,annualSales:10}, apartment:{median:870000,annualSales:210} }, clearanceRate:0.73 },
+    "glebe":         { state:"NSW", nearby:["newtown","pyrmont","annandale","ultimo"],
+        types:{ house:{median:1950000,annualSales:32}, townhouse:{median:1380000,annualSales:15}, apartment:{median:760000,annualSales:165} }, clearanceRate:0.72 },
+
+    // ── Victoria ─────────────────────────────────────────────────
+    "fitzroy":       { state:"VIC", nearby:["collingwood","richmond","brunswick","carlton"],
+        types:{ house:{median:1450000,annualSales:42}, townhouse:{median:1050000,annualSales:28}, apartment:{median:560000,annualSales:145}, villa:{median:950000,annualSales:10} }, clearanceRate:0.76 },
+    "richmond":      { state:"VIC", nearby:["fitzroy","collingwood","abbotsford","east melbourne"],
+        types:{ house:{median:1550000,annualSales:48}, townhouse:{median:1100000,annualSales:32}, apartment:{median:590000,annualSales:165} }, clearanceRate:0.77 },
+    "collingwood":   { state:"VIC", nearby:["fitzroy","richmond","abbotsford","north melbourne"],
+        types:{ house:{median:1350000,annualSales:38}, townhouse:{median:980000,annualSales:25}, apartment:{median:520000,annualSales:130} }, clearanceRate:0.75 },
+    "brunswick":     { state:"VIC", nearby:["fitzroy","coburg","northcote","north melbourne"],
+        types:{ house:{median:1250000,annualSales:55}, townhouse:{median:920000,annualSales:38}, apartment:{median:490000,annualSales:200} }, clearanceRate:0.73 },
+    "south yarra":   { state:"VIC", nearby:["toorak","prahran","armadale","windsor"],
+        types:{ house:{median:2800000,annualSales:25}, townhouse:{median:1600000,annualSales:20}, apartment:{median:680000,annualSales:280} }, clearanceRate:0.76 },
+    "st kilda":      { state:"VIC", nearby:["south melbourne","balaclava","elsterwick","prahran"],
+        types:{ house:{median:2200000,annualSales:28}, townhouse:{median:1350000,annualSales:20}, apartment:{median:590000,annualSales:210} }, clearanceRate:0.74 },
+    "essendon":      { state:"VIC", nearby:["moonee ponds","flemington","ascot vale","strathmore"],
+        types:{ house:{median:1300000,annualSales:62}, townhouse:{median:950000,annualSales:35}, apartment:{median:520000,annualSales:140}, villa:{median:870000,annualSales:12} }, clearanceRate:0.72 },
+    "hawthorn":      { state:"VIC", nearby:["camberwell","kew","glen iris","malvern"],
+        types:{ house:{median:2100000,annualSales:35}, townhouse:{median:1400000,annualSales:20}, apartment:{median:620000,annualSales:130} }, clearanceRate:0.77 },
+    "footscray":     { state:"VIC", nearby:["yarraville","seddon","west footscray","maidstone"],
+        types:{ house:{median:900000,annualSales:72}, townhouse:{median:720000,annualSales:45}, apartment:{median:440000,annualSales:180} }, clearanceRate:0.70 },
+    "frankston":     { state:"VIC", nearby:["seaford","langwarrin","carrum downs","karingal"],
+        types:{ house:{median:780000,annualSales:98}, townhouse:{median:620000,annualSales:60}, apartment:{median:380000,annualSales:165} }, clearanceRate:0.65 },
+
+    // ── Queensland ───────────────────────────────────────────────
+    "new farm":      { state:"QLD", nearby:["teneriffe","newstead","fortitude valley","kangaroo point"],
+        types:{ house:{median:1800000,annualSales:35}, townhouse:{median:1200000,annualSales:25}, apartment:{median:680000,annualSales:150} }, clearanceRate:0.72 },
+    "west end":      { state:"QLD", nearby:["south brisbane","woolloongabba","highgate hill","dutton park"],
+        types:{ house:{median:1500000,annualSales:40}, townhouse:{median:1000000,annualSales:28}, apartment:{median:560000,annualSales:135} }, clearanceRate:0.71 },
+    "paddington":    { state:"QLD", nearby:["red hill","ashgrove","kelvin grove","given terrace"],
+        types:{ house:{median:1600000,annualSales:38}, townhouse:{median:1100000,annualSales:22}, apartment:{median:590000,annualSales:100} }, clearanceRate:0.73 },
+    "ascot":         { state:"QLD", nearby:["hamilton","clayfield","hendra","lutwyche"],
+        types:{ house:{median:2300000,annualSales:25}, townhouse:{median:1500000,annualSales:15}, apartment:{median:750000,annualSales:80} }, clearanceRate:0.74 },
+    "bulimba":       { state:"QLD", nearby:["hawthorne","morningside","balmoral","cannon hill"],
+        types:{ house:{median:1700000,annualSales:42}, townhouse:{median:1200000,annualSales:28}, apartment:{median:640000,annualSales:110} }, clearanceRate:0.72 },
+    "indooroopilly": { state:"QLD", nearby:["taringa","st lucia","toowong","fig tree pocket"],
+        types:{ house:{median:1400000,annualSales:50}, townhouse:{median:980000,annualSales:32}, apartment:{median:530000,annualSales:145} }, clearanceRate:0.70 },
+
+    // ── Western Australia ────────────────────────────────────────
+    "fremantle":     { state:"WA", nearby:["north fremantle","east fremantle","white gum valley","beaconsfield"],
+        types:{ house:{median:1200000,annualSales:48}, townhouse:{median:850000,annualSales:30}, apartment:{median:480000,annualSales:120} }, clearanceRate:0.70 },
+    "subiaco":       { state:"WA", nearby:["west perth","leederville","mt hawthorn","shenton park"],
+        types:{ house:{median:1400000,annualSales:42}, townhouse:{median:980000,annualSales:25}, apartment:{median:530000,annualSales:135} }, clearanceRate:0.72 },
+    "cottesloe":     { state:"WA", nearby:["claremont","swanbourne","nedlands","peppermint grove"],
+        types:{ house:{median:2500000,annualSales:28}, townhouse:{median:1600000,annualSales:18}, apartment:{median:780000,annualSales:90} }, clearanceRate:0.73 },
+    "victoria park": { state:"WA", nearby:["east victoria park","carlisle","lathlain","bentley"],
+        types:{ house:{median:950000,annualSales:65}, townhouse:{median:720000,annualSales:40}, apartment:{median:430000,annualSales:160} }, clearanceRate:0.68 },
+
+    // ── South Australia ──────────────────────────────────────────
+    "norwood":       { state:"SA", nearby:["kent town","rose park","marryatville","burnside"],
+        types:{ house:{median:1100000,annualSales:55}, townhouse:{median:780000,annualSales:30}, apartment:{median:440000,annualSales:120} }, clearanceRate:0.71 },
+    "unley":         { state:"SA", nearby:["malvern","parkside","hyde park","colonel light gardens"],
+        types:{ house:{median:1300000,annualSales:48}, townhouse:{median:900000,annualSales:28}, apartment:{median:490000,annualSales:105} }, clearanceRate:0.72 },
+    "glenelg":       { state:"SA", nearby:["north glenelg","somerton park","brighton","holdfast bay"],
+        types:{ house:{median:1500000,annualSales:40}, townhouse:{median:1000000,annualSales:25}, apartment:{median:520000,annualSales:130} }, clearanceRate:0.70 },
+};
+
+// ================================================================
+// DISTRIBUTION TABLES
+// "What % of [type] properties have AT LEAST N of this feature?"
+// Based on typical Australian market distributions.
+// ================================================================
+const BEDROOM_AVAIL = {
+    house:     { 1:1.00, 2:0.97, 3:0.78, 4:0.42, 5:0.14, 6:0.04 },
+    townhouse: { 1:0.99, 2:0.94, 3:0.72, 4:0.20, 5:0.05, 6:0.01 },
+    apartment: { 1:0.97, 2:0.60, 3:0.18, 4:0.04, 5:0.01, 6:0.00 },
+    villa:     { 1:0.99, 2:0.94, 3:0.70, 4:0.22, 5:0.06, 6:0.01 },
+};
+const BATHROOM_AVAIL = {
+    house:     { 1:1.00, 2:0.82, 3:0.40, 4:0.12 },
+    townhouse: { 1:1.00, 2:0.72, 3:0.22, 4:0.05 },
+    apartment: { 1:1.00, 2:0.38, 3:0.08, 4:0.01 },
+    villa:     { 1:1.00, 2:0.68, 3:0.20, 4:0.04 },
+};
+const CARSPACE_AVAIL = {
+    house:     { 0:1.00, 1:0.92, 2:0.70, 3:0.32, 4:0.10 },
+    townhouse: { 0:1.00, 1:0.88, 2:0.50, 3:0.14, 4:0.04 },
+    apartment: { 0:1.00, 1:0.72, 2:0.28, 3:0.06, 4:0.01 },
+    villa:     { 0:1.00, 1:0.90, 2:0.55, 3:0.18, 4:0.05 },
+};
+
+const TYPE_CHEAPER = { house:'townhouse', townhouse:'apartment', apartment:null };
+// Canonical hierarchy for what-if (villa/unit not shown as step-down options)
+const TYPE_HIERARCHY = ['house','townhouse','apartment'];
+const TYPE_LABELS  = { house:'House', townhouse:'Townhouse', apartment:'Apartment', villa:'Villa' };
+
+// ================================================================
+// SCORING ENGINE
+// ================================================================
+
+/** Returns approx % of suburb's [type] sales at or below this budget */
+function getPricePercentile(ratio) {
+    const tbl = [
+        [0.50,0.02],[0.60,0.05],[0.70,0.12],[0.75,0.18],[0.80,0.26],
+        [0.85,0.33],[0.90,0.40],[0.95,0.45],[1.00,0.50],[1.05,0.55],
+        [1.10,0.62],[1.15,0.67],[1.20,0.72],[1.30,0.80],[1.40,0.86],
+        [1.50,0.90],[1.75,0.94],[2.00,0.97]
+    ];
+    if (ratio <= 0.50) return 0.01;
+    if (ratio >= 2.00) return 0.97;
+    for (let i = 0; i < tbl.length - 1; i++) {
+        if (ratio >= tbl[i][0] && ratio < tbl[i+1][0]) {
+            const t = (ratio - tbl[i][0]) / (tbl[i+1][0] - tbl[i][0]);
+            return tbl[i][1] + t * (tbl[i+1][1] - tbl[i][1]);
+        }
+    }
+    return 0.50;
+}
+
+function getAvail(distTable, type, val) {
+    if (val === null || val === undefined || isNaN(val)) return null;
+    const t = distTable[type];
+    if (!t) return 0.50;
+    if (t[val] !== undefined) return t[val];
+    const keys = Object.keys(t).map(Number).sort((a,b)=>a-b);
+    if (val > keys[keys.length-1]) return t[keys[keys.length-1]] * 0.5;
+    return t[keys[0]];
+}
+
+/**
+ * Core scoring function — new model.
+ *
+ * Step 1: Estimate the pool of properties matching non-price criteria
+ *         (suburb type + bedrooms + bathrooms + car spaces) sold in the last year.
+ * Step 2: Of that pool, what % sold at or below the user's budget?
+ *         That percentage IS the score (0–100).
+ *
+ * Score = % of matching properties within budget.
+ * If the matching pool is very thin (<5), cap the score at "Competitive" (35)
+ * to signal that supply is scarce regardless of price position.
+ */
+function scoreSearch(suburbData, type, budget, beds, baths, cars) {
+    const td = suburbData.types[type];
+    if (!td) return null;
+
+    const ratio    = budget / td.median;
+    const pricePct = getPricePercentile(ratio);
+    const bedsPct  = getAvail(BEDROOM_AVAIL,  type, beds);
+    const bathsPct = getAvail(BATHROOM_AVAIL, type, baths);
+    const carsPct  = getAvail(CARSPACE_AVAIL, type, cars);
+
+    // Use 1.0 in place of null (no filter applied) for pool calculation
+    const bedsF  = bedsPct  ?? 1.0;
+    const bathsF = bathsPct ?? 1.0;
+    const carsF  = carsPct  ?? 1.0;
+    const noFilters = bedsPct === null && bathsPct === null && carsPct === null;
+
+    // Pool = properties matching all non-price criteria
+    const matchingPool = Math.max(0, Math.round(td.annualSales * bedsF * bathsF * carsF));
+
+    // Of those, how many were within budget?
+    const withinBudget = Math.round(matchingPool * pricePct);
+
+    // Score:
+    // – When no bed/bath/car filtering (VIC): raw pricePct × 100.
+    //   "15 of 30 sold within budget = 50%" — transparent and intuitive.
+    // – When filtering is applied (NSW what-ifs): normalise against TARGET so
+    //   that capturing 30% of filtered stock = 100 (excellent availability).
+    let score;
+    if (noFilters) {
+        score = Math.round(pricePct * 100);
+    } else {
+        const allFactorsPct = pricePct * bedsF * bathsF * carsF;
+        const TARGET = 0.30;
+        score = Math.round(Math.min(allFactorsPct / TARGET, 1.0) * 100);
+    }
+    if (matchingPool === 0 || withinBudget === 0) score = 0;
+
+    return { score, matchingPool, withinBudget,
+             annualSales: td.annualSales, median: td.median,
+             ratio, pricePct, bedsPct, bathsPct, carsPct };
+}
+
+function getGrade(score) {
+    if (score >= 75) return { label:'Highly Realistic', color:'#15803d', ring:'#22c55e' };
+    if (score >= 55) return { label:'Realistic',        color:'#0f766e', ring:'#14b8a6' };
+    if (score >= 35) return { label:'Competitive',      color:'#b45309', ring:'#f59e0b' };
+    if (score >= 15) return { label:'Tight',            color:'#c2410c', ring:'#f97316' };
+    if (score >=  5) return { label:'Very Difficult',   color:'#b91c1c', ring:'#ef4444' };
+    return               { label:'Unrealistic',         color:'#7f1d1d', ring:'#dc2626' };
+}
+
+function buildInsight(r, type, beds, baths, cars) {
+    const typeLabel = TYPE_LABELS[type].toLowerCase() + 's';
+
+    // Thin pool — supply is the core problem regardless of price
+    if (r.matchingPool < 5) {
+        return `<strong>Supply is the main constraint.</strong> Barely any ${typeLabel} with these specs sell here each year. Try a nearby suburb or loosen your requirements.`;
+    }
+
+    if (r.score >= 75) {
+        return `<strong>Strong position.</strong> Most ${typeLabel} matching your criteria sold within budget last year. You have genuine choice.`;
+    }
+
+    // Find the biggest non-price constraint
+    const nonPriceFactors = [
+        { key:'beds',  label:`${beds} bedroom${beds>1?'s':''}`,   pct: r.bedsPct  },
+        { key:'baths', label:`${baths} bathroom${baths>1?'s':''}`,pct: r.bathsPct },
+        { key:'cars',  label:`${cars} car space${cars>1?'s':''}`, pct: r.carsPct  },
+    ];
+    if (cars === 0) nonPriceFactors.splice(2, 1);
+    const limiting = [...nonPriceFactors].sort((a,b) => a.pct - b.pct)[0];
+
+    if (r.pricePct < 0.4) {
+        return `<strong>Price is the biggest lever.</strong> Your budget covers ~${r.withinBudget} of the ~${r.matchingPool} matching ${typeLabel} sold here last year. Raising your budget or trying a nearby suburb will have the most impact.`;
+    }
+
+    return `<strong>${TYPE_LABELS[type]}s with ${limiting.label}</strong> are the tightest constraint (~${Math.round(limiting.pct*100)}% availability). Price covers ${r.score}% of matching sales — reasonable, but supply is thin.`;
+}
+
+// ================================================================
+// WHAT-IF GENERATOR
+// Always returns exactly 4 cards in this fixed order:
+//   1. Budget +10%
+//   2. Bedrooms -1
+//   3. Nearby suburb
+//   4. Step down property type (house→townhouse→apartment)
+// ================================================================
+function buildWhatIfs(suburbKey, suburbData, type, budget, beds, baths, cars, baseScore) {
+    const results = [];
+
+    // 1. Budget +10%
+    const r1 = scoreSearch(suburbData, type, Math.round(budget * 1.1), beds, baths, cars);
+    results.push({
+        change: 'Increase budget by 10%',
+        desc:   fmtCurrency(Math.round(budget * 1.1)),
+        result: r1 || { score: baseScore, matchingPool: 0, withinBudget: 0, annualSales: 0, median: 0, ratio:1, pricePct:0, bedsPct:0, bathsPct:0, carsPct:0 },
+        apply:  { budget: Math.round(budget * 1.1) },
+        atMin:  false,
+    });
+
+    // 2. Bedrooms -1 (not available when beds is NaN — VIC has no individual records)
+    if (isNaN(beds)) {
+        results.push({ comingSoon: true, change: 'Fewer bedrooms' });
+    } else {
+        const newBeds = Math.max(1, beds - 1);
+        const r2 = newBeds < beds
+            ? scoreSearch(suburbData, type, budget, newBeds, baths, cars)
+            : null;
+        results.push({
+            change: 'Fewer bedrooms',
+            desc:   newBeds < beds ? `${newBeds} bed${newBeds !== 1 ? 's' : ''}` : null,
+            atMin:  newBeds >= beds,
+            result: r2 || results[0].result,
+            apply:  newBeds < beds ? { beds: newBeds } : null,
+        });
+    }
+
+    // 3. Nearby suburb (same criteria, same type)
+    let r3 = null, nearbyName = null, nearbyState = null, nearbyKey = null;
+    for (const nb of (suburbData.nearby || [])) {
+        const nd = ACTIVE_SUBURBS[nb.toLowerCase()];
+        if (nd && nd.types[type]) {
+            r3 = scoreSearch(nd, type, budget, beds, baths, cars);
+            nearbyKey   = nb;
+            nearbyName  = titleCase(nb);
+            nearbyState = nd.state;
+            break;
+        }
+    }
+    // Fallback 1: same state, any suburb with matching type
+    if (!r3) {
+        for (const [key, data] of Object.entries(ACTIVE_SUBURBS)) {
+            if (key === suburbKey) continue;
+            if (data.state === suburbData.state && data.types[type]) {
+                r3 = scoreSearch(data, type, budget, beds, baths, cars);
+                nearbyKey = key; nearbyName = titleCase(key); nearbyState = data.state;
+                break;
+            }
+        }
+    }
+    // Fallback 2: any suburb with matching type
+    if (!r3) {
+        for (const [key, data] of Object.entries(ACTIVE_SUBURBS)) {
+            if (key === suburbKey) continue;
+            if (data.types[type]) {
+                r3 = scoreSearch(data, type, budget, beds, baths, cars);
+                nearbyKey = key; nearbyName = titleCase(key); nearbyState = data.state;
+                break;
+            }
+        }
+    }
+    results.push({
+        change: 'Nearby suburb',
+        desc:   r3 ? nearbyName : null,
+        atMin:  !r3,
+        result: r3 || results[0].result,
+        apply:  r3 ? { suburb: nearbyKey } : null,
+    });
+
+    // 4. Step down property type: house→townhouse→apartment (skip villa/unit)
+    const hierarchyIdx = TYPE_HIERARCHY.indexOf(type);
+    const nextType = hierarchyIdx !== -1 && hierarchyIdx < TYPE_HIERARCHY.length - 1
+        ? TYPE_HIERARCHY[hierarchyIdx + 1]
+        : null;
+    let r4 = null;
+    if (nextType && suburbData.types[nextType]) {
+        r4 = scoreSearch(suburbData, nextType, budget, Math.min(beds, nextType === 'apartment' ? 3 : beds), baths, cars);
+    }
+    const typeAtMin = !nextType || (!r4 && nextType);
+    results.push({
+        change: 'Change type',
+        desc:   r4 ? TYPE_LABELS[nextType] : null,
+        atMin:  typeAtMin,
+        result: r4 || results[0].result,
+        apply:  r4 ? { type: nextType } : null,
+    });
+
+    return results;
+}
+
+// ================================================================
+// UI HELPERS
+// ================================================================
+function fmtCurrency(n) {
+    if (n >= 1000000) return `$${(n/1e6).toFixed(n%1e6===0?0:1)}M`;
+    if (n >= 1000)    return `$${Math.round(n/1000)}k`;
+    return `$${n}`;
+}
+
+function titleCase(str) {
+    return str.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function parseBudget(str) {
+    return parseInt(str.replace(/[^0-9]/g, ''), 10);
+}
+
+function barColor(pct) {
+    if (pct >= 0.65) return '#4ade80';
+    if (pct >= 0.40) return '#f5c842';
+    return '#f87171';
+}
+
+function setBar(fillId, pctId, pct) {
+    const el    = document.getElementById(fillId);
+    const pctEl = document.getElementById(pctId);
+    if (pct === null) {
+        el.style.width      = '0%';
+        el.style.background = '#2a2a2a';
+        pctEl.textContent   = 'N/A';
+        pctEl.style.color   = '#444';
+        return;
+    }
+    el.style.width      = (pct * 100).toFixed(1) + '%';
+    el.style.background = barColor(pct);
+    pctEl.textContent   = Math.round(pct * 100) + '%';
+    pctEl.style.color   = barColor(pct);
+}
+
+function showError(msg) {
+    document.getElementById('resultsEmpty').classList.add('hidden');
+    document.getElementById('scoreArea').classList.add('hidden');
+    document.getElementById('comingSoonBox').classList.add('hidden');
+    document.getElementById('errorBox').innerHTML = msg;
+    document.getElementById('errorBox').classList.remove('hidden');
+    document.getElementById('whatifSection').classList.add('hidden');
+    document.getElementById('comparablesSection').classList.add('hidden');
+}
+
+function renderScore(result, suburbName, type, beds, baths, cars) {
+    const grade = getGrade(result.score);
+
+    // Score ring (conic-gradient)
+    document.getElementById('scoreRing').style.background =
+        `conic-gradient(${grade.ring} ${result.score * 3.6}deg, #222222 0deg)`;
+    document.getElementById('scoreNum').textContent = result.score + '%';
+    document.getElementById('scoreNum').style.color  = grade.color;
+
+    // Grade
+    document.getElementById('gradeLabel').textContent = grade.label;
+    document.getElementById('gradeLabel').style.color  = grade.color;
+    document.getElementById('gradeSub').innerHTML = result.isNSW
+        ? `<strong>${result.withinBudget} of ${result.matchingPool} ${TYPE_LABELS[type].toLowerCase()}s</strong> sold here in the last 13 months were within your budget`
+        : `<strong>${result.withinBudget} of ${result.matchingPool} ${TYPE_LABELS[type].toLowerCase()}s</strong> sold in the last 12 months within your budget`;
+
+    // Factor bars (null = N/A, shown for NSW beds/baths/cars)
+    setBar('barPrice', 'pctPrice', result.pricePct);
+    setBar('barBeds',  'pctBeds',  result.bedsPct);
+    setBar('barBaths', 'pctBaths', result.bathsPct);
+    setBar('barCars',  'pctCars',  result.carsPct);
+
+    // Factor notes
+    const nswNote = document.getElementById('nswFactorNote');
+    if (nswNote) nswNote.classList.toggle('hidden', !result.isNSW);
+    const vicNote = document.getElementById('vicFactorNote');
+    if (vicNote) vicNote.classList.toggle('hidden', result.isNSW || result.bedsPct !== null);
+
+    // Save state for PDF generation
+    lastResult       = result;
+    lastSearchParams = { suburb: suburbName, type, budget: null, beds, baths, cars };
+
+    // Show
+    document.getElementById('resultsEmpty').classList.add('hidden');
+    document.getElementById('errorBox').classList.add('hidden');
+    document.getElementById('comingSoonBox').classList.add('hidden');
+    document.getElementById('scoreArea').classList.remove('hidden');
+}
+
+function renderWhatIfs(scenarios, baseScore) {
+    lastWhatifs = scenarios;
+
+    const section = document.getElementById('whatifSection');
+    const grid    = document.getElementById('whatifGrid');
+
+    if (!scenarios.length) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+    grid.innerHTML = '';
+
+    const WF_ICONS = [
+        // Budget — clean dollar sign (S curves correct direction)
+        `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 4v8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M10 6C10 5 9.1 4.5 8 4.5 6.9 4.5 6 5 6 6c0 1.2 2 1.5 2 1.5S10 8.3 10 9.5c0 1-.9 1.5-2 1.5-1.1 0-2-.5-2-1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></svg>`,
+        // Bedrooms
+        `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="7.5" width="13" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M1.5 11v2M14.5 11v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="4" y="4.5" width="8" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>`,
+        // Location pin
+        `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5C5.79 1.5 4 3.29 4 5.5c0 3.25 4 9 4 9s4-5.75 4-9c0-2.21-1.79-4-4-4z" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="5.5" r="1.5" fill="currentColor"/></svg>`,
+        // House/type
+        `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L14 7.5H12V14H4V7.5H2L8 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+    ];
+
+    const WF_LABELS = [
+        'Raise budget',
+        'Fewer bedrooms',
+        'Nearby suburb',
+        'Change type',
+    ];
+
+    scenarios.forEach((s, i) => {
+        if (s.comingSoon) {
+            grid.innerHTML += `
+            <div class="whatif-card wf-disabled">
+                <div class="wf-header">
+                    <div class="wf-icon">${WF_ICONS[i]}</div>
+                    <div class="wf-change">${WF_LABELS[i]}</div>
+                </div>
+                <div class="wf-at-min" style="color:#555">Coming soon for NSW</div>
+            </div>`;
+            return;
+        }
+        if (s.atMin) {
+            grid.innerHTML += `
+            <div class="whatif-card wf-disabled">
+                <div class="wf-header">
+                    <div class="wf-icon">${WF_ICONS[i]}</div>
+                    <div class="wf-change">${WF_LABELS[i]}</div>
+                </div>
+                <div class="wf-at-min">Already at minimum</div>
+            </div>`;
+            return;
+        }
+
+        const grade = getGrade(s.result.score);
+        const delta = s.result.score - baseScore;
+        const dCls  = delta > 2 ? 'd-pos' : delta < -2 ? 'd-neg' : 'd-zero';
+        const dStr  = delta > 0 ? `+${delta}%` : `${delta}%`;
+
+        grid.innerHTML += `
+        <div class="whatif-card" role="button" tabindex="0"
+             onclick="applyWhatIf(${i})"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();applyWhatIf(${i})}"
+             aria-label="${WF_LABELS[i]}: ${s.desc || ''} — score becomes ${s.result.score}%">
+            <div class="wf-header">
+                <div class="wf-icon" aria-hidden="true">${WF_ICONS[i]}</div>
+                <div class="wf-change">${WF_LABELS[i]}</div>
+                <span class="wf-delta ${dCls}" style="margin-left:auto" aria-label="${dStr}">${dStr}</span>
+            </div>
+            ${s.desc ? `<div class="wf-desc">${s.desc}</div>` : ''}
+            <div class="wf-score-row">
+                <span class="wf-score-num" style="color:${grade.color}">${s.result.score}%</span>
+                <span class="wf-grade" style="color:${grade.color}">${grade.label}</span>
+            </div>
+        </div>`;
+    });
+}
+
+function applyWhatIf(idx) {
+    const s = lastWhatifs[idx];
+    if (!s || !s.apply) return;
+    const a = s.apply;
+    if (a.budget !== undefined) {
+        const formatted = a.budget.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        document.getElementById('budget').value = formatted;
+    }
+    if (a.beds !== undefined) {
+        document.getElementById('bedrooms').value = a.beds;
+    }
+    if (a.suburb !== undefined) {
+        document.getElementById('suburb').value = titleCase(a.suburb);
+    }
+    if (a.type !== undefined) {
+        document.getElementById('propertyType').value = a.type;
+    }
+    runSearch();
+}
+
+// ================================================================
+// MAIN SEARCH HANDLER
+// ================================================================
+function showComingSoon(state) {
+    const STATE_NAMES = { QLD:'Queensland', SA:'South Australia', WA:'Western Australia', ACT:'ACT', TAS:'Tasmania', NT:'Northern Territory' };
+    const name = STATE_NAMES[state] || state;
+    document.getElementById('resultsEmpty').classList.add('hidden');
+    document.getElementById('scoreArea').classList.add('hidden');
+    document.getElementById('errorBox').classList.add('hidden');
+    document.getElementById('validationError').classList.add('hidden');
+    document.getElementById('whatifSection').classList.add('hidden');
+    document.getElementById('comparablesSection').classList.add('hidden');
+    document.getElementById('reportCta').classList.add('hidden');
+    const box = document.getElementById('comingSoonBox');
+    box.innerHTML = `
+        <div class="cs-icon">◎</div>
+        <div class="cs-state">${name}</div>
+        <div class="cs-title">Coming soon</div>
+        <div class="cs-body">We're working on ${name} data. GetReal currently covers Victoria and New South Wales.</div>`;
+    box.classList.remove('hidden');
+}
+
+async function runSearch() {
+    const state     = document.getElementById('stateSelect').value;
+    const suburbRaw = document.getElementById('suburb').value.trim();
+    const suburbKey = suburbRaw.toLowerCase();
+    const type      = document.getElementById('propertyType').value;
+    const budgetRaw = document.getElementById('budget').value;
+    const bedsRaw   = document.getElementById('bedrooms').value;
+    const bathsRaw  = document.getElementById('bathrooms').value;
+    const carsRaw   = document.getElementById('carspaces').value;
+    const beds      = bedsRaw  !== '' ? parseInt(bedsRaw)  : NaN;
+    const baths     = bathsRaw !== '' ? parseInt(bathsRaw) : NaN;
+    const cars      = carsRaw  !== '' ? parseInt(carsRaw)  : NaN;
+
+    // Coming soon for states other than VIC and NSW
+    if (state && state !== 'VIC' && state !== 'NSW') {
+        showComingSoon(state);
+        return;
+    }
+
+    // Collect ALL validation errors before showing anything
+    const validationErrors = [];
+    if (!state)          validationErrors.push('Select a state');
+    if (!budgetRaw)      validationErrors.push('Enter your maximum budget');
+    const budget = parseBudget(budgetRaw || '0');
+    if (budgetRaw && (isNaN(budget) || budget < 50000)) validationErrors.push('Budget must be at least $50,000 (e.g. 850 000)');
+    if (!suburbRaw)      validationErrors.push('Enter a suburb');
+    if (!type)           validationErrors.push('Select a property type');
+
+    if (validationErrors.length > 0) {
+        // Show errors in results panel
+        document.getElementById('resultsEmpty').classList.add('hidden');
+        document.getElementById('scoreArea').classList.add('hidden');
+        document.getElementById('errorBox').classList.add('hidden');
+        document.getElementById('comingSoonBox').classList.add('hidden');
+        const veEl = document.getElementById('validationError');
+        const veList = document.getElementById('veList');
+        veList.innerHTML = validationErrors.map(e =>
+            `<li class="ve-item"><span class="ve-dot"></span>${e}</li>`
+        ).join('');
+        veEl.classList.remove('hidden');
+        document.getElementById('whatifSection').classList.add('hidden');
+        document.getElementById('comparablesSection').classList.add('hidden');
+        document.getElementById('comparablesUnavailable').classList.add('hidden');
+        document.getElementById('suburbMapSection').classList.add('hidden');
+        document.getElementById('reportCta').classList.add('hidden');
+        return;
+    }
+    document.getElementById('validationError').classList.add('hidden');
+
+    // ── NSW: live Supabase query ────────────────────────────────────
+    if (state === 'NSW') {
+        const emptyEl = document.getElementById('resultsEmpty');
+        emptyEl.innerHTML = '<div class="icon" style="font-size:1.8rem;opacity:0.2">◎</div><p>Checking real NSW sales data…</p>';
+        emptyEl.classList.remove('hidden');
+        document.getElementById('scoreArea').classList.add('hidden');
+        document.getElementById('errorBox').classList.add('hidden');
+        document.getElementById('comingSoonBox').classList.add('hidden');
+        document.getElementById('whatifSection').classList.add('hidden');
+        document.getElementById('comparablesSection').classList.add('hidden');
+        document.getElementById('comparablesUnavailable').classList.add('hidden');
+        document.getElementById('suburbMapSection').classList.add('hidden');
+        document.getElementById('reportCta').classList.add('hidden');
+        try {
+            const result = await scoreNSW(suburbKey, type, budget);
+            if (!result) {
+                showError(`No <strong>${TYPE_LABELS[type]}</strong> sales found in <strong>${titleCase(suburbRaw)}</strong> in the last 13 months. Try a different suburb or property type.`);
+                return;
+            }
+            renderScore(result, suburbRaw, type, beds, baths, cars);
+            if (lastSearchParams) lastSearchParams.budget = budget;
+
+            // What-ifs: live Supabase queries for NSW
+            const sd = ACTIVE_SUBURBS[suburbKey];
+            const nswWhatifs = await buildNSWWhatIfs(suburbKey, sd || {}, type, budget, result.score);
+            renderWhatIfs(nswWhatifs, result.score);
+
+            // Real NSW comparable cards
+            const comps = await fetchNSWComparables(suburbKey, type, budget);
+            if (comps.length) renderNSWComparables(comps);
+            else document.getElementById('comparablesSection').classList.add('hidden');
+
+            // NSW suburb map — real Supabase scores (async, non-blocking)
+            document.getElementById('comparablesUnavailable').classList.add('hidden');
+            renderSuburbMapNSW(suburbKey, type, budget);
+
+            document.getElementById('reportCta').classList.remove('hidden');
+        } catch(e) {
+            console.error('NSW search error:', e);
+            showError(`Couldn't load NSW data. Please try again. (${e.message})`);
+        }
+        return;
+    }
+
+    // ── Live API path (stub — implement when you have credentials) ──
+    if (CONFIG.USE_LIVE_API && CONFIG.CLIENT_ID) {
+        runLiveSearch(suburbRaw, type, budget, beds, baths, cars);
+        return;
+    }
+
+    // ── VIC / static data path ──────────────────────────────────────
+    const suburbData = ACTIVE_SUBURBS[suburbKey];
+
+    if (!suburbData) {
+        const sourceNote = DATA_SOURCE === 'real'
+            ? `Start typing to see matching suburbs in the autocomplete list — spelling must match exactly.`
+            : `Try one of these: Fitzroy, Richmond, Brunswick, South Yarra, Footscray, Glen Waverley, Brighton.`;
+        showError(`<strong>Suburb not found:</strong> "${titleCase(suburbRaw)}"<br><br>${sourceNote}`);
+        return;
+    }
+
+    if (!suburbData.types[type]) {
+        showError(`No ${TYPE_LABELS[type]} data available for ${titleCase(suburbRaw)}. Try a different property type.`);
+        return;
+    }
+
+    const result = scoreSearch(suburbData, type, budget, beds, baths, cars);
+    if (!result) return;
+
+    renderScore(result, suburbRaw, type, beds, baths, cars);
+    if (lastSearchParams) lastSearchParams.budget = budget;
+
+    const whatifs = buildWhatIfs(suburbKey, suburbData, type, budget, beds, baths, cars, result.score);
+    renderWhatIfs(whatifs, result.score);
+
+    // No individual sale records for VIC — show suburb map instead
+    document.getElementById('comparablesSection').classList.add('hidden');
+    document.getElementById('comparablesUnavailable').classList.add('hidden');
+    renderSuburbMap(suburbKey, type, budget);
+
+    document.getElementById('reportCta').classList.remove('hidden');
+}
+
+// ================================================================
+// LIVE API STUB
+// Replace the body of this function once you have Domain credentials.
+// Endpoints to use:
+//   GET /v1/suburbPerformanceStatistics?suburbId=... → median prices, sales count
+//   GET /v2/listings/residential/_search             → count matching active listings
+// Auth: POST https://auth.domain.com.au/v1/connect/token (client_credentials)
+// ================================================================
+async function runLiveSearch(suburb, type, budget, beds, baths, cars) {
+    alert('Live API integration coming soon — add your CLIENT_ID and CLIENT_SECRET to CONFIG and implement this function.');
+}
+
+// ================================================================
+// NSW LIVE SCORING — queries property_sales in Supabase
+// ================================================================
+
+function nswCutoff() {
+    return new Date(Date.now() - NSW_DAYS * 864e5).toISOString().slice(0, 10);
+}
+
+async function scoreNSW(suburb, type, budget) {
+    const q = `suburb=eq.${encodeURIComponent(suburb)}`
+            + `&state=eq.NSW`
+            + `&property_type=eq.${encodeURIComponent(type)}`
+            + `&sale_date=gte.${nswCutoff()}`
+            + `&select=sale_price`
+            + `&order=sale_price`;
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/property_sales?${q}`, {
+        headers: { apikey: SUPABASE_ANON }
+    });
+    if (!resp.ok) throw new Error(`Supabase error ${resp.status}`);
+    const rows = await resp.json();
+    if (!rows.length) return null;
+
+    const prices       = rows.map(r => r.sale_price);
+    const matchingPool = prices.length;
+    const withinBudget = prices.filter(p => p <= budget).length;
+    const pricePct     = withinBudget / matchingPool;
+    const sorted       = [...prices].sort((a, b) => a - b);
+    const median       = sorted[Math.floor(sorted.length / 2)];
+    const score        = Math.round(pricePct * 100);
+
+    return { score, matchingPool, withinBudget, annualSales: matchingPool,
+             median, ratio: budget / median,
+             pricePct, bedsPct: null, bathsPct: null, carsPct: null, isNSW: true };
+}
+
+// Query Supabase for the most active NSW suburb in the same postcode prefix.
+// Used as the "Nearby suburb" what-if when suburb-data.json has no nearby array.
+async function findNearbyNSWSuburb(suburbKey, type) {
+    try {
+        // Step 1: get this suburb's postcode
+        const pcResp = await fetch(
+            `${SUPABASE_URL}/rest/v1/property_sales`
+            + `?suburb=eq.${encodeURIComponent(suburbKey)}`
+            + `&select=postcode&limit=1`,
+            { headers: { apikey: SUPABASE_ANON } }
+        );
+        const pcData = await pcResp.json();
+        if (!Array.isArray(pcData) || !pcData[0]?.postcode) return null;
+
+        const prefix = String(pcData[0].postcode).slice(0, 3);
+
+        // Step 2: find other suburbs in the same postcode band with most sales
+        const subResp = await fetch(
+            `${SUPABASE_URL}/rest/v1/property_sales`
+            + `?postcode=gte.${prefix}0&postcode=lte.${prefix}9`
+            + `&property_type=eq.${encodeURIComponent(type)}`
+            + `&suburb=neq.${encodeURIComponent(suburbKey)}`
+            + `&sale_date=gte.${nswCutoff()}`
+            + `&select=suburb&limit=300`,
+            { headers: { apikey: SUPABASE_ANON } }
+        );
+        const subData = await subResp.json();
+        if (!Array.isArray(subData) || !subData.length) return null;
+
+        // Count by suburb, pick the most active one
+        const counts = {};
+        for (const row of subData) {
+            if (row.suburb) counts[row.suburb] = (counts[row.suburb] || 0) + 1;
+        }
+        const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+        return best ? best[0] : null;
+    } catch {
+        return null;
+    }
+}
+
+async function buildNSWWhatIfs(suburbKey, suburbData, type, budget, baseScore) {
+    // TYPE_HIERARCHY defined elsewhere: house → townhouse → apartment
+    const hierarchyIdx = TYPE_HIERARCHY.indexOf(type);
+    const nextType = hierarchyIdx !== -1 && hierarchyIdx < TYPE_HIERARCHY.length - 1
+        ? TYPE_HIERARCHY[hierarchyIdx + 1] : null;
+
+    // Check suburb-data.json nearby array first (no extra query needed)
+    let nearbyKey = null, nearbyName = null;
+    for (const nb of (suburbData && suburbData.nearby ? suburbData.nearby : [])) {
+        const nd = ACTIVE_SUBURBS[nb.toLowerCase()];
+        if (nd && nd.state === 'NSW') { nearbyKey = nb.toLowerCase(); nearbyName = titleCase(nb); break; }
+    }
+
+    // Fire raise-budget, change-type, and nearby-lookup in parallel
+    const [r1, r4, foundNearby] = await Promise.all([
+        scoreNSW(suburbKey, type, Math.round(budget * 1.1)),
+        nextType ? scoreNSW(suburbKey, nextType, budget) : Promise.resolve(null),
+        nearbyKey ? Promise.resolve(nearbyKey) : findNearbyNSWSuburb(suburbKey, type),
+    ]);
+
+    if (!nearbyKey && foundNearby) {
+        nearbyKey  = foundNearby;
+        nearbyName = titleCase(foundNearby);
+    }
+
+    // Score the nearby suburb (needs nearbyKey from above)
+    const r3 = nearbyKey ? await scoreNSW(nearbyKey, type, budget) : null;
+
+    const fallback = { score: baseScore };
+
+    return [
+        // 1. Raise budget +10%
+        {
+            change: 'Increase budget by 10%',
+            desc:   fmtCurrency(Math.round(budget * 1.1)),
+            result: r1 || fallback,
+            apply:  { budget: Math.round(budget * 1.1) },
+            atMin:  false,
+        },
+        // 2. Fewer bedrooms — not available for NSW
+        {
+            comingSoon: true,
+        },
+        // 3. Nearby suburb (geographically proximate via postcode prefix)
+        {
+            change: 'Nearby suburb',
+            desc:   nearbyName,
+            result: r3 || fallback,
+            apply:  nearbyKey ? { suburb: nearbyKey } : null,
+            atMin:  !nearbyKey,
+        },
+        // 4. Change type
+        {
+            change: 'Change type',
+            desc:   nextType ? TYPE_LABELS[nextType] : null,
+            result: r4 || fallback,
+            apply:  nextType ? { type: nextType } : null,
+            atMin:  !nextType,
+        },
+    ];
+}
+
+async function fetchNSWComparables(suburb, type, budget) {
+    const h    = { apikey: SUPABASE_ANON };
+    const base = `${SUPABASE_URL}/rest/v1/property_sales`
+               + `?suburb=eq.${encodeURIComponent(suburb)}`
+               + `&state=eq.NSW`
+               + `&property_type=eq.${encodeURIComponent(type)}`
+               + `&sale_date=gte.${nswCutoff()}`
+               + `&select=address_full,sale_price,sale_date`;
+    const [r1, r2] = await Promise.all([
+        fetch(`${base}&sale_price=lte.${budget}&order=sale_price.desc&limit=1`, { headers: h }),
+        fetch(`${base}&sale_price=gt.${budget}&order=sale_price.asc&limit=1`,   { headers: h }),
+    ]);
+    const [below, above] = await Promise.all([r1.json(), r2.json()]);
+    const fmt = iso => iso
+        ? new Date(iso).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' })
+        : '—';
+    const out = [];
+    if (below[0]) out.push({ label:'Closest within budget', labelCls:'comp-within',
+        price: below[0].sale_price, address: below[0].address_full || 'Address unavailable',
+        soldDate: fmt(below[0].sale_date), isReal: true });
+    if (above[0]) out.push({ label:'Just above budget', labelCls:'comp-above',
+        price: above[0].sale_price, address: above[0].address_full || 'Address unavailable',
+        soldDate: fmt(above[0].sale_date), isReal: true });
+    return out;
+}
+
+const GMAPS_KEY = 'AIzaSyChH49EIZmfRITmN0qiqphDz6dNhQbuZuk';
+
+function streetViewUrl(address) {
+    const params = new URLSearchParams({
+        size:    '600x340',
+        location: address,
+        fov:     '90',
+        pitch:   '0',
+        key:     GMAPS_KEY,
+    });
+    return `https://maps.googleapis.com/maps/api/streetview?${params}`;
+}
+
+
+function addressToREAUrl(address) {
+    // Input:  "20 Church St, Balmain NSW 2041"
+    // Output: "https://www.realestate.com.au/property/20-church-st-balmain-nsw-2041/"
+    try {
+        // Split on comma: ["20 Church St", "Balmain NSW 2041"]
+        const parts = address.split(',');
+        if (parts.length < 2) return null;
+        const streetPart  = parts[0].trim();                        // "20 Church St"
+        const locationPart = parts.slice(1).join(',').trim();       // "Balmain NSW 2041"
+        // slug everything
+        const slug = (streetPart + ' ' + locationPart)
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '')   // strip punctuation
+            .trim()
+            .replace(/\s+/g, '-');          // spaces → hyphens
+        return `https://www.realestate.com.au/property/${slug}/`;
+    } catch { return null; }
+}
+
+function renderNSWComparables(comps) {
+    const grid = document.getElementById('comparablesGrid');
+    const note = document.querySelector('.comparables-note');
+    grid.innerHTML = '';
+    _lightboxComps = [];
+
+    comps.forEach(c => {
+        const img = document.createElement('img');
+        img.src   = streetViewUrl(c.address);
+        img.alt   = c.address;
+        img.style.cssText = '';
+
+        const imgDiv = document.createElement('div');
+        imgDiv.className = 'comp-img';
+        imgDiv.innerHTML = `<span class="comp-label ${c.labelCls}">${c.label}</span>`;
+        imgDiv.appendChild(img);
+
+        const reaUrl = addressToREAUrl(c.address);
+        const reaLink = reaUrl
+            ? `<a href="#" onclick="openReaModal('${reaUrl}');return false;" style="font-size:0.68rem;color:#555;text-decoration:underline;text-underline-offset:2px;letter-spacing:0.03em;">View on realestate.com.au →</a>`
+            : '';
+
+        const body = document.createElement('div');
+        body.className = 'comp-body';
+        body.innerHTML = `
+            <div class="comp-price">${fmtCurrencyFull(c.price)}</div>
+            <div class="comp-address">${c.address}</div>
+            <div class="comp-date">Sold ${c.soldDate}</div>
+            <div class="comp-specs" style="display:flex;flex-direction:column;gap:0.3rem;">
+                <span style="color:#444;font-size:0.68rem">NSW Valuer General · public record</span>
+                ${reaLink}
+            </div>`;
+
+        const card = document.createElement('div');
+        card.className = 'comp-card';
+        card.style.cursor = 'default';
+        card.appendChild(imgDiv);
+        card.appendChild(body);
+        grid.appendChild(card);
+    });
+
+    if (note) note.textContent = 'Real NSW Valuer General sales data · Google Street View';
+    document.getElementById('comparablesSection').classList.remove('hidden');
+}
+
+// ================================================================
+// REPORT STATE  — saved each time a search runs
+// ================================================================
+let lastResult       = null;
+let lastSearchParams = null;
+let lastWhatifs      = null;
+
+// ================================================================
+// HELPERS
+// ================================================================
+function hexToRgb(hex) {
+    const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return r ? [parseInt(r[1],16), parseInt(r[2],16), parseInt(r[3],16)] : [0,0,0];
+}
+
+// ================================================================
+// MODAL
+function formatPhone(input) {
+    // Strip everything except digits
+    let digits = input.value.replace(/\D/g, '').slice(0, 10);
+    // Format as 04XX XXX XXX
+    if (digits.length > 7)      digits = digits.slice(0,4) + ' ' + digits.slice(4,7) + ' ' + digits.slice(7);
+    else if (digits.length > 4) digits = digits.slice(0,4) + ' ' + digits.slice(4);
+    input.value = digits;
+}
+
+// ================================================================
+let _modalTrigger = null;
+function openReportModal() {
+    if (!lastResult) return;
+    _modalTrigger = document.activeElement;
+    const modal = document.getElementById('reportModal');
+    modal.classList.remove('hidden');
+    document.getElementById('modalError').classList.add('hidden');
+    document.body.style.overflow = 'hidden';
+    // Move focus into the modal
+    setTimeout(() => { const el = document.getElementById('leadName'); if (el) el.focus(); }, 50);
+    // Trap focus within modal
+    modal.addEventListener('keydown', trapModalFocus);
+}
+
+function trapModalFocus(e) {
+    if (e.key !== 'Tab') { if (e.key === 'Escape') closeReportModal(); return; }
+    const modal = document.getElementById('reportModal');
+    const focusable = modal.querySelectorAll('button, input, [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+    else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
+}
+
+function closeReportModal() {
+    const modal = document.getElementById('reportModal');
+    modal.classList.add('hidden');
+    modal.removeEventListener('keydown', trapModalFocus);
+    document.body.style.overflow = '';
+    // Return focus to the element that opened the modal
+    if (_modalTrigger) { _modalTrigger.focus(); _modalTrigger = null; }
+}
+
+function handleModalOverlay(e) {
+    if (e.target === document.getElementById('reportModal')) closeReportModal();
+}
+
+function submitReport() {
+    const name  = document.getElementById('leadName').value.trim();
+    const email = document.getElementById('leadEmail').value.trim();
+    const phone = document.getElementById('leadPhone').value.trim();
+    const errEl = document.getElementById('modalError');
+
+    // Validate
+    if (!name || !email || !phone) {
+        errEl.textContent = 'Please fill in your name, email, and phone number.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errEl.textContent = 'Please enter a valid email address.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+
+    errEl.classList.add('hidden');
+
+    const consent = document.getElementById('leadConsent').checked;
+
+    // Save lead to Supabase
+    fetch(`${SUPABASE_URL}/rest/v1/lead_captures`, {
+        method: 'POST',
+        headers: {
+            'apikey':       SUPABASE_ANON,
+            'Content-Type': 'application/json',
+            'Prefer':       'return=minimal',
+        },
+        body: JSON.stringify({
+            name,
+            email,
+            phone,
+            broker_consent: consent,
+            suburb:         lastSearchParams?.suburb || null,
+            property_type:  lastSearchParams?.type   || null,
+            budget:         lastSearchParams?.budget  || null,
+            score:          lastResult?.score         || null,
+        }),
+    }).catch(err => console.warn('Lead save failed:', err));
+
+    closeReportModal();
+    generatePDF(name, email, phone, consent).catch(err => {
+        console.error('PDF generation failed:', err);
+        alert('Something went wrong generating the PDF. Please try again.');
+    });
+}
+
+// ================================================================
+// PDF GENERATION
+// ================================================================
+async function generatePDF(name, email, phone, consent) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+
+    const W = 210, H = 297, M = 18;
+    const CW = W - 2 * M;
+
+    // ── Palette ──────────────────────────────────────────────────
+    const BLACK = [20,  20,  20];
+    const DARK  = [70,  70,  70];
+    const MID   = [130, 130, 130];
+    const LIGHT = [200, 200, 200];
+    const WHITE = [255, 255, 255];
+    const RED   = [160, 30,  30];
+
+    const grade    = getGrade(lastResult.score);
+    const GRADE    = hexToRgb(grade.ring);
+    const sp       = lastSearchParams;
+    const isNSW    = !!lastResult.isNSW;
+    const today    = `${String(new Date().getDate()).padStart(2,'0')}.${String(new Date().getMonth()+1).padStart(2,'0')}.${new Date().getFullYear()}`;
+    const firstName = name.trim().split(/\s+/)[0];
+
+    // ── Helpers ──────────────────────────────────────────────────
+    const cf = (bold = false) => doc.setFont('courier', bold ? 'bold' : 'normal');
+
+    const rule = (y, thick = false, rgb = LIGHT) => {
+        doc.setDrawColor(...rgb);
+        doc.setLineWidth(thick ? 0.7 : 0.25);
+        doc.line(M, y, M + CW, y);
+    };
+
+    const sectionLabel = (text, y) => {
+        cf(false); doc.setFontSize(8); doc.setTextColor(...DARK);
+        doc.text(`// ${text}`, M, y);
+    };
+
+    const pageHeader = (rightText) => {
+        cf(true);  doc.setFontSize(9);   doc.setTextColor(...BLACK); doc.text('GETREAL', M, 10);
+        cf(false); doc.setFontSize(7.5); doc.setTextColor(...MID);   doc.text(rightText, W - M, 10, { align: 'right' });
+        rule(13, true, BLACK);
+    };
+
+    const pageFooter = () => {
+        const pn = doc.internal.getCurrentPageInfo().pageNumber;
+        rule(H - 12, false, LIGHT);
+        cf(false); doc.setFontSize(7); doc.setTextColor(...MID);
+        doc.text('GetReal · Property Search Realism Report · Not financial advice', M, H - 7);
+        doc.text(`Page ${pn}`, W - M, H - 7, { align: 'right' });
+    };
+
+    const fmtDate = iso => iso
+        ? new Date(iso).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'2-digit' }).replace(/ /g,'-')
+        : '—';
+
+    const budgetStr = sp.budget
+        ? `$${(sp.budget / 1_000_000).toFixed(2).replace(/\.?0+$/,'')}M`
+        : 'your budget';
+
+    // ── Fetch 10 below + 10 above budget ────────────────────────
+    let propsBelow = [], propsAbove = [];
+    if (isNSW && sp.budget) {
+        try {
+            const base = `${SUPABASE_URL}/rest/v1/property_sales`
+                + `?suburb=eq.${encodeURIComponent(sp.suburb.toLowerCase())}`
+                + `&state=eq.NSW`
+                + `&property_type=eq.${encodeURIComponent(sp.type)}`
+                + `&sale_date=gte.${nswCutoff()}`
+                + `&select=address_full,sale_price,sale_date`;
+            const h = { apikey: SUPABASE_ANON };
+            const [r1, r2] = await Promise.all([
+                fetch(`${base}&sale_price=lte.${sp.budget}&order=sale_price.desc&limit=10`, { headers: h }),
+                fetch(`${base}&sale_price=gt.${sp.budget}&order=sale_price.asc&limit=10`,  { headers: h }),
+            ]);
+            propsBelow = (await r1.json()).reverse();
+            propsAbove = await r2.json();
+        } catch(e) { /* proceed without */ }
+    }
+    const allTableProps = [...propsBelow, ...propsAbove];
+
+    // ── Table header helper ──────────────────────────────────────
+    const drawTableHeader = (y) => {
+        doc.setFillColor(...BLACK);
+        doc.rect(M, y, CW, 6, 'F');
+        cf(true); doc.setFontSize(7); doc.setTextColor(...WHITE);
+        doc.text('#',       M + 2,        y + 4.2);
+        doc.text('ADDRESS', M + 9,        y + 4.2);
+        doc.text('SOLD',    M + 9 + 108,  y + 4.2);
+        doc.text('PRICE',   M + CW - 2,   y + 4.2, { align: 'right' });
+        return y + 6;
+    };
+
+    // =============================================================
+    // PAGE 1 — LETTER
+    // =============================================================
+    cf(true);  doc.setFontSize(16); doc.setTextColor(...BLACK); doc.text('GETREAL', M, 13);
+    cf(false); doc.setFontSize(9);  doc.setTextColor(...MID);   doc.text(today, W - M, 13, { align: 'right' });
+    doc.setDrawColor(...BLACK); doc.setLineWidth(0.8); doc.line(M, 17, M + CW, 17);
+
+    let y = 27;
+    cf(false); doc.setFontSize(10); doc.setTextColor(...BLACK);
+    doc.text(`Dear ${firstName},`, M, y);
+    y += 9;
+
+    const letterParas = [
+        `Property searching is one of the most stressful things most people go through. And one thing that makes it harder than it needs to be is looking for a combination of things that almost never appear together in a target suburb — without knowing it.`,
+        `GetReal was built from research with hundreds of people actively searching for homes. What that research showed, again and again, was that the searches that went on longest weren't always driven by tight budgets or impossible expectations. They were driven by a combination of criteria that almost never appeared together in the market — and the searcher had no way of knowing.`,
+        `The people who broke through and found their home had almost always reached a point where they figured out what to let go of. Not randomly — deliberately. They found the thing that mattered least to them personally, and which happened to open up the most of the market. A suburb one stop further out. An apartment instead of a house. One fewer bedroom. The compromise itself isn't the point. What matters is that it was the right one: the trade-off that costs you the least but changes your search the most.`,
+        `There is also another possibility: that your search is genuinely hard, and the right response is simply to know that going in — to align your expectations, your timeline, and your risk tolerance with what the data actually shows, rather than discovering it offer by disappointing offer.`,
+        `This report shows you where you stand. Be honest with yourself about what you see.`,
+    ];
+
+    letterParas.forEach(para => {
+        cf(false); doc.setFontSize(9.5); doc.setTextColor(...DARK);
+        const lines = doc.splitTextToSize(para, CW);
+        doc.text(lines, M, y);
+        y += lines.length * 5.0 + 3;
+    });
+
+    y += 3;
+    rule(y, false, LIGHT);
+    y += 8;
+    cf(true);  doc.setFontSize(10); doc.setTextColor(...BLACK); doc.text('GetReal', M, y);
+    y += 5.5;
+    cf(false); doc.setFontSize(8);  doc.setTextColor(...MID);   doc.text('getreallyreal.netlify.app', M, y);
+
+    pageFooter();
+
+    // =============================================================
+    // PAGE 2 — DATA + SEARCH
+    // =============================================================
+    doc.addPage();
+    pageHeader('About the data & your search');
+    y = 22;
+
+    sectionLabel('about the data', y);
+    y += 7;
+
+    const stateText = isNSW
+        ? `This report is built on data from the NSW Valuer General — a complete record of every residential property sale in New South Wales. It is updated daily, published free under an open licence, and covers the last 13 months of sales. For each transaction, the dataset records the address, price, date, and property type. It does not record bedroom or bathroom counts (these are not required at point of registration), so those factors in the score use national distribution estimates. NSW is currently the only Australian state that makes individual sale records freely available at this level of detail. It is the benchmark all other states should be measured against — though even NSW has room to improve.`
+        : `This report uses data from the Victorian Valuer-General, which publishes suburb-level median prices and sales counts on an annual basis. Unlike NSW, Victoria does not make individual sale records publicly available — they are sold commercially to data brokers. This means VIC scoring is based on aggregated medians rather than individual transactions, and real comparable properties cannot be shown for Victorian searches. GetReal's position: property sales data is collected by public servants, funded by taxpayers, from transactions that are legally required to be registered. It should be freely available to all Australians. NSW has proved it is possible. Victoria — and every other state — should follow.`;
+
+    cf(false); doc.setFontSize(8.5); doc.setTextColor(...DARK);
+    const stateLines = doc.splitTextToSize(stateText, CW);
+    doc.text(stateLines, M, y);
+    y += stateLines.length * 4.5 + 10;
+
+    rule(y, true, BLACK);
+    y += 10;
+
+    sectionLabel('your search', y);
+    y += 8;
+
+    const bedsStr  = sp.beds  > 0 ? `, ${sp.beds}+ bed${sp.beds  !== 1 ? 's' : ''}` : '';
+    const bathsStr = sp.baths > 0 ? `, ${sp.baths}+ bath${sp.baths !== 1 ? 's' : ''}` : '';
+    const carsStr  = sp.cars  > 0 ? `, ${sp.cars}+ car space${sp.cars !== 1 ? 's' : ''}` : '';
+    const stateName = isNSW ? 'NSW' : 'VIC';
+    const personalSentence = `${firstName}, you are looking for a ${TYPE_LABELS[sp.type].toLowerCase()} in ${titleCase(sp.suburb)}, ${stateName}${bedsStr}${bathsStr}${carsStr} — with a budget of ${budgetStr}.`;
+
+    cf(true); doc.setFontSize(10.5); doc.setTextColor(...BLACK);
+    const personalLines = doc.splitTextToSize(personalSentence, CW);
+    doc.text(personalLines, M, y);
+    y += personalLines.length * 6.5 + 10;
+
+    // Score
+    const scoreStr = `${lastResult.score}%`;
+    cf(true); doc.setFontSize(44); doc.setTextColor(...GRADE);
+    doc.text(scoreStr, M, y + 10);
+    const scoreW = doc.getTextWidth(scoreStr);
+    cf(true); doc.setFontSize(14); doc.setTextColor(...GRADE);
+    doc.text(grade.label.toUpperCase(), M + scoreW + 6, y + 8);
+
+    const barY = y + 14;
+    doc.setFillColor(...LIGHT); doc.rect(M, barY, CW, 4, 'F');
+    doc.setFillColor(...BLACK); doc.rect(M, barY, CW * (lastResult.score / 100), 4, 'F');
+    y = barY + 4 + 7;
+
+    cf(false); doc.setFontSize(8); doc.setTextColor(...MID);
+    doc.text(
+        `${lastResult.annualSales} ${TYPE_LABELS[sp.type].toLowerCase()}s sold in ${titleCase(sp.suburb)} in the last 13 months — ${lastResult.withinBudget} (${lastResult.score}%) within budget`,
+        M, y
+    );
+    y += 8;
+
+    const gradeBlurbs = {
+        'Highly Realistic': `Strong supply. Plenty of properties matching your combined criteria sold last year. You should expect regular opportunities — the challenge is execution, not scarcity.`,
+        'Realistic':        `Good supply. Enough matching sales last year that you should find options without too much difficulty. Some patience required, but you are not fighting long odds.`,
+        'Competitive':      `Limited supply. Properties matching all your requirements are uncommon in this suburb. You will likely need to act quickly, or look carefully at which factor is doing the most damage.`,
+        'Tight':            `Very limited supply. The market does not often produce what you are looking for here. One adjustment could move the needle significantly — see the final section of this report.`,
+        'Very Difficult':   `Rare supply. Your combined criteria eliminate most of what trades in this suburb. You are likely to wait a long time, pay above median, or both.`,
+        'Unrealistic':      `This combination almost never appears in this suburb's market. Something needs to change — budget, location, type or size. The final section shows you what would matter most.`,
+    };
+
+    const blurb = gradeBlurbs[grade.label] || '';
+    if (blurb) {
+        const blurbLines = doc.splitTextToSize(`"${blurb}"`, CW);
+        cf(false); doc.setFontSize(9); doc.setTextColor(...DARK);
+        doc.text(blurbLines, M, y);
+        y += blurbLines.length * 5 + 8;
+    }
+
+    sectionLabel("what's limiting you", y);
+    y += 7;
+
+    const factors = [
+        { label: 'Price vs. market',  pct: lastResult.pricePct },
+        { label: 'Bedroom supply',    pct: lastResult.bedsPct  },
+        { label: 'Bathroom supply',   pct: lastResult.bathsPct },
+        { label: 'Car space supply',  pct: lastResult.carsPct  },
+    ];
+    const lblW = 40, barW = CW - lblW - 10;
+
+    factors.forEach(f => {
+        cf(false); doc.setFontSize(8); doc.setTextColor(...DARK);
+        doc.text(f.label, M, y + 3.5);
+        doc.setFillColor(...LIGHT); doc.rect(M + lblW, y, barW, 3.5, 'F');
+        doc.setFillColor(...BLACK); doc.rect(M + lblW, y, Math.max(barW * f.pct, 0.5), 3.5, 'F');
+        cf(true); doc.setFontSize(8); doc.setTextColor(...(f.pct < 0.4 ? RED : BLACK));
+        doc.text(`${Math.round(f.pct * 100)}%`, M + lblW + barW + 4, y + 3.5);
+        y += 8;
+    });
+
+    pageFooter();
+
+    // =============================================================
+    // PAGE 3 — COMPARABLE PROPERTIES
+    // =============================================================
+    doc.addPage();
+    pageHeader('Comparable properties');
+    y = 22;
+
+    if (!isNSW) {
+        // VIC and others: brief note, no table
+        sectionLabel('why this section is empty', y);
+        y += 7;
+        const vicNote = `Victoria does not make individual property sale records publicly available. The Valuer-General publishes suburb-level medians only — not individual transactions. Until Victoria follows NSW's lead, we cannot show you real comparable sales with addresses and prices. GetReal's score for Victorian suburbs is based on those medians and national distribution estimates. See the data freedom manifesto at getreallyreal.netlify.app/manifesto.html for a full breakdown of what each state publishes.`;
+        const vicLines = doc.splitTextToSize(vicNote, CW);
+        cf(false); doc.setFontSize(8.5); doc.setTextColor(...DARK);
+        doc.text(vicLines, M, y);
+    } else {
+        // NSW: intro then table
+        sectionLabel('real nsw valuer general sales', y);
+        y += 7;
+
+        const propsIntroText = allTableProps.length > 0
+            ? `${allTableProps.length} ${TYPE_LABELS[sp.type].toLowerCase()}s sold in ${titleCase(sp.suburb)} in the last 13 months — 10 closest to your budget on each side. Source: NSW Valuer General (public record). These are the properties the score is based on.`
+            : `No ${TYPE_LABELS[sp.type].toLowerCase()} sales found in ${titleCase(sp.suburb)} in the last 13 months — or data could not be loaded. Try regenerating the report from the website after running a fresh search.`;
+
+        const introLines = doc.splitTextToSize(propsIntroText, CW);
+        cf(false); doc.setFontSize(8.5); doc.setTextColor(...DARK);
+        doc.text(introLines, M, y);
+        y += introLines.length * 4.6 + 8;
+
+        if (allTableProps.length > 0) {
+            y = drawTableHeader(y);
+            let budgetLineDone = false;
+
+            allTableProps.forEach((prop, idx) => {
+                if (y + 6 > H - 18) {
+                    pageFooter();
+                    doc.addPage();
+                    pageHeader('Comparable properties (continued)');
+                    y = 22;
+                    y = drawTableHeader(y);
+                }
+
+                const price  = prop.sale_price || 0;
+                const within = price <= (sp.budget || 0);
+
+                // Budget separator
+                if (!budgetLineDone && !within) {
+                    if (y + 6 > H - 18) {
+                        pageFooter();
+                        doc.addPage();
+                        pageHeader('Comparable properties (continued)');
+                        y = 22;
+                        y = drawTableHeader(y);
+                    }
+                    doc.setFillColor(245, 235, 235);
+                    doc.rect(M, y, CW, 5, 'F');
+                    doc.setDrawColor(...RED); doc.setLineWidth(0.4);
+                    doc.line(M, y + 0.2, M + CW, y + 0.2);
+                    cf(true); doc.setFontSize(6.5); doc.setTextColor(...RED);
+                    doc.text(`▲ budget limit: $${(sp.budget || 0).toLocaleString()}`, M + 2, y + 3.5);
+                    doc.text('above budget', M + CW - 2, y + 3.5, { align: 'right' });
+                    y += 5;
+                    budgetLineDone = true;
+                }
+
+                if (idx % 2 === 0) { doc.setFillColor(248, 248, 248); doc.rect(M, y, CW, 5.5, 'F'); }
+
+                cf(within); doc.setFontSize(7.5); doc.setTextColor(...(within ? DARK : MID));
+                doc.text(String(idx + 1), M + 2, y + 4);
+                const addr = prop.address_full || '—';
+                doc.text(addr.length > 52 ? addr.slice(0, 51) + '…' : addr, M + 9, y + 4);
+                doc.text(fmtDate(prop.sale_date), M + 9 + 108, y + 4);
+                cf(true); doc.setFontSize(7.5); doc.setTextColor(...(within ? BLACK : MID));
+                doc.text(`$${price.toLocaleString()}`, M + CW - 2, y + 4, { align: 'right' });
+                y += 5.5;
+            });
+        }
+    }
+
+    pageFooter();
+
+    // =============================================================
+    // PAGE — WHAT CHANGES
+    // =============================================================
+    doc.addPage();
+    pageHeader('What changes your result');
+    y = 22;
+
+    sectionLabel('if you changed one thing', y);
+    y += 7;
+
+    cf(false); doc.setFontSize(8.5); doc.setTextColor(...DARK);
+    const changeIntroLines = doc.splitTextToSize(
+        `Each of these scenarios changes a single element of your search and shows how your score would shift. The goal is to help you identify which lever matters most — so that if something has to give, it is an informed choice, not a random one.`,
+        CW
+    );
+    doc.text(changeIntroLines, M, y);
+    y += changeIntroLines.length * 4.6 + 10;
+
+    (lastWhatifs || []).filter(wf => !wf.comingSoon || wf.change).forEach(wf => {
+        const cardH = (!wf.result || wf.comingSoon) ? 18 : 28;
+
+        if (y + cardH + 4 > H - 18) {
+            pageFooter();
+            doc.addPage();
+            pageHeader('What changes your result (continued)');
+            y = 22;
+        }
+
+        doc.setDrawColor(...BLACK); doc.setLineWidth(0.3);
+        doc.rect(M, y, CW, cardH, 'S');
+
+        if (!wf.result || wf.comingSoon) {
+            cf(true);  doc.setFontSize(7);   doc.setTextColor(...MID);  doc.text((wf.change || '').toUpperCase(), M + 4, y + 7);
+            cf(false); doc.setFontSize(8.5); doc.setTextColor(...MID);  doc.text(wf.desc || '', M + 4, y + 13);
+            cf(false); doc.setFontSize(7);   doc.setTextColor(...LIGHT); doc.text('data not yet available', M + CW - 4, y + 13, { align: 'right' });
+        } else {
+            const wg    = getGrade(wf.result.score);
+            const wRgb  = hexToRgb(wg.color);
+            const delta = wf.result.score - lastResult.score;
+            const dStr  = delta > 0 ? `+${delta}%` : `${delta}%`;
+            const dRgb  = delta > 2 ? [21,128,61] : delta < -2 ? [160,30,30] : MID;
+
+            // IF row
+            cf(true);  doc.setFontSize(7); doc.setTextColor(...MID);  doc.text('IF:',  M + 4, y + 7);
+            cf(false); doc.setFontSize(7); doc.setTextColor(...DARK); doc.text((wf.change || '').toUpperCase(), M + 12, y + 7);
+
+            // Description
+            cf(true); doc.setFontSize(9); doc.setTextColor(...BLACK);
+            const descMax = (wf.desc || '').length > 58 ? (wf.desc || '').slice(0, 57) + '…' : (wf.desc || '');
+            doc.text(descMax, M + 4, y + 14);
+
+            // THEN row
+            cf(true);  doc.setFontSize(7);  doc.setTextColor(...MID);  doc.text('THEN:', M + 4, y + 22);
+            cf(true);  doc.setFontSize(14); doc.setTextColor(...wRgb);
+            const wScoreStr = `${wf.result.score}%`;
+            doc.text(wScoreStr, M + 18, y + 22);
+            const wScoreW = doc.getTextWidth(wScoreStr);
+            cf(true);  doc.setFontSize(8.5); doc.setTextColor(...wRgb);
+            doc.text(wg.label.toUpperCase(), M + 18 + wScoreW + 3, y + 22);
+
+            // Delta top-right
+            cf(true); doc.setFontSize(11); doc.setTextColor(...dRgb);
+            doc.text(dStr, M + CW - 4, y + 14, { align: 'right' });
+
+            // Mini before/after bar
+            const mbW = 36, mbH = 3, mbX = M + CW - 4 - mbW;
+            doc.setFillColor(...LIGHT); doc.rect(mbX, y + 18, mbW, mbH, 'F');
+            doc.setFillColor(...GRADE); doc.rect(mbX, y + 18, mbW * (lastResult.score / 100), mbH, 'F');
+            doc.setFillColor(...LIGHT); doc.rect(mbX, y + 22.5, mbW, mbH, 'F');
+            doc.setFillColor(...wRgb);  doc.rect(mbX, y + 22.5, mbW * (wf.result.score / 100), mbH, 'F');
+            cf(false); doc.setFontSize(6); doc.setTextColor(...MID);
+            doc.text('now', mbX - 1, y + 20.5, { align: 'right' });
+            doc.text('if',  mbX - 1, y + 25,   { align: 'right' });
+        }
+
+        y += cardH + 4;
+    });
+
+    pageFooter();
+
+    // =============================================================
+    // SAVE
+    // =============================================================
+
+    const fd = new Date();
+    const dateStr = `${String(fd.getDate()).padStart(2,'0')}-${String(fd.getMonth()+1).padStart(2,'0')}-${fd.getFullYear()}`;
+    const nameStr = firstName.toLowerCase().replace(/[^a-z0-9]/g, '') || 'report';
+    const filename = `getreal-${sp.suburb.replace(/\s+/g,'-').toLowerCase()}-${nameStr}-${dateStr}.pdf`;
+    doc.save(filename);
+}
+
+// ================================================================
+// REAL DATA LOADER
+// Tries to fetch suburb-data.json (generated by build-data.py).
+// Falls back silently to the built-in SUBURBS mock data.
+// suburb-data.json loads automatically when served via HTTP (e.g. Netlify).
+// ================================================================
+let ACTIVE_SUBURBS = SUBURBS;  // default: mock data
+let DATA_SOURCE    = 'sample'; // 'sample' | 'real'
+let DATA_DATE      = null;
+
+async function loadRealData() {
+    try {
+        const res = await fetch('suburb-data.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+
+        if (!json.suburbs || typeof json.suburbs !== 'object') throw new Error('Invalid format');
+
+        ACTIVE_SUBURBS = json.suburbs;
+        DATA_SOURCE    = 'real';
+        DATA_DATE      = json.generated || 'unknown';
+
+        console.log(`Loaded suburb-data.json: ${json.total_suburbs} suburbs (generated ${DATA_DATE})`);
+        return true;
+    } catch (e) {
+        // Normal on file:// — silently fall back to mock data
+        console.log('suburb-data.json not available, using built-in sample data.', e.message);
+        return false;
+    }
+}
+
+function updateDataBadge() {
+    const badge = document.querySelector('.indicative-badge');
+    if (!badge) return;
+    if (DATA_SOURCE === 'real') {
+        const count = Object.keys(ACTIVE_SUBURBS).length;
+        badge.textContent = `${count} Suburbs`;
+    }
+}
+
+const STATE_PLACEHOLDERS = {
+    VIC: 'e.g. Richmond, Glen Waverley, Frankston…',
+    NSW: 'e.g. Newtown, Bondi, Parramatta…',
+    QLD: 'e.g. Paddington, Ascot, Noosa Heads…',
+    SA:  'e.g. Norwood, Glenelg, Unley…',
+    WA:  'e.g. Cottesloe, Subiaco, Fremantle…',
+    ACT: 'e.g. Braddon, Manuka, Kingston…',
+    TAS: 'e.g. Sandy Bay, Battery Point, Launceston…',
+    NT:  'e.g. Darwin, Parap, Alice Springs…',
+    '':  'Select a state first…',
+};
+
+// Suburb names for states not in suburb-data.json (autocomplete only — no scoring data)
+const FALLBACK_SUBURBS = {
+    QLD: ['Ascot','Bulimba','Clayfield','East Brisbane','Fortitude Valley','Graceville','Hamilton','Hawthorne','Highgate Hill','Indooroopilly','Kangaroo Point','Kelvin Grove','Milton','New Farm','Newmarket','Norman Park','Paddington','Red Hill','St Lucia','Teneriffe','Toowong','West End','Woolloongabba','Noosa Heads','Noosaville','Mooloolaba','Maroochydore','Buderim','Caloundra','Broadbeach','Burleigh Heads','Coolangatta','Palm Beach','Surfers Paradise','Southport','Robina','Townsville','Cairns','Toowoomba','Ipswich'],
+    SA:  ['Adelaide','Glenelg','Norwood','Unley','Burnside','Kensington','Parkside','Rose Park','Toorak Gardens','Hawthorn','Malvern','Hyde Park','Prospect','Medindie','North Adelaide','Thebarton','Hindmarsh','Mile End','Plympton','Mitcham','Belair','Stirling','Bridgewater','Aldgate','Hahndorf','Crafers','Blackwood','Marino','Brighton','Christies Beach'],
+    WA:  ['Cottesloe','Claremont','Nedlands','Subiaco','Fremantle','South Fremantle','North Fremantle','Mosman Park','Peppermint Grove','Dalkeith','Applecross','Mt Pleasant','South Perth','Como','Burswood','Victoria Park','Northbridge','Leederville','West Perth','East Perth','Shenton Park','Wembley','Floreat','City Beach','Scarborough','Churchlands','Joondanna','Doubleview','Innaloo','Gwelup'],
+    ACT: ['Braddon','Kingston','Manuka','Griffith','Forrest','Red Hill','Yarralumla','Deakin','Barton','Campbell','Reid','Ainslie','Dickson','Downer','Turner','O\'Connor','Hackett','Watson','Lyneham','Holder','Weston','Torrens','Hughes','Curtin','Garran','Mawson','Pearce','Kambah','Tuggeranong','Gungahlin'],
+    TAS: ['Sandy Bay','Battery Point','West Hobart','North Hobart','South Hobart','Lenah Valley','Fern Tree','Kingston','Blackmans Bay','Howrah','Lindisfarne','Rosny Park','Bellerive','Launceston','Newstead','Trevallyn','West Launceston','Prospect','Kings Meadows','Newnham','Devonport','Burnie','Ulverstone','Penguin','Wynyard'],
+    NT:  ['Darwin','Parap','Fannie Bay','Larrakeyah','Nightcliff','Rapid Creek','Millner','Stuart Park','The Parap','Cullen Bay','Bayview','Coconut Grove','Casuarina','Nakara','Moil','Karama','Malak','Marrara','Palmerston','Rosebery','Alice Springs','Araluen','Gillen','Larapinta'],
+};
+
+function onStateChange() {
+    const state = document.getElementById('stateSelect').value;
+    const suburbInput = document.getElementById('suburb');
+    suburbInput.value = '';
+    suburbInput.placeholder = STATE_PLACEHOLDERS[state] || 'e.g. enter suburb…';
+    populateAutocomplete(state);
+    // Reset results panel
+    document.getElementById('resultsEmpty').classList.remove('hidden');
+    document.getElementById('scoreArea').classList.add('hidden');
+    document.getElementById('errorBox').classList.add('hidden');
+    document.getElementById('validationError').classList.add('hidden');
+    document.getElementById('comingSoonBox').classList.add('hidden');
+    document.getElementById('whatifSection').classList.add('hidden');
+    document.getElementById('comparablesSection').classList.add('hidden');
+    document.getElementById('reportCta').classList.add('hidden');
+}
+
+function populateAutocomplete(filterState) {
+    const state = filterState || document.getElementById('stateSelect').value || '';
+    const dl = document.getElementById('suburbList');
+    dl.innerHTML = '';
+
+    // NSW and VIC come from ACTIVE_SUBURBS (real scoring data)
+    Object.keys(ACTIVE_SUBURBS)
+        .filter(name => !state || ACTIVE_SUBURBS[name].state === state)
+        .sort()
+        .forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = titleCase(name);
+            dl.appendChild(opt);
+        });
+
+    // Other states use FALLBACK_SUBURBS (autocomplete only — coming soon for scoring)
+    if (state && FALLBACK_SUBURBS[state]) {
+        FALLBACK_SUBURBS[state].slice().sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            dl.appendChild(opt);
+        });
+    }
+}
+
+// ================================================================
+// COMPARABLE PROPERTIES (mock — replace with real API data)
+// ================================================================
+
+const AU_STREETS = ['High St','Church St','King St','Queen St','Park Ave',
+                    'Garden Rd','Main Rd','Bay Rd','Hill St','View Tce',
+                    'Merri St','Elgin St','Smith St','Johnston St','Bridge Rd'];
+
+function buildMockComparables(suburbName, type, budget, beds, baths, cars) {
+    // Deterministic seed so values don't shuffle on re-render
+    const seed = suburbName.split('').reduce((a,c,i) => a + c.charCodeAt(0) * (i+1), 0) + budget;
+    const r = n => ((seed * 9301 + 49297 * (n+1)) % 233280) / 233280;
+
+    const state    = ACTIVE_SUBURBS[suburbName.toLowerCase()]?.state || 'NSW';
+    const suburb   = titleCase(suburbName);
+
+    const belowPrice = Math.round(budget * (0.91 + r(1) * 0.07) / 1000) * 1000;
+    const abovePrice = Math.round(budget * (1.02 + r(2) * 0.07) / 1000) * 1000;
+
+    const streetBelow = AU_STREETS[Math.floor(r(3) * AU_STREETS.length)];
+    const streetAbove = AU_STREETS[Math.floor(r(4) * AU_STREETS.length)];
+    const numBelow    = Math.floor(r(5) * 128) + 1;
+    const numAbove    = Math.floor(r(6) * 128) + 1;
+
+    const now = new Date();
+    const fmtDate = d => new Date(now - d * 86400000)
+        .toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+
+    const carsDisplay = cars > 0 ? cars : 1;
+
+    // Photo seeds — deterministic but varied. Picsum IDs 10-900 give architectural/interior-ish images.
+    // Each property gets an exterior + 4 interior seeds.
+    const photoBase = (n, offset) => 10 + Math.floor(r(n) * 890) + offset;
+    const photosBelow = [0,1,2,3,4].map(n => photoBase(9 + n, n * 7));
+    const photosAbove = [0,1,2,3,4].map(n => photoBase(14 + n, n * 11));
+
+    return [
+        {
+            label:    'Closest within budget',
+            labelCls: 'comp-within',
+            price:    belowPrice,
+            address:  `${numBelow} ${streetBelow}, ${suburb} ${state}`,
+            beds, baths,
+            cars:     carsDisplay,
+            soldDate: fmtDate(Math.floor(r(7) * 365)),
+            photos:   photosBelow,
+        },
+        {
+            label:    'Just above budget',
+            labelCls: 'comp-above',
+            price:    abovePrice,
+            address:  `${numAbove} ${streetAbove}, ${suburb} ${state}`,
+            beds, baths,
+            cars:     carsDisplay,
+            soldDate: fmtDate(Math.floor(r(8) * 365)),
+            photos:   photosAbove,
+        },
+    ];
+}
+
+let _lightboxComps = [];
+
+function renderComparables(comparables) {
+    const section = document.getElementById('comparablesSection');
+    const grid    = document.getElementById('comparablesGrid');
+    grid.innerHTML = '';
+    _lightboxComps = comparables;
+
+    comparables.forEach((c, idx) => {
+        const thumbId = `https://picsum.photos/seed/${c.photos[0]}/800/500`;
+        grid.innerHTML += `
+        <div class="comp-card" onclick="openLightbox(${idx}, 0)">
+            <div class="comp-img">
+                <img src="${thumbId}" alt="Property photo" loading="lazy" onerror="this.style.display='none'">
+                <span class="comp-label ${c.labelCls}">${c.label}</span>
+                <span class="comp-photo-hint">View photos →</span>
+            </div>
+            <div class="comp-body">
+                <div class="comp-price">${fmtCurrencyFull(c.price)}</div>
+                <div class="comp-address">${c.address}</div>
+                <div class="comp-date">Sold ${c.soldDate}</div>
+                <div class="comp-specs">
+                    <span>${c.beds} bed</span>
+                    <span>${c.baths} bath</span>
+                    <span>${c.cars} car</span>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    section.classList.remove('hidden');
+}
+
+// ── Lightbox ──────────────────────────────────────────────────────
+let _lbComp = null, _lbIdx = 0;
+
+function openLightbox(compIdx, photoIdx) {
+    _lbComp = _lightboxComps[compIdx];
+    _lbIdx  = photoIdx;
+    document.getElementById('lightboxOverlay').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    renderLightboxPhoto();
+}
+
+function closeLightbox() {
+    document.getElementById('lightboxOverlay').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+// ================================================================
+// VIC SUBURB MAP
+// ================================================================
+
+// Static coordinates for VIC suburbs (lat, lng)
+// Covers Melbourne metro + major regional centres
+const VIC_COORDS = {
+  // ── Inner Melbourne ──
+  'melbourne':[-37.8136,144.9631],'docklands':[-37.8140,144.9458],'south melbourne':[-37.8311,144.9585],
+  'port melbourne':[-37.8345,144.9348],'albert park':[-37.8467,144.9598],'middle park':[-37.8551,144.9594],
+  'fitzroy':[-37.7990,144.9793],'collingwood':[-37.8039,144.9796],'abbotsford':[-37.8042,144.9939],
+  'richmond':[-37.8183,144.9956],'cremorne':[-37.8280,144.9994],'east melbourne':[-37.8139,144.9851],
+  'carlton':[-37.7986,144.9664],'carlton north':[-37.7834,144.9664],'parkville':[-37.7880,144.9522],
+  'north melbourne':[-37.7994,144.9500],'west melbourne':[-37.8079,144.9394],
+  // ── South / Bayside ──
+  'south yarra':[-37.8390,144.9930],'toorak':[-37.8445,144.9932],'prahran':[-37.8509,144.9907],
+  'windsor':[-37.8553,144.9898],'st kilda':[-37.8679,144.9807],'st kilda east':[-37.8600,145.0005],
+  'elwood':[-37.8833,144.9851],'armadale':[-37.8568,145.0194],'malvern':[-37.8586,145.0315],
+  'malvern east':[-37.8704,145.0571],'glen iris':[-37.8611,145.0568],'caulfield':[-37.8783,145.0201],
+  'caulfield north':[-37.8733,145.0177],'caulfield south':[-37.8873,145.0165],'glen huntly':[-37.8936,145.0428],
+  'carnegie':[-37.8896,145.0660],'murrumbeena':[-37.8946,145.0726],'ormond':[-37.9003,145.0424],
+  'bentleigh':[-37.9206,145.0406],'bentleigh east':[-37.9256,145.0627],'mckinnon':[-37.9083,145.0358],
+  'moorabbin':[-37.9341,145.0397],'highett':[-37.9409,145.0196],'cheltenham':[-37.9515,145.0533],
+  'mentone':[-37.9873,145.0617],'parkdale':[-38.0009,145.0748],'mordialloc':[-38.0209,145.0919],
+  'aspendale':[-38.0442,145.1032],'edithvale':[-38.0564,145.1111],'chelsea':[-38.0717,145.1227],
+  'bonbeach':[-38.0866,145.1289],'carrum':[-38.0970,145.1219],'seaford':[-38.1127,145.1332],
+  'frankston':[-38.1433,145.1253],'frankston north':[-38.1219,145.1239],'frankston south':[-38.1664,145.1259],
+  'langwarrin':[-38.1685,145.1834],'mornington':[-38.2206,145.0371],'mount martha':[-38.2625,145.0313],
+  'rosebud':[-38.3611,144.9011],'rye':[-38.3717,144.8336],'sorrento':[-38.3398,144.7440],
+  'portsea':[-38.3133,144.7045],'blairgowrie':[-38.3630,144.7850],'dromana':[-38.3389,144.9669],
+  'brighton':[-37.9067,145.0019],'brighton east':[-37.9140,145.0276],'hampton':[-37.9359,145.0070],
+  'sandringham':[-37.9510,145.0026],'black rock':[-37.9660,145.0215],'beaumaris':[-37.9819,145.0399],
+  // ── Inner north ──
+  'brunswick':[-37.7671,144.9600],'brunswick east':[-37.7697,144.9803],'brunswick west':[-37.7594,144.9471],
+  'coburg':[-37.7440,144.9644],'coburg north':[-37.7213,144.9710],'fawkner':[-37.7100,144.9598],
+  'glenroy':[-37.7020,144.9285],'pascoe vale':[-37.7255,144.9383],'pascoe vale south':[-37.7408,144.9373],
+  'essendon':[-37.7488,144.9156],'essendon north':[-37.7311,144.9175],'moonee ponds':[-37.7593,144.9160],
+  'ascot vale':[-37.7739,144.9195],'flemington':[-37.7905,144.9314],'kensington':[-37.7993,144.9288],
+  'niddrie':[-37.7400,144.8820],'airport west':[-37.7272,144.8875],'strathmore':[-37.7275,144.9175],
+  'oak park':[-37.7158,144.9205],'broadmeadows':[-37.6827,144.9235],'craigieburn':[-37.5978,144.9451],
+  'meadow heights':[-37.6663,144.9282],'roxburgh park':[-37.6435,144.9365],'greenvale':[-37.6351,144.8988],
+  // ── North east ──
+  'northcote':[-37.7750,144.9993],'thornbury':[-37.7617,144.9994],'reservoir':[-37.7178,144.9966],
+  'lalor':[-37.6697,145.0085],'thomastown':[-37.6874,145.0151],'epping':[-37.6441,145.0130],
+  'mill park':[-37.6632,145.0564],'bundoora':[-37.7080,145.0576],'macleod':[-37.7351,145.0796],
+  'rosanna':[-37.7444,145.0747],'heidelberg':[-37.7581,145.0614],'heidelberg west':[-37.7539,145.0384],
+  'heidelberg heights':[-37.7429,145.0564],'ivanhoe':[-37.7686,145.0433],'ivanhoe east':[-37.7701,145.0567],
+  'eaglemont':[-37.7595,145.0677],'viewbank':[-37.7316,145.0840],'greensborough':[-37.7072,145.1024],
+  'eltham':[-37.7144,145.1476],'eltham north':[-37.6938,145.1519],'diamond creek':[-37.6706,145.1528],
+  'doreen':[-37.6135,145.1570],'south morang':[-37.6449,145.1088],'mernda':[-37.6003,145.1103],
+  'whittlesea':[-37.5148,145.1163],'research':[-37.7154,145.1927],'warrandyte':[-37.7415,145.2255],
+  'park orchards':[-37.7746,145.2157],'templestowe':[-37.7532,145.1542],'templestowe lower':[-37.7680,145.1310],
+  'doncaster':[-37.7843,145.1225],'doncaster east':[-37.7851,145.1512],
+  // ── East ──
+  'hawthorn':[-37.8220,145.0330],'hawthorn east':[-37.8264,145.0543],'camberwell':[-37.8385,145.0587],
+  'surrey hills':[-37.8228,145.0946],'box hill':[-37.8197,145.1229],'box hill north':[-37.8097,145.1229],
+  'box hill south':[-37.8306,145.1244],'mont albert':[-37.8217,145.1017],'balwyn':[-37.8100,145.0877],
+  'balwyn north':[-37.7910,145.0861],'kew':[-37.8060,145.0274],'kew east':[-37.8039,145.0477],
+  'deepdene':[-37.8150,145.0735],'donvale':[-37.7920,145.1835],'mitcham':[-37.8208,145.1919],
+  'nunawading':[-37.8179,145.1770],'blackburn':[-37.8213,145.1477],'blackburn north':[-37.8068,145.1511],
+  'blackburn south':[-37.8335,145.1498],'ringwood':[-37.8144,145.2291],'ringwood east':[-37.8170,145.2524],
+  'ringwood north':[-37.7924,145.2322],'croydon':[-37.7958,145.2820],'croydon north':[-37.7707,145.2855],
+  'croydon south':[-37.8150,145.2879],'bayswater':[-37.8416,145.2637],'bayswater north':[-37.8200,145.2669],
+  'mooroolbark':[-37.7777,145.3150],'lilydale':[-37.7584,145.3525],'kilsyth':[-37.8017,145.3107],
+  'montrose':[-37.8151,145.3400],'wantirna':[-37.8601,145.2187],'wantirna south':[-37.8793,145.2336],
+  'ferntree gully':[-37.8857,145.2919],'upper ferntree gully':[-37.9023,145.3167],
+  'rowville':[-37.9253,145.2341],'scoresby':[-37.8899,145.2476],'knox':[-37.8781,145.2506],
+  'vermont':[-37.8469,145.1942],'vermont south':[-37.8651,145.1886],'forest hill':[-37.8428,145.1698],
+  'glen waverley':[-37.8784,145.1624],'mount waverley':[-37.8799,145.1296],'burwood':[-37.8519,145.1196],
+  'burwood east':[-37.8525,145.1453],'mulgrave':[-37.9287,145.1715],'wheelers hill':[-37.9158,145.1937],
+  'oakleigh':[-37.8987,145.0963],'oakleigh south':[-37.9188,145.0963],'oakleigh east':[-37.9008,145.1123],
+  'huntingdale':[-37.9050,145.1019],'clarinda':[-37.9408,145.0803],'clayton':[-37.9178,145.1197],
+  'clayton south':[-37.9370,145.1175],'springvale':[-37.9520,145.1512],'springvale south':[-37.9701,145.1498],
+  'noble park':[-37.9695,145.1723],'noble park north':[-37.9524,145.1713],'keysborough':[-37.9947,145.1741],
+  'dingley village':[-37.9780,145.1202],'dandenong':[-37.9864,145.2144],'dandenong north':[-37.9607,145.2133],
+  'endeavour hills':[-37.9820,145.2489],'hallam':[-37.9989,145.2737],'narre warren':[-38.0338,145.2937],
+  'narre warren north':[-38.0100,145.2929],'narre warren south':[-38.0572,145.2927],
+  'berwick':[-38.0369,145.3447],'hampton park':[-38.0370,145.2564],'cranbourne':[-38.1152,145.2843],
+  'cranbourne north':[-38.0869,145.2679],'cranbourne east':[-38.1157,145.3219],'cranbourne west':[-38.1141,145.2511],
+  'lynbrook':[-38.0657,145.2497],'lyndhurst':[-38.0780,145.2404],'clyde':[-38.1438,145.3334],
+  'clyde north':[-38.1233,145.3334],'officer':[-38.0715,145.4111],'pakenham':[-38.0761,145.4897],
+  // ── West ──
+  'footscray':[-37.8000,144.9014],'yarraville':[-37.8184,144.8900],'seddon':[-37.8126,144.8897],
+  'kingsville':[-37.8186,144.8844],'maribyrnong':[-37.7918,144.8861],'maidstone':[-37.7893,144.8665],
+  'sunshine':[-37.7882,144.8298],'sunshine west':[-37.7974,144.8009],'sunshine north':[-37.7679,144.8285],
+  'albion':[-37.7682,144.8175],'braybrook':[-37.7958,144.8583],'st albans':[-37.7457,144.8111],
+  'albanvale':[-37.7445,144.7865],'kings park':[-37.7264,144.7946],'keilor':[-37.7261,144.8326],
+  'keilor east':[-37.7357,144.8671],'keilor downs':[-37.7326,144.7888],'sydenham':[-37.6979,144.7750],
+  'hillside':[-37.6762,144.7596],'taylors hill':[-37.6826,144.7730],'taylors lakes':[-37.7063,144.7637],
+  'caroline springs':[-37.7331,144.7347],'hoppers crossing':[-37.8844,144.7027],'werribee':[-37.9016,144.6578],
+  'point cook':[-37.9122,144.7540],'truganina':[-37.8557,144.7480],'laverton':[-37.8622,144.7847],
+  'altona':[-37.8696,144.8270],'altona north':[-37.8530,144.8483],'altona meadows':[-37.8903,144.7697],
+  'newport':[-37.8461,144.8793],'spotswood':[-37.8291,144.8887],'williamstown':[-37.8592,144.8977],
+  'williamstown north':[-37.8453,144.9000],'wyndham vale':[-37.9310,144.6416],'manor lakes':[-37.9139,144.6513],
+  'melton':[-37.6847,144.5769],'melton south':[-37.7060,144.5786],'melton west':[-37.6847,144.5569],
+  'melton city':[-37.6847,144.5769],'aintree':[-37.6980,144.5910],'cobblebank':[-37.7190,144.5620],
+  'toolern vale':[-37.6252,144.5028],'eynesbury':[-37.7568,144.5408],'strathtulloh':[-37.7006,144.5588],
+  'rockbank':[-37.7190,144.6079],'bacchus marsh':[-37.6756,144.4295],'sunbury':[-37.5836,144.7285],
+  'diggers rest':[-37.6382,144.7184],'gisborne':[-37.4902,144.5894],'romsey':[-37.3584,144.7378],
+  // ── Geelong region ──
+  'geelong':[-38.1499,144.3617],'geelong west':[-38.1440,144.3377],'geelong north':[-38.1243,144.3704],
+  'south geelong':[-38.1644,144.3563],'east geelong':[-38.1463,144.3884],'newtown':[-38.1395,144.3497],
+  'chilwell':[-38.1592,144.3448],'belmont':[-38.1836,144.3606],'highton':[-38.1810,144.3402],
+  'waurn ponds':[-38.2176,144.3169],'grovedale':[-38.2046,144.3606],'norlane':[-38.1030,144.3498],
+  'corio':[-38.1027,144.3299],'hamlyn heights':[-38.1302,144.3268],'lara':[-38.0215,144.4015],
+  'leopold':[-38.1830,144.4669],'ocean grove':[-38.2623,144.5278],'barwon heads':[-38.2704,144.5029],
+  'torquay':[-38.3290,144.3267],'jan juc':[-38.3477,144.3244],'anglesea':[-38.4068,144.1845],
+  'lorne':[-38.5451,143.9761],'drysdale':[-38.1666,144.5742],'clifton springs':[-38.1515,144.5693],
+  'portarlington':[-38.1169,144.6523],'queenscliff':[-38.2692,144.6598],'point lonsdale':[-38.2872,144.5907],
+  // ── Ballarat region ──
+  'ballarat':[-37.5622,143.8503],'ballarat central':[-37.5622,143.8503],'ballarat north':[-37.5469,143.8588],
+  'ballarat east':[-37.5652,143.8718],'wendouree':[-37.5432,143.8225],'sebastopol':[-37.5905,143.8620],
+  'mount clear':[-37.6060,143.8600],'canadian':[-37.6070,143.8830],'buninyong':[-37.6412,143.8765],
+  'alfredton':[-37.5617,143.8022],'delacombe':[-37.6122,143.8190],
+  // ── Bendigo region ──
+  'bendigo':[-36.7570,144.2794],'flora hill':[-36.7796,144.3016],'golden square':[-36.7823,144.2602],
+  'long gully':[-36.7372,144.2844],'strathdale':[-36.7503,144.3129],'kangaroo flat':[-36.8104,144.2570],
+  'eaglehawk':[-36.7184,144.2498],'epsom':[-36.7182,144.2966],'spring gully':[-36.7815,144.3189],
+  'california gully':[-36.7344,144.3044],'quarry hill':[-36.7649,144.2917],
+  // ── Other regional ──
+  'shepparton':[-36.3813,145.3990],'mooroopna':[-36.3888,145.3546],'wodonga':[-36.1213,146.8877],
+  'mildura':[-34.1853,142.1625],'wangaratta':[-36.3565,146.3125],'traralgon':[-38.1951,146.5420],
+  'morwell':[-38.2343,146.3967],'moe':[-38.1769,146.2697],'sale':[-38.1051,147.0699],
+  'bairnsdale':[-37.8280,147.6210],'warragul':[-38.1645,145.9299],'drouin':[-38.1444,145.8602],
+  'wonthaggi':[-38.6032,145.5927],'leongatha':[-38.4726,145.9453],'hamilton':[-37.7386,142.0192],
+  'warrnambool':[-38.3838,142.4879],'portland':[-38.3481,141.6038],'horsham':[-36.7116,142.2013],
+  'ararat':[-37.2815,142.9274],'stawell':[-37.0548,142.7748],'echuca':[-36.1342,144.7553],
+  'kyabram':[-36.3196,145.0526],'cobram':[-35.9269,145.6487],'yarrawonga':[-36.0188,145.9936],
+  'swan hill':[-35.3382,143.5555],'castlemaine':[-37.0661,144.2139],'maryborough':[-37.0487,143.7337],
+  'daylesford':[-37.3487,144.1439],'kyneton':[-37.2472,144.4534],'woodend':[-37.3595,144.5225],
+  'macedon':[-37.4189,144.5617],'healesville':[-37.6558,145.5210],'yea':[-37.2082,145.4260],
+};
+
+// ── NSW suburb coordinates ─────────────────────────────────────────────────
+const NSW_COORDS = {
+  // ── Sydney CBD & inner ──
+  'sydney':[-33.8688,151.2093],'haymarket':[-33.8796,151.2034],'pyrmont':[-33.8697,151.1943],
+  'ultimo':[-33.8805,151.1988],'glebe':[-33.8799,151.1857],'chippendale':[-33.8907,151.1983],
+  'surry hills':[-33.8872,151.2113],'darlinghurst':[-33.8762,151.2205],'woolloomooloo':[-33.8686,151.2199],
+  'potts point':[-33.8706,151.2239],'kings cross':[-33.8750,151.2222],'elizabeth bay':[-33.8723,151.2284],
+  'rushcutters bay':[-33.8764,151.2318],'edgecliff':[-33.8793,151.2366],'paddington':[-33.8847,151.2284],
+  'centennial park':[-33.9011,151.2333],'moore park':[-33.8967,151.2186],'waterloo':[-33.9010,151.2044],
+  'zetland':[-33.9064,151.2056],'beaconsfield':[-33.9096,151.2002],'eveleigh':[-33.9009,151.1940],
+  'redfern':[-33.8935,151.2040],'newtown':[-33.8981,151.1778],'erskineville':[-33.9049,151.1899],
+  'st peters':[-33.9117,151.1890],'sydenham':[-33.9167,151.1718],'tempe':[-33.9197,151.1635],
+  // ── Eastern Suburbs ──
+  'bondi':[-33.8914,151.2744],'bondi beach':[-33.8909,151.2771],'bondi junction':[-33.8927,151.2548],
+  'tamarama':[-33.9003,151.2747],'bronte':[-33.9079,151.2686],'clovelly':[-33.9143,151.2635],
+  'coogee':[-33.9222,151.2580],'maroubra':[-33.9479,151.2527],'south coogee':[-33.9290,151.2526],
+  'randwick':[-33.9142,151.2403],'kensington':[-33.9028,151.2237],'kingsford':[-33.9254,151.2264],
+  'rosebery':[-33.9177,151.2044],'pagewood':[-33.9363,151.2153],'hillsdale':[-33.9468,151.2204],
+  'chifley':[-33.9613,151.2282],'little bay':[-33.9739,151.2500],'malabar':[-33.9634,151.2474],
+  'la perouse':[-33.9918,151.2316],'phillip bay':[-33.9877,151.2249],
+  'double bay':[-33.8780,151.2413],'point piper':[-33.8682,151.2542],'darling point':[-33.8713,151.2435],
+  'vaucluse':[-33.8585,151.2768],'watsons bay':[-33.8455,151.2839],'dover heights':[-33.8651,151.2789],
+  'rose bay':[-33.8753,151.2643],'bellevue hill':[-33.8871,151.2558],'woollahra':[-33.8876,151.2430],
+  // ── Inner West ──
+  'leichhardt':[-33.8834,151.1556],'annandale':[-33.8791,151.1695],'forest lodge':[-33.8840,151.1824],
+  'stanmore':[-33.8984,151.1641],'petersham':[-33.8999,151.1550],'enmore':[-33.9027,151.1729],
+  'marrickville':[-33.9118,151.1570],'dulwich hill':[-33.9154,151.1425],'hurlstone park':[-33.9202,151.1366],
+  'campsie':[-33.9152,151.1037],'ashbury':[-33.9127,151.1225],'ashfield':[-33.8889,151.1245],
+  'summer hill':[-33.8935,151.1368],'lewisham':[-33.9009,151.1491],'haberfield':[-33.8792,151.1333],
+  'five dock':[-33.8678,151.1275],'drummoyne':[-33.8554,151.1415],'canada bay':[-33.8667,151.1258],
+  'concord':[-33.8671,151.0973],'rhodes':[-33.8335,151.0878],'liberty grove':[-33.8574,151.0963],
+  'strathfield':[-33.8731,151.0844],'burwood':[-33.8794,151.1040],'croydon':[-33.8822,151.1160],
+  'homebush':[-33.8610,151.0820],'homebush west':[-33.8639,151.0682],'lidcombe':[-33.8640,151.0436],
+  // ── Lower North Shore ──
+  'north sydney':[-33.8404,151.2070],'milsons point':[-33.8475,151.2118],'kirribilli':[-33.8484,151.2137],
+  'mcmahons point':[-33.8462,151.2014],'lavender bay':[-33.8449,151.2075],'waverton':[-33.8356,151.2011],
+  'wollstonecraft':[-33.8303,151.2028],'st leonards':[-33.8252,151.1937],'greenwich':[-33.8301,151.1790],
+  'lane cove':[-33.8161,151.1693],'lane cove west':[-33.8215,151.1507],'longueville':[-33.8280,151.1788],
+  'northwood':[-33.8356,151.1703],'crows nest':[-33.8270,151.2040],'cammeray':[-33.8250,151.2113],
+  'neutral bay':[-33.8352,151.2183],'cremorne':[-33.8282,151.2281],'cremorne point':[-33.8385,151.2302],
+  'mosman':[-33.8285,151.2444],'balmoral':[-33.8208,151.2523],'clifton gardens':[-33.8319,151.2467],
+  'spit junction':[-33.8089,151.2356],'middle cove':[-33.7997,151.2095],'artarmon':[-33.8166,151.1879],
+  'chatswood':[-33.7968,151.1827],'willoughby':[-33.8027,151.1988],'castle cove':[-33.7950,151.2008],
+  // ── Upper North Shore ──
+  'pymble':[-33.7476,151.1444],'gordon':[-33.7559,151.1535],'killara':[-33.7680,151.1620],
+  'lindfield':[-33.7770,151.1668],'roseville':[-33.7878,151.1772],'chatswood west':[-33.7978,151.1680],
+  'turramurra':[-33.7321,151.1356],'wahroonga':[-33.7190,151.1180],'warrawee':[-33.7281,151.1301],
+  'st ives':[-33.7309,151.1697],'st ives chase':[-33.7163,151.1640],'west pymble':[-33.7511,151.1282],
+  'north turramurra':[-33.7121,151.1438],'ku-ring-gai':[-33.6900,151.1000],'hornsby':[-33.7025,151.0994],
+  'waitara':[-33.7103,151.0989],'normanhurst':[-33.7200,151.0850],'thornleigh':[-33.7327,151.0792],
+  'pennant hills':[-33.7380,151.0660],'beecroft':[-33.7517,151.0671],'cheltenham':[-33.7607,151.0712],
+  'epping':[-33.7727,151.0814],'eastwood':[-33.7914,151.0834],'ryde':[-33.8144,151.1019],
+  'meadowbank':[-33.8222,151.0861],'west ryde':[-33.8083,151.0706],'top ryde':[-33.8181,151.0890],
+  'gladesville':[-33.8327,151.1375],'hunters hill':[-33.8339,151.1494],'henley':[-33.8330,151.1532],
+  // ── Northern Beaches ──
+  'manly':[-33.7972,151.2858],'manly vale':[-33.7736,151.2695],'fairlight':[-33.7930,151.2768],
+  'balgowlah':[-33.7971,151.2636],'balgowlah heights':[-33.8071,151.2636],'seaforth':[-33.7896,151.2491],
+  'clontarf':[-33.8079,151.2497],'castle crag':[-33.8042,151.2211],'middle harbour':[-33.8020,151.2390],
+  'dee why':[-33.7531,151.2894],'narraweena':[-33.7607,151.2778],'curl curl':[-33.7674,151.2861],
+  'brookvale':[-33.7656,151.2671],'freshwater':[-33.7746,151.2828],'harbord':[-33.7746,151.2828],
+  'collaroy':[-33.7322,151.2985],'narrabeen':[-33.7191,151.2963],'collaroy plateau':[-33.7374,151.2836],
+  'wheeler heights':[-33.7356,151.2717],'warriewood':[-33.7004,151.2940],'mona vale':[-33.6802,151.2985],
+  'newport':[-33.6548,151.3230],'bilgola':[-33.6399,151.3275],'bilgola plateau':[-33.6434,151.2992],
+  'avalon':[-33.6325,151.3384],'avalon beach':[-33.6325,151.3384],'palm beach':[-33.5993,151.3237],
+  'whale beach':[-33.6114,151.3276],'clareville':[-33.6270,151.3294],'church point':[-33.6537,151.2743],
+  'bayview':[-33.6634,151.2802],'pittwater':[-33.6400,151.3000],'terrey hills':[-33.6884,151.2254],
+  'duffys forest':[-33.6756,151.2193],'forest way':[-33.7100,151.2200],
+  // ── Hills District ──
+  'castle hill':[-33.7311,151.0043],'baulkham hills':[-33.7531,150.9966],'seven hills':[-33.7720,150.9437],
+  'winston hills':[-33.7617,150.9723],'kings langley':[-33.7461,150.9634],'bella vista':[-33.7200,150.9800],
+  'norwest':[-33.7221,150.9745],'rouse hill':[-33.6818,150.9215],'kellyville':[-33.7049,150.9574],
+  'kellyville ridge':[-33.7000,150.9350],'beaumont hills':[-33.6881,150.9534],'box hill':[-33.6606,150.9256],
+  'nelson':[-33.6350,150.9100],'dural':[-33.6843,151.0283],'round corner':[-33.6978,151.0183],
+  'cherrybrook':[-33.7325,151.0450],'westleigh':[-33.7237,151.0556],'carlingford':[-33.7817,151.0482],
+  'oatlands':[-33.8044,151.0499],'telopea':[-33.8022,151.0272],'dundas':[-33.8008,151.0443],
+  'north parramatta':[-33.8028,151.0062],'parramatta':[-33.8148,151.0022],'granville':[-33.8347,151.0136],
+  'merrylands':[-33.8368,150.9871],'guildford':[-33.8530,150.9884],'woodville':[-33.8566,150.9801],
+  // ── Western Sydney ──
+  'blacktown':[-33.7713,150.9077],'pendle hill':[-33.7846,150.9542],'girraween':[-33.8034,150.9494],
+  'toongabbie':[-33.8008,150.9677],'old toongabbie':[-33.7967,150.9630],'wentworthville':[-33.8246,150.9688],
+  'westmead':[-33.8072,151.0012],'harris park':[-33.8179,150.9979],'pemulwuy':[-33.8411,150.8742],
+  'greystanes':[-33.8290,150.9564],'holroyd':[-33.8395,150.9770],'berala':[-33.8698,150.9918],
+  'auburn':[-33.8499,151.0196],'clyde':[-33.8559,151.0034],'regents park':[-33.8774,151.0085],
+  'bass hill':[-33.9015,150.9930],'bankstown':[-33.9162,151.0337],'yagoona':[-33.9127,151.0172],
+  'birrong':[-33.9003,151.0182],'potts hill':[-33.9098,151.0019],'chester hill':[-33.8994,150.9986],
+  'sefton':[-33.8946,150.9968],'mount lewis':[-33.9170,151.0056],'chullora':[-33.8930,151.0483],
+  'greenacre':[-33.9127,151.0625],'condell park':[-33.9283,151.0284],'punchbowl':[-33.9314,151.0518],
+  'wiley park':[-33.9289,151.0609],'lakemba':[-33.9236,151.0709],'roselands':[-33.9294,151.0789],
+  'belmore':[-33.9246,151.0862],'clemton park':[-33.9201,151.0962],'kingsgrove':[-33.9354,151.1013],
+  // ── South Western Sydney ──
+  'liverpool':[-33.9200,150.9240],'casula':[-33.9651,150.9131],'moorebank':[-33.9522,150.9329],
+  'chipping norton':[-33.9349,150.9783],'warwick farm':[-33.9274,150.9337],'cabramatta':[-33.8939,150.9432],
+  'canley vale':[-33.8839,150.9528],'canley heights':[-33.8908,150.9388],'fairfield':[-33.8726,150.9557],
+  'fairfield west':[-33.8735,150.9355],'smithfield':[-33.8527,150.9285],'wetherill park':[-33.8491,150.8995],
+  'prairiewood':[-33.8569,150.8971],'bossley park':[-33.8482,150.8749],'edensor park':[-33.8668,150.8715],
+  'bonnyrigg':[-33.8916,150.8912],'bonnyrigg heights':[-33.8838,150.8809],'heckenberg':[-33.9125,150.8904],
+  'lurnea':[-33.9394,150.8979],'green valley':[-33.9067,150.8676],'miller':[-33.9169,150.8476],
+  'busby':[-33.9279,150.8611],'cartwright':[-33.9364,150.8517],'sadleir':[-33.9255,150.8427],
+  'macquarie fields':[-33.9981,150.8878],'ingleburn':[-34.0062,150.8676],'minto':[-34.0367,150.8614],
+  'campbelltown':[-34.0657,150.8143],'leumeah':[-34.0531,150.8338],'glenfield':[-33.9887,150.9013],
+  'narellan':[-34.0556,150.7376],'mount annan':[-34.0711,150.7699],'currans hill':[-34.0659,150.7504],
+  'camden':[-34.0556,150.6977],'elderslie':[-34.0432,150.7261],'cobbitty':[-34.0350,150.7000],
+  // ── Southern Sydney ──
+  'kogarah':[-33.9635,151.1322],'carlton':[-33.9741,151.1213],'allawah':[-33.9688,151.1145],
+  'hurstville':[-33.9664,151.1011],'penshurst':[-33.9654,151.0878],'mortdale':[-33.9736,151.0763],
+  'oatley':[-33.9887,151.0816],'beverly hills':[-33.9536,151.0779],'narwee':[-33.9592,151.0697],
+  'king georges road':[-33.9600,151.0850],'riverwood':[-33.9607,151.0599],'peakhurst':[-33.9788,151.0578],
+  'lugarno':[-33.9939,151.0614],'padstow':[-33.9669,151.0373],'revesby':[-33.9473,151.0091],
+  'panania':[-33.9484,151.0286],'east hills':[-33.9554,150.9975],'picnic point':[-33.9696,151.0079],
+  'milperra':[-33.9300,150.9866],'georges hall':[-33.9227,150.9989],
+  // ── Sutherland Shire ──
+  'sutherland':[-34.0312,151.0568],'jannali':[-34.0363,151.0706],'como':[-34.0150,151.0531],
+  'miranda':[-34.0393,151.1047],'caringbah':[-34.0421,151.1239],'cronulla':[-34.0561,151.1538],
+  'gymea':[-34.0382,151.0869],'gymea bay':[-34.0502,151.0808],'kirrawee':[-34.0283,151.0789],
+  'engadine':[-34.0703,151.0131],'heathcote':[-34.0853,151.0062],'menai':[-34.0090,151.0216],
+  'bangor':[-34.0191,151.0322],'woronora':[-34.0181,151.0505],'oyster bay':[-34.0081,151.0726],
+  'illawong':[-33.9997,151.0415],'alfords point':[-34.0020,151.0249],'pleasure point':[-34.0144,151.0050],
+  'kurnell':[-34.0175,151.2052],'bundeena':[-34.0881,151.1527],'maianbar':[-34.0975,151.1323],
+  'loftus':[-34.0451,151.0516],'grays point':[-34.0614,151.1070],'yowie bay':[-34.0491,151.1107],
+  'port hacking':[-34.0643,151.1277],'dolans bay':[-34.0674,151.1201],'sandy point':[-34.0736,151.1434],
+  'sylvania':[-34.0279,151.1277],'sylvania waters':[-34.0239,151.1336],'taren point':[-34.0115,151.1284],
+  'burraneer':[-34.0616,151.1402],'woolooware':[-34.0499,151.1460],'kingsway':[-34.0380,151.0900],
+  // ── Blue Mountains ──
+  'penrith':[-33.7511,150.6942],'kingswood':[-33.7624,150.7162],'werrington':[-33.7461,150.7429],
+  'st marys':[-33.7681,150.7747],'mount druitt':[-33.7739,150.8188],'blackett':[-33.7596,150.8071],
+  'rooty hill':[-33.7738,150.8529],'doonside':[-33.7779,150.8669],'lalor park':[-33.7678,150.9100],
+  'springwood':[-33.7048,150.5610],'blaxland':[-33.7410,150.6131],'glenbrook':[-33.7583,150.6148],
+  'lapstone':[-33.7563,150.6405],'emu plains':[-33.7468,150.6685],'leonay':[-33.7358,150.6559],
+  'katoomba':[-33.7131,150.3118],'leura':[-33.7196,150.3379],'wentworth falls':[-33.7193,150.3856],
+  'lawson':[-33.7253,150.4284],'hazelbrook':[-33.7328,150.4620],'woodford':[-33.7433,150.5015],
+  'linden':[-33.7363,150.5340],'faulconbridge':[-33.7245,150.5551],'valley heights':[-33.7266,150.5874],
+  // ── Central Coast ──
+  'gosford':[-33.4244,151.3413],'east gosford':[-33.4302,151.3576],'north gosford':[-33.4054,151.3463],
+  'point clare':[-33.4373,151.3144],'point frederick':[-33.4339,151.3473],'koolewong':[-33.4568,151.2910],
+  'woy woy':[-33.4875,151.3219],'ettalong beach':[-33.5109,151.3308],'umina beach':[-33.5138,151.3155],
+  'blackwall':[-33.4924,151.3138],'saratoga':[-33.4669,151.2880],'davistown':[-33.4698,151.2987],
+  'terrigal':[-33.4458,151.4440],'wamberal':[-33.4245,151.4524],'north avoca':[-33.4284,151.4450],
+  'avoca beach':[-33.4627,151.4373],'copacabana':[-33.4985,151.4136],'macmasters beach':[-33.5125,151.4019],
+  'wyong':[-33.2848,151.4230],'tuggerah':[-33.3323,151.4097],'toukley':[-33.2588,151.5527],
+  'budgewoi':[-33.2298,151.5618],'lake haven':[-33.3035,151.5064],'gorokan':[-33.2666,151.5322],
+  'wyongah':[-33.2714,151.5050],'long jetty':[-33.3504,151.4901],'tumbi umbi':[-33.3625,151.4670],
+  'bateau bay':[-33.3818,151.4763],'shelley beach':[-33.3900,151.4800],'blue bay':[-33.3740,151.4897],
+  'killarney vale':[-33.3924,151.4664],'lake munmorah':[-33.1893,151.5656],'blue haven':[-33.1989,151.5409],
+  'san remo':[-33.2088,151.5162],'charmhaven':[-33.2259,151.5090],'chain valley bay':[-33.2110,151.5513],
+  // ── Newcastle & Hunter ──
+  'newcastle':[-32.9283,151.7817],'newcastle west':[-32.9319,151.7622],'hamilton':[-32.9253,151.7545],
+  'merewether':[-32.9558,151.7669],'bar beach':[-32.9406,151.7712],'cooks hill':[-32.9320,151.7742],
+  'the hill':[-32.9133,151.7753],'adamstown':[-32.9366,151.7440],'hamilton south':[-32.9355,151.7596],
+  'broadmeadow':[-32.9221,151.7366],'kotara':[-32.9356,151.7149],'new lambton':[-32.9308,151.7215],
+  'new lambton heights':[-32.9409,151.7093],'lambton':[-32.9156,151.7279],'wallsend':[-32.9061,151.6665],
+  'jesmond':[-32.9026,151.6999],'maryland':[-32.8760,151.6717],'fletcher':[-32.8666,151.6536],
+  'cameron park':[-32.8956,151.6370],'charlestown':[-32.9661,151.6963],'dudley':[-32.9850,151.7153],
+  'redhead':[-32.9966,151.7182],'belmont':[-32.9997,151.6837],'belmont north':[-32.9748,151.6854],
+  'lake macquarie':[-33.0500,151.6000],'gateshead':[-32.9826,151.6690],'warners bay':[-33.0023,151.6479],
+  'carey bay':[-33.0155,151.6322],'marmong point':[-33.0255,151.6313],'speers point':[-33.0174,151.6552],
+  'bolton point':[-33.0353,151.6356],'toronto':[-33.0347,151.5994],'rathmines':[-33.0750,151.6160],
+  'maitland':[-32.7334,151.5556],'cessnock':[-32.8342,151.3530],'singleton':[-32.5677,151.1791],
+  'muswellbrook':[-32.2651,150.8896],'scone':[-32.0588,150.8680],'raymond terrace':[-32.7594,151.7430],
+  'nelson bay':[-32.7212,152.1468],'shoal bay':[-32.7128,152.1719],'salamander bay':[-32.7426,152.0787],
+  // ── Wollongong & Illawarra ──
+  'wollongong':[-34.4278,150.8931],'north wollongong':[-34.4073,150.8985],'gwynneville':[-34.4218,150.8813],
+  'keiraville':[-34.4299,150.8733],'mangerton':[-34.4436,150.8866],'mount keira':[-34.4218,150.8581],
+  'mount saint thomas':[-34.4406,150.8774],'figtree':[-34.4527,150.8684],'unanderra':[-34.4738,150.8678],
+  'kembla grange':[-34.5014,150.8224],'port kembla':[-34.4787,150.9095],'coniston':[-34.4652,150.9001],
+  'warrawong':[-34.4848,150.8987],'lake heights':[-34.5016,150.8792],'primbee':[-34.4941,150.8815],
+  'windang':[-34.5291,150.8617],'shellharbour':[-34.5795,150.8725],'blackbutt':[-34.5492,150.8599],
+  'barrack heights':[-34.5619,150.8569],'barrack point':[-34.5671,150.8611],'albion park':[-34.5660,150.7867],
+  'dapto':[-34.5071,150.7916],'koonawarra':[-34.5044,150.8207],'farmborough heights':[-34.4875,150.8386],
+  'fairy meadow':[-34.3986,150.9065],'thirroul':[-34.3187,150.9223],'coalcliff':[-34.2477,150.9783],
+  'stanwell park':[-34.2335,150.9893],'helensburgh':[-34.1770,150.9918],'austinmer':[-34.3007,150.9317],
+  'bulli':[-34.3380,150.9168],'woonona':[-34.3550,150.9098],'corrimal':[-34.3754,150.9049],
+  'towradgi':[-34.3895,150.9016],'mount ousley':[-34.4004,150.8936],'balgownie':[-34.4118,150.8895],
+  'berkeley':[-34.4712,150.8830],'brownsville':[-34.4602,150.8821],
+  // ── Shoalhaven / South Coast ──
+  'nowra':[-34.8753,150.5992],'bomaderry':[-34.8504,150.5989],'north nowra':[-34.8573,150.5965],
+  'south nowra':[-34.9020,150.5925],'worrigee':[-34.8829,150.5762],'cambewarra':[-34.8550,150.5500],
+  'ulladulla':[-35.3623,150.4752],'batemans bay':[-35.7075,150.1742],'moruya':[-35.9087,150.0918],
+  'narooma':[-36.2145,150.1334],'bermagui':[-36.4209,150.0690],
+  // ── Canberra region ──
+  'queanbeyan':[-35.3533,149.2340],'queanbeyan east':[-35.3510,149.2530],'jerrabomberra':[-35.3800,149.2350],
+  'goulburn':[-34.7533,149.7197],'yass':[-34.8400,148.9100],
+  // ── Major regionals ──
+  'bathurst':[-33.4190,149.5776],'orange':[-33.2827,149.0994],'dubbo':[-32.2569,148.6014],
+  'tamworth':[-31.0927,150.9320],'armidale':[-30.5128,151.6716],'lismore':[-28.8142,153.2800],
+  'ballina':[-28.8639,153.5669],'byron bay':[-28.6474,153.6020],'coffs harbour':[-30.2963,153.1135],
+  'port macquarie':[-31.4295,152.9080],'forster':[-32.1849,152.5224],'taree':[-31.8994,152.4560],
+  'grafton':[-29.6887,152.9320],'inverell':[-29.7717,151.1142],'glen innes':[-29.7318,151.7348],
+  'broken hill':[-31.9537,141.4677],'albury':[-36.0737,146.9135],'wagga wagga':[-35.1082,147.3598],
+  'griffith':[-34.2858,146.0413],'leeton':[-34.5500,146.4000],'tumut':[-35.3083,148.2266],
+  'young':[-34.3167,148.3000],'cowra':[-33.8333,148.6833],'parkes':[-33.1333,148.1667],
+  'forbes':[-33.3833,148.0167],'mudgee':[-32.5956,149.5872],'lithgow':[-33.4818,150.1539],
+  'katoomba':[-33.7131,150.3118],'bowral':[-34.4802,150.4188],'moss vale':[-34.5500,150.3833],
+  'mittagong':[-34.4500,150.4500],'bundanoon':[-34.6588,150.3047],'kiama':[-34.6714,150.8544],
+  'berry':[-34.7786,150.6945],'kangaroo valley':[-34.7333,150.4833],'gerringong':[-34.7500,150.8167],
+};
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+    const R = 6371, toRad = x => x * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function mapScoreColor(score) {
+    if (score >= 60) return '#22c55e';
+    if (score >= 40) return '#f59e0b';
+    return '#ef4444';
+}
+
+let _leafletMap = null;
+
+function hideSuburbMap() {
+    document.getElementById('suburbMapSection').classList.add('hidden');
+}
+
+function renderSuburbMap(suburbKey, type, budget) {
+    const coords = VIC_COORDS[suburbKey];
+    if (!coords) {
+        document.getElementById('suburbMapSection').classList.add('hidden');
+        return;
+    }
+    buildMap(suburbKey, coords[0], coords[1], type, budget);
+}
+
+function buildMap(suburbKey, lat, lng, type, budget) {
+    const mapSection = document.getElementById('suburbMapSection');
+    const mapDiv     = document.getElementById('suburbMap');
+
+    // Find nearby VIC suburbs in VIC_COORDS within 18km, score each
+    const nearby = [];
+    for (const [key, data] of Object.entries(ACTIVE_SUBURBS)) {
+        if (key === suburbKey || data.state !== 'VIC') continue;
+        const nc = VIC_COORDS[key];
+        if (!nc) continue;
+        const dist = haversineKm(lat, lng, nc[0], nc[1]);
+        if (dist > 18) continue;
+        if (!data.types?.[type]) continue;
+        const result = scoreSearch(data, type, budget, NaN, NaN, NaN);
+        if (!result) continue;
+        nearby.push({ key, name: titleCase(key), lat: nc[0], lng: nc[1], score: result.score, dist });
+    }
+    nearby.sort((a, b) => a.dist - b.dist);
+
+    mapSection.classList.remove('hidden');
+    const dsEl = document.getElementById('mapDataSource');
+    if (dsEl) dsEl.textContent = 'VIC Valuer-General data';
+
+    // Destroy previous Leaflet instance if any
+    if (_leafletMap) { _leafletMap.remove(); _leafletMap = null; }
+    mapDiv.innerHTML = '';
+
+    const map = L.map(mapDiv, { zoomControl: true, scrollWheelZoom: false });
+    _leafletMap = map;
+
+    // CartoDB Dark Matter tiles — free, no key required
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd', maxZoom: 19,
+    }).addTo(map);
+
+    map.setView([lat, lng], nearby.length > 15 ? 12 : 11);
+
+    // Searched suburb — blue dot, larger
+    L.circleMarker([lat, lng], {
+        radius: 11, fillColor: '#0000ff', fillOpacity: 1,
+        color: '#ffffff', weight: 2,
+    }).addTo(map).bindTooltip(`<strong>${titleCase(suburbKey)}</strong><br><span style="color:#666;font-size:10px;">Your search</span>`, { permanent: false, direction: 'top' });
+
+    // Nearby suburb markers
+    nearby.forEach(s => {
+        const color = mapScoreColor(s.score);
+        L.circleMarker([s.lat, s.lng], {
+            radius: 8, fillColor: color, fillOpacity: 0.9,
+            color: '#111', weight: 1,
+        }).addTo(map)
+          .bindTooltip(`<strong>${s.name}</strong><br><span style="color:${color};font-size:13px;font-weight:700;">${s.score}%</span> <span style="font-size:10px;color:#888;">· click to search</span>`, { direction: 'top' })
+          .on('click', () => {
+              document.getElementById('suburb').value = s.name;
+              runSearch();
+          });
+    });
+}
+
+// ── NSW suburb map — real Supabase scores ─────────────────────────
+async function renderSuburbMapNSW(suburbKey, type, budget) {
+    const coords = NSW_COORDS[suburbKey];
+    if (!coords) {
+        document.getElementById('suburbMapSection').classList.add('hidden');
+        return;
+    }
+    await buildMapNSW(suburbKey, coords[0], coords[1], type, budget);
+}
+
+async function buildMapNSW(suburbKey, lat, lng, type, budget) {
+    const mapSection = document.getElementById('suburbMapSection');
+    const mapDiv     = document.getElementById('suburbMap');
+
+    // Find nearby NSW suburbs from NSW_COORDS within 18km
+    const nearby = [];
+    for (const [key, c] of Object.entries(NSW_COORDS)) {
+        if (key === suburbKey) continue;
+        const dist = haversineKm(lat, lng, c[0], c[1]);
+        if (dist > 18) continue;
+        nearby.push({ key, name: titleCase(key), lat: c[0], lng: c[1], dist });
+    }
+    nearby.sort((a, b) => a.dist - b.dist);
+    const top = nearby.slice(0, 30); // cap at 30 neighbours
+
+    mapSection.classList.remove('hidden');
+    const dsEl2 = document.getElementById('mapDataSource');
+    if (dsEl2) dsEl2.textContent = 'NSW Valuer General data · real sale prices';
+    if (_leafletMap) { _leafletMap.remove(); _leafletMap = null; }
+    mapDiv.innerHTML = '';
+
+    // Show loading state on map div while querying
+    mapDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#555;font-family:monospace;font-size:0.72rem;">Loading real sales data…</div>';
+
+    // One batch Supabase query: all nearby suburbs in a single request
+    let scored = [];
+    try {
+        const suburbList = top.map(s => s.key).join(',');
+        const cutoff = nswCutoff();
+        const url = `${SUPABASE_URL}/rest/v1/property_sales`
+            + `?suburb=in.(${encodeURIComponent(suburbList)})`
+            + `&property_type=eq.${encodeURIComponent(type)}`
+            + `&sale_date=gte.${cutoff}`
+            + `&select=suburb,sale_price`;
+        const resp = await fetch(url, { headers: { apikey: SUPABASE_ANON } });
+        const rows = await resp.json();
+
+        // Group by suburb and score each
+        const bySuburb = {};
+        for (const r of rows) {
+            if (!bySuburb[r.suburb]) bySuburb[r.suburb] = [];
+            bySuburb[r.suburb].push(r.sale_price);
+        }
+        for (const s of top) {
+            const prices = bySuburb[s.key];
+            if (!prices || prices.length < 3) continue; // skip thin data
+            const within = prices.filter(p => p <= budget).length;
+            const score  = Math.round((within / prices.length) * 100);
+            scored.push({ ...s, score });
+        }
+    } catch(e) {
+        console.warn('NSW map batch query failed:', e);
+    }
+
+    // Rebuild map div now data is ready
+    mapDiv.innerHTML = '';
+    const map = L.map(mapDiv, { zoomControl: true, scrollWheelZoom: false });
+    _leafletMap = map;
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd', maxZoom: 19,
+    }).addTo(map);
+
+    map.setView([lat, lng], scored.length > 15 ? 12 : 11);
+
+    // Searched suburb — blue dot
+    L.circleMarker([lat, lng], {
+        radius: 11, fillColor: '#0000ff', fillOpacity: 1,
+        color: '#ffffff', weight: 2,
+    }).addTo(map).bindTooltip(`<strong>${titleCase(suburbKey)}</strong><br><span style="color:#666;font-size:10px;">Your search</span>`, { permanent: false, direction: 'top' });
+
+    // Neighbours — real scores
+    scored.forEach(s => {
+        const color = mapScoreColor(s.score);
+        L.circleMarker([s.lat, s.lng], {
+            radius: 8, fillColor: color, fillOpacity: 0.9,
+            color: '#111', weight: 1,
+        }).addTo(map)
+          .bindTooltip(`<strong>${s.name}</strong><br><span style="color:${color};font-size:13px;font-weight:700;">${s.score}%</span> <span style="font-size:10px;color:#888;">· click to search</span>`, { direction: 'top' })
+          .on('click', () => {
+              document.getElementById('suburb').value = s.name;
+              runSearch();
+          });
+    });
+
+    // If no scored neighbours, show a note
+    if (scored.length === 0) {
+        mapDiv.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#555;font-family:monospace;font-size:0.72rem;">Not enough nearby sale data to show map</div>';
+        mapSection.classList.add('hidden');
+    }
+}
+
+// ── REA interstitial ──────────────────────────────────────────────
+function openReaModal(url) {
+    document.getElementById('reaModalLink').href = url;
+    document.getElementById('reaModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeReaModal() {
+    document.getElementById('reaModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function lbNav(dir) {
+    _lbIdx = (_lbIdx + dir + _lbComp.photos.length) % _lbComp.photos.length;
+    renderLightboxPhoto();
+}
+
+function renderLightboxPhoto() {
+    const url = `https://picsum.photos/seed/${_lbComp.photos[_lbIdx]}/1200/800`;
+    document.getElementById('lbImg').src = url;
+    document.getElementById('lbCounter').textContent = `${_lbIdx + 1} / ${_lbComp.photos.length}`;
+    document.getElementById('lbAddress').textContent = _lbComp.address;
+    document.getElementById('lbPrice').textContent = fmtCurrencyFull(_lbComp.price);
+    // Thumbnails
+    const strip = document.getElementById('lbStrip');
+    strip.innerHTML = _lbComp.photos.map((seed, i) =>
+        `<img src="https://picsum.photos/seed/${seed}/200/130" onclick="lbNav(${i - _lbIdx})"
+              style="width:80px;height:52px;object-fit:cover;cursor:pointer;opacity:${i===_lbIdx?1:0.45};border:${i===_lbIdx?'2px solid #f5c842':'2px solid transparent'};"
+              loading="lazy">`
+    ).join('');
+}
+
+document.addEventListener('keydown', e => {
+    if (document.getElementById('lightboxOverlay')?.classList.contains('hidden')) return;
+    if (e.key === 'ArrowRight') lbNav(1);
+    if (e.key === 'ArrowLeft')  lbNav(-1);
+    if (e.key === 'Escape')     closeLightbox();
+});
+
+function fmtCurrencyFull(n) {
+    return '$' + n.toLocaleString('en-AU');
+}
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', async () => {
+    // Try to load real data first, then set up the rest
+    await loadRealData();
+
+    populateAutocomplete();
+    updateDataBadge();
+
+    // Live budget formatting — spaces every 3 digits as you type
+    const budgetEl = document.getElementById('budget');
+    budgetEl.addEventListener('input', function () {
+        const raw   = this.value.replace(/\D/g, '');
+        const pos   = this.selectionStart;
+        const prev  = this.value.length;
+        if (!raw) { this.value = ''; return; }
+        // Format with thin-space separator (regular space works fine visually)
+        this.value  = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        // Preserve cursor roughly
+        const diff  = this.value.length - prev;
+        try { this.setSelectionRange(pos + diff, pos + diff); } catch(_) {}
+    });
+
+    // Enter key triggers search
+    document.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
+    });
+});
+</script>
+<!-- ── Lead Capture Modal ──────────────────────────────────── -->
+<div id="reportModal" class="modal-overlay hidden" onclick="handleModalOverlay(event)" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeReportModal()" aria-label="Close dialog">✕</button>
+        <h2 id="reportModalTitle">Generate Your Report</h2>
+        <p>Enter your details and your personalised PDF will download instantly.</p>
+
+        <div id="modalError" class="modal-error hidden" role="alert"></div>
+
+        <div class="form-group">
+            <label for="leadName">Full Name</label>
+            <input type="text" id="leadName" placeholder="Sarah Johnson" autocomplete="name">
+        </div>
+        <div class="form-group">
+            <label for="leadEmail">Email Address</label>
+            <input type="email" id="leadEmail" placeholder="sarah@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label for="leadPhone">Phone Number</label>
+            <input type="tel" id="leadPhone" placeholder="0400 000 000" autocomplete="tel" oninput="formatPhone(this)">
+        </div>
+
+        <div class="consent-row">
+            <input type="checkbox" id="leadConsent" checked>
+            <label for="leadConsent" style="font-family:monospace;font-size:0.8rem;color:var(--text);line-height:1.45;cursor:pointer;">I'm happy to be contacted by a mortgage broker about my property search</label>
+        </div>
+
+        <button class="btn" onclick="submitReport()">Generate My Report →</button>
+        <div class="modal-fine">Your details may be shared with mortgage brokers and property professionals.</div>
+    </div>
+</div>
+
+<!-- ── Lightbox ──────────────────────────────────── -->
+<!-- REA interstitial modal -->
+<div id="reaModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9500; align-items:center; justify-content:center; padding:1.5rem;" onclick="if(event.target===this)closeReaModal()">
+    <div style="background:#111; border:1px solid #2a2a2a; max-width:400px; width:100%; padding:1.75rem; display:flex; flex-direction:column; gap:1rem; position:relative;">
+        <button onclick="closeReaModal()" style="position:absolute; top:0.75rem; right:0.75rem; background:none; border:none; color:#444; font-size:1rem; cursor:pointer; line-height:1; padding:0.25rem;" aria-label="Close">✕</button>
+        <div style="font-family:monospace; font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; background:#2a2a2a; color:#fff; padding:0.2rem 0.55rem; display:inline-block; align-self:flex-start;">Heads up</div>
+        <div style="font-size:1rem; font-weight:700; color:#f0f0f0;">You're leaving GetReal</div>
+        <p style="font-size:0.82rem; color:#c0c0c0; line-height:1.7;">The realestate.com.au page may show a different address, different details, or nothing at all — sold listings are often removed after settlement.</p>
+        <p style="font-size:0.82rem; color:#c0c0c0; line-height:1.7;">NSW Valuer General data records the price, date, and property type — but not bedrooms, photos, or listing history. REA may have more context, or may not.</p>
+        <a href="manifesto.html" style="font-family:monospace; font-size:0.68rem; color:#555; text-decoration:underline; text-underline-offset:2px;">Why doesn't the data include everything? →</a>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.25rem;">
+            <button onclick="closeReaModal()" style="font-family:monospace; font-size:0.68rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; background:#2a2a2a; color:#f0f0f0; border:none; padding:0.6rem 1rem; cursor:pointer;">Stay here</button>
+            <a id="reaModalLink" href="#" target="_blank" rel="noopener" onclick="closeReaModal()" style="font-family:monospace; font-size:0.68rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; background:#f5f5f5; color:#0a0a0a; padding:0.6rem 1rem; text-decoration:none; display:inline-block;">Go to realestate.com.au →</a>
+        </div>
+    </div>
+</div>
+
+<div id="lightboxOverlay" class="lb-overlay hidden" onclick="if(event.target===this)closeLightbox()">
+    <div class="lb-box">
+        <div class="lb-header">
+            <div class="lb-header-left">
+                <div class="lb-price" id="lbPrice"></div>
+                <div class="lb-addr" id="lbAddress"></div>
+            </div>
+            <div class="lb-header-right">
+                <span class="lb-counter" id="lbCounter"></span>
+                <button class="lb-close" onclick="closeLightbox()" aria-label="Close lightbox">✕ CLOSE</button>
+            </div>
+        </div>
+        <div class="lb-main">
+            <img id="lbImg" src="" alt="Property photo">
+            <button class="lb-nav lb-prev" onclick="lbNav(-1)">&#8592;</button>
+            <button class="lb-nav lb-next" onclick="lbNav(1)">&#8594;</button>
+        </div>
+        <div class="lb-strip" id="lbStrip"></div>
+    </div>
+</div>
+
+<!-- Privacy notice -->
+<div id="privacyNotice" style="
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #111111; border-top: 1px solid #2a2a2a;
+    padding: 0.75rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    font-family: monospace; font-size: 0.75rem; color: #999999;
+    z-index: 9000;
+">
+    <span>
+        This tool is free to use. If you request a report, your suburb and contact number are stored securely and used only to follow up with you.
+        No tracking cookies. No ads.
+    </span>
+    <button onclick="document.getElementById('privacyNotice').style.display='none'; try{localStorage.setItem('gr_privacy_ok','1')}catch(e){}" style="
+        background: none; border: 1px solid #555; color: #ccc;
+        font-family: monospace; font-size: 0.7rem; padding: 0.3rem 0.75rem;
+        cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    ">Got it</button>
+</div>
+<script>
+    try { if (localStorage.getItem('gr_privacy_ok')) document.getElementById('privacyNotice').style.display = 'none'; } catch(e) {}
+</script>
+
+</body>
+</html>

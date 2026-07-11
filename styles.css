@@ -1,0 +1,184 @@
+/*
+ * GetReal — Shared Design System
+ * ─────────────────────────────────────────────────────────────
+ * Import this in every page: <link rel="stylesheet" href="styles.css">
+ * Page-specific styles go in a <style> block after this import.
+ */
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Tokens ── */
+:root {
+    /* Backgrounds */
+    --bg:       #0a0a0a;   /* page background */
+    --card:     #111111;   /* card / panel surface */
+    --inset:    #0f0f0f;   /* inset block (e.g. pull quotes, code blocks) */
+
+    /* Borders */
+    --border:   #2a2a2a;   /* standard border */
+    --border-subtle: #161616; /* barely-there divider */
+
+    /* Text */
+    --text:     #f0f0f0;   /* primary — on dark backgrounds */
+    --muted:    #c0c0c0;   /* secondary — sublines, descriptions */
+    --dim:      #555555;   /* very muted — timestamps, placeholders */
+    --ghost:    #333333;   /* footer notes, barely visible */
+
+    /* Colour rules (strict):
+       --blue  → eyebrows, section labels, interactive accents ONLY
+       Orange, green, red → status meaning only (score badges etc.)
+       Never use colour purely decoratively.
+       White / grey / black are always safe on dark backgrounds.       */
+    --blue:     #0000ff;
+    --accent:   #f5c842;   /* yellow — use sparingly, avoid on dark bg */
+
+    /* Typography */
+    --font-body: 'Inter', -apple-system, sans-serif;
+    --font-mono: monospace;
+
+    /* Spacing */
+    --pad-page: 1.5rem;
+}
+
+/* ── Base ── */
+body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Shared header (light bar) ── */
+.site-header {
+    background: #f5f5f5;
+    border-bottom: 2px solid #0a0a0a;
+    padding: 0.85rem var(--pad-page);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.brand {
+    display: flex; align-items: center; gap: 0.6rem;
+    text-decoration: none; color: inherit;
+}
+.brand-name {
+    color: #18181b;
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+/* ── Eyebrow pill — blue bg, white text ── */
+/* Use for: page-level labels ("A side project", "Data freedom") */
+.eyebrow {
+    display: inline-block;
+    align-self: flex-start;
+    background: var(--blue);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.6rem;
+}
+
+/* ── Tag pill — grey bg, white text ── */
+/* Use for: secondary labels ("Tool 01", "Coming soon", section tags) */
+.tag {
+    display: inline-block;
+    align-self: flex-start;
+    background: var(--border);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+}
+
+/* ── Status badges (score / data availability) ── */
+/* Green, orange, red are RESERVED for these and nothing else */
+.status-free   { background: #14532d; color: #86efac; font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.2rem 0.55rem; }
+.status-paid   { background: #1c1917; color: #a8a29e; font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.2rem 0.55rem; }
+.status-locked { background: #450a0a; color: #fca5a5; font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.2rem 0.55rem; }
+.status-none   { background: #1c1917; color: #57534e; font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.2rem 0.55rem; }
+
+/* ── Primary button ── */
+.btn {
+    display: inline-block;
+    align-self: flex-start;
+    background: #f5f5f5;
+    color: #0a0a0a;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.1rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.btn:hover, .btn:focus-visible { background: var(--blue); color: #fff; }
+
+/* ── Inset block (pull quotes, code, lazy-tax callouts) ── */
+.inset {
+    background: var(--inset);
+    border-left: 2px solid var(--border);
+    padding: 0.6rem 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--dim);
+    line-height: 1.6;
+}
+
+/* ── Ticker ── */
+.ticker-wrap {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.65rem 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.ticker-inner {
+    display: inline-block;
+    animation: ticker-scroll 22s linear infinite;
+}
+@keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+.ticker-item {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: #3a3a3a;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 2rem;
+}
+.ticker-item span { color: var(--dim); }
+
+/* ── Footer note ── */
+.footer-note {
+    padding: var(--pad-page);
+    border-top: 1px solid var(--border-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ghost);
+    line-height: 1.8;
+}
+
+/* ── Skip link (accessibility) ── */
+.skip-link {
+    position: absolute; top: -999px; left: 1rem;
+    background: var(--blue); color: #fff;
+    font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;
+    padding: 0.5rem 1rem; z-index: 9999; text-decoration: none;
+}
+.skip-link:focus { top: 0.5rem; }
