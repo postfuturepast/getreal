@@ -2060,8 +2060,8 @@ async function generatePDF(name, email, phone, consent) {
 
     // ── Target rings ──────────────────────────────────────────────
     const tgtCX    = W / 2;
-    const tgtCY    = 97;
-    const tgtOutR  = 73;
+    const tgtCY    = 105;
+    const tgtOutR  = 70;
     const tgtInR   = 9;
     const tgtRingW = (tgtOutR - tgtInR) / 6;
 
@@ -2103,18 +2103,18 @@ async function generatePDF(name, email, phone, consent) {
 
     // ── Score — centred below target ──────────────────────────────
     cf(true); doc.setFontSize(52); doc.setTextColor(...GRADE);
-    doc.text(scoreStr, W / 2, 185, { align: 'center' });
+    doc.text(scoreStr, W / 2, 200, { align: 'center' });
 
     cf(true); doc.setFontSize(11); doc.setTextColor(...GRADE);
-    doc.text(grade.label.toUpperCase(), W / 2, 196, { align: 'center' });
+    doc.text(grade.label.toUpperCase(), W / 2, 213, { align: 'center' });
 
     // Thin divider
     doc.setDrawColor(...GRAY3); doc.setLineWidth(0.2);
-    doc.line(W / 2 - 22, 202, W / 2 + 22, 202);
+    doc.line(W / 2 - 22, 219, W / 2 + 22, 219);
 
     // ── Name ──────────────────────────────────────────────────────
     cf(true); doc.setFontSize(10); doc.setTextColor(...WHITE);
-    doc.text(firstName, W / 2, 211, { align: 'center' });
+    doc.text(firstName, W / 2, 228, { align: 'center' });
 
     // ── Search input pills ────────────────────────────────────────
     const pills    = [titleCase(sp.suburb) + ' ' + stateName, TYPE_LABELS[sp.type], budgetStr];
@@ -2125,7 +2125,7 @@ async function generatePDF(name, email, phone, consent) {
     const pillWidths = pills.map(p => doc.getTextWidth(p) + pillPad * 2);
     const totalPillW = pillWidths.reduce((s, w) => s + w, 0) + pillGap * (pills.length - 1);
     let pillX = W / 2 - totalPillW / 2;
-    const pillY = 217;
+    const pillY = 234;
 
     pills.forEach((label, pi) => {
         const pW = pillWidths[pi];
@@ -2164,7 +2164,7 @@ async function generatePDF(name, email, phone, consent) {
         cf(false); doc.setFontSize(10); doc.setTextColor(...GRAY1);
         const lines = doc.splitTextToSize(para, CW);
         doc.text(lines, M, y);
-        y += lines.length * 5.5 + 5;
+        y += lines.length * 5.5 + 3;
     });
 
     y += 2;
