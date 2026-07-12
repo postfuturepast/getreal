@@ -56,6 +56,56 @@ Tasks labelled **[T]** (Tristan), **[C]** (Claude), or **[T+C]** (back and forth
 
 ---
 
+### 🔜 PDF v2 — combined improvement list
+*Agreed changes from analysis session (July 2026). Implement together in one pass.*
+
+**Layout / structure (Tristan)**
+- [ ] Text is too small everywhere except tables — body copy and labels need to be bigger
+- [ ] Combine pages 2 (letter) + 3 (result) — letter at top, result content below, saves a page
+- [ ] Combine pages 4 (comparables) + 5 (continuation) onto one page — smush images up to make room, keep table. Add section title: "Properties sold closest to your budget"
+- [ ] Logo on cover page — *pending new logo design (see task below)*
+- [ ] Page 7 (what-if) needs a full rethink — currently hard to understand, not just cosmetic fix
+
+**Cover (Claude analysis)**
+- [ ] Score is sitting too low — centre it vertically (~40% down the page)
+- [ ] Too much dead space above the score
+
+**Result page (Claude analysis)**
+- [ ] "At or above the median" callout text is wordy — simplify to "≥ median" or show $0 gap
+- [ ] N/A bars look like bugs — add "Data coming" label or different visual treatment
+
+**Comparables table (Claude analysis)**
+- [ ] GAP value and REA link are colliding in the same column — give REA its own space or move below price
+
+**Suburb table — page 6 (Claude analysis)**
+- [ ] Searched suburb is not highlighted — should stand out with a distinct row colour
+- [ ] *Tristan: page 6 is actually great — small improvements only*
+
+**What-if — merge into page 2 (Tristan + Claude)**
+- [ ] Remove what-if as a standalone page entirely
+- [ ] Add what-if content to the bottom of the new combined page 2 (letter + result + what-if)
+- [ ] Reframe as plain-language narrative: "If your budget were $X more, your score jumps from 42 to 67 — Marrickville would come into range." Story, not widgets.
+- [ ] Keep it brief — 2–4 lines, feels like a coda to the result, not a separate section
+
+**Final page structure — 4 pages:**
+1. Cover
+2. Letter + result + what-if narrative
+3. Comparable sales (images + table, all on one page)
+4. Suburb comparison table
+
+**Pending before implementing:**
+- [ ] **[T]** Share new logo design / idea — needed before cover can be finalised
+
+---
+
+### 🔜 New logo design
+*Tristan has a new logo idea to share. Hold PDF cover implementation until this is resolved.*
+- **[T]** Share the new logo concept / design direction
+- **[T+C]** Build/refine the logo
+- **[C]** Implement logo on PDF cover + website
+
+---
+
 ### 🔜 PDF redesign — big rethink needed
 *Tested in production — comparable property cards are not showing at all in the PDF output. This is a regression from an earlier working version. Overall design needs a proper rethink, not just a patch.*
 

@@ -1931,7 +1931,7 @@ async function generatePDF(name, email, phone, consent) {
     const doc = new jsPDF({ unit:'mm', format:'a4' });
 
     const W = 210, H = 297, M = 16;
-    const CW = W - 2 * M;
+    const CW = W - 2 * M;  // 178mm
 
     // ── Dark palette ─────────────────────────────────────────────
     const BG      = [10,  10,  10];
@@ -1944,6 +1944,7 @@ async function generatePDF(name, email, phone, consent) {
     const RED     = [226, 51,  51];
     const GREEN   = [34,  197, 94];
     const AMBER   = [245, 158, 11];
+    const BLUE    = [59,  130, 246];
 
     const grade     = getGrade(lastResult.score);
     const GRADE     = hexToRgb(grade.color);
@@ -1976,9 +1977,9 @@ async function generatePDF(name, email, phone, consent) {
     const pageFooter = () => {
         const pn = doc.internal.getCurrentPageInfo().pageNumber;
         rule(H - 12, GRAY3);
-        cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY2);
+        cf(false); doc.setFontSize(7); doc.setTextColor(...GRAY2);
         doc.text('GetReal · Property Search Realism Report · Not financial advice', M, H - 7);
-        doc.text(`Page ${pn}`, W - M, H - 7, { align: 'right' });
+        doc.text(`${pn} / 4`, W - M, H - 7, { align: 'right' });
     };
 
     const fmtDate = iso => {
@@ -2005,12 +2006,12 @@ async function generatePDF(name, email, phone, consent) {
     };
 
     const gradeBlurbs = {
-        'Highly Realistic': `Strong supply. Plenty of properties matching your criteria sold last year. You should expect regular opportunities — the challenge is execution, not scarcity.`,
+        'Highly Realistic': `Strong supply. Plenty of properties matching your criteria sold here in the last year. The challenge is execution, not scarcity.`,
         'Realistic':        `Good supply. Enough matching sales that you should find options without too much difficulty. Some patience required, but you are not fighting long odds.`,
-        'Competitive':      `Limited supply. Properties matching your requirements are uncommon in this suburb. You will likely need to act quickly, or look carefully at which factor is doing the most damage.`,
-        'Tight':            `Very limited supply. The market does not often produce what you are looking for here. One adjustment could move the needle significantly — see the final section.`,
+        'Competitive':      `Limited supply. Properties matching your requirements are uncommon here. You will need to act quickly, or look carefully at which factor is doing the most damage.`,
+        'Tight':            `Very limited supply. The market does not often produce what you are looking for here. One adjustment could move the needle significantly.`,
         'Very Difficult':   `Rare supply. Your criteria eliminate most of what trades here. You are likely to wait a long time, pay above median, or both.`,
-        'Unrealistic':      `This combination almost never appears in this suburb's market. Something needs to change — budget, location, type or size. The final section shows what would matter most.`,
+        'Unrealistic':      `This combination almost never appears in this suburb's market. Something needs to change — budget, location, type or size.`,
     };
 
     // ── Fetch comparable properties ──────────────────────────────
@@ -2034,11 +2035,11 @@ async function generatePDF(name, email, phone, consent) {
     }
     const allTableProps = [...propsBelow, ...propsAbove];
 
-    // ── Pre-fetch street view images (up to 4: 2 below + 2 above) ─
+    // ── Pre-fetch street view images (3: 1 below budget + 2 above) ─
     const svProps = [
-        ...propsBelow.slice(-2),
+        ...propsBelow.slice(-1),
         ...propsAbove.slice(0, 2),
-    ];
+    ].slice(0, 3);
     const svImages = await Promise.all(
         svProps.map(p => p.address_full ? fetchImgBase64(streetViewUrl(p.address_full)) : Promise.resolve(null))
     );
@@ -2048,95 +2049,87 @@ async function generatePDF(name, email, phone, consent) {
     // =============================================================
     fillPage();
 
-    // Header strip
-    cf(true);  doc.setFontSize(9);  doc.setTextColor(...WHITE); doc.text('GETREAL', M, 14);
+    // GETREAL wordmark
+    cf(true);  doc.setFontSize(11); doc.setTextColor(...WHITE); doc.text('GETREAL', M, 14);
     cf(false); doc.setFontSize(7);  doc.setTextColor(...GRAY2); doc.text(today, W - M, 14, { align: 'right' });
     rule(17, GRAY3);
 
-    // Score — centred vertically in upper 2/3
+    // Score — true vertical centre of available space
     const scoreStr  = `${lastResult.score}%`;
-    cf(true); doc.setFontSize(88); doc.setTextColor(...GRADE);
-    const scoreW = doc.getTextWidth(scoreStr);
-    doc.text(scoreStr, W / 2, 125, { align: 'center' });
+    cf(true); doc.setFontSize(96); doc.setTextColor(...GRADE);
+    doc.text(scoreStr, W / 2, 112, { align: 'center' });
 
     // Grade label
-    cf(true); doc.setFontSize(15); doc.setTextColor(...GRADE);
-    doc.text(grade.label.toUpperCase(), W / 2, 138, { align: 'center' });
+    cf(true); doc.setFontSize(16); doc.setTextColor(...GRADE);
+    doc.text(grade.label.toUpperCase(), W / 2, 127, { align: 'center' });
 
     // Thin rule
-    doc.setDrawColor(...GRAY3); doc.setLineWidth(0.2);
-    doc.line(W / 2 - 30, 144, W / 2 + 30, 144);
+    doc.setDrawColor(...GRAY3); doc.setLineWidth(0.25);
+    doc.line(W / 2 - 35, 133, W / 2 + 35, 133);
 
-    // Name + search details
-    cf(true);  doc.setFontSize(10); doc.setTextColor(...WHITE);
-    doc.text(firstName, W / 2, 153, { align: 'center' });
+    // Name
+    cf(true);  doc.setFontSize(12); doc.setTextColor(...WHITE);
+    doc.text(firstName, W / 2, 143, { align: 'center' });
 
+    // Search details
     const stateName  = isNSW ? 'NSW' : 'VIC';
     const searchLine = `${titleCase(sp.suburb)} ${stateName}  ·  ${TYPE_LABELS[sp.type]}  ·  ${budgetStr}`;
-    cf(false); doc.setFontSize(8.5); doc.setTextColor(...GRAY1);
-    doc.text(searchLine, W / 2, 161, { align: 'center' });
+    cf(false); doc.setFontSize(9.5); doc.setTextColor(...GRAY1);
+    doc.text(searchLine, W / 2, 152, { align: 'center' });
 
-    // Site URL at bottom
+    // URL at bottom
     cf(false); doc.setFontSize(7); doc.setTextColor(...GRAY2);
     doc.text('getreallyreal.netlify.app', W / 2, H - 10, { align: 'center' });
 
     // =============================================================
-    // PAGE 2 — LETTER
+    // PAGE 2 — LETTER + RESULT + WHAT-IF NARRATIVE
     // =============================================================
     doc.addPage(); fillPage();
     pageHeader('Your report');
     let y = 24;
 
-    cf(false); doc.setFontSize(10); doc.setTextColor(...WHITE);
+    // ── Letter ──────────────────────────────────────────────────
+    cf(true); doc.setFontSize(11); doc.setTextColor(...WHITE);
     doc.text(`Dear ${firstName},`, M, y);
-    y += 10;
+    y += 9;
 
     const letterParas = [
-        `Property searching is one of the most stressful things most people go through. And one thing that makes it harder than it needs to be is looking for a combination of things that almost never appear together in a target suburb — without knowing it.`,
-        `GetReal was built from research with hundreds of people actively searching for homes. What that research showed, again and again, was that the searches that went on longest weren't always driven by tight budgets or impossible expectations. They were driven by a combination of criteria that almost never appeared together in the market — and the searcher had no way of knowing.`,
-        `The people who broke through and found their home had almost always reached a point where they figured out what to let go of. Not randomly — deliberately. They found the thing that mattered least to them personally, and which happened to open up the most of the market. A suburb one stop further out. An apartment instead of a house. One fewer bedroom. The compromise itself isn't the point. What matters is that it was the right one: the trade-off that costs you the least but changes your search the most.`,
-        `There is also another possibility: that your search is genuinely hard, and the right response is simply to know that going in — to align your expectations, your timeline, and your risk tolerance with what the data actually shows, rather than discovering it offer by disappointing offer.`,
+        `Property searching is one of the most stressful experiences most people go through. What makes it harder than it needs to be is looking for a combination of things that almost never appear together in a target suburb — without knowing it.`,
+        `The people who broke through and found their home had almost always reached a point where they figured out what to let go of. Not randomly — deliberately. The thing that mattered least to them, which happened to open up the most of the market. That trade-off doesn't have to cost you much, but it has to be the right one.`,
         `This report shows you where you stand. Be honest with yourself about what you see.`,
     ];
 
     letterParas.forEach(para => {
-        cf(false); doc.setFontSize(9); doc.setTextColor(...GRAY1);
+        cf(false); doc.setFontSize(10); doc.setTextColor(...GRAY1);
         const lines = doc.splitTextToSize(para, CW);
         doc.text(lines, M, y);
-        y += lines.length * 5.0 + 4;
+        y += lines.length * 5.5 + 5;
     });
 
-    y += 4;
-    rule(y, GRAY3);
-    y += 9;
-    cf(true);  doc.setFontSize(9);  doc.setTextColor(...WHITE); doc.text('GetReal', M, y);
+    y += 2;
+    cf(true);  doc.setFontSize(9);   doc.setTextColor(...WHITE); doc.text('GetReal', M, y);
     y += 5;
-    cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY1); doc.text('getreallyreal.netlify.app', M, y);
+    cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY2); doc.text('getreallyreal.netlify.app', M, y);
+    y += 9;
+    rule(y, GRAY2, true);
+    y += 11;
 
-    pageFooter();
-
-    // =============================================================
-    // PAGE 3 — YOUR RESULT
-    // =============================================================
-    doc.addPage(); fillPage();
-    pageHeader('Your result');
-    y = 22;
-
-    // Score + label
-    cf(true); doc.setFontSize(48); doc.setTextColor(...GRADE);
-    doc.text(scoreStr, M, y + 14);
+    // ── Result ──────────────────────────────────────────────────
+    // Score + grade
+    cf(true); doc.setFontSize(52); doc.setTextColor(...GRADE);
+    doc.text(scoreStr, M, y + 16);
     const bigScoreW = doc.getTextWidth(scoreStr);
-    cf(true); doc.setFontSize(14); doc.setTextColor(...GRADE);
-    doc.text(grade.label.toUpperCase(), M + bigScoreW + 5, y + 11);
-    y += 20;
+    cf(true); doc.setFontSize(15); doc.setTextColor(...GRADE);
+    doc.text(grade.label.toUpperCase(), M + bigScoreW + 4, y + 13);
+    y += 22;
 
     // Score bar
-    doc.setFillColor(...GRAY3); doc.rect(M, y, CW, 4, 'F');
-    doc.setFillColor(...GRADE); doc.rect(M, y, CW * Math.max(lastResult.score / 100, 0.005), 4, 'F');
+    doc.setFillColor(...GRAY3); doc.rect(M, y, CW, 5, 'F');
+    doc.setFillColor(...GRADE); doc.rect(M, y, CW * Math.max(lastResult.score / 100, 0.005), 5, 'F');
     y += 10;
 
     // Stats line
-    cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY1);
+    cf(false); doc.setFontSize(9); doc.setTextColor(...GRAY1);
     doc.text(
         `${lastResult.annualSales} ${TYPE_LABELS[sp.type].toLowerCase()}s sold in ${titleCase(sp.suburb)} in the last 13 months — ${lastResult.withinBudget} (${lastResult.score}%) within budget`,
         M, y
@@ -2146,136 +2139,169 @@ async function generatePDF(name, email, phone, consent) {
     // Blurb
     const blurb = gradeBlurbs[grade.label] || '';
     if (blurb) {
-        cf(false); doc.setFontSize(8.5); doc.setTextColor(...GRAY1);
+        cf(false); doc.setFontSize(10); doc.setTextColor(...GRAY1);
         const blurbLines = doc.splitTextToSize(`"${blurb}"`, CW);
         doc.text(blurbLines, M, y);
-        y += blurbLines.length * 5 + 8;
+        y += blurbLines.length * 5.5 + 7;
     }
 
-    // Gap-to-median callout box
+    // Median callout box
     const medianPrice = lastResult.median || (propsAbove.length ? propsAbove[0].sale_price : null);
     if (medianPrice && sp.budget) {
-        const gap = medianPrice - sp.budget;
-        const gapStr = gap > 0
-            ? `+${gap >= 1_000_000 ? `$${(gap/1_000_000).toFixed(2).replace(/\.?0+$/,'')}M` : `$${Math.round(gap/1000)}k`} to median`
-            : 'At or above the median';
+        const gap    = medianPrice - sp.budget;
+        const absGap = Math.abs(gap);
+        const gapStr = gap <= 0
+            ? 'At or above median'
+            : `+$${absGap >= 1_000_000 ? `${(absGap/1_000_000).toFixed(1)}M` : `${Math.round(absGap/1000)}k`}`;
 
         doc.setFillColor(...SURFACE);
-        doc.rect(M, y, CW, 18, 'F');
+        doc.rect(M, y, CW, 22, 'F');
         doc.setDrawColor(...GRAY3); doc.setLineWidth(0.2);
-        doc.rect(M, y, CW, 18, 'S');
+        doc.rect(M, y, CW, 22, 'S');
 
-        cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY1);
-        doc.text('MEDIAN SALE PRICE', M + 6, y + 6);
-        cf(true); doc.setFontSize(10); doc.setTextColor(...WHITE);
-        doc.text(`$${medianPrice.toLocaleString()}`, M + 6, y + 13);
+        cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY1);
+        doc.text('MEDIAN SALE PRICE', M + 6, y + 8);
+        cf(true); doc.setFontSize(13); doc.setTextColor(...WHITE);
+        doc.text(`$${medianPrice.toLocaleString()}`, M + 6, y + 17);
 
-        cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY1);
-        doc.text('GAP TO MEDIAN', M + CW / 2 + 4, y + 6);
-        cf(true); doc.setFontSize(10); doc.setTextColor(...(gap > 0 ? RED : GREEN));
-        doc.text(gapStr, M + CW / 2 + 4, y + 13);
+        cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY1);
+        doc.text('GAP TO MEDIAN', M + CW / 2 + 4, y + 8);
+        cf(true); doc.setFontSize(13); doc.setTextColor(...(gap > 0 ? RED : GREEN));
+        doc.text(gapStr, M + CW / 2 + 4, y + 17);
 
-        y += 24;
+        y += 27;
     }
 
     // What's limiting you
-    cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY2);
+    cf(false); doc.setFontSize(8); doc.setTextColor(...GRAY2);
     doc.text('WHAT\'S LIMITING YOU', M, y);
-    y += 7;
+    y += 8;
 
     const factors = [
-        { label: 'PRICE',     pct: lastResult.pricePct },
-        { label: 'BEDROOMS',  pct: lastResult.bedsPct  },
-        { label: 'BATHROOMS', pct: lastResult.bathsPct },
-        { label: 'CAR SPACES',pct: lastResult.carsPct  },
+        { label: 'PRICE',      pct: lastResult.pricePct },
+        { label: 'BEDROOMS',   pct: lastResult.bedsPct  },
+        { label: 'BATHROOMS',  pct: lastResult.bathsPct },
+        { label: 'CAR SPACES', pct: lastResult.carsPct  },
     ];
-    const lblW = 28, barW = CW - lblW - 16;
+    const lblW = 32, barW = CW - lblW - 22;
 
     factors.forEach(f => {
         const isNA = f.pct === null || f.pct === undefined;
-        cf(false); doc.setFontSize(7); doc.setTextColor(...GRAY1);
-        doc.text(f.label, M, y + 3.5);
-        doc.setFillColor(...GRAY3); doc.rect(M + lblW, y, barW, 4, 'F');
+        cf(false); doc.setFontSize(9); doc.setTextColor(...GRAY1);
+        doc.text(f.label, M, y + 4);
+        doc.setFillColor(...GRAY3); doc.rect(M + lblW, y, barW, 5, 'F');
         if (!isNA) {
             const fillColor = f.pct < 0.3 ? RED : f.pct < 0.6 ? AMBER : GREEN;
             doc.setFillColor(...fillColor);
-            doc.rect(M + lblW, y, Math.max(barW * f.pct, 0.8), 4, 'F');
+            doc.rect(M + lblW, y, Math.max(barW * f.pct, 0.8), 5, 'F');
         }
-        cf(true); doc.setFontSize(7);
+        cf(true); doc.setFontSize(9);
         if (isNA) {
-            doc.setTextColor(...GRAY2); doc.text('N/A', M + lblW + barW + 4, y + 3.5);
+            doc.setTextColor(...GRAY2); doc.text('no data', M + lblW + barW + 4, y + 4);
         } else {
             const col = f.pct < 0.3 ? RED : f.pct < 0.6 ? AMBER : GREEN;
             doc.setTextColor(...col);
-            doc.text(`${Math.round(f.pct * 100)}%`, M + lblW + barW + 4, y + 3.5);
+            doc.text(`${Math.round(f.pct * 100)}%`, M + lblW + barW + 4, y + 4);
         }
-        y += 8;
+        y += 9;
     });
 
     y += 4;
+    rule(y, GRAY2, true);
+    y += 9;
+
+    // ── What-if narrative ────────────────────────────────────────
+    cf(false); doc.setFontSize(8); doc.setTextColor(...GRAY2);
+    doc.text('WHAT WOULD CHANGE YOUR SCORE', M, y);
+    y += 8;
+
+    const validWhatifs = (lastWhatifs || []).filter(
+        wf => wf.result && !wf.comingSoon && !wf.atMin && wf.result.score > lastResult.score
+    );
+    validWhatifs.sort((a, b) => b.result.score - a.result.score);
+
+    if (validWhatifs.length > 0) {
+        const best  = validWhatifs[0];
+        const bestG = getGrade(best.result.score);
+        let narrative = `The biggest single change is ${best.change.toLowerCase()}${best.desc ? ' — ' + best.desc : ''}. That takes your score from ${lastResult.score}% (${grade.label}) to ${best.result.score}% (${bestG.label}).`;
+        if (validWhatifs.length > 1) {
+            const second = validWhatifs[1];
+            const g2 = getGrade(second.result.score);
+            narrative += ` ${second.change}${second.desc ? ' — ' + second.desc : ''} — would take you to ${second.result.score}% (${g2.label}).`;
+        }
+        cf(false); doc.setFontSize(10); doc.setTextColor(...GRAY1);
+        const narLines = doc.splitTextToSize(narrative, CW);
+        doc.text(narLines, M, y);
+        y += narLines.length * 5.5 + 5;
+    } else {
+        cf(false); doc.setFontSize(10); doc.setTextColor(...GRAY2);
+        doc.text('No what-if scenarios available for this state yet.', M, y);
+        y += 8;
+    }
+
     // Data source note
-    cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY2);
+    y += 3;
+    cf(false); doc.setFontSize(7); doc.setTextColor(...GRAY3);
     const srcText = isNSW
-        ? 'Source: NSW Valuer General — complete record of all residential sales. Updated daily. getreallyreal.netlify.app'
-        : 'Source: Victorian Valuer-General — suburb-level medians, annual data. Individual records not publicly available. getreallyreal.netlify.app';
-    const srcLines = doc.splitTextToSize(srcText, CW);
-    doc.text(srcLines, M, y);
+        ? 'Source: NSW Valuer General — complete record of all residential sales. Not financial advice.'
+        : 'Source: Victorian Valuer-General — suburb-level medians. Not financial advice.';
+    doc.text(srcText, M, y);
 
     pageFooter();
 
     // =============================================================
-    // PAGE 4 — COMPARABLE SALES
+    // PAGE 3 — COMPARABLE SALES (all on one page)
     // =============================================================
     doc.addPage(); fillPage();
-    pageHeader(`Comparable sales · ${isNSW ? 'NSW Valuer General' : 'data not available'}`);
+    pageHeader('Properties sold closest to your budget · NSW Valuer General');
     y = 22;
 
     if (!isNSW) {
-        cf(false); doc.setFontSize(8.5); doc.setTextColor(...GRAY1);
+        cf(false); doc.setFontSize(10); doc.setTextColor(...GRAY1);
         const vicLines = doc.splitTextToSize(
             `Victoria does not make individual property sale records publicly available. The Valuer-General publishes suburb-level medians only. Until Victoria follows NSW's lead, we cannot show real comparable sales with addresses and prices. Visit getreallyreal.netlify.app/manifesto.html for the full data freedom breakdown.`,
             CW
         );
         doc.text(vicLines, M, y);
     } else {
-        // Street view image grid (2×2, up to 4 properties)
-        if (svImages.some(img => img !== null)) {
-            const imgW = (CW - 6) / 2;
-            const imgH = imgW * 0.57;
-            const imgY = y;
+        // ── Street view images — 3 in a single row ──────────────
+        const validSvProps  = svProps.filter((_, i) => svImages[i] !== null);
+        if (validSvProps.length > 0) {
+            const imgCount = Math.min(validSvProps.length, 3);
+            const imgW     = (CW - (imgCount - 1) * 5) / imgCount;
+            const imgH     = imgW * 0.5;
 
             svProps.forEach((prop, i) => {
-                const img = svImages[i];
-                if (!img) return;
-                const col   = i % 2;
-                const row   = Math.floor(i / 2);
-                const ix    = M + col * (imgW + 6);
-                const iy    = imgY + row * (imgH + 14);
+                if (!svImages[i]) return;
+                const ix    = M + i * (imgW + 5);
+                const iy    = y;
                 const price = prop.sale_price || 0;
                 const within = price <= (sp.budget || 0);
 
-                try { doc.addImage(img, 'JPEG', ix, iy, imgW, imgH); } catch(e) {}
+                try { doc.addImage(svImages[i], 'JPEG', ix, iy, imgW, imgH); } catch(e) {}
 
-                // Label badge
+                // Budget badge
                 doc.setFillColor(...(within ? [0, 80, 40] : [80, 20, 20]));
                 doc.rect(ix + 2, iy + 2, within ? 24 : 22, 5, 'F');
                 cf(true); doc.setFontSize(5.5); doc.setTextColor(...WHITE);
                 doc.text(within ? 'WITHIN BUDGET' : 'ABOVE BUDGET', ix + 3, iy + 5.5);
 
-                // Address + price below image
-                cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY1);
-                const addr = (prop.address_full || '').split(',')[0];
-                doc.text(addr.length > 30 ? addr.slice(0, 29) + '…' : addr, ix, iy + imgH + 4.5);
-                cf(true); doc.setFontSize(7); doc.setTextColor(...(within ? GREEN : RED));
-                doc.text(`$${price.toLocaleString()}`, ix, iy + imgH + 9.5);
+                // Price below image
+                cf(true); doc.setFontSize(8.5); doc.setTextColor(...(within ? GREEN : RED));
+                doc.text(`$${price.toLocaleString()}`, ix, iy + imgH + 6);
+
+                // Street address
+                cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY1);
+                const addr    = (prop.address_full || '').split(',')[0];
+                const maxChar = Math.floor(imgW / 1.6);
+                doc.text(addr.length > maxChar ? addr.slice(0, maxChar - 1) + '…' : addr, ix, iy + imgH + 12);
             });
 
-            const rows = Math.ceil(Math.min(svProps.filter((_, i) => svImages[i]).length, 4) / 2);
-            y += rows * (imgH + 14) + 6;
+            y += imgH + 17;
         }
 
         // Intro line
-        cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY1);
+        cf(false); doc.setFontSize(9); doc.setTextColor(...GRAY1);
         doc.text(
             allTableProps.length > 0
                 ? `${allTableProps.length} ${TYPE_LABELS[sp.type].toLowerCase()}s sold in ${titleCase(sp.suburb)} in the last 13 months. Source: NSW Valuer General (public record).`
@@ -2285,73 +2311,78 @@ async function generatePDF(name, email, phone, consent) {
         y += 9;
 
         if (allTableProps.length > 0) {
-            // Table header
-            const drawTblHdr = (ty) => {
-                doc.setFillColor(...SURFACE);
-                doc.rect(M, ty, CW, 6, 'F');
-                cf(true); doc.setFontSize(6.5); doc.setTextColor(...GRAY1);
-                doc.text('#',        M + 2,          ty + 4.2);
-                doc.text('ADDRESS',  M + 9,          ty + 4.2);
-                doc.text('DATE',     M + 9 + 85,     ty + 4.2);
-                doc.text('PRICE',    M + 9 + 110,    ty + 4.2);
-                doc.text('GAP',      M + CW - 2,     ty + 4.2, { align: 'right' });
-                return ty + 6;
-            };
+            // Column x-positions (no overlap between GAP and REA)
+            const C_NUM   = M + 2;
+            const C_ADDR  = M + 9;
+            const C_DATE  = M + 9 + 80;
+            const C_PRICE = M + 9 + 80 + 24;
+            const C_GAP   = M + 9 + 80 + 24 + 28;
+            const C_REA   = M + CW - 2;
 
-            y = drawTblHdr(y);
+            // Table header
+            doc.setFillColor(...SURFACE);
+            doc.rect(M, y, CW, 7, 'F');
+            cf(true); doc.setFontSize(7.5); doc.setTextColor(...GRAY1);
+            doc.text('#',       C_NUM,  y + 5);
+            doc.text('ADDRESS', C_ADDR, y + 5);
+            doc.text('DATE',    C_DATE, y + 5);
+            doc.text('PRICE',   C_PRICE,y + 5);
+            doc.text('GAP',     C_GAP,  y + 5);
+            doc.text('↗',       C_REA,  y + 5, { align: 'right' });
+            y += 7;
+
             let budgetLineDone = false;
 
             allTableProps.forEach((prop, idx) => {
-                const rowH = 6.5;
-                if (y + rowH + 4 > H - 18) {
-                    pageFooter();
-                    doc.addPage(); fillPage();
-                    pageHeader('Comparable sales (continued)');
-                    y = 22;
-                    y = drawTblHdr(y);
-                    budgetLineDone = budgetLineDone; // preserve across pages
-                }
-
+                const rowH   = 7;
                 const price  = prop.sale_price || 0;
                 const within = price <= (sp.budget || 0);
+
+                if (y + rowH + 4 > H - 18) return; // single page — skip overflow
 
                 // Budget separator
                 if (!budgetLineDone && !within) {
                     doc.setFillColor(...SURFACE);
-                    doc.rect(M, y, CW, 5, 'F');
+                    doc.rect(M, y, CW, 6, 'F');
                     doc.setDrawColor(...RED); doc.setLineWidth(0.3);
                     doc.line(M, y + 0.15, M + CW, y + 0.15);
-                    cf(true); doc.setFontSize(6); doc.setTextColor(...RED);
-                    doc.text(`BUDGET LIMIT  $${(sp.budget || 0).toLocaleString()}`, M + 2, y + 3.6);
-                    doc.text('above budget →', M + CW - 2, y + 3.6, { align: 'right' });
-                    y += 5;
+                    cf(true); doc.setFontSize(7); doc.setTextColor(...RED);
+                    doc.text(`BUDGET LIMIT  $${(sp.budget || 0).toLocaleString()}`, C_NUM, y + 4.5);
+                    doc.text('above →', C_REA, y + 4.5, { align: 'right' });
+                    y += 6;
                     budgetLineDone = true;
                 }
 
                 if (idx % 2 === 0) { doc.setFillColor(...SURFACE); doc.rect(M, y, CW, rowH, 'F'); }
 
-                const addr  = prop.address_full || '—';
-                const gap   = fmtGap(price);
+                const addr   = prop.address_full || '—';
+                const gap    = fmtGap(price);
                 const reaUrl = addressToREAUrl(prop.address_full || '');
 
-                cf(within ? true : false); doc.setFontSize(7); doc.setTextColor(...(within ? WHITE : GRAY1));
-                doc.text(String(idx + 1), M + 2, y + 4.5);
-                const shortAddr = addr.length > 44 ? addr.slice(0, 43) + '…' : addr;
-                doc.text(shortAddr, M + 9, y + 4.5);
+                // #
+                cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY2);
+                doc.text(String(idx + 1), C_NUM, y + 5);
 
-                cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY1);
-                doc.text(fmtDate(prop.sale_date), M + 9 + 85, y + 4.5);
+                // Address
+                cf(within ? true : false); doc.setFontSize(7.5); doc.setTextColor(...(within ? WHITE : GRAY1));
+                doc.text(addr.length > 40 ? addr.slice(0, 39) + '…' : addr, C_ADDR, y + 5);
 
-                cf(true); doc.setFontSize(7); doc.setTextColor(...(within ? GREEN : RED));
-                doc.text(`$${price.toLocaleString()}`, M + 9 + 110, y + 4.5);
+                // Date
+                cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY1);
+                doc.text(fmtDate(prop.sale_date), C_DATE, y + 5);
 
-                cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY2);
-                doc.text(gap, M + CW - 2, y + 4.5, { align: 'right' });
+                // Price
+                cf(true); doc.setFontSize(7.5); doc.setTextColor(...(within ? GREEN : RED));
+                doc.text(`$${price.toLocaleString()}`, C_PRICE, y + 5);
 
-                // REA clickable link
+                // Gap
+                cf(false); doc.setFontSize(7.5); doc.setTextColor(...(price > (sp.budget||0) ? RED : GREEN));
+                doc.text(gap, C_GAP, y + 5);
+
+                // REA link — own column, no overlap
                 if (reaUrl) {
-                    doc.setTextColor(59, 130, 246);
-                    doc.textWithLink('↗ REA', M + CW - 2, y + rowH - 0.5, { url: reaUrl, align: 'right' });
+                    doc.setTextColor(...BLUE);
+                    doc.textWithLink('↗', C_REA, y + 5, { url: reaUrl, align: 'right' });
                 }
 
                 y += rowH;
@@ -2362,152 +2393,71 @@ async function generatePDF(name, email, phone, consent) {
     pageFooter();
 
     // =============================================================
-    // PAGE 5 — SUBURB COMPARISON
+    // PAGE 4 — SUBURB COMPARISON
     // =============================================================
     doc.addPage(); fillPage();
     pageHeader('How does your budget travel?');
     y = 22;
 
-    cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY1);
+    cf(false); doc.setFontSize(9); doc.setTextColor(...GRAY1);
     const mapIntro = isNSW
         ? 'Nearby suburbs scored at your current budget using real NSW Valuer General sales data.'
         : 'Nearby suburbs scored at your current budget using VIC Valuer-General median data.';
     doc.text(mapIntro, M, y);
-    y += 10;
+    y += 11;
 
     const mapSuburbs = (_lastMapSuburbs || []).slice().sort((a, b) => b.score - a.score);
 
     if (mapSuburbs.length > 0) {
         // Table header
         doc.setFillColor(...SURFACE);
-        doc.rect(M, y, CW, 6, 'F');
-        cf(true); doc.setFontSize(6.5); doc.setTextColor(...GRAY1);
-        doc.text('SUBURB',    M + 2,       y + 4.2);
-        doc.text('SCORE',     M + 60,      y + 4.2);
-        doc.text('DIST',      M + CW - 2,  y + 4.2, { align: 'right' });
-        y += 6;
+        doc.rect(M, y, CW, 7, 'F');
+        cf(true); doc.setFontSize(7.5); doc.setTextColor(...GRAY1);
+        doc.text('SUBURB', M + 2,      y + 5);
+        doc.text('SCORE',  M + 62,     y + 5);
+        doc.text('DIST',   M + CW - 2, y + 5, { align: 'right' });
+        y += 7;
 
-        const barMaxW = 60;
+        const barMaxW = 62;
         mapSuburbs.forEach((s, i) => {
-            if (y + 7 > H - 18) {
-                pageFooter();
-                doc.addPage(); fillPage();
-                pageHeader('Suburb comparison (continued)');
-                y = 22;
-            }
+            if (y + 8 > H - 18) return;
 
-            const isYours = s.key === sp.suburb.toLowerCase().replace(/\s+/g, '');
-            if (i % 2 === 0) { doc.setFillColor(...SURFACE); doc.rect(M, y, CW, 6.5, 'F'); }
-            if (isYours) { doc.setFillColor(20, 30, 60); doc.rect(M, y, CW, 6.5, 'F'); }
+            const suburbNorm = sp.suburb.toLowerCase().replace(/\s+/g, '');
+            const rowKeyNorm = (s.key  || '').toLowerCase().replace(/\s+/g, '');
+            const rowNmNorm  = (s.name || '').toLowerCase().replace(/\s+/g, '');
+            const isYours    = rowKeyNorm === suburbNorm || rowNmNorm === suburbNorm;
+
+            if (i % 2 === 0) { doc.setFillColor(...SURFACE); doc.rect(M, y, CW, 7.5, 'F'); }
+            if (isYours)      { doc.setFillColor(20, 40, 80); doc.rect(M, y, CW, 7.5, 'F'); }
 
             const col = mapScoreColor(s.score);
             const rgb = hexToRgb(col);
 
-            cf(isYours ? true : false); doc.setFontSize(7); doc.setTextColor(...(isYours ? WHITE : GRAY1));
-            doc.text((s.name || titleCase(s.key || '')).slice(0, 22), M + 2, y + 4.5);
+            const displayName = (s.name || titleCase(s.key || '')) + (isYours ? '  ← YOU' : '');
+            cf(isYours ? true : false); doc.setFontSize(8); doc.setTextColor(...(isYours ? WHITE : GRAY1));
+            doc.text(displayName.slice(0, 28), M + 2, y + 5.5);
 
             // Score bar
-            doc.setFillColor(...GRAY3); doc.rect(M + 60, y + 1.5, barMaxW, 3.5, 'F');
-            doc.setFillColor(...rgb);   doc.rect(M + 60, y + 1.5, barMaxW * (s.score / 100), 3.5, 'F');
+            doc.setFillColor(...GRAY3); doc.rect(M + 62, y + 2, barMaxW, 4, 'F');
+            doc.setFillColor(...rgb);   doc.rect(M + 62, y + 2, barMaxW * (s.score / 100), 4, 'F');
 
-            cf(true); doc.setFontSize(6.5); doc.setTextColor(...rgb);
-            doc.text(`${s.score}%`, M + 60 + barMaxW + 3, y + 4.5);
+            cf(true); doc.setFontSize(7.5); doc.setTextColor(...rgb);
+            doc.text(`${s.score}%`, M + 62 + barMaxW + 3, y + 5.5);
 
-            cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY2);
+            cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY2);
             const distStr = s.dist != null ? `${s.dist.toFixed(1)}km` : '—';
-            doc.text(distStr, M + CW - 2, y + 4.5, { align: 'right' });
+            doc.text(distStr, M + CW - 2, y + 5.5, { align: 'right' });
 
-            y += 6.5;
+            y += 7.5;
         });
 
-        y += 6;
-        cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY2);
+        y += 7;
+        cf(false); doc.setFontSize(8); doc.setTextColor(...GRAY2);
         doc.text('Click any suburb on the live map at getreallyreal.netlify.app to run a new search.', M, y);
     } else {
-        cf(false); doc.setFontSize(8); doc.setTextColor(...GRAY1);
+        cf(false); doc.setFontSize(9); doc.setTextColor(...GRAY1);
         doc.text('Open the live map at getreallyreal.netlify.app to explore nearby suburbs interactively.', M, y);
     }
-
-    pageFooter();
-
-    // =============================================================
-    // PAGE 6 — WHAT IF
-    // =============================================================
-    doc.addPage(); fillPage();
-    pageHeader('What if you changed one thing?');
-    y = 22;
-
-    cf(false); doc.setFontSize(8); doc.setTextColor(...GRAY1);
-    const wiIntroLines = doc.splitTextToSize(
-        `Each scenario changes one element of your search. The goal: identify the lever that matters most — so any trade-off is an informed choice, not a random one.`,
-        CW
-    );
-    doc.text(wiIntroLines, M, y);
-    y += wiIntroLines.length * 4.8 + 8;
-
-    (lastWhatifs || []).forEach(wf => {
-        const cardH = (!wf.result || wf.comingSoon) ? 18 : 30;
-
-        if (y + cardH + 5 > H - 18) {
-            pageFooter();
-            doc.addPage(); fillPage();
-            pageHeader('What if? (continued)');
-            y = 22;
-        }
-
-        doc.setFillColor(...SURFACE);
-        doc.rect(M, y, CW, cardH, 'F');
-        doc.setDrawColor(...GRAY3); doc.setLineWidth(0.2);
-        doc.rect(M, y, CW, cardH, 'S');
-
-        if (!wf.result || wf.comingSoon) {
-            cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY2);
-            doc.text('IF:', M + 4, y + 7);
-            cf(true); doc.setFontSize(7); doc.setTextColor(...GRAY1);
-            doc.text((wf.change || '').toUpperCase(), M + 12, y + 7);
-            cf(false); doc.setFontSize(8); doc.setTextColor(...GRAY2);
-            doc.text(wf.desc || 'Data not yet available for this state.', M + 4, y + 14);
-        } else {
-            const wg    = getGrade(wf.result.score);
-            const wRgb  = hexToRgb(wg.color);
-            const delta = wf.result.score - lastResult.score;
-            const dStr  = (delta > 0 ? '+' : '') + delta + '%';
-            const dRgb  = delta > 2 ? GREEN : delta < -2 ? RED : GRAY1;
-
-            // IF row
-            cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY2); doc.text('IF:', M + 4, y + 7);
-            cf(true);  doc.setFontSize(7);   doc.setTextColor(...GRAY1); doc.text((wf.change || '').toUpperCase(), M + 12, y + 7);
-
-            // Description
-            cf(true); doc.setFontSize(9); doc.setTextColor(...WHITE);
-            const descMax = (wf.desc || '').length > 55 ? (wf.desc || '').slice(0, 54) + '…' : (wf.desc || '');
-            doc.text(descMax, M + 4, y + 15);
-
-            // THEN row
-            cf(false); doc.setFontSize(6.5); doc.setTextColor(...GRAY2); doc.text('THEN:', M + 4, y + 24);
-            const wScoreStr = `${wf.result.score}%`;
-            cf(true); doc.setFontSize(13); doc.setTextColor(...wRgb);
-            doc.text(wScoreStr, M + 18, y + 24);
-            const wScoreW2 = doc.getTextWidth(wScoreStr);
-            cf(true); doc.setFontSize(8); doc.setTextColor(...wRgb);
-            doc.text(wg.label.toUpperCase(), M + 18 + wScoreW2 + 3, y + 24);
-
-            // Delta + bars (top right)
-            cf(true); doc.setFontSize(11); doc.setTextColor(...dRgb);
-            doc.text(dStr, M + CW - 4, y + 15, { align: 'right' });
-
-            const mbW = 38, mbH = 3, mbX = M + CW - 4 - mbW;
-            doc.setFillColor(...GRAY3); doc.rect(mbX, y + 19,   mbW, mbH, 'F');
-            doc.setFillColor(...GRADE); doc.rect(mbX, y + 19,   Math.max(mbW * (lastResult.score / 100), 0.5), mbH, 'F');
-            doc.setFillColor(...GRAY3); doc.rect(mbX, y + 23.5, mbW, mbH, 'F');
-            doc.setFillColor(...wRgb);  doc.rect(mbX, y + 23.5, Math.max(mbW * (wf.result.score / 100), 0.5), mbH, 'F');
-            cf(false); doc.setFontSize(5.5); doc.setTextColor(...GRAY2);
-            doc.text('now', mbX - 1, y + 21.5, { align: 'right' });
-            doc.text('if',  mbX - 1, y + 26,   { align: 'right' });
-        }
-
-        y += cardH + 5;
-    });
 
     pageFooter();
 
