@@ -506,8 +506,7 @@
     <div class="contact-block">
         <h2>Something wrong on this page?</h2>
         <p>Data access policies change. If anything here is out of date or incorrect, let us know and we'll fix it.</p>
-        <form name="manifesto-contact" method="POST" data-netlify="true" onsubmit="handleSubmit(event)">
-            <input type="hidden" name="form-name" value="manifesto-contact" />
+        <form name="manifesto-contact" method="POST" onsubmit="handleSubmit(event)">
             <label for="contact-name">Name (optional)</label>
             <input type="text" id="contact-name" name="name" autocomplete="name" />
             <label for="contact-message">Message</label>
@@ -540,13 +539,17 @@
 function handleSubmit(e) {
     e.preventDefault();
     const form = e.target;
-    fetch('/', {
+    fetch('https://formspree.io/f/xkodwypr', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(new FormData(form)).toString()
-    }).then(() => {
-        form.style.display = 'none';
-        document.getElementById('contactSuccess').style.display = 'block';
+        headers: { 'Accept': 'application/json' },
+        body: new FormData(form)
+    }).then(r => {
+        if (r.ok) {
+            form.style.display = 'none';
+            document.getElementById('contactSuccess').style.display = 'block';
+        } else {
+            alert('Something went wrong. Please try again.');
+        }
     }).catch(() => {
         alert('Something went wrong. Please try again.');
     });
