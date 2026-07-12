@@ -2049,35 +2049,96 @@ async function generatePDF(name, email, phone, consent) {
     // =============================================================
     fillPage();
 
+    // Shared vars used on later pages
+    const scoreStr  = `${lastResult.score}%`;
+    const stateName = isNSW ? 'NSW' : 'VIC';
+
     // GETREAL wordmark
     cf(true);  doc.setFontSize(11); doc.setTextColor(...WHITE); doc.text('GETREAL', M, 14);
     cf(false); doc.setFontSize(7);  doc.setTextColor(...GRAY2); doc.text(today, W - M, 14, { align: 'right' });
     rule(17, GRAY3);
 
-    // Score — true vertical centre of available space
-    const scoreStr  = `${lastResult.score}%`;
-    cf(true); doc.setFontSize(96); doc.setTextColor(...GRADE);
-    doc.text(scoreStr, W / 2, 112, { align: 'center' });
+    // ── Target rings ──────────────────────────────────────────────
+    const tgtCX    = W / 2;
+    const tgtCY    = 97;
+    const tgtOutR  = 73;
+    const tgtInR   = 9;
+    const tgtRingW = (tgtOutR - tgtInR) / 6;
 
-    // Grade label
-    cf(true); doc.setFontSize(16); doc.setTextColor(...GRADE);
-    doc.text(grade.label.toUpperCase(), W / 2, 127, { align: 'center' });
+    // Bright and dim versions of each ring (outside-in: 0=Unrealistic … 5=Highly Realistic)
+    const RING_BRIGHT = [
+        [220, 38,  38],
+        [239, 68,  68],
+        [249, 115, 22],
+        [245, 158, 11],
+        [20,  184, 166],
+        [34,  197, 94],
+    ];
+    const RING_DIM = [
+        [30, 12, 12],
+        [32, 14, 14],
+        [30, 18, 10],
+        [30, 22, 10],
+        [12, 28, 25],
+        [12, 28, 16],
+    ];
+    const GRADE_TO_RING = {
+        'Unrealistic': 0, 'Very Difficult': 1, 'Tight': 2,
+        'Competitive': 3, 'Realistic': 4,      'Highly Realistic': 5,
+    };
+    const activeRingIdx = GRADE_TO_RING[grade.label] ?? 0;
 
-    // Thin rule
-    doc.setDrawColor(...GRAY3); doc.setLineWidth(0.25);
-    doc.line(W / 2 - 35, 133, W / 2 + 35, 133);
+    // Draw filled discs outside-in — each inner disc paints over the centre of the previous
+    for (let i = 0; i < 6; i++) {
+        const r = tgtOutR - i * tgtRingW;
+        doc.setFillColor(...(i === activeRingIdx ? RING_BRIGHT[i] : RING_DIM[i]));
+        doc.circle(tgtCX, tgtCY, r, 'F');
+    }
+    // Draw BG-coloured strokes at each ring boundary to create gaps
+    doc.setDrawColor(...BG);
+    doc.setLineWidth(1.1);
+    for (let i = 1; i < 6; i++) {
+        doc.circle(tgtCX, tgtCY, tgtOutR - i * tgtRingW, 'D');
+    }
 
-    // Name
-    cf(true);  doc.setFontSize(12); doc.setTextColor(...WHITE);
-    doc.text(firstName, W / 2, 143, { align: 'center' });
+    // ── Score — centred below target ──────────────────────────────
+    cf(true); doc.setFontSize(52); doc.setTextColor(...GRADE);
+    doc.text(scoreStr, W / 2, 185, { align: 'center' });
 
-    // Search details
-    const stateName  = isNSW ? 'NSW' : 'VIC';
-    const searchLine = `${titleCase(sp.suburb)} ${stateName}  ·  ${TYPE_LABELS[sp.type]}  ·  ${budgetStr}`;
-    cf(false); doc.setFontSize(9.5); doc.setTextColor(...GRAY1);
-    doc.text(searchLine, W / 2, 152, { align: 'center' });
+    cf(true); doc.setFontSize(11); doc.setTextColor(...GRADE);
+    doc.text(grade.label.toUpperCase(), W / 2, 196, { align: 'center' });
 
-    // URL at bottom
+    // Thin divider
+    doc.setDrawColor(...GRAY3); doc.setLineWidth(0.2);
+    doc.line(W / 2 - 22, 202, W / 2 + 22, 202);
+
+    // ── Name ──────────────────────────────────────────────────────
+    cf(true); doc.setFontSize(10); doc.setTextColor(...WHITE);
+    doc.text(firstName, W / 2, 211, { align: 'center' });
+
+    // ── Search input pills ────────────────────────────────────────
+    const pills    = [titleCase(sp.suburb) + ' ' + stateName, TYPE_LABELS[sp.type], budgetStr];
+    const pillH    = 7.5;
+    const pillPad  = 9;   // horizontal padding inside pill
+    const pillGap  = 4;   // gap between pills
+    cf(false); doc.setFontSize(8.5);
+    const pillWidths = pills.map(p => doc.getTextWidth(p) + pillPad * 2);
+    const totalPillW = pillWidths.reduce((s, w) => s + w, 0) + pillGap * (pills.length - 1);
+    let pillX = W / 2 - totalPillW / 2;
+    const pillY = 217;
+
+    pills.forEach((label, pi) => {
+        const pW = pillWidths[pi];
+        doc.setFillColor(...SURFACE);
+        doc.setDrawColor(...GRAY2);
+        doc.setLineWidth(0.25);
+        doc.roundedRect(pillX, pillY, pW, pillH, 1.5, 1.5, 'FD');
+        cf(false); doc.setFontSize(8.5); doc.setTextColor(...WHITE);
+        doc.text(label, pillX + pW / 2, pillY + 5.1, { align: 'center' });
+        pillX += pW + pillGap;
+    });
+
+    // ── URL ───────────────────────────────────────────────────────
     cf(false); doc.setFontSize(7); doc.setTextColor(...GRAY2);
     doc.text('getreallyreal.netlify.app', W / 2, H - 10, { align: 'center' });
 
