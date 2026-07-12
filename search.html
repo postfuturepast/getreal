@@ -1945,9 +1945,6 @@ async function generatePDF(name, email, phone, consent) {
     const GREEN   = [34,  197, 94];
     const AMBER   = [245, 158, 11];
 
-    const W = 210, H = 297, M = 16;
-    const CW = W - 2 * M;
-
     const grade     = getGrade(lastResult.score);
     const GRADE     = hexToRgb(grade.color);
     const sp        = lastSearchParams;
