@@ -2140,7 +2140,7 @@ async function generatePDF(name, email, phone, consent) {
 
     // ── URL ───────────────────────────────────────────────────────
     cf(false); doc.setFontSize(7); doc.setTextColor(...GRAY2);
-    doc.text('getreallyreal.netlify.app', W / 2, H - 10, { align: 'center' });
+    doc.text('getreal-aa2.pages.dev', W / 2, H - 10, { align: 'center' });
 
     // =============================================================
     // PAGE 2 — LETTER + RESULT + WHAT-IF NARRATIVE
@@ -2170,7 +2170,7 @@ async function generatePDF(name, email, phone, consent) {
     y += 2;
     cf(true);  doc.setFontSize(9);   doc.setTextColor(...WHITE); doc.text('GetReal', M, y);
     y += 5;
-    cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY2); doc.text('getreallyreal.netlify.app', M, y);
+    cf(false); doc.setFontSize(7.5); doc.setTextColor(...GRAY2); doc.text('getreal-aa2.pages.dev', M, y);
     y += 9;
     rule(y, GRAY2, true);
     y += 11;
@@ -2320,7 +2320,7 @@ async function generatePDF(name, email, phone, consent) {
     if (!isNSW) {
         cf(false); doc.setFontSize(10); doc.setTextColor(...GRAY1);
         const vicLines = doc.splitTextToSize(
-            `Victoria does not make individual property sale records publicly available. The Valuer-General publishes suburb-level medians only. Until Victoria follows NSW's lead, we cannot show real comparable sales with addresses and prices. Visit getreallyreal.netlify.app/manifesto.html for the full data freedom breakdown.`,
+            `Victoria does not make individual property sale records publicly available. The Valuer-General publishes suburb-level medians only. Until Victoria follows NSW's lead, we cannot show real comparable sales with addresses and prices. Visit getreal-aa2.pages.dev/manifesto.html for the full data freedom breakdown.`,
             CW
         );
         doc.text(vicLines, M, y);
@@ -2389,7 +2389,7 @@ async function generatePDF(name, email, phone, consent) {
             doc.text('DATE',    C_DATE, y + 5);
             doc.text('PRICE',   C_PRICE,y + 5);
             doc.text('GAP',     C_GAP,  y + 5);
-            doc.text('↗',       C_REA,  y + 5, { align: 'right' });
+            doc.text('REA',     C_REA,  y + 5, { align: 'right' });
             y += 7;
 
             let budgetLineDone = false;
@@ -2443,7 +2443,7 @@ async function generatePDF(name, email, phone, consent) {
                 // REA link — own column, no overlap
                 if (reaUrl) {
                     doc.setTextColor(...BLUE);
-                    doc.textWithLink('↗', C_REA, y + 5, { url: reaUrl, align: 'right' });
+                    doc.textWithLink('REA', C_REA, y + 5, { url: reaUrl, align: 'right' });
                 }
 
                 y += rowH;
@@ -2514,10 +2514,10 @@ async function generatePDF(name, email, phone, consent) {
 
         y += 7;
         cf(false); doc.setFontSize(8); doc.setTextColor(...GRAY2);
-        doc.text('Click any suburb on the live map at getreallyreal.netlify.app to run a new search.', M, y);
+        doc.text('Click any suburb on the live map at getreal-aa2.pages.dev to run a new search.', M, y);
     } else {
         cf(false); doc.setFontSize(9); doc.setTextColor(...GRAY1);
-        doc.text('Open the live map at getreallyreal.netlify.app to explore nearby suburbs interactively.', M, y);
+        doc.text('Open the live map at getreal-aa2.pages.dev to explore nearby suburbs interactively.', M, y);
     }
 
     pageFooter();
