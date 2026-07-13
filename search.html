@@ -440,6 +440,7 @@
             grid-column: 1 / -1;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.75rem;
             font-size: 0.78rem;
             color: #fff;
@@ -447,7 +448,11 @@
             padding: 0.75rem 1rem;
             line-height: 1.5;
             flex-wrap: wrap;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
         }
+        .data-freedom-strip:hover { opacity: 0.9; }
         .df-tag {
             font-family: monospace;
             font-size: 0.68rem;
@@ -460,13 +465,6 @@
             padding: 0.15rem 0.45rem;
             white-space: nowrap;
         }
-        .data-freedom-strip a {
-            color: #fff;
-            text-decoration: underline;
-            text-underline-offset: 2px;
-            white-space: nowrap;
-        }
-        .data-freedom-strip a:hover { opacity: 0.8; }
 
         .indicative-note {
             grid-column: 1 / -1;
@@ -649,7 +647,7 @@
         </svg>
         <span class="brand-name">GetReal</span>
     </a>
-    <div class="indicative-badge">Indicative</div>
+    <div class="indicative-badge">Tool 1</div>
 </header>
 
 <main id="main-content">
@@ -691,7 +689,7 @@
         <div class="form-group">
             <label for="suburb">Suburb</label>
             <input type="text" id="suburb" list="suburbList"
-                   placeholder="Select a state first…" autocomplete="off">
+                   placeholder="Select a state first…" autocomplete="off" disabled>
             <datalist id="suburbList"></datalist>
         </div>
 
@@ -771,13 +769,14 @@
                     <div class="factor-track"><div class="factor-fill" id="barCars" style="width:0%"></div></div>
                     <span class="factor-pct" id="pctCars">—</span>
                 </div>
-                <div id="nswFactorNote" class="hidden" style="font-family:monospace;font-size:0.65rem;color:#444;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1a1a1a;letter-spacing:0.04em;">
-                    Bedroom, bathroom &amp; car space data — coming soon for NSW
+                <div id="nswFactorNote" class="hidden" style="font-family:monospace;font-size:0.65rem;color:#444;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1a1a1a;letter-spacing:0.04em;line-height:1.8;">
+                    · Score uses budget vs market — bedroom &amp; bathroom data not yet available for NSW · <a href="faq.html#vic-bedrooms" style="color:#555;text-decoration:underline;">Why not? →</a><br>
+                    · NSW Valuer General data doesn't include property attributes · <a href="manifesto.html" style="color:#555;text-decoration:underline;">Read more →</a>
                 </div>
                 <div id="vicFactorNote" class="hidden" style="font-family:monospace;font-size:0.65rem;color:#444;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1a1a1a;letter-spacing:0.04em;line-height:1.8;">
                     · Score estimated — VIC doesn't publish individual sale records · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">How? →</a><br>
                     · Modelled from NSW data matched to this suburb's price &amp; volume · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">See the data tables →</a><br>
-                    · Bedroom &amp; bathroom data unavailable for the same reason · <a href="faq.html#vic-bedrooms" style="color:#555;text-decoration:underline;">Why not? →</a>
+                    · Bedroom &amp; bathroom data unavailable for the same reason · <a href="manifesto.html" style="color:#555;text-decoration:underline;">Why not? →</a>
                 </div>
             </div>
         </div>
@@ -810,7 +809,7 @@
         </div>
     </div>
 
-    <!-- ── Suburb map (VIC) ── -->
+    <!-- ── Suburb map (VIC/NSW) ── -->
     <div id="suburbMapSection" class="hidden" style="grid-column:1 / -1; border-top:1px solid var(--border-subtle);">
         <div style="padding:1rem var(--pad-page) 0.5rem; display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
             <div class="section-heading" style="margin:0;">How does your budget travel?</div>
@@ -821,27 +820,37 @@
                 <span><span style="color:#0000ff;">●</span> Your search</span>
             </div>
         </div>
+        <!-- Map controls -->
+        <div id="mapControls" style="padding:0.4rem var(--pad-page); display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; border-bottom:1px solid var(--border-subtle); background:var(--surface);">
+            <span style="font-family:monospace;font-size:0.62rem;color:var(--dim);letter-spacing:0.06em;">TYPE</span>
+            <div id="mapTypeButtons" style="display:flex;gap:0.3rem;"></div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
+                <span style="font-family:monospace;font-size:0.62rem;color:var(--dim);letter-spacing:0.06em;">BUDGET</span>
+                <button onclick="adjustMapBudget(-50000)" style="font-family:monospace;font-size:0.7rem;padding:0.2rem 0.55rem;background:transparent;border:1px solid var(--border-subtle);color:var(--muted);cursor:pointer;border-radius:3px;" title="−$50k">−</button>
+                <span id="mapBudgetDisplay" style="font-family:monospace;font-size:0.72rem;color:var(--text);min-width:5ch;text-align:center;"></span>
+                <button onclick="adjustMapBudget(50000)" style="font-family:monospace;font-size:0.7rem;padding:0.2rem 0.55rem;background:transparent;border:1px solid var(--border-subtle);color:var(--muted);cursor:pointer;border-radius:3px;" title="+$50k">+</button>
+            </div>
+        </div>
         <div id="suburbMap" style="width:100%; height:340px; background:#111;"></div>
         <div style="padding:0.5rem var(--pad-page); font-family:monospace; font-size:0.65rem; color:var(--dim);">
-            Click a suburb to search it · Score shown at your current budget · <span id="mapDataSource">Valuer-General data</span>
+            Click a suburb to search it · Score shown at selected budget · <span id="mapDataSource">Valuer-General data</span>
         </div>
     </div>
 
     <!-- ── Report CTA ────────────────── -->
-    <div class="report-cta hidden" id="reportCta">
+    <div class="report-cta hidden" id="reportCta" onclick="openReportModal()" style="cursor:pointer;">
         <div class="report-cta-text">
             <h3>Save your results as a PDF</h3>
             <p>Share with your partner or mortgage broker</p>
         </div>
-        <button class="report-cta-btn" onclick="openReportModal()">Generate My Report →</button>
+        <button class="report-cta-btn" onclick="event.stopPropagation();openReportModal()">Generate My Report →</button>
     </div>
 
     <!-- ── Data freedom teaser ──────── -->
-    <div class="data-freedom-strip">
+    <a href="manifesto.html" class="data-freedom-strip">
         <span class="df-tag">Data freedom</span>
-        Only 1 of 8 Australian states publishes property sales data openly.
-        <a href="manifesto.html">Who's sharing and who's hiding →</a>
-    </div>
+        Only 1 of 8 Australian states publishes property sales data openly. Read more →
+    </a>
 
     <!-- ── Indicative note ──────────── -->
     <div class="indicative-note">
@@ -1152,6 +1161,7 @@ function buildWhatIfs(suburbKey, suburbData, type, budget, beds, baths, cars, ba
     const r1 = scoreSearch(suburbData, type, Math.round(budget * 1.1), beds, baths, cars);
     results.push({
         change: 'Increase budget by 10%',
+        from:   fmtCurrency(budget),
         desc:   fmtCurrency(Math.round(budget * 1.1)),
         result: r1 || { score: baseScore, matchingPool: 0, withinBudget: 0, annualSales: 0, median: 0, ratio:1, pricePct:0, bedsPct:0, bathsPct:0, carsPct:0 },
         apply:  { budget: Math.round(budget * 1.1) },
@@ -1168,6 +1178,7 @@ function buildWhatIfs(suburbKey, suburbData, type, budget, beds, baths, cars, ba
             : null;
         results.push({
             change: 'Fewer bedrooms',
+            from:   `${beds} bed${beds !== 1 ? 's' : ''}`,
             desc:   newBeds < beds ? `${newBeds} bed${newBeds !== 1 ? 's' : ''}` : null,
             atMin:  newBeds >= beds,
             result: r2 || results[0].result,
@@ -1211,6 +1222,7 @@ function buildWhatIfs(suburbKey, suburbData, type, budget, beds, baths, cars, ba
     }
     results.push({
         change: 'Nearby suburb',
+        from:   titleCase(suburbKey),
         desc:   r3 ? nearbyName : null,
         atMin:  !r3,
         result: r3 || results[0].result,
@@ -1229,6 +1241,7 @@ function buildWhatIfs(suburbKey, suburbData, type, budget, beds, baths, cars, ba
     const typeAtMin = !nextType || (!r4 && nextType);
     results.push({
         change: 'Change type',
+        from:   TYPE_LABELS[type],
         desc:   r4 ? TYPE_LABELS[nextType] : null,
         atMin:  typeAtMin,
         result: r4 || results[0].result,
@@ -1398,7 +1411,7 @@ function renderWhatIfs(scenarios, baseScore) {
                 <div class="wf-change">${WF_LABELS[i]}</div>
                 <span class="wf-delta ${dCls}" style="margin-left:auto" aria-label="${dStr}">${dStr}</span>
             </div>
-            ${s.desc ? `<div class="wf-desc">${s.desc}</div>` : ''}
+            ${s.desc ? `<div class="wf-desc">${s.from ? `${s.from} → ` : ''}${s.desc}</div>` : ''}
             <div class="wf-score-row">
                 <span class="wf-score-num" style="color:${grade.color}">${s.result.score}%</span>
                 <span class="wf-grade" style="color:${grade.color}">${grade.label}</span>
@@ -1703,6 +1716,7 @@ async function buildNSWWhatIfs(suburbKey, suburbData, type, budget, baseScore) {
         // 1. Raise budget +10%
         {
             change: 'Increase budget by 10%',
+            from:   fmtCurrency(budget),
             desc:   fmtCurrency(Math.round(budget * 1.1)),
             result: r1 || fallback,
             apply:  { budget: Math.round(budget * 1.1) },
@@ -1715,6 +1729,7 @@ async function buildNSWWhatIfs(suburbKey, suburbData, type, budget, baseScore) {
         // 3. Nearby suburb (geographically proximate via postcode prefix)
         {
             change: 'Nearby suburb',
+            from:   titleCase(suburbKey),
             desc:   nearbyName,
             result: r3 || fallback,
             apply:  nearbyKey ? { suburb: nearbyKey } : null,
@@ -1723,6 +1738,7 @@ async function buildNSWWhatIfs(suburbKey, suburbData, type, budget, baseScore) {
         // 4. Change type
         {
             change: 'Change type',
+            from:   TYPE_LABELS[type],
             desc:   nextType ? TYPE_LABELS[nextType] : null,
             result: r4 || fallback,
             apply:  nextType ? { type: nextType } : null,
@@ -2645,12 +2661,7 @@ async function loadPriceCurves() {
 }
 
 function updateDataBadge() {
-    const badge = document.querySelector('.indicative-badge');
-    if (!badge) return;
-    if (DATA_SOURCE === 'real') {
-        const count = Object.keys(ACTIVE_SUBURBS).length;
-        badge.textContent = `${count} Suburbs`;
-    }
+    // Badge is now static "Tool 1" — nothing to update
 }
 
 const STATE_PLACEHOLDERS = {
@@ -2706,6 +2717,7 @@ function onStateChange() {
     const state = document.getElementById('stateSelect').value;
     const suburbInput = document.getElementById('suburb');
     suburbInput.value = '';
+    suburbInput.disabled = false;
     suburbInput.placeholder = STATE_PLACEHOLDERS[state] || 'e.g. enter suburb…';
     if (state === 'NSW') {
         populateNSWAutocomplete();
@@ -3201,6 +3213,54 @@ function mapScoreColor(score) {
 
 let _leafletMap = null;
 
+// ── Map control state ─────────────────────────────────────────────────────────
+let _mapSuburbKey = null;
+let _mapType      = null;
+let _mapBudget    = null;
+let _mapIsNSW     = false;
+
+function updateMapControls() {
+    // Budget display
+    const budgetEl = document.getElementById('mapBudgetDisplay');
+    if (budgetEl && _mapBudget) budgetEl.textContent = fmtCurrency(_mapBudget);
+
+    // Type buttons — only show types available for this state
+    const btnContainer = document.getElementById('mapTypeButtons');
+    if (!btnContainer) return;
+    const types = _mapIsNSW
+        ? ['house','apartment','townhouse']
+        : Object.keys(ACTIVE_SUBURBS[_mapSuburbKey]?.types || { house:1, apartment:1 });
+    const shown = ['house','townhouse','apartment'].filter(t => types.includes(t));
+    btnContainer.innerHTML = shown.map(t => `
+        <button onclick="setMapType('${t}')"
+            style="font-family:monospace;font-size:0.68rem;padding:0.2rem 0.55rem;
+                   background:${t === _mapType ? '#fff' : 'transparent'};
+                   color:${t === _mapType ? '#000' : 'var(--muted)'};
+                   border:1px solid ${t === _mapType ? '#fff' : 'var(--border-subtle)'};
+                   cursor:pointer;border-radius:3px;transition:all 0.1s;">
+            ${TYPE_LABELS[t]}
+        </button>`).join('');
+}
+
+function setMapType(newType) {
+    _mapType = newType;
+    rerenderMap();
+}
+
+function adjustMapBudget(delta) {
+    _mapBudget = Math.max(100000, (_mapBudget || 0) + delta);
+    rerenderMap();
+}
+
+function rerenderMap() {
+    updateMapControls();
+    if (_mapIsNSW) {
+        renderSuburbMapNSW(_mapSuburbKey, _mapType, _mapBudget);
+    } else {
+        renderSuburbMap(_mapSuburbKey, _mapType, _mapBudget);
+    }
+}
+
 function hideSuburbMap() {
     document.getElementById('suburbMapSection').classList.add('hidden');
 }
@@ -3211,6 +3271,8 @@ function renderSuburbMap(suburbKey, type, budget) {
         document.getElementById('suburbMapSection').classList.add('hidden');
         return;
     }
+    _mapSuburbKey = suburbKey; _mapType = type; _mapBudget = budget; _mapIsNSW = false;
+    updateMapControls();
     buildMap(suburbKey, coords[0], coords[1], type, budget);
 }
 
@@ -3281,6 +3343,8 @@ async function renderSuburbMapNSW(suburbKey, type, budget) {
         document.getElementById('suburbMapSection').classList.add('hidden');
         return;
     }
+    _mapSuburbKey = suburbKey; _mapType = type; _mapBudget = budget; _mapIsNSW = true;
+    updateMapControls();
     await buildMapNSW(suburbKey, coords[0], coords[1], type, budget);
 }
 
