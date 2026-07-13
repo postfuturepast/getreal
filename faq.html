@@ -108,10 +108,40 @@
         }
 
 
+        .data-freedom-strip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-size: 0.78rem;
+            color: #fff;
+            background: #0000ff;
+            padding: 0.75rem 1rem;
+            line-height: 1.5;
+            flex-wrap: wrap;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .data-freedom-strip:hover { opacity: 0.9; }
+        .df-tag {
+            font-family: monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.15rem 0.45rem;
+            white-space: nowrap;
+        }
+
         footer {
             text-align: center;
             font-size: 0.73rem; color: var(--muted);
             padding-bottom: 2rem;
+            margin-top: 1.5rem;
         }
         footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
     </style>
@@ -219,17 +249,6 @@
         </div>
     </div>
 
-    <div class="faq-group">
-        <button class="faq-q" onclick="toggle(this)">
-            Why does my bedroom/bathroom count affect the score?
-            <span class="faq-chevron">▼</span>
-        </button>
-        <div class="faq-a">
-            <p>The government sales data records the sale price and property type, but not the number of bedrooms or bathrooms. To account for this, GetReal uses national distribution estimates. For example, roughly 78% of houses have at least 3 bedrooms and 42% have at least 4.</p>
-            <p>These are national averages and will vary by suburb, which is why the bedroom and bathroom factors are labelled indicative. A suburb like Mosman will skew larger; an inner-city apartment suburb will skew smaller.</p>
-        </div>
-    </div>
-
     <div class="faq-group" id="vic-bedrooms">
         <button class="faq-q" onclick="toggle(this)">
             How are bedrooms and bathrooms calculated for VIC?
@@ -299,6 +318,11 @@
     </div>
 
 </main>
+
+<a href="manifesto.html" class="data-freedom-strip">
+    <span class="df-tag">Data freedom</span>
+    Only 1 of 8 Australian states publishes property sales data openly. Read more →
+</a>
 
 <footer>
     <a href="search.html">Back to GetReal</a>
