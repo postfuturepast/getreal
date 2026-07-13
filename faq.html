@@ -320,7 +320,7 @@
         </div>
     </div>
 
-    <div class="faq-group">
+    <div class="faq-group" id="vic-bedrooms">
         <button class="faq-q" onclick="toggle(this)">
             How are bedrooms and bathrooms calculated for VIC?
             <span class="faq-chevron">▼</span>
@@ -333,7 +333,7 @@
         </div>
     </div>
 
-    <div class="faq-group">
+    <div class="faq-group" id="vic-methodology">
         <button class="faq-q" onclick="toggle(this)">
             How do you calculate budget scores for Victorian suburbs?
             <span class="faq-chevron">▼</span>
@@ -346,9 +346,10 @@
             <p><strong>Market depth</strong> — suburbs with fewer than 30 sales per year ("thin" markets) cluster more tightly around the median. We tested three tiers (deep, medium, thin) and found that high-volume and medium-volume suburbs were almost identical, so we simplified to two: active (30+ sales/year) and thin (under 30).</p>
             <p>We tested whether inner-city vs regional suburbs behave differently within the same price bracket. They don't, meaningfully — depth matters more than location.</p>
             <p>For each Victorian suburb, we look up its median price and annual sales volume from the Victorian Valuer General's quarterly data, match it to the right NSW-derived curve, and use that to estimate what percentage of the market falls within your budget. The score is that percentage — and we're honest that it's an estimate based on comparable NSW markets, not a direct count of VIC sales.</p>
-            <p><em>Note: the actual distribution tables used in this calculation are shown below. These are derived from NSW data and updated when new data is available.</em></p>
-            <!-- TODO: embed live price_curves table data from Supabase here -->
-            <p style="color: var(--muted); font-size: 0.85em;">[Distribution tables to be embedded here — see task #45]</p>
+            <p><em>The actual distribution tables we use are shown below. These are derived from NSW data and update automatically when new data is loaded.</em></p>
+            <div id="price-curves-tables" style="margin-top:1rem;">
+                <p style="color:var(--muted);font-size:0.85em;">Loading distribution tables…</p>
+            </div>
         </div>
     </div>
 
@@ -408,6 +409,95 @@ function toggle(btn) {
         answer.classList.add('open');
     }
 }
+</script>
+
+<script>
+// ── Live price_curves table from Supabase ────────────────────────────────────
+const SUPABASE_URL  = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
+
+const BRACKET_LABELS = {
+    'under_500k':   'Under $500k',
+    '500k_800k':    '$500k–$800k',
+    '800k_1200k':   '$800k–$1.2M',
+    '1200k_1800k':  '$1.2M–$1.8M',
+    'over_1800k':   'Over $1.8M',
+};
+const BRACKET_ORDER = ['under_500k','500k_800k','800k_1200k','1200k_1800k','over_1800k'];
+const TYPE_ORDER    = ['house','apartment','townhouse'];
+const TYPE_LABELS   = { house:'Houses', apartment:'Apartments', townhouse:'Townhouses' };
+const COLS = [
+    ['pct_at_05x','≤50%'],['pct_at_06x','≤60%'],['pct_at_07x','≤70%'],
+    ['pct_at_08x','≤80%'],['pct_at_09x','≤90%'],['pct_at_10x','≤100%'],
+    ['pct_at_11x','≤110%'],['pct_at_12x','≤120%'],['pct_at_15x','≤150%'],
+];
+
+async function loadPriceCurvesTables() {
+    const container = document.getElementById('price-curves-tables');
+    if (!container) return;
+    try {
+        const fields = ['property_type','price_bracket','depth_tier','sample_size',...COLS.map(c=>c[0])].join(',');
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/price_curves?select=${fields}&order=property_type,price_bracket,depth_tier`, {
+            headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` }
+        });
+        const rows = await res.json();
+        if (!Array.isArray(rows) || rows.length === 0) throw new Error('No data');
+
+        // Group by type
+        const byType = {};
+        for (const row of rows) {
+            if (!byType[row.property_type]) byType[row.property_type] = [];
+            byType[row.property_type].push(row);
+        }
+
+        const tableStyle = `width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:1.5rem;`;
+        const thStyle    = `padding:5px 8px;text-align:right;border-bottom:2px solid var(--border);color:var(--muted);font-weight:600;white-space:nowrap;`;
+        const thLStyle   = `padding:5px 8px;text-align:left;border-bottom:2px solid var(--border);color:var(--muted);font-weight:600;`;
+        const tdStyle    = `padding:4px 8px;text-align:right;border-bottom:1px solid var(--border);`;
+        const tdLStyle   = `padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);`;
+        const trAlt      = `background:#f7f7f6;`;
+
+        let html = `<p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Each table shows, for a suburb with a given median price range and annual sales volume, what percentage of properties historically sold at or below each ratio of the suburb median. Source: ${rows[0] ? rows.length : 0} rows derived from 146,000+ NSW transactions.</p>`;
+
+        for (const ptype of TYPE_ORDER) {
+            const typeRows = byType[ptype];
+            if (!typeRows) continue;
+            html += `<h4 style="font-size:0.9rem;font-weight:700;margin:1.2rem 0 0.4rem;">${TYPE_LABELS[ptype]}</h4>`;
+            html += `<div style="overflow-x:auto;"><table style="${tableStyle}"><thead><tr>`;
+            html += `<th style="${thLStyle}">Price bracket</th><th style="${thLStyle}">Market</th>`;
+            for (const [,label] of COLS) html += `<th style="${thStyle}">${label}</th>`;
+            html += `<th style="${thStyle}">Sample</th></tr></thead><tbody>`;
+
+            let rowIdx = 0;
+            for (const bracket of BRACKET_ORDER) {
+                for (const tier of ['active','thin']) {
+                    const row = typeRows.find(r => r.price_bracket === bracket && r.depth_tier === tier);
+                    if (!row) continue;
+                    const bg = rowIdx % 2 === 1 ? `style="${trAlt}"` : '';
+                    html += `<tr ${bg}>`;
+                    html += `<td style="${tdLStyle}">${BRACKET_LABELS[bracket]}</td>`;
+                    html += `<td style="${tdLStyle}">${tier === 'active' ? '30+ sales/yr' : 'Under 30 sales/yr'}</td>`;
+                    for (const [col] of COLS) {
+                        const val = row[col] != null ? row[col].toFixed(1) + '%' : '—';
+                        const bold = col === 'pct_at_10x' ? 'font-weight:700;' : '';
+                        html += `<td style="${tdStyle}${bold}">${val}</td>`;
+                    }
+                    html += `<td style="${tdStyle}color:var(--muted);">${(row.sample_size||0).toLocaleString()}</td>`;
+                    html += `</tr>`;
+                    rowIdx++;
+                }
+            }
+            html += `</tbody></table></div>`;
+        }
+        html += `<p style="font-size:0.75rem;color:var(--muted);">The ≤100% column shows the percentage of sales at or below the suburb median — this should be close to 50% in normal markets. "Thin" markets (under 30 sales/year) show higher ≤100% values because fewer sales mean less dispersion around the median.</p>`;
+        container.innerHTML = html;
+    } catch(e) {
+        document.getElementById('price-curves-tables').innerHTML =
+            `<p style="color:var(--muted);font-size:0.85em;">Distribution tables temporarily unavailable. (${e.message})</p>`;
+    }
+}
+
+loadPriceCurvesTables();
 </script>
 
 </body>
