@@ -984,15 +984,17 @@ const TYPE_LABELS  = { house:'House', townhouse:'Townhouse', apartment:'Apartmen
 // ================================================================
 
 /** Returns approx % of suburb's [type] sales at or below this budget */
-function getPricePercentile(ratio) {
-    const tbl = [
-        [0.50,0.02],[0.60,0.05],[0.70,0.12],[0.75,0.18],[0.80,0.26],
-        [0.85,0.33],[0.90,0.40],[0.95,0.45],[1.00,0.50],[1.05,0.55],
-        [1.10,0.62],[1.15,0.67],[1.20,0.72],[1.30,0.80],[1.40,0.86],
-        [1.50,0.90],[1.75,0.94],[2.00,0.97]
-    ];
-    if (ratio <= 0.50) return 0.01;
-    if (ratio >= 2.00) return 0.97;
+// Fallback hardcoded curve (used if price_curves not yet loaded)
+const FALLBACK_CURVE = [
+    [0.50,0.02],[0.60,0.05],[0.70,0.12],[0.75,0.18],[0.80,0.26],
+    [0.85,0.33],[0.90,0.40],[0.95,0.45],[1.00,0.50],[1.05,0.55],
+    [1.10,0.62],[1.15,0.67],[1.20,0.72],[1.30,0.80],[1.40,0.86],
+    [1.50,0.90],[1.75,0.94],[2.00,0.97]
+];
+
+function interpolateCurve(tbl, ratio) {
+    if (ratio <= tbl[0][0])               return tbl[0][1];
+    if (ratio >= tbl[tbl.length - 1][0])  return tbl[tbl.length - 1][1];
     for (let i = 0; i < tbl.length - 1; i++) {
         if (ratio >= tbl[i][0] && ratio < tbl[i+1][0]) {
             const t = (ratio - tbl[i][0]) / (tbl[i+1][0] - tbl[i][0]);
@@ -1000,6 +1002,36 @@ function getPricePercentile(ratio) {
         }
     }
     return 0.50;
+}
+
+function getPriceBracket(median) {
+    if (median < 500000)   return 'under_500k';
+    if (median < 800000)   return '500k_800k';
+    if (median < 1200000)  return '800k_1200k';
+    if (median < 1800000)  return '1200k_1800k';
+    return 'over_1800k';
+}
+
+// Cache loaded from Supabase price_curves table.
+// Structure: PRICE_CURVES[ptype][bracket][tier] = [[ratio, pct], ...]
+let PRICE_CURVES = null;
+
+function getPricePercentile(ratio, ptype, median, annualSales) {
+    // Try to use the NSW-derived curves from Supabase
+    if (PRICE_CURVES && ptype && median && annualSales !== undefined) {
+        const bracket = getPriceBracket(median);
+        const tier    = annualSales >= 30 ? 'active' : 'thin';
+        // Fall back through type hierarchy: townhouse → house if no curve
+        const ptypes  = ptype === 'townhouse'
+            ? ['townhouse', 'house']
+            : [ptype];
+        for (const pt of ptypes) {
+            const curve = PRICE_CURVES[pt]?.[bracket]?.[tier];
+            if (curve) return interpolateCurve(curve, ratio);
+        }
+    }
+    // Fallback to hardcoded curve
+    return interpolateCurve(FALLBACK_CURVE, ratio);
 }
 
 function getAvail(distTable, type, val) {
@@ -1029,7 +1061,7 @@ function scoreSearch(suburbData, type, budget, beds, baths, cars) {
     if (!td) return null;
 
     const ratio    = budget / td.median;
-    const pricePct = getPricePercentile(ratio);
+    const pricePct = getPricePercentile(ratio, type, td.median, td.annualSales);
     const bedsPct  = getAvail(BEDROOM_AVAIL,  type, beds);
     const bathsPct = getAvail(BATHROOM_AVAIL, type, baths);
     const carsPct  = getAvail(CARSPACE_AVAIL, type, cars);
@@ -2575,6 +2607,34 @@ async function loadRealData() {
     }
 }
 
+async function loadPriceCurves() {
+    try {
+        const url = `${SUPABASE_URL}/rest/v1/price_curves?select=property_type,price_bracket,depth_tier,pct_at_05x,pct_at_06x,pct_at_07x,pct_at_08x,pct_at_09x,pct_at_10x,pct_at_11x,pct_at_12x,pct_at_15x`;
+        const res = await fetch(url, { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const rows = await res.json();
+        if (!Array.isArray(rows) || rows.length === 0) throw new Error('No curve data');
+
+        // Build nested cache: PRICE_CURVES[ptype][bracket][tier] = [[ratio, pct], ...]
+        const COLS = [
+            [0.50,'pct_at_05x'],[0.60,'pct_at_06x'],[0.70,'pct_at_07x'],
+            [0.80,'pct_at_08x'],[0.90,'pct_at_09x'],[1.00,'pct_at_10x'],
+            [1.10,'pct_at_11x'],[1.20,'pct_at_12x'],[1.50,'pct_at_15x'],
+        ];
+        const cache = {};
+        for (const row of rows) {
+            const { property_type: pt, price_bracket: br, depth_tier: tier } = row;
+            if (!cache[pt]) cache[pt] = {};
+            if (!cache[pt][br]) cache[pt][br] = {};
+            cache[pt][br][tier] = COLS.map(([ratio, col]) => [ratio, (row[col] ?? 50) / 100]);
+        }
+        PRICE_CURVES = cache;
+        console.log(`Loaded price_curves: ${rows.length} rows`);
+    } catch (e) {
+        console.warn('price_curves not available, using fallback curve.', e.message);
+    }
+}
+
 function updateDataBadge() {
     const badge = document.querySelector('.indicative-badge');
     if (!badge) return;
@@ -3325,7 +3385,7 @@ function fmtCurrencyFull(n) {
 // ================================================================
 document.addEventListener('DOMContentLoaded', async () => {
     // Try to load real data first, then set up the rest
-    await loadRealData();
+    await Promise.all([loadRealData(), loadPriceCurves()]);
 
     populateAutocomplete();
     updateDataBadge();

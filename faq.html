@@ -333,6 +333,25 @@
         </div>
     </div>
 
+    <div class="faq-group">
+        <button class="faq-q" onclick="toggle(this)">
+            How do you calculate budget scores for Victorian suburbs?
+            <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-a">
+            <p>Victoria publishes suburb median prices and annual sales volumes for houses, apartments and land — but not individual sale records. So we can't directly measure what percentage of properties sell within any given budget in a VIC suburb the way we can in NSW.</p>
+            <p>Instead, we use NSW as a calibration dataset. NSW has over 146,000 individual sale records, which lets us measure the actual shape of property markets: for any given suburb median, what percentage of properties sell at 80% of that median? 90%? 110%? And so on.</p>
+            <p>We found that this shape — the distribution of sale prices around the median — is remarkably consistent across NSW, with two meaningful variables:</p>
+            <p><strong>Price bracket</strong> — more expensive markets behave slightly differently to affordable ones. We use five brackets: under $500k, $500k–$800k, $800k–$1.2M, $1.2M–$1.8M, and over $1.8M.</p>
+            <p><strong>Market depth</strong> — suburbs with fewer than 30 sales per year ("thin" markets) cluster more tightly around the median. We tested three tiers (deep, medium, thin) and found that high-volume and medium-volume suburbs were almost identical, so we simplified to two: active (30+ sales/year) and thin (under 30).</p>
+            <p>We tested whether inner-city vs regional suburbs behave differently within the same price bracket. They don't, meaningfully — depth matters more than location.</p>
+            <p>For each Victorian suburb, we look up its median price and annual sales volume from the Victorian Valuer General's quarterly data, match it to the right NSW-derived curve, and use that to estimate what percentage of the market falls within your budget. The score is that percentage — and we're honest that it's an estimate based on comparable NSW markets, not a direct count of VIC sales.</p>
+            <p><em>Note: the actual distribution tables used in this calculation are shown below. These are derived from NSW data and updated when new data is available.</em></p>
+            <!-- TODO: embed live price_curves table data from Supabase here -->
+            <p style="color: var(--muted); font-size: 0.85em;">[Distribution tables to be embedded here — see task #45]</p>
+        </div>
+    </div>
+
     <div class="section-label">Using the tool</div>
 
     <div class="faq-group">
