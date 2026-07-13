@@ -2675,12 +2675,61 @@ const FALLBACK_SUBURBS = {
     NT:  ['Darwin','Parap','Fannie Bay','Larrakeyah','Nightcliff','Rapid Creek','Millner','Stuart Park','The Parap','Cullen Bay','Bayview','Coconut Grove','Casuarina','Nakara','Moil','Karama','Malak','Marrara','Palmerston','Rosebery','Alice Springs','Araluen','Gillen','Larapinta'],
 };
 
+// ── NSW live suburb autocomplete ────────────────────────────────────────────
+let _nswAutoTimer = null;
+let _nswAutoHandler = null;
+
+function teardownNSWAutocomplete() {
+    const input = document.getElementById('suburb');
+    if (_nswAutoHandler) { input.removeEventListener('input', _nswAutoHandler); _nswAutoHandler = null; }
+    clearTimeout(_nswAutoTimer);
+}
+
+function setupNSWAutocomplete() {
+    const input = document.getElementById('suburb');
+    const dl    = document.getElementById('suburbList');
+    teardownNSWAutocomplete();
+    _nswAutoHandler = () => {
+        clearTimeout(_nswAutoTimer);
+        _nswAutoTimer = setTimeout(async () => {
+            const val = input.value.trim();
+            if (val.length < 2) { dl.innerHTML = ''; return; }
+            try {
+                const res = await fetch(
+                    `${SUPABASE_URL}/rest/v1/property_sales`
+                    + `?select=suburb&state=eq.NSW`
+                    + `&suburb=ilike.${encodeURIComponent(val.toLowerCase())}*`
+                    + `&limit=500&order=suburb`,
+                    { headers: { apikey: SUPABASE_ANON } }
+                );
+                const rows = await res.json();
+                if (!Array.isArray(rows)) return;
+                const seen = new Set();
+                const names = rows.map(r => r.suburb).filter(s => s && !seen.has(s) && seen.add(s));
+                dl.innerHTML = '';
+                names.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = titleCase(name);
+                    dl.appendChild(opt);
+                });
+            } catch(e) { /* silent */ }
+        }, 280);
+    };
+    input.addEventListener('input', _nswAutoHandler);
+}
+
 function onStateChange() {
     const state = document.getElementById('stateSelect').value;
     const suburbInput = document.getElementById('suburb');
     suburbInput.value = '';
     suburbInput.placeholder = STATE_PLACEHOLDERS[state] || 'e.g. enter suburb…';
-    populateAutocomplete(state);
+    teardownNSWAutocomplete();
+    if (state === 'NSW') {
+        document.getElementById('suburbList').innerHTML = ''; // clear mock list
+        setupNSWAutocomplete();
+    } else {
+        populateAutocomplete(state);
+    }
     // Reset results panel
     document.getElementById('resultsEmpty').classList.remove('hidden');
     document.getElementById('scoreArea').classList.add('hidden');
