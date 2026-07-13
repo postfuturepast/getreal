@@ -775,9 +775,9 @@
                     Bedroom, bathroom &amp; car space data — coming soon for NSW
                 </div>
                 <div id="vicFactorNote" class="hidden" style="font-family:monospace;font-size:0.65rem;color:#444;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1a1a1a;letter-spacing:0.04em;line-height:1.8;">
-                    · Budget score is estimated, not counted — Victoria doesn't publish individual sale records · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">How we estimate this →</a><br>
-                    · We model the score using NSW market data matched to this suburb's price range and sales volume · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">See the actual data tables →</a><br>
-                    · Bedroom &amp; bathroom breakdown not available for the same reason · <a href="faq.html#vic-bedrooms" style="color:#555;text-decoration:underline;">Why not? →</a>
+                    · Score estimated — VIC doesn't publish individual sale records · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">How? →</a><br>
+                    · Modelled from NSW data matched to this suburb's price &amp; volume · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">See the data tables →</a><br>
+                    · Bedroom &amp; bathroom data unavailable for the same reason · <a href="faq.html#vic-bedrooms" style="color:#555;text-decoration:underline;">Why not? →</a>
                 </div>
             </div>
         </div>
@@ -1302,10 +1302,10 @@ function renderScore(result, suburbName, type, beds, baths, cars) {
     document.getElementById('gradeSub').innerHTML = result.isNSW
         ? `<strong>${result.withinBudget} of ${result.matchingPool} ${TYPE_LABELS[type].toLowerCase()}s</strong> sold here in the last 13 months were within your budget`
         : (() => {
-            const period = VIC_DATA_PERIOD_END ? `the 12 months leading up to ${VIC_DATA_PERIOD_END}` : '2025';
+            const period = VIC_DATA_PERIOD_END || '2025';
             const subName = titleCase(suburbName);
             const typeLabel = TYPE_LABELS[type].toLowerCase() + 's';
-            return `<strong>${result.matchingPool} ${typeLabel}</strong> sold in ${subName} in ${period}.<br>~<strong>${result.withinBudget}</strong> of these we estimate were within your budget.`;
+            return `~<strong>${result.withinBudget}</strong> of the <strong>${result.matchingPool} ${typeLabel}</strong> sold in ${subName} from ${period} were within your budget.`;
           })();
 
     // Factor bars (null = N/A, shown for NSW beds/baths/cars)
@@ -2605,7 +2605,7 @@ async function loadRealData() {
         ACTIVE_SUBURBS      = json.suburbs;
         DATA_SOURCE         = 'real';
         DATA_DATE           = json.generated || 'unknown';
-        VIC_DATA_PERIOD_END = json.data_period_end || null;
+        VIC_DATA_PERIOD_END = json.data_period || null;
 
         console.log(`Loaded suburb-data.json: ${json.total_suburbs} suburbs (generated ${DATA_DATE})`);
         return true;

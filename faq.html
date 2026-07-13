@@ -409,6 +409,23 @@ function toggle(btn) {
         answer.classList.add('open');
     }
 }
+
+// Auto-open accordion item when navigated to via anchor link
+function openAnchor() {
+    const hash = window.location.hash;
+    if (!hash) return;
+    const target = document.querySelector(hash);
+    if (!target) return;
+    const btn = target.querySelector('.faq-q');
+    const ans = target.querySelector('.faq-a');
+    if (btn && ans) {
+        btn.classList.add('open');
+        ans.classList.add('open');
+        setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    }
+}
+document.addEventListener('DOMContentLoaded', openAnchor);
+window.addEventListener('hashchange', openAnchor);
 </script>
 
 <script>

@@ -218,7 +218,7 @@ def main():
     output = {
         "generated":        datetime.today().strftime("%Y-%m-%d"),
         "source":           "Victorian Valuer General quarterly data Q4 2025 via load_vic_quarterly.py",
-        "data_period_end":  "December 2025",
+        "data_period":      "Jan – Dec 2025",
         "total_suburbs":    len(suburbs),
         "suburbs":       suburbs,
     }
