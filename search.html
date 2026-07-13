@@ -775,7 +775,7 @@
                     Bedroom, bathroom &amp; car space data — coming soon for NSW
                 </div>
                 <div id="vicFactorNote" class="hidden" style="font-family:monospace;font-size:0.65rem;color:#444;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1a1a1a;letter-spacing:0.04em;">
-                    VIC individual sales records aren't public — bedroom &amp; bathroom breakdown not available · <a href="manifesto.html" style="color:#555;text-decoration:underline;">Why?</a>
+                    Budget score estimated from NSW market distribution data — VIC doesn't publish individual sale records · Bedroom &amp; bathroom breakdown not available for the same reason · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">How does this work?</a>
                 </div>
             </div>
         </div>
@@ -1299,7 +1299,7 @@ function renderScore(result, suburbName, type, beds, baths, cars) {
     document.getElementById('gradeLabel').style.color  = grade.color;
     document.getElementById('gradeSub').innerHTML = result.isNSW
         ? `<strong>${result.withinBudget} of ${result.matchingPool} ${TYPE_LABELS[type].toLowerCase()}s</strong> sold here in the last 13 months were within your budget`
-        : `<strong>${result.withinBudget} of ${result.matchingPool} ${TYPE_LABELS[type].toLowerCase()}s</strong> sold in the last 12 months within your budget`;
+        : `<strong>${result.withinBudget} of ${result.matchingPool} ${TYPE_LABELS[type].toLowerCase()}s</strong> sold in 2025 (VGV annual data) within your budget`;
 
     // Factor bars (null = N/A, shown for NSW beds/baths/cars)
     setBar('barPrice', 'pctPrice', result.pricePct);
