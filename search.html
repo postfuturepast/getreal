@@ -1455,7 +1455,7 @@ function showComingSoon(state) {
     document.getElementById('reportCta').classList.add('hidden');
     const box = document.getElementById('comingSoonBox');
     box.innerHTML = `
-        <div class="cs-icon">🔒</div>
+        <div class="cs-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="15" width="20" height="14" rx="0" stroke="currentColor" stroke-width="1.5"/><path d="M10 15v-5a6 6 0 0 1 12 0v5" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="22" r="1.5" fill="currentColor"/></svg></div>
         <div class="cs-state">${name}</div>
         <div class="cs-title">No public data found</div>
         <div class="cs-body">We haven't been able to find a free public source of individual property sales data for ${name}. GetReal currently covers Victoria and New South Wales.</div>`;
