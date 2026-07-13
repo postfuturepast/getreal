@@ -2078,7 +2078,7 @@ async function generatePDF(name, email, phone, consent) {
         const mapDiv     = document.getElementById('suburbMap');
         if (mapDiv && mapSection && !mapSection.classList.contains('hidden') && window.html2canvas) {
             // Give Leaflet tiles a moment to finish if still loading
-            await new Promise(r => setTimeout(r, 600));
+            await new Promise(r => setTimeout(r, 1500));
             const canvas = await html2canvas(mapDiv, {
                 useCORS:         true,
                 allowTaint:      false,
@@ -3346,9 +3346,10 @@ function buildMap(suburbKey, lat, lng, type, budget) {
     _leafletMap = map;
 
     // CartoDB Dark Matter tiles — free, no key required
+    // crossOrigin: '' required so html2canvas can read the tile canvas without tainting it
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd', maxZoom: 19,
+        subdomains: 'abcd', maxZoom: 19, crossOrigin: '',
     }).addTo(map);
 
     map.setView([lat, lng], nearby.length > 15 ? 12 : 11);
@@ -3448,7 +3449,7 @@ async function buildMapNSW(suburbKey, lat, lng, type, budget) {
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd', maxZoom: 19,
+        subdomains: 'abcd', maxZoom: 19, crossOrigin: '',
     }).addTo(map);
 
     map.setView([lat, lng], scored.length > 15 ? 12 : 11);
