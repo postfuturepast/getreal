@@ -17,7 +17,6 @@
     <meta name="twitter:description" content="Check whether your budget is realistic for the suburbs you're searching. Based on real sold property data across Australia.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
@@ -2070,25 +2069,62 @@ async function generatePDF(name, email, phone, consent) {
         'Unrealistic':      `This combination almost never appears in this suburb's market. Something needs to change — budget, location, type or size.`,
     };
 
-    // ── Capture map image (leaflet-image, graceful fallback) ──────
+    // ── Capture map image (manual canvas, no library needed) ──────
     let mapImageData   = null;
     let mapImageAspect = 16 / 9;
     try {
         const mapSection = document.getElementById('suburbMapSection');
-        if (_leafletMap && mapSection && !mapSection.classList.contains('hidden') && window.leafletImage) {
-            // Give tiles a moment to finish loading
-            await new Promise(r => setTimeout(r, 1500));
-            await new Promise((resolve) => {
-                leafletImage(_leafletMap, (err, canvas) => {
-                    if (!err && canvas && canvas.width > 0) {
-                        mapImageData   = canvas.toDataURL('image/jpeg', 0.85);
-                        mapImageAspect = canvas.width / canvas.height;
-                    } else if (err) {
-                        console.log('leaflet-image failed:', err);
-                    }
-                    resolve();
-                });
+        const mapDiv     = document.getElementById('suburbMap');
+        if (_leafletMap && mapSection && mapDiv && !mapSection.classList.contains('hidden')) {
+            await new Promise(r => setTimeout(r, 1500)); // let tiles settle
+            const W = mapDiv.offsetWidth;
+            const H = mapDiv.offsetHeight;
+            const canvas = document.createElement('canvas');
+            canvas.width  = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d');
+
+            // Dark background
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, W, H);
+
+            // Draw tile images (crossOrigin: '' set on tile layer so they're not tainted)
+            const mapRect = mapDiv.getBoundingClientRect();
+            mapDiv.querySelectorAll('.leaflet-tile').forEach(tile => {
+                if (!tile.complete || tile.naturalWidth === 0) return;
+                try {
+                    const r = tile.getBoundingClientRect();
+                    ctx.drawImage(tile,
+                        Math.round(r.left - mapRect.left),
+                        Math.round(r.top  - mapRect.top),
+                        Math.round(r.width), Math.round(r.height));
+                } catch(e) { /* CORS tainted — skip tile */ }
             });
+
+            // Draw suburb score circles using Leaflet's own coordinate projection
+            if (_lastMapSuburbs && _lastMapSuburbs.length > 0) {
+                _lastMapSuburbs.forEach(s => {
+                    if (!s.lat || !s.lng) return;
+                    try {
+                        const pt = _leafletMap.latLngToContainerPoint(L.latLng(s.lat, s.lng));
+                        const color = mapScoreColor(s.score);
+                        ctx.beginPath();
+                        ctx.arc(pt.x, pt.y, 10, 0, Math.PI * 2);
+                        ctx.fillStyle = color;
+                        ctx.globalAlpha = 0.75;
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                        ctx.strokeStyle = '#000';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    } catch(e) { /* skip */ }
+                });
+            }
+
+            if (W > 0 && H > 0) {
+                mapImageData   = canvas.toDataURL('image/jpeg', 0.85);
+                mapImageAspect = W / H;
+            }
         }
     } catch(e) {
         console.log('Map capture skipped:', e.message);
