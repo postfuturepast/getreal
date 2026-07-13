@@ -107,57 +107,6 @@
             color: var(--muted); margin: 2rem 0 0.75rem;
         }
 
-        .manifesto {
-            border-left: 3px solid var(--text);
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 0.75rem;
-            background: var(--card);
-            border-radius: 0 8px 8px 0;
-            border-top: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-        .manifesto p {
-            font-size: 0.875rem;
-            color: var(--muted2);
-            line-height: 1.75;
-        }
-        .manifesto p + p { margin-top: 0.85rem; }
-        .manifesto strong { color: var(--text); }
-        .manifesto .lede {
-            font-size: 1rem; font-weight: 700;
-            color: var(--text); letter-spacing: -0.02em;
-            line-height: 1.4; margin-bottom: 1rem;
-        }
-
-        .state-list {
-            margin-top: 1rem;
-            display: flex; flex-direction: column; gap: 0.5rem;
-        }
-        .state-row {
-            display: flex; gap: 0.75rem;
-            font-size: 0.875rem; line-height: 1.5;
-            color: var(--muted2);
-        }
-        .state-row strong { color: var(--text); }
-        .state-row .badge {
-            flex-shrink: 0;
-            font-size: 0.68rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.05em;
-            padding: 0.15rem 0.5rem; border-radius: 4px;
-            align-self: flex-start; margin-top: 0.15rem;
-        }
-        .badge-open   { background: #052e16; color: #4ade80; }
-        .badge-part   { background: #2d1f00; color: #fbbf24; }
-        .badge-closed { background: #2d0a0a; color: #f87171; }
-
-        .manifesto .cta {
-            margin-top: 1.25rem; padding-top: 1.25rem;
-            border-top: 1px solid var(--border);
-            font-size: 0.875rem; color: var(--muted2); line-height: 1.7;
-        }
-        .manifesto .cta a { color: var(--muted2); text-decoration: underline; text-underline-offset: 2px; }
-        .manifesto .cta a:hover { color: var(--text); }
 
         footer {
             text-align: center;
@@ -226,54 +175,17 @@
 
     <div class="section-label">Data freedom</div>
 
-    <div class="manifesto">
-        <p class="lede">Property data belongs to Australians. Right now, most state governments disagree.</p>
-
-        <p>Every time a home changes hands in this country, the transaction is recorded by a government department, in a register funded by public money, under a legal obligation created by public law. The sale price, the address, the date. These are not private facts. They are public records.</p>
-
-        <p>And yet if you live in Queensland, Western Australia, South Australia, or most other states, and you want to know what properties have actually sold for in your suburb, you will be directed to a private data broker charging thousands of dollars. For the same information your taxes funded to collect.</p>
-
-        <p>This is not an accident. It is a choice. A choice that benefits a small commercial ecosystem at the direct expense of everyone else: first-home buyers trying to understand what they're really up against, renters trying to make sense of a market that keeps moving away from them, economists and journalists trying to report honestly on a housing crisis, community groups advocating for people being priced out.</p>
-
-        <p><strong>NSW is the best we've got, which says something but not everything.</strong> The NSW Valuer General publishes the record of every residential sale: address, price, date. Updated daily, free to download, open licence. That's genuinely better than everywhere else, and it's the foundation GetReal's NSW data runs on. But the data doesn't include property attributes like bedrooms, bathrooms, or car spaces. Whether that's because the government doesn't collect it, doesn't require it at registration, or simply hasn't gotten there yet, we're not sure. The format is also raw bulk files, not an API. The fact that a community developer had to build a separate project just to make it accessible tells you there's still room to go. NSW opened the door. It hasn't finished the job.</p>
-
-        <div class="state-list">
-            <div class="state-row">
-                <span class="badge badge-open">Open</span>
-                <span><strong>NSW</strong> — Individual sale records, daily updates, free download, open licence. No property attributes (bedrooms, bathrooms etc.) and no API, but the most open state by some distance.</span>
-            </div>
-            <div class="state-row">
-                <span class="badge badge-part">Partial</span>
-                <span><strong>VIC</strong> — Suburb-level aggregated medians published quarterly. Individual sale records require a professional licence (valuers, estate agents) and are not publicly accessible.</span>
-            </div>
-            <div class="state-row">
-                <span class="badge badge-closed">Closed</span>
-                <span><strong>QLD</strong> — Sold commercially via authorised brokers. The full dataset costs approximately <strong>$20,000 per year</strong>. Individual property lookups are available from the Valuer General at a per-transaction fee.</span>
-            </div>
-            <div class="state-row">
-                <span class="badge badge-closed">Closed</span>
-                <span><strong>SA</strong> — Individual records locked behind a professional licence via SAILIS. Public access is limited to quarterly aggregate suburb medians.</span>
-            </div>
-            <div class="state-row">
-                <span class="badge badge-closed">Closed</span>
-                <span><strong>WA</strong> — Landgate sells its Sales Evidence dataset commercially (price on request). It's the most detailed dataset in the country, including bedrooms and bathrooms, but it's not free.</span>
-            </div>
-            <div class="state-row">
-                <span class="badge badge-closed">Closed</span>
-                <span><strong>ACT</strong> — No bulk property sales dataset found in any government open data portal. Data flows only through commercial providers.</span>
-            </div>
-            <div class="state-row">
-                <span class="badge badge-closed">Closed</span>
-                <span><strong>TAS</strong> — theLIST provides per-property reports for a fee. No bulk download option exists.</span>
-            </div>
-            <div class="state-row">
-                <span class="badge badge-closed">Closed</span>
-                <span><strong>NT</strong> — The NT Open Data Portal's housing group contains only public housing wait lists and infrastructure plans. No property sales records of any kind are published.</span>
-            </div>
-        </div>
-
-        <div class="cta">
-            GetReal is built on whatever data we can access for free. When more states open up, we'll add them immediately. If you think property data should be a public good, the most direct thing you can do is say so to your state MP or open data team. This is a solvable problem. NSW solved it. <a href="manifesto.html">Read the full picture.</a>
+    <div class="faq-group">
+        <button class="faq-q" onclick="toggle(this)">
+            Why can't you cover all Australian states?
+            <span class="faq-chevron">▼</span>
+        </button>
+        <div class="faq-a">
+            <p>Property data belongs to Australians. Right now, most state governments disagree.</p>
+            <p>Every time a home changes hands in this country, the transaction is recorded by a government department, in a register funded by public money, under a legal obligation created by public law. The sale price, the address, the date. These are not private facts. They are public records.</p>
+            <p>And yet if you live in Queensland, Western Australia, South Australia, or most other states, and you want to know what properties have actually sold for in your suburb, you will be directed to a private data broker charging thousands of dollars. For the same information your taxes funded to collect.</p>
+            <p>This is not an accident. It is a choice. A choice that benefits a small commercial ecosystem at the direct expense of everyone else: first-home buyers trying to understand what they're really up against, renters trying to make sense of a market that keeps moving away from them, economists and journalists trying to report honestly on a housing crisis, community groups advocating for people being priced out.</p>
+            <p>GetReal is built on whatever data we can access for free. When more states open up, we'll add them immediately. If you think property data should be a public good, say so to your state MP or open data team. This is a solvable problem. NSW solved it. <a href="manifesto.html">Read the full picture.</a></p>
         </div>
     </div>
 
