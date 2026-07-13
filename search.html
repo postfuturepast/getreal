@@ -17,6 +17,7 @@
     <meta name="twitter:description" content="Check whether your budget is realistic for the suburbs you're searching. Based on real sold property data across Australia.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
@@ -2069,6 +2070,31 @@ async function generatePDF(name, email, phone, consent) {
         'Unrealistic':      `This combination almost never appears in this suburb's market. Something needs to change — budget, location, type or size.`,
     };
 
+    // ── Capture map image (html2canvas, CORS, graceful fallback) ─
+    let mapImageData   = null;
+    let mapImageAspect = 16 / 9;  // fallback aspect ratio
+    try {
+        const mapSection = document.getElementById('suburbMapSection');
+        const mapDiv     = document.getElementById('suburbMap');
+        if (mapDiv && mapSection && !mapSection.classList.contains('hidden') && window.html2canvas) {
+            // Give Leaflet tiles a moment to finish if still loading
+            await new Promise(r => setTimeout(r, 600));
+            const canvas = await html2canvas(mapDiv, {
+                useCORS:         true,
+                allowTaint:      false,
+                backgroundColor: '#0a0a0a',
+                scale:           1,
+                logging:         false,
+            });
+            if (canvas.width > 0 && canvas.height > 0) {
+                mapImageData   = canvas.toDataURL('image/jpeg', 0.85);
+                mapImageAspect = canvas.width / canvas.height;
+            }
+        }
+    } catch(e) {
+        console.log('Map capture skipped:', e.message);
+    }
+
     // ── Fetch comparable properties ──────────────────────────────
     let propsBelow = [], propsAbove = [];
     if (isNSW && sp.budget) {
@@ -2529,7 +2555,19 @@ async function generatePDF(name, email, phone, consent) {
         ? 'Nearby suburbs scored at your current budget using real NSW Valuer General sales data.'
         : 'Nearby suburbs scored at your current budget using VIC Valuer-General median data.';
     doc.text(mapIntro, M, y);
-    y += 11;
+    y += 7;
+
+    // ── Map image ─────────────────────────────────────────────────
+    if (mapImageData) {
+        const mapImgW = CW;
+        const mapImgH = Math.min(mapImgW / mapImageAspect, 70); // cap at 70mm tall
+        try {
+            doc.addImage(mapImageData, 'JPEG', M, y, mapImgW, mapImgH);
+        } catch(e) { /* skip silently */ }
+        y += mapImgH + 6;
+    } else {
+        y += 4;
+    }
 
     const mapSuburbs = (_lastMapSuburbs || []).slice().sort((a, b) => b.score - a.score);
 
