@@ -285,6 +285,21 @@
         .page-footer a { color: var(--muted); }
         .page-footer a:hover { color: var(--text); }
 
+        /* ── Source links ── */
+        a.source-link {
+            color: var(--muted);
+            text-decoration: underline;
+            text-decoration-color: #444;
+            text-underline-offset: 3px;
+            font-size: 0.82rem;
+            font-family: monospace;
+            letter-spacing: 0.03em;
+        }
+        a.source-link:hover {
+            color: var(--text);
+            text-decoration-color: var(--muted);
+        }
+
         @media (max-width: 560px) {
             .scorecard-row { grid-template-columns: 1fr; gap: 0.5rem; }
             .status-badge { align-self: auto; }
@@ -347,7 +362,7 @@
                 every buyer actually searches by. Whether that data isn't collected or just isn't
                 released isn't clear, but the gap is real.
                 <br><br>
-                <a href="https://www.valuergeneral.nsw.gov.au/land_values/property_sales_data" target="_blank" rel="noopener" style="color:#0000ff;">NSW Valuer General property sales data</a>
+                <a class="source-link" href="https://www.valuergeneral.nsw.gov.au/land_values/property_sales_data" target="_blank" rel="noopener">source</a>
             </div>
             <div class="status-badge status-free">Free</div>
         </div>
@@ -360,7 +375,7 @@
                 Valuers, conveyancers, and estate agents can get it. The general public cannot.
                 Free public access is limited to quarterly suburb-level aggregate medians.
                 <br><br>
-                <a href="https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics" target="_blank" rel="noopener" style="color:#0000ff;">LANDATA property sales statistics</a>
+                <a class="source-link" href="https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics" target="_blank" rel="noopener">source</a>
             </div>
             <div class="status-badge status-locked">Locked</div>
         </div>
@@ -374,7 +389,7 @@
                 Per-property searches are also available at a per-transaction fee
                 through the Valuer General's office.
                 <br><br>
-                <a href="https://www.dnrme.qld.gov.au/property/titles-and-valuation/property-sales-data" target="_blank" rel="noopener" style="color:#0000ff;">Queensland property sales data</a>
+                <a class="source-link" href="https://www.dnrme.qld.gov.au/property/titles-and-valuation/property-sales-data" target="_blank" rel="noopener">source</a>
             </div>
             <div class="status-badge status-paid">Paid</div>
         </div>
@@ -387,7 +402,7 @@
                 licensed professionals. Public access is limited to quarterly aggregate
                 suburb medians from the Valuer General.
                 <br><br>
-                <a href="https://www.sa.gov.au/topics/housing/buying-a-house/property-sales-information" target="_blank" rel="noopener" style="color:#0000ff;">SAILIS property information</a>
+                <a class="source-link" href="https://www.sa.gov.au/topics/housing/buying-a-house/property-sales-information" target="_blank" rel="noopener">source</a>
             </div>
             <div class="status-badge status-locked">Locked</div>
         </div>
@@ -401,7 +416,7 @@
                 But it's commercial. There's no published price; you have to ask.
                 When pricing isn't public, that's usually a sign it's expensive.
                 <br><br>
-                <a href="https://www0.landgate.wa.gov.au/for-government/data-and-licensing/landgate-data/property-sales-data" target="_blank" rel="noopener" style="color:#0000ff;">Landgate sales evidence data</a>
+                <a class="source-link" href="https://www0.landgate.wa.gov.au/for-government/data-and-licensing/landgate-data/property-sales-data" target="_blank" rel="noopener">source</a>
             </div>
             <div class="status-badge status-paid">Paid</div>
         </div>
@@ -415,7 +430,7 @@
                 The territory's small market means data flows primarily through
                 commercial providers.
                 <br><br>
-                <a href="https://www.actmapi.act.gov.au/" target="_blank" rel="noopener" style="color:#0000ff;">ACTmapi open data portal</a>
+                <a class="source-link" href="https://www.actmapi.act.gov.au/" target="_blank" rel="noopener">source</a>
             </div>
             <div class="status-badge status-none">None found</div>
         </div>
@@ -428,7 +443,7 @@
                 There is no bulk download option. Aggregate suburb statistics are
                 available from the Real Estate Institute of Tasmania quarterly.
                 <br><br>
-                <a href="https://www.thelist.tas.gov.au/app/content/property/property-sales" target="_blank" rel="noopener" style="color:#0000ff;">theLIST property sales</a>
+                <a class="source-link" href="https://www.thelist.tas.gov.au/app/content/property/property-sales" target="_blank" rel="noopener">source</a>
             </div>
             <div class="status-badge status-paid">Paid</div>
         </div>
@@ -441,7 +456,7 @@
                 datasets: all public housing wait lists and infrastructure plans.
                 There are no property sales records of any kind in the public domain.
                 <br><br>
-                <a href="https://data.nt.gov.au/" target="_blank" rel="noopener" style="color:#0000ff;">NT Open Data Portal</a>
+                <a class="source-link" href="https://data.nt.gov.au/" target="_blank" rel="noopener">source</a>
             </div>
             <div class="status-badge status-none">Nothing</div>
         </div>
@@ -476,21 +491,31 @@
     <h2>What this means for GetReal</h2>
 
     <p>
-        GetReal is built on NSW data because it's the only state where we can legally and freely
-        access individual sale records. NSW users get real suburb comparables: actual addresses,
-        actual prices, actual dates, matched to their search criteria.
+        What GetReal can tell you depends entirely on what your state's government is willing
+        to publish. There are three tiers.
     </p>
 
     <p>
-        For every other state, we rely on suburb-level median prices and sales volumes. That's
-        useful, but it's not the same. A Victorian or Queenslander using GetReal gets a less
-        precise picture than a NSW user. Not because their state's data doesn't exist, but
-        because their government won't share it.
+        <strong>Individual sale records available (NSW):</strong> Full experience. Real suburb
+        comparables with actual addresses, prices, and dates matched to your search criteria.
+        The score reflects what genuinely sold in that market.
     </p>
 
     <p>
-        We'd like to change that. We're watching what each state publishes, and we'll use
-        it the moment it becomes available.
+        <strong>Suburb-level data available (VIC, and others as they open up):</strong> Estimated
+        score. We know the median price and annual sales volume for your suburb, and we use
+        NSW market distribution curves to estimate where your budget sits. Useful, but not the
+        same as real comparables. We say so clearly.
+    </p>
+
+    <p>
+        <strong>No public data:</strong> Nothing. We won't invent a score we can't support.
+        If a state doesn't publish usable data, we'll say that too.
+    </p>
+
+    <p>
+        We're watching what each state publishes. The moment individual sale records become
+        available anywhere, we'll use them.
     </p>
 
     <div class="cta-block">
