@@ -17,7 +17,7 @@
     <meta name="twitter:description" content="Check whether your budget is realistic for the suburbs you're searching. Based on real sold property data across Australia.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
@@ -857,7 +857,7 @@
     <div class="indicative-note">
         Scores are indicative only, based on historical sales data.
         Sources: <a href="https://www.valuergeneral.nsw.gov.au/design/bulk_psi_content/bulk_psi" target="_blank">NSW Valuer General</a> &amp; <a href="https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series" target="_blank">Valuer-General Victoria</a>.
-        Not financial advice. · <a href="faq.html">FAQs</a> · <a href="manifesto.html">Data freedom</a>
+        Not financial advice. · <a href="faq.html">FAQs</a> · <a href="manifesto.html">Data freedom</a> · <span id="deployStamp" style="opacity:0.5;">—</span>
     </div>
 
 </main>
@@ -2070,26 +2070,25 @@ async function generatePDF(name, email, phone, consent) {
         'Unrealistic':      `This combination almost never appears in this suburb's market. Something needs to change — budget, location, type or size.`,
     };
 
-    // ── Capture map image (html2canvas, CORS, graceful fallback) ─
+    // ── Capture map image (leaflet-image, graceful fallback) ──────
     let mapImageData   = null;
-    let mapImageAspect = 16 / 9;  // fallback aspect ratio
+    let mapImageAspect = 16 / 9;
     try {
         const mapSection = document.getElementById('suburbMapSection');
-        const mapDiv     = document.getElementById('suburbMap');
-        if (mapDiv && mapSection && !mapSection.classList.contains('hidden') && window.html2canvas) {
-            // Give Leaflet tiles a moment to finish if still loading
+        if (_leafletMap && mapSection && !mapSection.classList.contains('hidden') && window.leafletImage) {
+            // Give tiles a moment to finish loading
             await new Promise(r => setTimeout(r, 1500));
-            const canvas = await html2canvas(mapDiv, {
-                useCORS:         true,
-                allowTaint:      false,
-                backgroundColor: '#0a0a0a',
-                scale:           1,
-                logging:         false,
+            await new Promise((resolve) => {
+                leafletImage(_leafletMap, (err, canvas) => {
+                    if (!err && canvas && canvas.width > 0) {
+                        mapImageData   = canvas.toDataURL('image/jpeg', 0.85);
+                        mapImageAspect = canvas.width / canvas.height;
+                    } else if (err) {
+                        console.log('leaflet-image failed:', err);
+                    }
+                    resolve();
+                });
             });
-            if (canvas.width > 0 && canvas.height > 0) {
-                mapImageData   = canvas.toDataURL('image/jpeg', 0.85);
-                mapImageAspect = canvas.width / canvas.height;
-            }
         }
     } catch(e) {
         console.log('Map capture skipped:', e.message);
@@ -3529,6 +3528,22 @@ function fmtCurrencyFull(n) {
 document.addEventListener('DOMContentLoaded', async () => {
     // Try to load real data first, then set up the rest
     await Promise.all([loadRealData(), loadPriceCurves(), loadNSWSuburbs()]);
+
+    // ── Deploy stamp — latest commit date from GitHub API ──────────
+    fetch('https://api.github.com/repos/postfuturepast/getreal/commits/main')
+        .then(r => r.json())
+        .then(data => {
+            const iso = data?.commit?.committer?.date || data?.commit?.author?.date;
+            if (!iso) return;
+            const d = new Date(iso);
+            const stamp = d.toLocaleString('en-AU', {
+                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+                timeZone: 'Australia/Sydney', hour12: false
+            });
+            const el = document.getElementById('deployStamp');
+            if (el) el.textContent = `deployed ${stamp}`;
+        })
+        .catch(() => {});  // silently skip if rate-limited or offline
 
     populateAutocomplete();
     updateDataBadge();
