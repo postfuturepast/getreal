@@ -216,9 +216,10 @@ def main():
     # Rebuild suburb-data.json
     suburbs = build_suburb_json(all_rows)
     output = {
-        "generated":     datetime.today().strftime("%Y-%m-%d"),
-        "source":        "Victorian Valuer General quarterly data Q4 2025 via load_vic_quarterly.py",
-        "total_suburbs": len(suburbs),
+        "generated":        datetime.today().strftime("%Y-%m-%d"),
+        "source":           "Victorian Valuer General quarterly data Q4 2025 via load_vic_quarterly.py",
+        "data_period_end":  "December 2025",
+        "total_suburbs":    len(suburbs),
         "suburbs":       suburbs,
     }
     with open(OUTPUT_JSON, "w") as f:

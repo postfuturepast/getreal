@@ -1301,7 +1301,12 @@ function renderScore(result, suburbName, type, beds, baths, cars) {
     document.getElementById('gradeLabel').style.color  = grade.color;
     document.getElementById('gradeSub').innerHTML = result.isNSW
         ? `<strong>${result.withinBudget} of ${result.matchingPool} ${TYPE_LABELS[type].toLowerCase()}s</strong> sold here in the last 13 months were within your budget`
-        : `Estimated · <strong>${result.matchingPool} ${TYPE_LABELS[type].toLowerCase()}s</strong> sold in this suburb in 2025 · ~${result.withinBudget} estimated within your budget`;
+        : (() => {
+            const period = VIC_DATA_PERIOD_END ? `the 12 months leading up to ${VIC_DATA_PERIOD_END}` : '2025';
+            const subName = titleCase(suburbName);
+            const typeLabel = TYPE_LABELS[type].toLowerCase() + 's';
+            return `<strong>${result.matchingPool} ${typeLabel}</strong> sold in ${subName} in ${period}.<br>~<strong>${result.withinBudget}</strong> of these we estimate were within your budget.`;
+          })();
 
     // Factor bars (null = N/A, shown for NSW beds/baths/cars)
     setBar('barPrice', 'pctPrice', result.pricePct);
@@ -2584,9 +2589,10 @@ async function generatePDF(name, email, phone, consent) {
 // Falls back silently to the built-in SUBURBS mock data.
 // suburb-data.json loads automatically when served via HTTP (e.g. Netlify).
 // ================================================================
-let ACTIVE_SUBURBS = SUBURBS;  // default: mock data
-let DATA_SOURCE    = 'sample'; // 'sample' | 'real'
-let DATA_DATE      = null;
+let ACTIVE_SUBURBS      = SUBURBS;  // default: mock data
+let DATA_SOURCE         = 'sample'; // 'sample' | 'real'
+let DATA_DATE           = null;
+let VIC_DATA_PERIOD_END = null;     // e.g. "December 2025" from suburb-data.json
 
 async function loadRealData() {
     try {
@@ -2596,9 +2602,10 @@ async function loadRealData() {
 
         if (!json.suburbs || typeof json.suburbs !== 'object') throw new Error('Invalid format');
 
-        ACTIVE_SUBURBS = json.suburbs;
-        DATA_SOURCE    = 'real';
-        DATA_DATE      = json.generated || 'unknown';
+        ACTIVE_SUBURBS      = json.suburbs;
+        DATA_SOURCE         = 'real';
+        DATA_DATE           = json.generated || 'unknown';
+        VIC_DATA_PERIOD_END = json.data_period_end || null;
 
         console.log(`Loaded suburb-data.json: ${json.total_suburbs} suburbs (generated ${DATA_DATE})`);
         return true;
