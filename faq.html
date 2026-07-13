@@ -3,28 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAQs — GetReal</title>
+    <title>GetReal: Frequently Asked Questions</title>
     <meta name="description" content="How GetReal works, where the data comes from, and what the scores mean.">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="FAQs — GetReal">
+    <meta property="og:title" content="GetReal: Frequently Asked Questions">
     <meta property="og:description" content="How GetReal works, where the data comes from, and what the scores mean.">
     <meta property="og:site_name" content="GetReal">
-    <!-- Twitter card -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="FAQs — GetReal">
+    <meta name="twitter:title" content="GetReal: Frequently Asked Questions">
     <meta name="twitter:description" content="How GetReal works, where the data comes from, and what the scores mean.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --border: #e4e4e7;
-            --bg: #fafaf9;
-            --card: #ffffff;
-            --text: #18181b;
-            --muted: #71717a;
+            --bg:     #0d0d0d;
+            --card:   #141414;
+            --card2:  #1a1a1a;
+            --border: #2a2a2a;
+            --text:   #e8e8e8;
+            --muted:  #666;
+            --muted2: #888;
+            --accent: #f59e0b;
         }
 
         body {
@@ -35,7 +36,7 @@
         }
 
         header {
-            background: var(--card);
+            background: var(--bg);
             border-bottom: 1px solid var(--border);
             padding: 0.85rem 2rem;
             display: flex;
@@ -45,16 +46,19 @@
             display: flex; align-items: center; gap: 0.6rem;
             text-decoration: none; color: inherit;
         }
-        .brand-name { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text); }
+        .brand-name {
+            font-size: 1.05rem; font-weight: 800;
+            letter-spacing: -0.03em; color: var(--text);
+        }
         .back-link {
             margin-left: auto;
             font-size: 0.82rem; font-weight: 500;
-            color: var(--muted); text-decoration: none;
+            color: var(--muted2); text-decoration: none;
         }
         .back-link:hover { color: var(--text); }
 
         main {
-            max-width: 680px;
+            max-width: 700px;
             margin: 3rem auto;
             padding: 0 1.5rem 4rem;
         }
@@ -64,41 +68,43 @@
             letter-spacing: -0.03em; margin-bottom: 0.5rem;
         }
         .page-sub {
-            font-size: 0.9rem; color: var(--muted);
+            font-size: 0.9rem; color: var(--muted2);
             margin-bottom: 2.5rem; line-height: 1.6;
         }
 
-        .faq-group { margin-bottom: 0.75rem; }
+        .faq-group { margin-bottom: 0.6rem; }
         .faq-q {
             width: 100%; text-align: left;
             background: var(--card); border: 1px solid var(--border);
-            border-radius: 10px; padding: 1rem 1.1rem;
+            border-radius: 8px; padding: 1rem 1.1rem;
             font-family: inherit; font-size: 0.92rem; font-weight: 600;
             color: var(--text); cursor: pointer;
             display: flex; justify-content: space-between; align-items: center;
             gap: 1rem; transition: background 0.1s;
         }
-        .faq-q:hover { background: #f4f4f5; }
-        .faq-q.open { border-radius: 10px 10px 0 0; border-bottom-color: transparent; }
+        .faq-q:hover { background: var(--card2); }
+        .faq-q.open { border-radius: 8px 8px 0 0; border-bottom-color: transparent; }
         .faq-chevron { font-size: 0.75rem; color: var(--muted); transition: transform 0.2s; flex-shrink: 0; }
         .faq-q.open .faq-chevron { transform: rotate(180deg); }
         .faq-a {
             display: none;
             background: var(--card); border: 1px solid var(--border);
-            border-top: none; border-radius: 0 0 10px 10px;
-            padding: 0 1.1rem 1rem;
-            font-size: 0.875rem; color: var(--muted);
-            line-height: 1.7;
+            border-top: none; border-radius: 0 0 8px 8px;
+            padding: 0.25rem 1.1rem 1rem;
+            font-size: 0.875rem; color: var(--muted2);
+            line-height: 1.75;
         }
         .faq-a.open { display: block; }
-        .faq-a a { color: var(--text); }
+        .faq-a a { color: var(--muted2); text-decoration: underline; text-underline-offset: 2px; }
+        .faq-a a:hover { color: var(--text); }
         .faq-a strong { color: var(--text); }
         .faq-a p + p { margin-top: 0.75rem; }
+        .faq-a em { color: var(--muted2); font-style: italic; }
 
         .section-label {
             font-size: 0.72rem; font-weight: 700;
             text-transform: uppercase; letter-spacing: 0.08em;
-            color: #a1a1aa; margin: 2rem 0 0.75rem;
+            color: var(--muted); margin: 2rem 0 0.75rem;
         }
 
         .manifesto {
@@ -106,67 +112,59 @@
             padding: 1.25rem 1.5rem;
             margin-bottom: 0.75rem;
             background: var(--card);
-            border-radius: 0 10px 10px 0;
+            border-radius: 0 8px 8px 0;
             border-top: 1px solid var(--border);
             border-right: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
         }
         .manifesto p {
             font-size: 0.875rem;
-            color: var(--muted);
+            color: var(--muted2);
             line-height: 1.75;
         }
         .manifesto p + p { margin-top: 0.85rem; }
         .manifesto strong { color: var(--text); }
         .manifesto .lede {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text);
-            letter-spacing: -0.02em;
-            line-height: 1.4;
-            margin-bottom: 1rem;
+            font-size: 1rem; font-weight: 700;
+            color: var(--text); letter-spacing: -0.02em;
+            line-height: 1.4; margin-bottom: 1rem;
         }
+
         .state-list {
             margin-top: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+            display: flex; flex-direction: column; gap: 0.5rem;
         }
         .state-row {
-            display: flex;
-            gap: 0.75rem;
-            font-size: 0.875rem;
-            line-height: 1.5;
+            display: flex; gap: 0.75rem;
+            font-size: 0.875rem; line-height: 1.5;
+            color: var(--muted2);
         }
+        .state-row strong { color: var(--text); }
         .state-row .badge {
             flex-shrink: 0;
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
-            align-self: flex-start;
-            margin-top: 0.1rem;
+            font-size: 0.68rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            padding: 0.15rem 0.5rem; border-radius: 4px;
+            align-self: flex-start; margin-top: 0.15rem;
         }
-        .badge-open   { background: #dcfce7; color: #166534; }
-        .badge-part   { background: #fef9c3; color: #854d0e; }
-        .badge-closed { background: #fee2e2; color: #991b1b; }
+        .badge-open   { background: #052e16; color: #4ade80; }
+        .badge-part   { background: #2d1f00; color: #fbbf24; }
+        .badge-closed { background: #2d0a0a; color: #f87171; }
+
         .manifesto .cta {
-            margin-top: 1.25rem;
-            padding-top: 1.25rem;
+            margin-top: 1.25rem; padding-top: 1.25rem;
             border-top: 1px solid var(--border);
-            font-size: 0.875rem;
-            color: var(--muted);
-            line-height: 1.7;
+            font-size: 0.875rem; color: var(--muted2); line-height: 1.7;
         }
+        .manifesto .cta a { color: var(--muted2); text-decoration: underline; text-underline-offset: 2px; }
+        .manifesto .cta a:hover { color: var(--text); }
 
         footer {
             text-align: center;
-            font-size: 0.73rem; color: #a1a1aa;
+            font-size: 0.73rem; color: var(--muted);
             padding-bottom: 2rem;
         }
-        footer a { color: #a1a1aa; text-decoration: underline; text-underline-offset: 2px; }
+        footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
     </style>
 </head>
 <body>
@@ -174,18 +172,18 @@
 <header>
     <a class="brand" href="index.html">
         <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
-            <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
-            <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+            <circle cx="13" cy="13" r="11.5" stroke="#e8e8e8" stroke-width="1.5"/>
+            <circle cx="13" cy="13" r="6.5" stroke="#e8e8e8" stroke-width="1.5"/>
+            <circle cx="13" cy="13" r="2.5" fill="#e8e8e8"/>
         </svg>
         <span class="brand-name">GetReal</span>
     </a>
-    <a class="back-link" href="search.html">← Back to the tool</a>
+    <a class="back-link" href="search.html">Back to the tool →</a>
 </header>
 
 <main>
     <h1 class="page-title">Frequently asked questions</h1>
-    <p class="page-sub">How the tool works, where the data comes from, and what the scores actually mean.</p>
+    <p class="page-sub">How the tool works, where the data comes from, and what the scores mean.</p>
 
     <div class="section-label">The data</div>
 
@@ -195,9 +193,9 @@
             <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-a">
-            <p>GetReal uses free, open-licence government property sales data:</p>
-            <p><strong>NSW:</strong> The <a href="https://www.valuergeneral.nsw.gov.au/design/bulk_psi_content/bulk_psi" target="_blank">NSW Valuer General bulk Property Sales Information (PSI)</a> — a complete record of every residential property sale in New South Wales. The raw data is processed and made available in a clean, easy-to-use format by <a href="https://nswpropertysalesdata.com" target="_blank">nswpropertysalesdata.com</a>, a project built by James Elks. We're grateful for his work.</p>
-            <p><strong>VIC:</strong> The <a href="https://discover.data.vic.gov.au/dataset/victorian-property-sales-report-median-house-by-suburb-time-series" target="_blank">Valuer-General Victoria Property Sales Report</a> — suburb-level median prices and sales counts.</p>
+            <p>GetReal uses free, open-licence government property sales data.</p>
+            <p><strong>NSW:</strong> The <a href="https://www.valuergeneral.nsw.gov.au/design/bulk_psi_content/bulk_psi" target="_blank">NSW Valuer General bulk Property Sales Information (PSI)</a> — a complete record of every residential property sale in New South Wales. The raw data is processed and made available in a clean format by <a href="https://nswpropertysalesdata.com" target="_blank">nswpropertysalesdata.com</a>, a project built by James Elks. We're grateful for his work.</p>
+            <p><strong>VIC:</strong> The <a href="https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics" target="_blank">Victorian Valuer General quarterly property sales reports</a>, which publish suburb-level median prices and annual sales volumes.</p>
             <p>Other states are coming soon.</p>
         </div>
     </div>
@@ -209,8 +207,8 @@
         </button>
         <div class="faq-a">
             <p><strong>NSW:</strong> Updated daily from the NSW Valuer General. The tool uses the last 13 months of sales, so results reflect recent market conditions.</p>
-            <p><strong>VIC:</strong> Based on the most recently published annual report from Valuer-General Victoria, typically lagging by 6–12 months.</p>
-            <p>Market conditions change, so treat scores as indicative of historical supply patterns, not a guarantee of what's available right now.</p>
+            <p><strong>VIC:</strong> Based on the most recently published quarterly report from Valuer-General Victoria. The current data covers the 12 months of 2025.</p>
+            <p>Market conditions change. Treat scores as a picture of historical supply patterns, not a guarantee of what's available right now.</p>
         </div>
     </div>
 
@@ -220,8 +218,8 @@
             <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-a">
-            <p><strong>NSW:</strong> Full coverage — 2,456 suburbs with real individual sales data from the last 13 months. Comparable property cards show real sold addresses with Google Street View photos.</p>
-            <p><strong>VIC:</strong> 722 suburbs with aggregated median price data. Individual sales and Street View coming soon.</p>
+            <p><strong>NSW:</strong> Full coverage across 2,456 suburbs with real individual sales data from the last 13 months. Comparable property cards show real sold addresses with Google Street View photos.</p>
+            <p><strong>VIC:</strong> 780 suburbs with median price data and real annual sales volumes. Individual sale records and Street View are not available for VIC.</p>
             <p>Queensland, WA, SA, Tasmania, ACT and NT are on the roadmap.</p>
         </div>
     </div>
@@ -231,18 +229,18 @@
     <div class="manifesto">
         <p class="lede">Property data belongs to Australians. Right now, most state governments disagree.</p>
 
-        <p>Every time a home changes hands in this country, the transaction is recorded by a government department, in a register funded by public money, under a legal obligation created by public law. The sale price, the address, the date — these are not private facts. They are public records.</p>
+        <p>Every time a home changes hands in this country, the transaction is recorded by a government department, in a register funded by public money, under a legal obligation created by public law. The sale price, the address, the date. These are not private facts. They are public records.</p>
 
-        <p>And yet if you live in Queensland, Western Australia, South Australia, or most other states, and you want to know what properties have actually sold for in your suburb — not estimates, not agent-supplied figures, but the real numbers — you will be directed to a private data broker charging thousands of dollars. For the same information your taxes funded to collect.</p>
+        <p>And yet if you live in Queensland, Western Australia, South Australia, or most other states, and you want to know what properties have actually sold for in your suburb, you will be directed to a private data broker charging thousands of dollars. For the same information your taxes funded to collect.</p>
 
         <p>This is not an accident. It is a choice. A choice that benefits a small commercial ecosystem at the direct expense of everyone else: first-home buyers trying to understand what they're really up against, renters trying to make sense of a market that keeps moving away from them, economists and journalists trying to report honestly on a housing crisis, community groups advocating for people being priced out.</p>
 
-        <p><strong>NSW is the best we've got — which says something, but not everything.</strong> The NSW Valuer General publishes the record of every residential sale — address, price, date — updated daily, free to download, under an open licence. That's genuinely better than everywhere else, and it's the foundation GetReal's NSW data runs on. But the data doesn't include property attributes like bedrooms, bathrooms, or car spaces. Whether that's because the government doesn't collect it, doesn't require it at registration, or simply hasn't gotten there yet — we're not sure. And the format is raw bulk files, not a proper API: useful, but not exactly modern. The fact that a community developer had to build a separate project just to make it accessible tells you there's still room to go. NSW opened the door. It hasn't finished the job.</p>
+        <p><strong>NSW is the best we've got, which says something but not everything.</strong> The NSW Valuer General publishes the record of every residential sale: address, price, date. Updated daily, free to download, open licence. That's genuinely better than everywhere else, and it's the foundation GetReal's NSW data runs on. But the data doesn't include property attributes like bedrooms, bathrooms, or car spaces. Whether that's because the government doesn't collect it, doesn't require it at registration, or simply hasn't gotten there yet, we're not sure. The format is also raw bulk files, not an API. The fact that a community developer had to build a separate project just to make it accessible tells you there's still room to go. NSW opened the door. It hasn't finished the job.</p>
 
         <div class="state-list">
             <div class="state-row">
                 <span class="badge badge-open">Open</span>
-                <span><strong>NSW</strong> — Individual sale records, weekly updates, free download, open licence. No property attributes (bedrooms, bathrooms etc.) and no API — but the most open state by some distance.</span>
+                <span><strong>NSW</strong> — Individual sale records, daily updates, free download, open licence. No property attributes (bedrooms, bathrooms etc.) and no API, but the most open state by some distance.</span>
             </div>
             <div class="state-row">
                 <span class="badge badge-part">Partial</span>
@@ -250,19 +248,19 @@
             </div>
             <div class="state-row">
                 <span class="badge badge-closed">Closed</span>
-                <span><strong>QLD</strong> — Sold commercially via authorised brokers. The full dataset costs approximately <strong>$20,000 per year</strong>. Individual property lookups available from the Valuer General at a per-transaction fee.</span>
+                <span><strong>QLD</strong> — Sold commercially via authorised brokers. The full dataset costs approximately <strong>$20,000 per year</strong>. Individual property lookups are available from the Valuer General at a per-transaction fee.</span>
             </div>
             <div class="state-row">
                 <span class="badge badge-closed">Closed</span>
-                <span><strong>SA</strong> — Individual records locked behind a professional licence via SAILIS. Public access limited to quarterly aggregate suburb medians.</span>
+                <span><strong>SA</strong> — Individual records locked behind a professional licence via SAILIS. Public access is limited to quarterly aggregate suburb medians.</span>
             </div>
             <div class="state-row">
                 <span class="badge badge-closed">Closed</span>
-                <span><strong>WA</strong> — Landgate sells its Sales Evidence dataset commercially (price on request). It's the most detailed in the country — it includes bedrooms and bathrooms — but it's not free and no public price is published.</span>
+                <span><strong>WA</strong> — Landgate sells its Sales Evidence dataset commercially (price on request). It's the most detailed dataset in the country, including bedrooms and bathrooms, but it's not free.</span>
             </div>
             <div class="state-row">
                 <span class="badge badge-closed">Closed</span>
-                <span><strong>ACT</strong> — No bulk property sales dataset found in any government open data portal. Data appears to flow only through commercial providers.</span>
+                <span><strong>ACT</strong> — No bulk property sales dataset found in any government open data portal. Data flows only through commercial providers.</span>
             </div>
             <div class="state-row">
                 <span class="badge badge-closed">Closed</span>
@@ -275,7 +273,7 @@
         </div>
 
         <div class="cta">
-            GetReal is built on whatever data we can access for free. When more states open up, we'll add them immediately. If you think property data should be a public good — and we believe it should — the most direct thing you can do is say so to your state MP or open data team. This is a solvable problem. NSW solved it. <a href="manifesto.html">Read the full picture.</a>
+            GetReal is built on whatever data we can access for free. When more states open up, we'll add them immediately. If you think property data should be a public good, the most direct thing you can do is say so to your state MP or open data team. This is a solvable problem. NSW solved it. <a href="manifesto.html">Read the full picture.</a>
         </div>
     </div>
 
@@ -287,8 +285,8 @@
             <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-a">
-            <p>The score estimates how many properties matching <em>all</em> of your criteria — suburb, property type, budget, bedrooms, bathrooms, and car spaces — actually sold in that suburb last year.</p>
-            <p>Each factor reduces the pool: your budget covers a certain percentile of the market; bedrooms, bathrooms, and car spaces each have a known distribution across property types. These are multiplied together, then scaled so that <strong>25+ matching sales per year = 100%</strong>.</p>
+            <p>The score estimates how many properties matching all of your criteria (suburb, property type, budget, bedrooms, bathrooms, car spaces) actually sold in that suburb last year.</p>
+            <p>Each factor reduces the pool: your budget covers a certain percentile of the market, and bedrooms, bathrooms and car spaces each have a known distribution across property types. These are multiplied together, then scaled so that 25 or more matching sales per year equals 100%.</p>
             <p>The tighter any single factor, the lower the score. The factor bars show you which constraint is doing the most damage.</p>
         </div>
     </div>
@@ -299,13 +297,13 @@
             <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-a">
-            <p>The grades map to bands of the score:</p>
+            <p>The grades map to score bands:</p>
             <p><strong>Highly Realistic (75–100%)</strong> — Strong supply. Plenty of properties matching your criteria sold last year. You should expect regular opportunities.</p>
             <p><strong>Realistic (55–74%)</strong> — Good supply. You'll need patience but shouldn't struggle to find options.</p>
             <p><strong>Competitive (35–54%)</strong> — Limited supply. Properties matching your full criteria are uncommon. You may need to act quickly or compromise on one factor.</p>
             <p><strong>Tight (15–34%)</strong> — Very limited supply. Consider relaxing at least one criteria.</p>
             <p><strong>Very Difficult (5–14%)</strong> — Rare supply. Your combined criteria eliminate almost everything on the market.</p>
-            <p><strong>Unrealistic (0–4%)</strong> — The combination of criteria almost never appears in this suburb. Something needs to change.</p>
+            <p><strong>Unrealistic (0–4%)</strong> — This combination almost never appears in this suburb. Something needs to change.</p>
         </div>
     </div>
 
@@ -315,8 +313,8 @@
             <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-a">
-            <p>The government sales data records the sale price and property type, but not the number of bedrooms or bathrooms. To account for this, GetReal uses national distribution estimates — for example, roughly 78% of houses have at least 3 bedrooms, 42% have at least 4.</p>
-            <p>These are averages across Australia and will vary by suburb, which is why the bedroom and bathroom factors are labelled indicative. A suburb like Mosman will skew larger; an inner-city apartment suburb will skew smaller.</p>
+            <p>The government sales data records the sale price and property type, but not the number of bedrooms or bathrooms. To account for this, GetReal uses national distribution estimates. For example, roughly 78% of houses have at least 3 bedrooms and 42% have at least 4.</p>
+            <p>These are national averages and will vary by suburb, which is why the bedroom and bathroom factors are labelled indicative. A suburb like Mosman will skew larger; an inner-city apartment suburb will skew smaller.</p>
         </div>
     </div>
 
@@ -326,9 +324,9 @@
             <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-a">
-            <p>The Victorian data published by Valuer-General Victoria is suburb-level aggregated data — it gives median prices and annual sales counts per suburb and property type, but does not include individual sale records or property attributes like bedrooms or bathrooms.</p>
-            <p>To estimate how many properties in a VIC suburb would match your bedroom and bathroom requirements, GetReal uses national distribution estimates based on ABS Census data. For example, approximately 78% of houses have 3 or more bedrooms, and about 42% have 4 or more. These figures are applied uniformly across VIC suburbs.</p>
-            <p>Because VIC individual sales records are not publicly available, the bedroom and bathroom factors for VIC are less precise than they would be with record-level data. The score is directionally useful — it tells you which factors are most constraining — but treat the exact percentages as indicative rather than precise.</p>
+            <p>Victoria publishes suburb-level median prices and annual sales counts, but not individual sale records or property attributes like bedrooms or bathrooms.</p>
+            <p>To estimate bedroom and bathroom availability in a VIC suburb, GetReal uses national distribution estimates based on ABS Census data. For example, approximately 78% of houses have 3 or more bedrooms and about 42% have 4 or more. These figures are applied uniformly across VIC suburbs.</p>
+            <p>Because individual records aren't available, the bedroom and bathroom factors for VIC are less precise than they are for NSW. The score is directionally useful — it tells you which factors are most constraining — but treat the exact percentages as indicative rather than precise.</p>
             <p><a href="manifesto.html">See what data each state publishes and why individual records matter →</a></p>
         </div>
     </div>
@@ -339,14 +337,14 @@
             <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-a">
-            <p>Victoria publishes suburb median prices and annual sales volumes for houses, apartments and land — but not individual sale records. So we can't directly measure what percentage of properties sell within any given budget in a VIC suburb the way we can in NSW.</p>
+            <p>Victoria publishes suburb median prices and annual sales volumes for houses, apartments and land, but not individual sale records. So we can't directly measure what percentage of properties sell within any given budget in a VIC suburb the way we can in NSW.</p>
             <p>Instead, we use NSW as a calibration dataset. NSW has over 146,000 individual sale records, which lets us measure the actual shape of property markets: for any given suburb median, what percentage of properties sell at 80% of that median? 90%? 110%? And so on.</p>
-            <p>We found that this shape — the distribution of sale prices around the median — is remarkably consistent across NSW, with two meaningful variables:</p>
-            <p><strong>Price bracket</strong> — more expensive markets behave slightly differently to affordable ones. We use five brackets: under $500k, $500k–$800k, $800k–$1.2M, $1.2M–$1.8M, and over $1.8M.</p>
-            <p><strong>Market depth</strong> — suburbs with fewer than 30 sales per year ("thin" markets) cluster more tightly around the median. We tested three tiers (deep, medium, thin) and found that high-volume and medium-volume suburbs were almost identical, so we simplified to two: active (30+ sales/year) and thin (under 30).</p>
-            <p>We tested whether inner-city vs regional suburbs behave differently within the same price bracket. They don't, meaningfully — depth matters more than location.</p>
-            <p>For each Victorian suburb, we look up its median price and annual sales volume from the Victorian Valuer General's quarterly data, match it to the right NSW-derived curve, and use that to estimate what percentage of the market falls within your budget. The score is that percentage — and we're honest that it's an estimate based on comparable NSW markets, not a direct count of VIC sales.</p>
-            <p><em>The actual distribution tables we use are shown below. These are derived from NSW data and update automatically when new data is loaded.</em></p>
+            <p>We found that this shape, the distribution of sale prices around the median, is remarkably consistent across NSW with two meaningful variables:</p>
+            <p><strong>Price bracket.</strong> More expensive markets behave slightly differently to affordable ones. We use five brackets: under $500k, $500k–$800k, $800k–$1.2M, $1.2M–$1.8M, and over $1.8M.</p>
+            <p><strong>Market depth.</strong> Suburbs with fewer than 30 sales per year (thin markets) cluster more tightly around the median. We tested three tiers (deep, medium, thin) and found that high-volume and medium-volume suburbs were almost identical, so we simplified to two: active (30+ sales/year) and thin (under 30).</p>
+            <p>We tested whether inner-city suburbs behave differently to regional ones within the same price bracket. They don't, meaningfully. Depth matters more than location.</p>
+            <p>For each Victorian suburb, we look up its median price and annual sales volume from the Victorian Valuer General's quarterly data, match it to the right NSW-derived curve, and use that to estimate what percentage of the market falls within your budget. The score is that percentage. We're honest that it's an estimate based on comparable NSW markets, not a direct count of VIC sales.</p>
+            <p><em>The actual distribution tables used in this calculation are shown below. They are derived from NSW data and update automatically when new data is loaded.</em></p>
             <div id="price-curves-tables" style="margin-top:1rem;">
                 <p style="color:var(--muted);font-size:0.85em;">Loading distribution tables…</p>
             </div>
@@ -361,8 +359,8 @@
             <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-a">
-            <p>A suburb appears in the dataset if it had at least 5 property sales recorded in the most recent annual file. Very small suburbs, rural areas, or recently rezoned localities may fall below this threshold.</p>
-            <p>Also check the spelling — the tool matches on the exact suburb name as recorded by the government. Try nearby alternatives if your suburb doesn't appear.</p>
+            <p>A suburb appears in the dataset if it had at least 5 property sales recorded in the most recent data file. Very small suburbs, rural areas, or recently rezoned localities may fall below this threshold.</p>
+            <p>Also check the spelling. The tool matches on the exact suburb name as recorded by the government. Try nearby alternatives if your suburb doesn't appear.</p>
         </div>
     </div>
 
@@ -372,8 +370,8 @@
             <span class="faq-chevron">▼</span>
         </button>
         <div class="faq-a">
-            <p>The scores give you a directionally accurate picture of how constrained your search is — but they are not a precise count of available listings. They're based on past sales, not current stock, and the bedroom/bathroom distributions are national estimates rather than suburb-specific.</p>
-            <p>Use the tool to understand which factors are limiting your search and what changes would have the biggest impact — not as a prediction of exactly how many properties you'll find.</p>
+            <p>The scores give you a directionally accurate picture of how constrained your search is, but they are not a precise count of available listings. They're based on past sales, not current stock, and the bedroom and bathroom distributions are national estimates rather than suburb-specific.</p>
+            <p>Use the tool to understand which factors are limiting your search and what changes would have the biggest impact, not as a prediction of exactly how many properties you'll find.</p>
         </div>
     </div>
 
@@ -391,26 +389,23 @@
 </main>
 
 <footer>
-    <a href="search.html">← Back to GetReal</a>
+    <a href="search.html">Back to GetReal</a>
 </footer>
 
 <script>
 function toggle(btn) {
     const answer = btn.nextElementSibling;
     const isOpen = btn.classList.contains('open');
-    // Close all
     document.querySelectorAll('.faq-q.open').forEach(q => {
         q.classList.remove('open');
         q.nextElementSibling.classList.remove('open');
     });
-    // Open clicked if it was closed
     if (!isOpen) {
         btn.classList.add('open');
         answer.classList.add('open');
     }
 }
 
-// Auto-open accordion item when navigated to via anchor link
 function openAnchor() {
     const hash = window.location.hash;
     if (!hash) return;
@@ -429,16 +424,15 @@ window.addEventListener('hashchange', openAnchor);
 </script>
 
 <script>
-// ── Live price_curves table from Supabase ────────────────────────────────────
 const SUPABASE_URL  = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
 
 const BRACKET_LABELS = {
-    'under_500k':   'Under $500k',
-    '500k_800k':    '$500k–$800k',
-    '800k_1200k':   '$800k–$1.2M',
-    '1200k_1800k':  '$1.2M–$1.8M',
-    'over_1800k':   'Over $1.8M',
+    'under_500k':  'Under $500k',
+    '500k_800k':   '$500k–$800k',
+    '800k_1200k':  '$800k–$1.2M',
+    '1200k_1800k': '$1.2M–$1.8M',
+    'over_1800k':  'Over $1.8M',
 };
 const BRACKET_ORDER = ['under_500k','500k_800k','800k_1200k','1200k_1800k','over_1800k'];
 const TYPE_ORDER    = ['house','apartment','townhouse'];
@@ -460,30 +454,29 @@ async function loadPriceCurvesTables() {
         const rows = await res.json();
         if (!Array.isArray(rows) || rows.length === 0) throw new Error('No data');
 
-        // Group by type
         const byType = {};
         for (const row of rows) {
             if (!byType[row.property_type]) byType[row.property_type] = [];
             byType[row.property_type].push(row);
         }
 
-        const tableStyle = `width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:1.5rem;`;
-        const thStyle    = `padding:5px 8px;text-align:right;border-bottom:2px solid var(--border);color:var(--muted);font-weight:600;white-space:nowrap;`;
-        const thLStyle   = `padding:5px 8px;text-align:left;border-bottom:2px solid var(--border);color:var(--muted);font-weight:600;`;
-        const tdStyle    = `padding:4px 8px;text-align:right;border-bottom:1px solid var(--border);`;
-        const tdLStyle   = `padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);`;
-        const trAlt      = `background:#f7f7f6;`;
+        const tblStyle = `width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:1.5rem;`;
+        const thR  = `padding:5px 8px;text-align:right;border-bottom:2px solid var(--border);color:var(--muted);font-weight:600;white-space:nowrap;`;
+        const thL  = `padding:5px 8px;text-align:left;border-bottom:2px solid var(--border);color:var(--muted);font-weight:600;`;
+        const tdR  = `padding:4px 8px;text-align:right;border-bottom:1px solid var(--border);color:var(--muted2);`;
+        const tdL  = `padding:4px 8px;text-align:left;border-bottom:1px solid var(--border);color:var(--muted2);`;
+        const trAlt = `background:#111;`;
 
-        let html = `<p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Each table shows, for a suburb with a given median price range and annual sales volume, what percentage of properties historically sold at or below each ratio of the suburb median. Source: ${rows[0] ? rows.length : 0} rows derived from 146,000+ NSW transactions.</p>`;
+        let html = `<p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;">Each table shows what percentage of NSW properties historically sold at or below each ratio of the suburb median, grouped by price bracket and annual sales volume. Derived from ${rows.length} rows across 146,000+ NSW transactions.</p>`;
 
         for (const ptype of TYPE_ORDER) {
             const typeRows = byType[ptype];
             if (!typeRows) continue;
-            html += `<h4 style="font-size:0.9rem;font-weight:700;margin:1.2rem 0 0.4rem;">${TYPE_LABELS[ptype]}</h4>`;
-            html += `<div style="overflow-x:auto;"><table style="${tableStyle}"><thead><tr>`;
-            html += `<th style="${thLStyle}">Price bracket</th><th style="${thLStyle}">Market</th>`;
-            for (const [,label] of COLS) html += `<th style="${thStyle}">${label}</th>`;
-            html += `<th style="${thStyle}">Sample</th></tr></thead><tbody>`;
+            html += `<h4 style="font-size:0.88rem;font-weight:700;color:var(--text);margin:1.2rem 0 0.4rem;text-transform:uppercase;letter-spacing:0.05em;">${TYPE_LABELS[ptype]}</h4>`;
+            html += `<div style="overflow-x:auto;"><table style="${tblStyle}"><thead><tr>`;
+            html += `<th style="${thL}">Price bracket</th><th style="${thL}">Market</th>`;
+            for (const [,label] of COLS) html += `<th style="${thR}">${label}</th>`;
+            html += `<th style="${thR}">n</th></tr></thead><tbody>`;
 
             let rowIdx = 0;
             for (const bracket of BRACKET_ORDER) {
@@ -492,25 +485,25 @@ async function loadPriceCurvesTables() {
                     if (!row) continue;
                     const bg = rowIdx % 2 === 1 ? `style="${trAlt}"` : '';
                     html += `<tr ${bg}>`;
-                    html += `<td style="${tdLStyle}">${BRACKET_LABELS[bracket]}</td>`;
-                    html += `<td style="${tdLStyle}">${tier === 'active' ? '30+ sales/yr' : 'Under 30 sales/yr'}</td>`;
+                    html += `<td style="${tdL}">${BRACKET_LABELS[bracket]}</td>`;
+                    html += `<td style="${tdL}">${tier === 'active' ? '30+ sales/yr' : 'Under 30/yr'}</td>`;
                     for (const [col] of COLS) {
-                        const val = row[col] != null ? row[col].toFixed(1) + '%' : '—';
-                        const bold = col === 'pct_at_10x' ? 'font-weight:700;' : '';
-                        html += `<td style="${tdStyle}${bold}">${val}</td>`;
+                        const val = row[col] != null ? row[col].toFixed(1) + '%' : 'n/a';
+                        const bold = col === 'pct_at_10x' ? `font-weight:700;color:var(--text);` : '';
+                        html += `<td style="${tdR}${bold}">${val}</td>`;
                     }
-                    html += `<td style="${tdStyle}color:var(--muted);">${(row.sample_size||0).toLocaleString()}</td>`;
+                    html += `<td style="${tdR}">${(row.sample_size||0).toLocaleString()}</td>`;
                     html += `</tr>`;
                     rowIdx++;
                 }
             }
             html += `</tbody></table></div>`;
         }
-        html += `<p style="font-size:0.75rem;color:var(--muted);">The ≤100% column shows the percentage of sales at or below the suburb median — this should be close to 50% in normal markets. "Thin" markets (under 30 sales/year) show higher ≤100% values because fewer sales mean less dispersion around the median.</p>`;
+        html += `<p style="font-size:0.75rem;color:var(--muted);margin-top:0.5rem;">The ≤100% column (bolded) shows the percentage selling at or below the suburb median. This should be close to 50% in active markets. Thin markets show higher values because fewer sales mean less spread around the median.</p>`;
         container.innerHTML = html;
     } catch(e) {
         document.getElementById('price-curves-tables').innerHTML =
-            `<p style="color:var(--muted);font-size:0.85em;">Distribution tables temporarily unavailable. (${e.message})</p>`;
+            `<p style="color:var(--muted);font-size:0.85em;">Distribution tables temporarily unavailable.</p>`;
     }
 }
 
