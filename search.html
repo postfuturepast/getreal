@@ -290,6 +290,19 @@
             color: var(--muted); line-height: 1.6; max-width: 280px;
         }
 
+        /* ── Map controls ────────────────────────────────── */
+        .map-pct-btn {
+            font-family: monospace; font-size: 0.75rem;
+            padding: 0.35rem 0.65rem;
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            color: var(--muted);
+            cursor: pointer; border-radius: 3px;
+            white-space: nowrap; transition: all 0.1s;
+        }
+        .map-pct-btn:hover { background: var(--surface-raised); color: var(--text); border-color: var(--border); }
+        .map-pct-btn:active { opacity: 0.7; }
+
         /* ── What-if ─────────────────────────────────────── */
         .whatif-section { grid-column: 1 / -1; }
         .section-heading {
@@ -811,30 +824,33 @@
 
     <!-- ── Suburb map (VIC/NSW) ── -->
     <div id="suburbMapSection" class="hidden" style="grid-column:1 / -1; border-top:1px solid var(--border-subtle);">
-        <div style="padding:1rem var(--pad-page) 0.5rem; display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
-            <div class="section-heading" style="margin:0;">How does your budget travel?</div>
-            <div style="font-family:monospace; font-size:0.65rem; color:var(--dim); display:flex; gap:1rem;">
+        <!-- Heading + legend + instruction -->
+        <div style="padding:1rem var(--pad-page) 0.75rem;">
+            <div class="section-heading" style="margin:0 0 0.6rem;">How does your budget travel?</div>
+            <div style="font-family:monospace; font-size:0.65rem; color:var(--dim); display:flex; flex-wrap:wrap; gap:0.4rem 1.25rem; align-items:baseline;">
                 <span><span style="color:#22c55e;">●</span> Realistic (&gt;60%)</span>
                 <span><span style="color:#f59e0b;">●</span> Competitive (40–60%)</span>
                 <span><span style="color:#ef4444;">●</span> Tight (&lt;40%)</span>
                 <span><span style="color:#0000ff;">●</span> Your search</span>
+                <span style="opacity:0.45;">· Click a suburb to run a new search · Score shown at selected budget · <span id="mapDataSource">Valuer-General data</span></span>
             </div>
         </div>
         <!-- Map controls -->
-        <div id="mapControls" style="padding:0.4rem var(--pad-page); display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; border-bottom:1px solid var(--border-subtle); background:var(--surface);">
+        <div id="mapControls" style="padding:0.5rem var(--pad-page); display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; border-top:1px solid var(--border-subtle); border-bottom:1px solid var(--border-subtle); background:var(--surface);">
             <span style="font-family:monospace;font-size:0.62rem;color:var(--dim);letter-spacing:0.06em;">TYPE</span>
-            <div id="mapTypeButtons" style="display:flex;gap:0.3rem;"></div>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;">
+            <div id="mapTypeButtons" style="display:flex;gap:0.4rem;"></div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
                 <span style="font-family:monospace;font-size:0.62rem;color:var(--dim);letter-spacing:0.06em;">BUDGET</span>
-                <button onclick="adjustMapBudget(-50000)" style="font-family:monospace;font-size:0.7rem;padding:0.2rem 0.55rem;background:transparent;border:1px solid var(--border-subtle);color:var(--muted);cursor:pointer;border-radius:3px;" title="−$50k">−</button>
-                <span id="mapBudgetDisplay" style="font-family:monospace;font-size:0.72rem;color:var(--text);min-width:5ch;text-align:center;"></span>
-                <button onclick="adjustMapBudget(50000)" style="font-family:monospace;font-size:0.7rem;padding:0.2rem 0.55rem;background:transparent;border:1px solid var(--border-subtle);color:var(--muted);cursor:pointer;border-radius:3px;" title="+$50k">+</button>
+                <span id="mapBudgetDisplay" style="font-family:monospace;font-size:0.82rem;font-weight:600;color:var(--text);min-width:5ch;"></span>
+                <div style="display:flex;gap:0.3rem;">
+                    <button onclick="adjustMapBudgetPct(-10)" class="map-pct-btn">−10%</button>
+                    <button onclick="adjustMapBudgetPct(-5)"  class="map-pct-btn">−5%</button>
+                    <button onclick="adjustMapBudgetPct(5)"   class="map-pct-btn">+5%</button>
+                    <button onclick="adjustMapBudgetPct(10)"  class="map-pct-btn">+10%</button>
+                </div>
             </div>
         </div>
         <div id="suburbMap" style="width:100%; height:340px; background:#111;"></div>
-        <div style="padding:0.5rem var(--pad-page); font-family:monospace; font-size:0.65rem; color:var(--dim);">
-            Click a suburb to search it · Score shown at selected budget · <span id="mapDataSource">Valuer-General data</span>
-        </div>
     </div>
 
     <!-- ── Report CTA ────────────────── -->
@@ -3320,11 +3336,11 @@ function updateMapControls() {
     const shown = ['house','townhouse','apartment'].filter(t => types.includes(t));
     btnContainer.innerHTML = shown.map(t => `
         <button onclick="setMapType('${t}')"
-            style="font-family:monospace;font-size:0.68rem;padding:0.2rem 0.55rem;
+            style="font-family:monospace;font-size:0.75rem;padding:0.35rem 0.65rem;
                    background:${t === _mapType ? '#fff' : 'transparent'};
                    color:${t === _mapType ? '#000' : 'var(--muted)'};
                    border:1px solid ${t === _mapType ? '#fff' : 'var(--border-subtle)'};
-                   cursor:pointer;border-radius:3px;transition:all 0.1s;">
+                   cursor:pointer;border-radius:3px;transition:all 0.1s;white-space:nowrap;">
             ${TYPE_LABELS[t]}
         </button>`).join('');
 }
@@ -3336,6 +3352,13 @@ function setMapType(newType) {
 
 function adjustMapBudget(delta) {
     _mapBudget = Math.max(100000, (_mapBudget || 0) + delta);
+    rerenderMap();
+}
+
+function adjustMapBudgetPct(pct) {
+    const raw = (_mapBudget || 0) * (1 + pct / 100);
+    // Round to nearest $5k for clean numbers
+    _mapBudget = Math.max(100000, Math.round(raw / 5000) * 5000);
     rerenderMap();
 }
 
