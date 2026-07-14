@@ -1,0 +1,109 @@
+name: Refresh VIC Property Data
+
+# Runs automatically on a quarterly schedule, shortly after VGV typically publishes.
+# Also supports manual trigger via GitHub UI → Actions → "Run workflow".
+
+on:
+  schedule:
+    # 20th of Jan, Apr, Jul, Oct at 02:00 UTC
+    # VGV typically publishes quarterly data within 2–3 weeks of each quarter end.
+    - cron: "0 2 20 1,4,7,10 *"
+  workflow_dispatch:
+    inputs:
+      force_commit:
+        description: "Commit even if suburb-data.json is unchanged"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  refresh-vic-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          # Use the default GITHUB_TOKEN — it has push access to this repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          pip install requests xlrd
+
+      - name: Download latest VIC median price files
+        id: download
+        run: |
+          python3 download_vic_data.py
+          exit_code=$?
+          if [ $exit_code -eq 2 ]; then
+            echo "new_data=false" >> $GITHUB_OUTPUT
+            echo "Files are already current — no new VGV data released yet."
+          elif [ $exit_code -eq 0 ]; then
+            echo "new_data=true" >> $GITHUB_OUTPUT
+          else
+            echo "Download failed with exit code $exit_code"
+            exit 1
+          fi
+        continue-on-error: false
+
+      - name: Process VIC data and update Supabase
+        if: steps.download.outputs.new_data == 'true' || github.event.inputs.force_commit == 'true'
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: |
+          python3 load_vic_quarterly.py
+
+      - name: Check if suburb-data.json changed
+        id: diff
+        if: steps.download.outputs.new_data == 'true' || github.event.inputs.force_commit == 'true'
+        run: |
+          if git diff --quiet suburb-data.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "suburb-data.json is unchanged after processing."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            LINES=$(git diff --stat suburb-data.json | tail -1)
+            echo "Changes: $LINES"
+          fi
+
+      - name: Commit and push updated data
+        if: |
+          (steps.diff.outputs.changed == 'true') ||
+          (github.event.inputs.force_commit == 'true' && steps.download.outputs.new_data == 'true')
+        run: |
+          # Derive quarter label from the downloaded file
+          QUARTER=$(python3 -c "
+          import glob, re
+          files = sorted(glob.glob('median-house-q*.xls'), reverse=True)
+          if files:
+              m = re.search(r'(q\d-\d{4})', files[0], re.IGNORECASE)
+              print(m.group(1).upper() if m else 'latest')
+          else:
+              print('latest')
+          ")
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add suburb-data.json
+          git commit -m "data: auto-refresh VIC data to $QUARTER [skip ci]"
+          git push
+
+          echo "✓ Pushed suburb-data.json — Cloudflare Pages will auto-deploy."
+
+      - name: No-op summary (already current)
+        if: steps.download.outputs.new_data == 'false'
+        run: |
+          echo "VGV data is already up to date. No changes committed."
+          echo "Next scheduled run: next quarter."

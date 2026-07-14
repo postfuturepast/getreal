@@ -26,8 +26,10 @@ OUTPUT
 - Regenerates suburb-data.json
 """
 
+import glob
 import json
 import os
+import re
 import requests
 import xlrd
 from datetime import datetime
@@ -59,6 +61,47 @@ FILES = [
     ("median-unit-q4-2025.xls",   "apartment"),
     # ("median-land-q4-2025.xls", "land"),  # uncomment when land scoring is added
 ]
+
+QUARTER_LABELS = {
+    "q1": ("Jan – Mar", 1),
+    "q2": ("Apr – Jun", 2),
+    "q3": ("Jul – Sep", 3),
+    "q4": ("Oct – Dec", 4),
+}
+
+
+def detect_files() -> tuple[list[tuple[str, str]], str, int, str]:
+    """
+    Auto-detect the newest median-house-*.xls and median-unit-*.xls in the
+    current directory. Returns (files, quarter_label, data_year, data_period).
+    Falls back to the hardcoded FILES list if nothing is found.
+    """
+    house_files = sorted(glob.glob("median-house-q*.xls"), reverse=True)
+    unit_files  = sorted(glob.glob("median-unit-q*.xls"),  reverse=True)
+
+    if house_files and unit_files:
+        house = house_files[0]
+        unit  = unit_files[0]
+        print(f"Auto-detected: {house} + {unit}")
+
+        # Derive quarter metadata from filename, e.g. median-house-q4-2025.xls
+        m = re.search(r"(q\d)-(\d{4})", house, re.IGNORECASE)
+        if m:
+            q_key = m.group(1).lower()
+            year  = int(m.group(2))
+            label, q_num = QUARTER_LABELS.get(q_key, ("", 0))
+            quarter_label = f"Q{q_num} {year}"
+            data_period   = f"{label} {year}" if label else str(year)
+        else:
+            quarter_label = "latest"
+            year = datetime.today().year
+            data_period = str(year)
+
+        return [(house, "house"), (unit, "apartment")], quarter_label, year, data_period
+
+    # Fallback to hardcoded FILES
+    print("No median-house-q*.xls files found — using hardcoded FILES list.")
+    return FILES, "Q4 2025", 2025, "Jan – Dec 2025"
 
 
 def title_case(s):
@@ -175,9 +218,10 @@ def build_suburb_json(rows):
 
 
 def main():
+    files, quarter_label, data_year, data_period = detect_files()
     all_rows = []
 
-    for xls_file, property_type in FILES:
+    for xls_file, property_type in files:
         if not os.path.exists(xls_file):
             print(f"WARNING: {xls_file} not found — skipping {property_type}")
             continue
@@ -217,8 +261,8 @@ def main():
     suburbs = build_suburb_json(all_rows)
     output = {
         "generated":        datetime.today().strftime("%Y-%m-%d"),
-        "source":           "Victorian Valuer General quarterly data Q4 2025 via load_vic_quarterly.py",
-        "data_period":      "Jan – Dec 2025",
+        "source":           f"Victorian Valuer General quarterly data {quarter_label} via load_vic_quarterly.py",
+        "data_period":      data_period,
         "total_suburbs":    len(suburbs),
         "suburbs":       suburbs,
     }

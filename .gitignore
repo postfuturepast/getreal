@@ -14,3 +14,6 @@ __pycache__/
 # Excel source files (regenerate with pipeline)
 *.xlsx
 *.xls
+
+# VIC download pipeline state (tracks which files have been processed)
+.vic_download_state.json

@@ -4,42 +4,31 @@ How to update GetReal when new source data is released.
 
 ---
 
-## VIC quarterly refresh
+## VIC quarterly refresh — AUTOMATED
 
-New VIC data is released by the Victorian Valuer General each quarter (roughly Jan, Apr, Jul, Oct) at:
-https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics
+VIC data is automatically refreshed by GitHub Actions. The workflow runs on the 20th of
+January, April, July, and October — shortly after each quarter's VGV data is typically published.
 
-**What to download:**
-- Median house prices by suburb (XLS)
-- Median unit prices by suburb (XLS)
+**You do nothing.** When the workflow runs:
+1. It scrapes land.vic.gov.au for the latest median-house and median-unit XLS files
+2. Downloads them if they're new
+3. Runs `load_vic_quarterly.py` against the Supabase secret
+4. Commits the regenerated `suburb-data.json` if it changed
+5. Pushes to main → Cloudflare Pages auto-deploys
 
-**Steps:**
+**Manual trigger** (if you know new data just dropped before the schedule):
+→ GitHub → Actions → "Refresh VIC Property Data" → Run workflow
 
-1. Download the two new XLS files from the link above.
+**One-time setup required** (do this once, then forget it):
+1. Go to https://github.com/postfuturepast/getreal/settings/secrets/actions
+2. Add a new Repository Secret named `SUPABASE_SECRET` with the service role key
+   (never store the key anywhere else — never commit it)
 
-2. Rename them to match the pattern in `load_vic_quarterly.py` — update the `FILES` list at the top of the script if the quarter has changed:
-   ```python
-   FILES = [
-       ("median-house-q1-2026.xls", "house"),
-       ("median-unit-q1-2026.xls",  "apartment"),
-   ]
-   ```
-   Also update `data_year` and `data_period` strings near the bottom of `main()`.
-
-3. Place the XLS files in the same folder as the script.
-
-4. Run the pipeline:
-   ```bash
-   export SUPABASE_SECRET=your_secret_key_here
-   python3 load_vic_quarterly.py
-   ```
-
-5. Commit and deploy the regenerated `suburb-data.json`:
-   ```bash
-   git add suburb-data.json
-   git commit -m "data: refresh VIC data to Q1 2026"
-   git push
-   ```
+**If the automated scraper breaks** (page structure changed):
+1. Download the XLS files manually from land.vic.gov.au
+2. Put them in this folder, named `median-house-qQ-YYYY.xls` / `median-unit-qQ-YYYY.xls`
+3. `export SUPABASE_SECRET=...` then `python3 load_vic_quarterly.py`
+4. Commit and push `suburb-data.json`
 
 ---
 
