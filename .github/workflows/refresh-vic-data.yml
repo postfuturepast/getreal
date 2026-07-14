@@ -25,6 +25,8 @@ jobs:
   refresh-vic-data:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
 
     steps:
       - name: Checkout repo
@@ -60,8 +62,6 @@ jobs:
 
       - name: Process VIC data and update Supabase
         if: steps.download.outputs.new_data == 'true' || github.event.inputs.force_commit == 'true'
-        env:
-          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
         run: |
           python3 load_vic_quarterly.py
 
