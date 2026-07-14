@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GetReal — Enrichment Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #f2f2f0;
+    --surface: #ffffff;
+    --border: #d0d0cc;
+    --text: #111111;
+    --muted: #666660;
+    --accent: #1a1a1a;
+    --green: #1a7a3c;
+    --blue: #1a3a7a;
+    --orange: #b85c00;
+    font-size: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', Courier, monospace;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  h1 { font-size: 18px; font-weight: bold; letter-spacing: 0.05em; }
+  .controls { display: flex; align-items: center; gap: 12px; }
+  #last-updated { color: var(--muted); font-size: 12px; }
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+  button:hover { opacity: 0.75; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Stat cards */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+  }
+  .stat .label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .stat .value {
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 1;
+  }
+  .stat.accent { border-left: 4px solid var(--accent); }
+  .stat.green  { border-left: 4px solid var(--green); }
+  .stat.blue   { border-left: 4px solid var(--blue); }
+  .stat.orange { border-left: 4px solid var(--orange); }
+
+  /* Two-col grid */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* Panels */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .panel h2 {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding: 4px 8px 6px;
+    white-space: nowrap;
+  }
+  td {
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--bg);
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bar-cell { width: 120px; }
+  .bar-wrap { background: var(--bg); height: 8px; }
+  .bar-fill { height: 8px; background: var(--accent); }
+  .pct-label { font-size: 11px; color: var(--muted); }
+
+  /* Chart */
+  .chart-wrap { position: relative; height: 180px; }
+
+  /* Loading/error */
+  .loading { color: var(--muted); font-size: 12px; padding: 12px 0; }
+  .error { color: #b00020; font-size: 12px; padding: 12px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>GETREAL — NSW ENRICHMENT DASHBOARD</h1>
+  <div class="controls">
+    <span id="last-updated">—</span>
+    <button id="refresh-btn" onclick="loadAll()">⟳ Refresh</button>
+  </div>
+</header>
+
+<!-- Overall stat cards -->
+<div class="stat-row">
+  <div class="stat accent">
+    <div class="label">TOTAL NSW RECORDS</div>
+    <div class="value" id="s-total">—</div>
+  </div>
+  <div class="stat green">
+    <div class="label">ENRICHED (EXACT)</div>
+    <div class="value" id="s-enriched">—</div>
+  </div>
+  <div class="stat accent">
+    <div class="label">COVERAGE</div>
+    <div class="value" id="s-pct">—</div>
+  </div>
+  <div class="stat blue">
+    <div class="label">RAY WHITE</div>
+    <div class="value" id="s-rw">—</div>
+  </div>
+  <div class="stat orange">
+    <div class="label">MCGRATH</div>
+    <div class="value" id="s-mc">—</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Property type breakdown -->
+  <div class="panel">
+    <h2>Property Type Coverage</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>TYPE</th>
+          <th class="num">TOTAL</th>
+          <th class="num">ENRICHED</th>
+          <th class="num">%</th>
+          <th class="bar-cell"></th>
+        </tr>
+      </thead>
+      <tbody id="type-tbody">
+        <tr><td colspan="5" class="loading">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Source breakdown -->
+  <div class="panel">
+    <h2>Source Breakdown</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>SOURCE</th>
+          <th class="num">ENRICHED</th>
+          <th class="num">SHARE</th>
+          <th class="bar-cell"></th>
+        </tr>
+      </thead>
+      <tbody id="source-tbody">
+        <tr><td colspan="4" class="loading">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Top suburbs -->
+<div class="panel">
+  <h2>Top 25 Suburbs by Enrichment Count</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>SUBURB</th>
+        <th class="num">ENRICHED</th>
+        <th class="num">TOTAL</th>
+        <th class="num">COVERAGE</th>
+        <th class="bar-cell">COVERAGE BAR</th>
+        <th>SOURCES</th>
+      </tr>
+    </thead>
+    <tbody id="suburb-tbody">
+      <tr><td colspan="6" class="loading">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Bedrooms distribution -->
+<div class="panel">
+  <h2>Bedrooms Distribution (Enriched Records)</h2>
+  <div class="chart-wrap"><canvas id="beds-chart"></canvas></div>
+</div>
+
+<script>
+const SB_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
+const SB_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
+
+let bedsChart = null;
+
+function headers(count = false) {
+  const h = {
+    'apikey': SB_KEY,
+    'Authorization': `Bearer ${SB_KEY}`,
+  };
+  if (count) h['Prefer'] = 'count=exact';
+  return h;
+}
+
+async function getCount(params) {
+  const url = `${SB_URL}/rest/v1/property_sales?select=id&limit=1&${params}`;
+  const r = await fetch(url, { headers: headers(true) });
+  if (!r.ok) throw new Error(`${r.status} on ${params}`);
+  const range = r.headers.get('Content-Range');
+  return range ? parseInt(range.split('/')[1]) : 0;
+}
+
+async function fetchAll(params) {
+  // Get total count first, then fetch all pages in parallel
+  const total = await getCount(params);
+  if (total === 0) return [];
+  const PAGE = 1000;
+  const pages = Math.ceil(total / PAGE);
+  const reqs = Array.from({ length: pages }, (_, i) =>
+    fetch(`${SB_URL}/rest/v1/property_sales?${params}&limit=${PAGE}&offset=${i * PAGE}`, {
+      headers: headers()
+    }).then(r => r.json())
+  );
+  const results = await Promise.all(reqs);
+  return results.flat();
+}
+
+function fmt(n) {
+  return n == null ? '—' : n.toLocaleString();
+}
+
+function pctStr(a, b) {
+  if (!b) return '—';
+  return (100 * a / b).toFixed(1) + '%';
+}
+
+function barRow(pct) {
+  const w = Math.round(Math.min(pct, 100));
+  return `<td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:${w}%"></div></div></td>`;
+}
+
+async function loadOverall() {
+  const [total, enriched, rw, mc] = await Promise.all([
+    getCount('state=eq.NSW'),
+    getCount('state=eq.NSW&match_confidence=eq.exact'),
+    getCount('state=eq.NSW&match_confidence=eq.exact&enriched_source=eq.raywhite'),
+    getCount('state=eq.NSW&match_confidence=eq.exact&enriched_source=eq.mcgrath'),
+  ]);
+  document.getElementById('s-total').textContent = fmt(total);
+  document.getElementById('s-enriched').textContent = fmt(enriched);
+  document.getElementById('s-pct').textContent = pctStr(enriched, total);
+  document.getElementById('s-rw').textContent = fmt(rw);
+  document.getElementById('s-mc').textContent = fmt(mc);
+  return { total, enriched, rw, mc };
+}
+
+async function loadPropertyTypes() {
+  const [hTotal, hEnriched, uTotal, uEnriched] = await Promise.all([
+    getCount('state=eq.NSW&street_number=not.like.*%2F*'),
+    getCount('state=eq.NSW&match_confidence=eq.exact&street_number=not.like.*%2F*'),
+    getCount('state=eq.NSW&street_number=like.*%2F*'),
+    getCount('state=eq.NSW&match_confidence=eq.exact&street_number=like.*%2F*'),
+  ]);
+
+  const rows = [
+    { label: 'House / Land', total: hTotal, enriched: hEnriched },
+    { label: 'Unit / Apartment', total: uTotal, enriched: uEnriched },
+  ];
+
+  const tbody = document.getElementById('type-tbody');
+  tbody.innerHTML = rows.map(r => {
+    const pct = r.total ? 100 * r.enriched / r.total : 0;
+    return `<tr>
+      <td>${r.label}</td>
+      <td class="num">${fmt(r.total)}</td>
+      <td class="num">${fmt(r.enriched)}</td>
+      <td class="num pct-label">${pctStr(r.enriched, r.total)}</td>
+      ${barRow(pct)}
+    </tr>`;
+  }).join('');
+}
+
+async function loadEnrichedRecords({ enriched, rw, mc }) {
+  // Fetch all enriched records (suburb + source + bedrooms)
+  const records = await fetchAll(
+    'state=eq.NSW&match_confidence=eq.exact&select=suburb,enriched_source,bedrooms'
+  );
+
+  // Source breakdown table
+  const sources = [
+    { name: 'raywhite', label: 'Ray White', count: rw },
+    { name: 'mcgrath',  label: 'McGrath',   count: mc },
+  ];
+  const sourceTbody = document.getElementById('source-tbody');
+  sourceTbody.innerHTML = sources.map(s => {
+    const pct = enriched ? 100 * s.count / enriched : 0;
+    return `<tr>
+      <td>${s.label}</td>
+      <td class="num">${fmt(s.count)}</td>
+      <td class="num pct-label">${pctStr(s.count, enriched)}</td>
+      ${barRow(pct)}
+    </tr>`;
+  }).join('');
+
+  // Aggregate by suburb
+  const suburbMap = {};
+  const suburbSources = {};
+  const bedsCount = {};
+
+  for (const r of records) {
+    const sub = r.suburb || 'UNKNOWN';
+    suburbMap[sub] = (suburbMap[sub] || 0) + 1;
+    if (!suburbSources[sub]) suburbSources[sub] = new Set();
+    if (r.enriched_source) suburbSources[sub].add(r.enriched_source);
+
+    const b = r.bedrooms ?? 'unknown';
+    bedsCount[b] = (bedsCount[b] || 0) + 1;
+  }
+
+  // Top 25 suburbs by enriched count
+  const top25 = Object.entries(suburbMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 25);
+
+  // Fetch total counts for those 25 suburbs in parallel
+  const totalCounts = await Promise.all(
+    top25.map(([sub]) =>
+      getCount(`state=eq.NSW&suburb=eq.${encodeURIComponent(sub)}`)
+    )
+  );
+
+  const suburbTbody = document.getElementById('suburb-tbody');
+  suburbTbody.innerHTML = top25.map(([sub, enrichedCount], i) => {
+    const total = totalCounts[i];
+    const pct = total ? 100 * enrichedCount / total : 0;
+    const srcLabels = [...(suburbSources[sub] || [])]
+      .map(s => s === 'raywhite' ? 'RW' : s === 'mcgrath' ? 'MC' : s.toUpperCase())
+      .join(', ');
+    return `<tr>
+      <td>${sub}</td>
+      <td class="num">${fmt(enrichedCount)}</td>
+      <td class="num">${fmt(total)}</td>
+      <td class="num pct-label">${pctStr(enrichedCount, total)}</td>
+      ${barRow(pct)}
+      <td class="pct-label">${srcLabels}</td>
+    </tr>`;
+  }).join('');
+
+  // Bedrooms chart
+  const bedOrder = ['1', '2', '3', '4', '5', '6', '7', 'unknown'];
+  const bedLabels = bedOrder.map(b => b === 'unknown' ? 'N/A' : `${b} bed`);
+  const bedData = bedOrder.map(b => bedsCount[String(b)] || 0);
+
+  if (bedsChart) bedsChart.destroy();
+  const ctx = document.getElementById('beds-chart').getContext('2d');
+  bedsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: bedLabels,
+      datasets: [{
+        label: 'Records',
+        data: bedData,
+        backgroundColor: '#1a1a1a',
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Courier New' } } },
+        y: { grid: { color: '#e8e8e8' }, ticks: { font: { family: 'Courier New' } } },
+      }
+    }
+  });
+}
+
+async function loadAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+  document.getElementById('last-updated').textContent = 'Updating…';
+
+  try {
+    const overall = await loadOverall();
+    await Promise.all([
+      loadPropertyTypes(),
+      loadEnrichedRecords(overall),
+    ]);
+    const now = new Date().toLocaleString('en-AU', { timeStyle: 'short', dateStyle: 'short' });
+    document.getElementById('last-updated').textContent = `Updated ${now}`;
+  } catch (e) {
+    document.getElementById('last-updated').textContent = `Error: ${e.message}`;
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⟳ Refresh';
+  }
+}
+
+// Load on open
+loadAll();
+
+// Auto-refresh every 5 minutes
+setInterval(loadAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>
