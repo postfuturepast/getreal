@@ -63,6 +63,12 @@ jobs:
       - name: Process VIC data and update Supabase
         if: steps.download.outputs.new_data == 'true' || github.event.inputs.force_commit == 'true'
         run: |
+          if [ -z "$SUPABASE_SECRET" ]; then
+            echo "::error::SUPABASE_SECRET is empty — check repository secret is set correctly"
+            exit 1
+          fi
+          echo "SUPABASE_SECRET is set (${#SUPABASE_SECRET} chars)"
+          export SUPABASE_SECRET="$SUPABASE_SECRET"
           python3 load_vic_quarterly.py
 
       - name: Check if suburb-data.json changed
