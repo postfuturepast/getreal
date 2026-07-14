@@ -2102,15 +2102,11 @@ async function generatePDF(name, email, phone, consent) {
             });
 
             // Draw suburb score circles using Leaflet's own coordinate projection
-            console.log('[map capture] canvas size:', W, H);
-            console.log('[map capture] _lastMapSuburbs:', _lastMapSuburbs?.length, _lastMapSuburbs?.[0]);
-            console.log('[map capture] _leafletMap ready:', !!_leafletMap);
             if (_lastMapSuburbs && _lastMapSuburbs.length > 0) {
                 _lastMapSuburbs.forEach(s => {
                     if (!s.lat || !s.lng) return;
                     try {
                         const pt = _leafletMap.latLngToContainerPoint(L.latLng(s.lat, s.lng));
-                        console.log('[map capture] suburb:', s.name, 'pt:', pt.x, pt.y, 'score:', s.score);
                         const color = mapScoreColor(s.score);
                         ctx.beginPath();
                         ctx.arc(pt.x, pt.y, 10, 0, Math.PI * 2);
@@ -2121,15 +2117,27 @@ async function generatePDF(name, email, phone, consent) {
                         ctx.strokeStyle = '#000';
                         ctx.lineWidth = 1;
                         ctx.stroke();
-                    } catch(e) { console.log('[map capture] circle error:', e.message); }
+                    } catch(e) { /* skip */ }
                 });
-            } else {
-                console.log('[map capture] no suburbs to draw');
             }
 
             if (W > 0 && H > 0) {
-                mapImageData   = canvas.toDataURL('image/jpeg', 0.85);
-                mapImageAspect = W / H;
+                // Crop to ~2.2:1 aspect ratio so it sits well in the PDF without stretching
+                const targetAspect = 2.2;
+                const cropH = Math.round(W / targetAspect);
+                if (cropH < H) {
+                    const cropped    = document.createElement('canvas');
+                    cropped.width    = W;
+                    cropped.height   = cropH;
+                    const cropCtx    = cropped.getContext('2d');
+                    const cropY      = Math.round((H - cropH) / 2); // centre crop vertically
+                    cropCtx.drawImage(canvas, 0, cropY, W, cropH, 0, 0, W, cropH);
+                    mapImageData   = cropped.toDataURL('image/jpeg', 0.9);
+                    mapImageAspect = targetAspect;
+                } else {
+                    mapImageData   = canvas.toDataURL('image/jpeg', 0.9);
+                    mapImageAspect = W / H;
+                }
             }
         }
     } catch(e) {
