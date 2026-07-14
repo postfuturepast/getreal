@@ -6,8 +6,9 @@ How to update GetReal when new source data is released.
 
 ## VIC quarterly refresh — AUTOMATED
 
-VIC data is automatically refreshed by GitHub Actions. The workflow runs on the 20th of
-January, April, July, and October — shortly after each quarter's VGV data is typically published.
+VIC data is automatically refreshed by GitHub Actions. The workflow runs every Monday —
+most weeks it finds nothing new and exits cleanly. When VGV publishes a new quarter,
+the next Monday run picks it up automatically.
 
 **You do nothing.** When the workflow runs:
 1. It scrapes land.vic.gov.au for the latest median-house and median-unit XLS files

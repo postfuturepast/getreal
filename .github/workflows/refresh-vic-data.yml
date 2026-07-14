@@ -5,9 +5,11 @@ name: Refresh VIC Property Data
 
 on:
   schedule:
-    # 20th of Jan, Apr, Jul, Oct at 02:00 UTC
-    # VGV typically publishes quarterly data within 2–3 weeks of each quarter end.
-    - cron: "0 2 20 1,4,7,10 *"
+    # Every Monday at 02:00 UTC — checks for new VGV data weekly.
+    # Data only changes quarterly, so most runs will be no-ops (exit 2).
+    # Running weekly means the pipeline stays verified rather than sitting
+    # untested for 3 months between quarters.
+    - cron: "0 2 * * 1"
   workflow_dispatch:
     inputs:
       force_commit:
