@@ -2102,11 +2102,15 @@ async function generatePDF(name, email, phone, consent) {
             });
 
             // Draw suburb score circles using Leaflet's own coordinate projection
+            console.log('[map capture] canvas size:', W, H);
+            console.log('[map capture] _lastMapSuburbs:', _lastMapSuburbs?.length, _lastMapSuburbs?.[0]);
+            console.log('[map capture] _leafletMap ready:', !!_leafletMap);
             if (_lastMapSuburbs && _lastMapSuburbs.length > 0) {
                 _lastMapSuburbs.forEach(s => {
                     if (!s.lat || !s.lng) return;
                     try {
                         const pt = _leafletMap.latLngToContainerPoint(L.latLng(s.lat, s.lng));
+                        console.log('[map capture] suburb:', s.name, 'pt:', pt.x, pt.y, 'score:', s.score);
                         const color = mapScoreColor(s.score);
                         ctx.beginPath();
                         ctx.arc(pt.x, pt.y, 10, 0, Math.PI * 2);
@@ -2117,8 +2121,10 @@ async function generatePDF(name, email, phone, consent) {
                         ctx.strokeStyle = '#000';
                         ctx.lineWidth = 1;
                         ctx.stroke();
-                    } catch(e) { /* skip */ }
+                    } catch(e) { console.log('[map capture] circle error:', e.message); }
                 });
+            } else {
+                console.log('[map capture] no suburbs to draw');
             }
 
             if (W > 0 && H > 0) {
