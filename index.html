@@ -36,29 +36,13 @@
             padding: 1.25rem 1.5rem;
             display: flex; flex-direction: column; gap: 0.6rem;
         }
-        .tool-card-header {
-            display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
-        }
         .tool-title { font-size: 1.1rem; font-weight: 700; }
         .tool-tagline { font-size: 0.85rem; color: var(--muted); font-style: italic; }
-        /* Status badges */
-        .badge {
-            font-family: var(--font-mono);
-            font-size: 0.6rem;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            padding: 0.2em 0.5em;
-            border: 1px solid;
-        }
-        .badge-alpha  { color: #f0a500; border-color: #f0a500; background: rgba(240,165,0,0.08); }
-        .badge-wip    { color: #e07b39; border-color: #e07b39; background: rgba(224,123,57,0.08); }
-        .badge-idea   { color: #7b9ebd; border-color: #7b9ebd; background: rgba(123,158,189,0.1);
-                        font-size: 0.7rem; padding: 0.25em 0.65em; }
+        .tool-coming { font-family: var(--font-mono); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); margin-top: 0.25rem; }
         @media (min-width: 600px) {
             .hero { padding: 3rem 2rem 1.5rem; }
-            .tools { padding: 1.5rem 2rem; flex-direction: row; flex-wrap: wrap; }
-            .tool-card { flex: 1 1 calc(50% - 0.5rem); min-width: 0; }
+            .tools { padding: 1.5rem 2rem; flex-direction: row; }
+            .tool-card { flex: 1; }
         }
     </style>
 </head>
@@ -110,10 +94,7 @@
 
 <div class="tools">
     <div class="tool-card">
-        <div class="tool-card-header">
-            <div class="tag">Tool 01</div>
-            <span class="badge badge-alpha">Alpha</span>
-        </div>
+        <div class="tag">Tool 01</div>
         <div class="tool-title">Looking for a property?</div>
         <div class="tool-tagline">Get real about your budget, or keep dreamin'.</div>
         <div class="inset">Most property searches start a little optimistic. This tool helps find the middle ground, based on what actually sold.</div>
@@ -121,34 +102,11 @@
     </div>
 
     <div class="tool-card">
-        <div class="tool-card-header">
-            <div class="tag">Tool 02</div>
-            <span class="badge badge-wip">In progress</span>
-        </div>
+        <div class="tag">Tool 02</div>
         <div class="tool-title">Paying it off?</div>
         <div class="tool-tagline">Find out if you're paying the lazy tax.</div>
         <div class="inset">Banks don't lower your rate unless you make them. We're building something to tell you when it's time to call.</div>
         <button class="btn" onclick="document.getElementById('comingSoonModal').style.display='flex'">Find out more</button>
-    </div>
-
-    <div class="tool-card">
-        <div class="tool-card-header">
-            <div class="tag">Tool 03</div>
-            <span class="badge badge-idea">Idea</span>
-        </div>
-        <div class="tool-title">Is your deposit the wall?</div>
-        <div class="tool-tagline">What's the maximum you could buy — and what would it cost you?</div>
-        <div class="inset">Enter your deposit and we'll show you the maximum property you could theoretically purchase, and the minimum income you'd need to service it. No income required — just the number you need to hit.</div>
-    </div>
-
-    <div class="tool-card">
-        <div class="tool-card-header">
-            <div class="tag">Tool 04</div>
-            <span class="badge badge-idea">Idea</span>
-        </div>
-        <div class="tool-title">CGT changes and your investment property.</div>
-        <div class="tool-tagline">Old rules vs new. The actual dollar difference.</div>
-        <div class="inset">From 1 July 2027, the 50% CGT discount on investment properties goes. Enter when you bought, how long you lived there, and what you might sell for — and see what you owe under both regimes.</div>
     </div>
 </div>
 
