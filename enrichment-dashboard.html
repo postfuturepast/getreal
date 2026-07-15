@@ -233,6 +233,38 @@
   <div class="chart-wrap"><canvas id="beds-chart"></canvas></div>
 </div>
 
+<!-- Historical candidates -->
+<div style="border-top: 2px solid var(--border); margin: 24px 0 16px; padding-top: 16px;">
+  <div style="font-size:11px;letter-spacing:0.1em;color:var(--muted);margin-bottom:4px;">HISTORICAL CANDIDATES — OUTSIDE WINDOW (NOT YET PROMOTED)</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Agency records matched to a VG property at the same address but sold outside the current enrichment window. Gap = days between agency sale date and VG sale date.</div>
+</div>
+<div class="stat-row">
+  <div class="stat" style="border-left:4px solid #999;">
+    <div class="label">TOTAL CANDIDATES</div>
+    <div class="value" id="h-total">—</div>
+  </div>
+  <div class="stat" style="border-left:4px solid #4a9a6a;">
+    <div class="label">WITHIN 3 MONTHS</div>
+    <div class="value" id="h-90">—</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="h-90-pct"></div>
+  </div>
+  <div class="stat" style="border-left:4px solid #4a7a9a;">
+    <div class="label">WITHIN 6 MONTHS</div>
+    <div class="value" id="h-180">—</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="h-180-pct"></div>
+  </div>
+  <div class="stat" style="border-left:4px solid #7a6a9a;">
+    <div class="label">WITHIN 1 YEAR</div>
+    <div class="value" id="h-365">—</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="h-365-pct"></div>
+  </div>
+  <div class="stat" style="border-left:4px solid #9a7a4a;">
+    <div class="label">WITHIN 2 YEARS</div>
+    <div class="value" id="h-730">—</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="h-730-pct"></div>
+  </div>
+</div>
+
 <script>
 const SB_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
 const SB_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
@@ -250,6 +282,14 @@ function headers(count = false) {
 
 async function getCount(params) {
   const url = `${SB_URL}/rest/v1/property_sales?select=id&limit=1&${params}`;
+  const r = await fetch(url, { headers: headers(true) });
+  if (!r.ok) throw new Error(`${r.status} on ${params}`);
+  const range = r.headers.get('Content-Range');
+  return range ? parseInt(range.split('/')[1]) : 0;
+}
+
+async function getSourcedCount(params) {
+  const url = `${SB_URL}/rest/v1/sourced_sales_nsw?select=id&limit=1&${params}`;
   const r = await fetch(url, { headers: headers(true) });
   if (!r.ok) throw new Error(`${r.status} on ${params}`);
   const range = r.headers.get('Content-Range');
@@ -283,6 +323,34 @@ function pctStr(a, b) {
 function barRow(pct) {
   const w = Math.round(Math.min(pct, 100));
   return `<td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:${w}%"></div></div></td>`;
+}
+
+async function loadHistoricalCandidates() {
+  // Calls a SECURITY DEFINER RPC function that can read sourced_sales_nsw
+  // without requiring public RLS on that table
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/get_historical_summary`, {
+    method: 'POST',
+    headers: { ...headers(), 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  if (!r.ok) throw new Error(`get_historical_summary: ${r.status}`);
+  const [row] = await r.json();
+  if (!row) return;
+
+  const total = parseInt(row.total_candidates) || 0;
+  document.getElementById('h-total').textContent = fmt(total);
+
+  const buckets = [
+    { id: 'h-90',  count: parseInt(row.within_90d)  || 0 },
+    { id: 'h-180', count: parseInt(row.within_180d) || 0 },
+    { id: 'h-365', count: parseInt(row.within_365d) || 0 },
+    { id: 'h-730', count: parseInt(row.within_730d) || 0 },
+  ];
+  for (const b of buckets) {
+    document.getElementById(b.id).textContent = fmt(b.count);
+    const pctEl = document.getElementById(b.id + '-pct');
+    if (pctEl) pctEl.textContent = total ? `${(100 * b.count / total).toFixed(1)}% of candidates` : '';
+  }
 }
 
 async function loadOverall() {
@@ -433,6 +501,7 @@ async function loadAll() {
     await Promise.all([
       loadPropertyTypes(),
       loadEnrichedRecords(overall),
+      loadHistoricalCandidates(),
     ]);
     const now = new Date().toLocaleString('en-AU', { timeStyle: 'short', dateStyle: 'short' });
     document.getElementById('last-updated').textContent = `Updated ${now}`;

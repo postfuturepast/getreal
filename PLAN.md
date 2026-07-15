@@ -63,7 +63,7 @@ Tasks labelled **[T]** (Tristan), **[C]** (Claude), or **[T+C]** (back and forth
 - [ ] Text is too small everywhere except tables — body copy and labels need to be bigger
 - [ ] Combine pages 2 (letter) + 3 (result) — letter at top, result content below, saves a page
 - [ ] Combine pages 4 (comparables) + 5 (continuation) onto one page — smush images up to make room, keep table. Add section title: "Properties sold closest to your budget"
-- [ ] Logo on cover page — *pending new logo design (see task below)*
+- [ ] Logo on cover page
 - [ ] Page 7 (what-if) needs a full rethink — currently hard to understand, not just cosmetic fix
 
 **Cover (Claude analysis)**
@@ -93,16 +93,6 @@ Tasks labelled **[T]** (Tristan), **[C]** (Claude), or **[T+C]** (back and forth
 3. Comparable sales (images + table, all on one page)
 4. Suburb comparison table
 
-**Pending before implementing:**
-- [ ] **[T]** Share new logo design / idea — needed before cover can be finalised
-
----
-
-### 🔜 New logo design
-*Tristan has a new logo idea to share. Hold PDF cover implementation until this is resolved.*
-- **[T]** Share the new logo concept / design direction
-- **[T+C]** Build/refine the logo
-- **[C]** Implement logo on PDF cover + website
 
 ---
 
@@ -113,14 +103,6 @@ Tasks labelled **[T]** (Tristan), **[C]** (Claude), or **[T+C]** (back and forth
 - **[T+C]** Decide on the right approach: fix the comparable cards, or redesign the whole PDF from scratch
 - **[C]** Rebuild PDF generation to reliably include: score, what-if cards, and comparable property cards with addresses
 - **[T]** Test output across several suburbs before deploying
-
----
-
-### 🔜 Nearby suburb loop fix
-*When clicking a nearby suburb suggestion, it loops back to the same suburb rather than progressing. Fix: when suggesting a nearby suburb, pick one that is more realistic (lower median price) than the current suburb, and never suggest the suburb the user is already on.*
-
-- **[C]** Update nearby suburb logic to filter out the current suburb and prefer suburbs with a lower median price
-- **[T]** Test: search an expensive suburb, click nearby, confirm it goes to something more affordable and doesn't loop
 
 ---
 
@@ -135,13 +117,6 @@ Tasks labelled **[T]** (Tristan), **[C]** (Claude), or **[T+C]** (back and forth
 - **[T]** Clone the empty repo locally, copy all project files in, commit and push
   - Files to include: search.html, index.html, faq.html, manifesto.html, styles.css, suburb-data.json, favicon.svg, robots.txt, all .py scripts
   - Files to exclude: archive.zip (too large), any .env files, __pycache__
-
-#### Step 2 — Connect Netlify to GitHub
-- **[T]** In Netlify dashboard: Sites → getreal → Site settings → Build & deploy → Link to Git
-- Choose GitHub, authorise, select the `getreal` repo
-- Build command: leave blank (static site, no build step)
-- Publish directory: `/` (root)
-- From now on: every push to GitHub `main` branch = automatic Netlify deploy
 
 #### Step 3 — Add Supabase secret to GitHub
 - **[T]** In GitHub repo: Settings → Secrets and variables → Actions → New repository secret
@@ -180,13 +155,6 @@ James's site updates daily, so we'll be at most 7 days behind current sales. Tha
 
 ---
 
-### 🔜 Hook up Netlify contact form to Gmail
-*The contact form on manifesto.html is confirmed working (submissions land in Netlify dashboard). Just need to wire up email notification so submissions arrive in Gmail.*
-
-- **[T]** In Netlify dashboard: Forms tab → manifesto-contact → Notifications → Add notification → Email → enter Gmail address
-
----
-
 ### 🐛 Bug: Nearby suburb is always "Bonshaw" (and loops)
 *Root cause: the NSW what-if "Nearby suburb" card falls back to iterating through ACTIVE_SUBURBS alphabetically when no `nearby` array exists for the searched suburb. "Bonshaw" happens to be near the top alphabetically. Clicking it has the same problem, creating a loop.*
 
@@ -208,39 +176,13 @@ James's site updates daily, so we'll be at most 7 days behind current sales. Tha
 
 ---
 
-### Sort out Netlify credits *(backburner — costs money)*
-*Netlify free tier is 300 credits/month — already at 75% by mid-July. Deployments burn credits.*
-- **[T]** Check what's consuming credits (likely frequent deploys — each deploy = 1 credit)
-- **[T+C]** Decide: upgrade to Personal plan (1,000 credits/month, ~$19/month) or find an alternative host
-- **[T+C]** If switching host: assess Cloudflare Pages or GitHub Pages as free alternatives with no credit limits
-- *Note: factor hosting cost into monetisation model*
+### Get individual sale records for VIC, QLD and other states
+*Ray White API is a strong candidate — same API used for NSW bedroom enrichment, just different stateCode and postcode range. See `TRIED-TOOL-01.md` for full details and staged plan.*
 
----
-
-### Add QLD + upgrade VIC — Domain suburb profile pipeline
-*Domain.com.au suburb profile pages contain bedroom-level median prices + annual sales counts + surrounding suburbs. No paywall — but Akamai bot detection blocks automated fetches. We tried scraping and were blocked. Not a cost problem, a bot-detection problem.*
-
-*Status: blocked. Need to either find an alternative free source or accept aggregated-only data for VIC/QLD for now.*
-
-*Why this would have been good: bedroom-level medians (not just overall), more current, surrounding suburb lists built in, same source for all states.*
-
-*What we tried and ruled out:*
-- *Direct fetch — blocked*
-- *Headless browser to simulate human — hit Cloudflare then Akamai bot detection*
-- *Verdict: Domain is actively protecting this data. It's their compiled product, so fair enough. Treat this path as closed.*
-
-- **[C]** Get list of QLD + VIC suburb names and postcodes from free Australian postcode dataset
-- **[C]** Write `load_domain_suburbs.py` — fetches `domain.com.au/suburb-profile/{suburb}-{state}-{postcode}` for each suburb, parses bedroom-level median table, uploads to new `suburb_stats` Supabase table
-- **[C]** Create `suburb_stats` table in Supabase SQL (suburb, state, postcode, property_type, bedrooms, median_price, annual_sales, nearby_suburbs, updated_at)
-- **[C]** Run pipeline for VIC (replaces current VIC static data with bedroom-level data)
-- **[C]** Run pipeline for QLD
-- **[C]** Update VIC scoring engine in index.html to query `suburb_stats` live (same pattern as NSW), enabling bedroom what-if cards
-- **[C]** Wire QLD scoring engine — same live query pattern
-- **[C]** Update "coming soon" logic so QLD is live
-- **[C]** Update FAQs coverage numbers
-- **[T]** Test VIC suburbs — sense-check medians and bedroom cards
-- **[T]** Test QLD suburbs — sense-check medians
-- **[T]** Deploy
+- **[T+C]** Confirm Ray White NSW extraction works end-to-end (Stage 2 matching test)
+- **[C]** Run Ray White extraction for VIC (postcodes 3000–3999), QLD (4000–4999)
+- **[C]** Wire VIC + QLD scoring engines against real individual sale records
+- **[T]** Test and deploy
 
 ---
 
@@ -259,8 +201,8 @@ James's site updates daily, so we'll be at most 7 days behind current sales. Tha
 *NSW scoring engine works but has three significant gaps that make it not truly launch-ready.*
 
 #### 1. Bedroom/bathroom/car space data missing
-*Every buyer searches by bedrooms. We're using national distribution estimates right now — not real data.*
-- **[T+C]** Figure out how to get bedroom/bathroom/car space data for NSW for free
+*Every buyer searches by bedrooms. We're using national distribution estimates right now — not real data. See `TRIED-TOOL-01.md` for approaches already ruled out.*
+- **[T+C]** Find a viable free source for NSW bedroom/bathroom/car space data
 - **[C]** Write enrichment pipeline → update property_sales rows
 - **[C]** Update NSW scoring to include real beds/baths, remove "coming soon" notes
 - **[T]** Test and deploy
@@ -434,12 +376,7 @@ Each: find free data source → pipeline → scoring → what-ifs → comparable
 ### 🧬 NSW bedroom + bathroom data
 *The single biggest gap in NSW scoring. Beds/baths use national distribution estimates right now.*
 
-- **[T+C]** Research available sources — what free or cheap options exist for NSW property attributes?
-  - Domain/REA listing scrape (risky — Akamai)
-  - GNAF (address dataset — no attributes)
-  - Planning portals / DA data (may have floor area, not rooms)
-  - Council open data (varies by LGA)
-  - Crowdsourced / user-submitted enrichment
+- **[T+C]** Find a viable free source — see `TRIED-TOOL-01.md` for what's already been ruled out
 - **[T+C]** Pick best viable approach and scope the work
 - **[C]** Build enrichment pipeline → match addresses to property_sales rows
 - **[C]** Update NSW scoring to use real beds/baths, remove "coming soon" notes from what-if cards
