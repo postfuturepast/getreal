@@ -33,6 +33,12 @@ The annual sales count in VIC data is the rolling 12-month figure from the Q4 20
 - `fetch_mcgrath.py` — harvests mcgrath.com.au sold listings (requires curl_cffi + mcgrath_urls.json seed file)
 - `match_mcgrath_nsw.py` — matches McGrath sourced_sales_nsw records to property_sales by address, writes bedrooms/bathrooms
 - `enrich_property_sales.py` — matches Ray White sourced_sales_nsw to property_sales (same pattern as McGrath script)
+- `discover_ljhooker_offices.py` — brute-forces LJ Hooker office IDs 1–3000, outputs ljhooker_offices.json (national)
+- `fetch_ljhooker.py` — harvests LJ Hooker sold listings for NSW via api01.ljx.com.au, upserts to sourced_sales_nsw
+- `match_ljhooker_nsw.py` — matches LJ Hooker sourced_sales_nsw to property_sales (address-only, no sold_date)
+- `cleanup_probable_ljhooker.py` — clears any probable match flags from ljhooker records (run if re-matching)
+- `promote_historical_matches.py` — promotes Ray White/McGrath records matched outside VG window (≤730 days) to match_confidence='historical'
+- `spotcheck_ljhooker.py` — spot-check tool: 30 random LJ Hooker exact matches displayed side-by-side for QA
 
 ## Supabase
 - URL: https://lkxzxeeeqfiymunpqvgt.supabase.co
@@ -48,11 +54,18 @@ See `RUNBOOK.md` for the full step-by-step pipeline — which scripts to run, in
 See `TRIED-TOOL-01.md` for all data sources investigated, outcomes, and the Ray White API and McGrath scraping approaches. Includes address matching methodology, confidence tiers, coverage targets, and the deduplication check that must be run after every enrichment.
 
 ## NSW enrichment coverage (as of 15 July 2026)
-- Ray White: 9,168 exact matches
-- McGrath: 4,947 exact matches (after dedup cleanup of 233 ambiguous source_ids)
-- Total: 14,115 / 146,330 = **9.6%** of NSW property_sales records enriched
-- Houses: 12.9% · Units: 3.4%
-- Next: add LJ Hooker, Raine & Horne, or other agencies to push coverage higher
+Match confidence tiers — documented in TRIED-TOOL-01.md:
+- `exact` — address + date window match (RW, McGrath, LJH address-only)
+- `historical` — address match, sold_date outside window but ≤730 days gap (RW, McGrath only)
+
+Counts:
+- Ray White: 9,168 exact + 1,787 historical = 10,955
+- McGrath: 4,947 exact + 439 historical = 5,386
+- LJ Hooker: 1,368 exact (no sold_date — address-only match accepted)
+- **Total: ~17,709 / 146,330 = ~12.1%** of NSW property_sales records enriched
+- Next agency: Raine & Horne, Belle Property, or LJ Hooker, Harcourts
+
+Probable matching was removed from all scripts — produced false positives (same street/number across different NSW suburbs).
 
 ## Deployment
 - GitHub: https://github.com/postfuturepast/getreal

@@ -154,8 +154,12 @@
     <div class="label">ENRICHED (EXACT)</div>
     <div class="value" id="s-enriched">—</div>
   </div>
+  <div class="stat" style="border-left:4px solid #7a6a9a;">
+    <div class="label">ENRICHED (HISTORICAL)</div>
+    <div class="value" id="s-enriched-hist">—</div>
+  </div>
   <div class="stat accent">
-    <div class="label">COVERAGE</div>
+    <div class="label">TOTAL COVERAGE</div>
     <div class="value" id="s-pct">—</div>
   </div>
   <div class="stat blue">
@@ -165,6 +169,10 @@
   <div class="stat orange">
     <div class="label">MCGRATH</div>
     <div class="value" id="s-mc">—</div>
+  </div>
+  <div class="stat" style="border-left:4px solid #1a6a5a;">
+    <div class="label">LJ HOOKER</div>
+    <div class="value" id="s-ljh">—</div>
   </div>
 </div>
 
@@ -195,13 +203,15 @@
       <thead>
         <tr>
           <th>SOURCE</th>
-          <th class="num">ENRICHED</th>
+          <th class="num">EXACT</th>
+          <th class="num">HISTORICAL</th>
+          <th class="num">TOTAL</th>
           <th class="num">SHARE</th>
           <th class="bar-cell"></th>
         </tr>
       </thead>
       <tbody id="source-tbody">
-        <tr><td colspan="4" class="loading">Loading...</td></tr>
+        <tr><td colspan="6" class="loading">Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -233,15 +243,37 @@
   <div class="chart-wrap"><canvas id="beds-chart"></canvas></div>
 </div>
 
-<!-- Historical candidates -->
+<!-- Historical promoted section -->
 <div style="border-top: 2px solid var(--border); margin: 24px 0 16px; padding-top: 16px;">
-  <div style="font-size:11px;letter-spacing:0.1em;color:var(--muted);margin-bottom:4px;">HISTORICAL CANDIDATES — OUTSIDE WINDOW (NOT YET PROMOTED)</div>
-  <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Agency records matched to a VG property at the same address but sold outside the current enrichment window. Gap = days between agency sale date and VG sale date.</div>
+  <div style="font-size:11px;letter-spacing:0.1em;color:var(--muted);margin-bottom:4px;">HISTORICAL MATCHES — PROMOTED TO ENRICHMENT</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Agency records matched to a VG property at the same address but sold outside the current date window. Accepted within a 2-year gap — bedroom/bathroom counts are unlikely to change between sales. Only Ray White and McGrath contribute historical matches (LJ Hooker has no sold date).</div>
+</div>
+<div class="stat-row">
+  <div class="stat" style="border-left:4px solid #7a6a9a;">
+    <div class="label">TOTAL PROMOTED</div>
+    <div class="value" id="h-total">—</div>
+  </div>
+  <div class="stat" style="border-left:4px solid #1a7a4a;">
+    <div class="label">RAY WHITE</div>
+    <div class="value" id="h-rw">—</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="h-rw-pct"></div>
+  </div>
+  <div class="stat" style="border-left:4px solid #b85c00;">
+    <div class="label">MCGRATH</div>
+    <div class="value" id="h-mc">—</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="h-mc-pct"></div>
+  </div>
+</div>
+
+<!-- Remaining unmatched candidates -->
+<div style="border-top: 1px solid var(--border); margin: 20px 0 16px; padding-top: 16px;">
+  <div style="font-size:11px;letter-spacing:0.1em;color:var(--muted);margin-bottom:4px;">REMAINING UNMATCHED CANDIDATES (OUTSIDE WINDOW)</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Agency records that matched a VG property by address but sold outside the 2-year gap threshold — not promoted. Gap = days between agency sale date and VG sale date.</div>
 </div>
 <div class="stat-row">
   <div class="stat" style="border-left:4px solid #999;">
-    <div class="label">TOTAL CANDIDATES</div>
-    <div class="value" id="h-total">—</div>
+    <div class="label">TOTAL REMAINING</div>
+    <div class="value" id="r-total">—</div>
   </div>
   <div class="stat" style="border-left:4px solid #4a9a6a;">
     <div class="label">WITHIN 3 MONTHS</div>
@@ -325,47 +357,73 @@ function barRow(pct) {
   return `<td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:${w}%"></div></div></td>`;
 }
 
-async function loadHistoricalCandidates() {
-  // Calls a SECURITY DEFINER RPC function that can read sourced_sales_nsw
-  // without requiring public RLS on that table
-  const r = await fetch(`${SB_URL}/rest/v1/rpc/get_historical_summary`, {
-    method: 'POST',
-    headers: { ...headers(), 'Content-Type': 'application/json' },
-    body: '{}',
-  });
-  if (!r.ok) throw new Error(`get_historical_summary: ${r.status}`);
-  const [row] = await r.json();
-  if (!row) return;
+async function loadHistoricalStats() {
+  // Promoted historical matches — query property_sales directly (public read)
+  const [histTotal, histRw, histMc] = await Promise.all([
+    getCount('state=eq.NSW&match_confidence=eq.historical'),
+    getCount('state=eq.NSW&match_confidence=eq.historical&enriched_source=eq.raywhite'),
+    getCount('state=eq.NSW&match_confidence=eq.historical&enriched_source=eq.mcgrath'),
+  ]);
+  document.getElementById('h-total').textContent = fmt(histTotal);
+  document.getElementById('h-rw').textContent = fmt(histRw);
+  document.getElementById('h-mc').textContent = fmt(histMc);
+  const rwPctEl = document.getElementById('h-rw-pct');
+  const mcPctEl = document.getElementById('h-mc-pct');
+  if (rwPctEl) rwPctEl.textContent = histTotal ? `${(100 * histRw / histTotal).toFixed(1)}% of historical` : '';
+  if (mcPctEl) mcPctEl.textContent = histTotal ? `${(100 * histMc / histTotal).toFixed(1)}% of historical` : '';
 
-  const total = parseInt(row.total_candidates) || 0;
-  document.getElementById('h-total').textContent = fmt(total);
-
-  const buckets = [
-    { id: 'h-90',  count: parseInt(row.within_90d)  || 0 },
-    { id: 'h-180', count: parseInt(row.within_180d) || 0 },
-    { id: 'h-365', count: parseInt(row.within_365d) || 0 },
-    { id: 'h-730', count: parseInt(row.within_730d) || 0 },
-  ];
-  for (const b of buckets) {
-    document.getElementById(b.id).textContent = fmt(b.count);
-    const pctEl = document.getElementById(b.id + '-pct');
-    if (pctEl) pctEl.textContent = total ? `${(100 * b.count / total).toFixed(1)}% of candidates` : '';
+  // Remaining unmatched candidates (still outside window, not promoted) via RPC
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/rpc/get_historical_summary`, {
+      method: 'POST',
+      headers: { ...headers(), 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    if (r.ok) {
+      const [row] = await r.json();
+      if (row) {
+        const total = parseInt(row.total_candidates) || 0;
+        document.getElementById('r-total').textContent = fmt(total);
+        const buckets = [
+          { id: 'h-90',  count: parseInt(row.within_90d)  || 0 },
+          { id: 'h-180', count: parseInt(row.within_180d) || 0 },
+          { id: 'h-365', count: parseInt(row.within_365d) || 0 },
+          { id: 'h-730', count: parseInt(row.within_730d) || 0 },
+        ];
+        for (const b of buckets) {
+          const el = document.getElementById(b.id);
+          if (el) el.textContent = fmt(b.count);
+          const pctEl = document.getElementById(b.id + '-pct');
+          if (pctEl) pctEl.textContent = total ? `${(100 * b.count / total).toFixed(1)}% of remaining` : '';
+        }
+      }
+    }
+  } catch (e) {
+    // RPC unavailable — skip remaining candidates section
+    console.warn('get_historical_summary unavailable:', e);
   }
+
+  return histTotal;
 }
 
 async function loadOverall() {
-  const [total, enriched, rw, mc] = await Promise.all([
+  const [total, exact, hist, rw, mc, ljh] = await Promise.all([
     getCount('state=eq.NSW'),
     getCount('state=eq.NSW&match_confidence=eq.exact'),
-    getCount('state=eq.NSW&match_confidence=eq.exact&enriched_source=eq.raywhite'),
-    getCount('state=eq.NSW&match_confidence=eq.exact&enriched_source=eq.mcgrath'),
+    getCount('state=eq.NSW&match_confidence=eq.historical'),
+    getCount('state=eq.NSW&enriched_source=eq.raywhite'),
+    getCount('state=eq.NSW&enriched_source=eq.mcgrath'),
+    getCount('state=eq.NSW&enriched_source=eq.ljhooker'),
   ]);
+  const enriched = exact + hist;
   document.getElementById('s-total').textContent = fmt(total);
-  document.getElementById('s-enriched').textContent = fmt(enriched);
+  document.getElementById('s-enriched').textContent = fmt(exact);
+  document.getElementById('s-enriched-hist').textContent = fmt(hist);
   document.getElementById('s-pct').textContent = pctStr(enriched, total);
   document.getElementById('s-rw').textContent = fmt(rw);
   document.getElementById('s-mc').textContent = fmt(mc);
-  return { total, enriched, rw, mc };
+  document.getElementById('s-ljh').textContent = fmt(ljh);
+  return { total, enriched, exact, hist, rw, mc, ljh };
 }
 
 async function loadPropertyTypes() {
@@ -394,24 +452,37 @@ async function loadPropertyTypes() {
   }).join('');
 }
 
-async function loadEnrichedRecords({ enriched, rw, mc }) {
-  // Fetch all enriched records (suburb + source + bedrooms)
+async function loadEnrichedRecords({ enriched, exact, hist, rw, mc, ljh }) {
+  // Fetch all enriched records (suburb + source + confidence + bedrooms)
   const records = await fetchAll(
-    'state=eq.NSW&match_confidence=eq.exact&select=suburb,enriched_source,bedrooms'
+    'state=eq.NSW&match_confidence=in.(exact,historical)&select=suburb,enriched_source,match_confidence,bedrooms'
   );
 
-  // Source breakdown table
+  // Per-source exact + historical counts
+  const sourceExact = {}, sourceHist = {};
+  for (const r of records) {
+    const src = r.enriched_source || 'unknown';
+    if (r.match_confidence === 'exact') sourceExact[src] = (sourceExact[src] || 0) + 1;
+    if (r.match_confidence === 'historical') sourceHist[src] = (sourceHist[src] || 0) + 1;
+  }
+
   const sources = [
-    { name: 'raywhite', label: 'Ray White', count: rw },
-    { name: 'mcgrath',  label: 'McGrath',   count: mc },
+    { name: 'raywhite', label: 'Ray White' },
+    { name: 'mcgrath',  label: 'McGrath' },
+    { name: 'ljhooker', label: 'LJ Hooker' },
   ];
   const sourceTbody = document.getElementById('source-tbody');
   sourceTbody.innerHTML = sources.map(s => {
-    const pct = enriched ? 100 * s.count / enriched : 0;
+    const ex = sourceExact[s.name] || 0;
+    const hi = sourceHist[s.name] || 0;
+    const tot = ex + hi;
+    const pct = enriched ? 100 * tot / enriched : 0;
     return `<tr>
       <td>${s.label}</td>
-      <td class="num">${fmt(s.count)}</td>
-      <td class="num pct-label">${pctStr(s.count, enriched)}</td>
+      <td class="num">${fmt(ex)}</td>
+      <td class="num">${fmt(hi) || '—'}</td>
+      <td class="num">${fmt(tot)}</td>
+      <td class="num pct-label">${pctStr(tot, enriched)}</td>
       ${barRow(pct)}
     </tr>`;
   }).join('');
@@ -448,7 +519,7 @@ async function loadEnrichedRecords({ enriched, rw, mc }) {
     const total = totalCounts[i];
     const pct = total ? 100 * enrichedCount / total : 0;
     const srcLabels = [...(suburbSources[sub] || [])]
-      .map(s => s === 'raywhite' ? 'RW' : s === 'mcgrath' ? 'MC' : s.toUpperCase())
+      .map(s => s === 'raywhite' ? 'RW' : s === 'mcgrath' ? 'MC' : s === 'ljhooker' ? 'LJH' : s.toUpperCase())
       .join(', ');
     return `<tr>
       <td>${sub}</td>
@@ -501,7 +572,7 @@ async function loadAll() {
     await Promise.all([
       loadPropertyTypes(),
       loadEnrichedRecords(overall),
-      loadHistoricalCandidates(),
+      loadHistoricalStats(),
     ]);
     const now = new Date().toLocaleString('en-AU', { timeStyle: 'short', dateStyle: 'short' });
     document.getElementById('last-updated').textContent = `Updated ${now}`;

@@ -351,6 +351,87 @@ GRANT USAGE, SELECT ON SEQUENCE sourced_sales_tas_id_seq TO service_role;
 
 ---
 
+## LJ Hooker — api01.ljx.com.au sold listings API
+
+**Outcome: ✅ Complete — 23,416+ records harvested (15 July 2026)**
+
+LJ Hooker's sold listings are served via an open JSON API with no authentication required.
+
+**Endpoint:** `GET https://api01.ljx.com.au/website/search-v1`
+
+**Key parameters:**
+- `searchProfile=sold` — sold listings only
+- `officeId=234` — numeric office ID (mandatory, no geographic filter works without it)
+- `orderBy=date-desc`, `limit=100`, `page=N`
+
+**Office ID discovery — critical gotcha:** The office ID is not exposed in any public endpoint. The `offices-v1` endpoint returns all 256 offices with names and subdomains but no numeric IDs. IDs must be discovered by brute-forcing a range (1–3000) — each valid ID returns sold listings, allowing state identification from the address field. Script: `discover_ljhooker_offices.py`.
+
+**National office counts (discovered July 2026):**
+- NSW: 72 offices · VIC: 10 · QLD: 34 · WA: 11 · SA: 7 · ACT: 8 · TAS: 2 · NT: 2
+- Output: `ljhooker_offices.json` — reuse for other states
+
+**Response fields available:**
+- `address.address1` = full street address including unit prefix ("33/25 Mantaka Street") ✅
+- `address.suburb`, `address.state`, `address.postcode` ✅
+- `bedrooms`, `bathrooms`, `parking` ✅
+- `category` = House / Unit / Townhouse / Villa ✅
+- `priceDisplay` = "Sold For $920,000" or "SOLD" (undisclosed) ✅
+- `linkUrl` — used as stable `source_id`
+- **No `soldDate` field** — LJ Hooker does not expose sale date in the API ⚠
+
+**Unit address capture:** LJ Hooker does capture unit-level addresses ("33/25 Mantaka Street") — unlike Ray White. Unit matching is possible in principle.
+
+**Address parsing:** `address1` contains the full address including unit prefix. Split on "/" to extract unit number, then parse street number and name+type. Street type is split and stored separately (like Ray White, unlike McGrath).
+
+**NSW harvest results:**
+- 77 NSW office IDs discovered (some offices share subdomains/IDs)
+- 23,416+ records upserted to `sourced_sales_nsw`
+- Scripts: `discover_ljhooker_offices.py`, `fetch_ljhooker.py`, `match_ljhooker_nsw.py`, `cleanup_probable_ljhooker.py`
+
+**Match results (exact only, after removing probable matching):**
+- 1,368 exact matches written to `property_sales` (two runs: 1,115 + 253)
+- Low match rate (~5.8%) suggests LJ Hooker data extends further back than the VG date window
+- 783 records dropped as ambiguous (same LJH record matched >1 VG row — consistent with older data where a property sold multiple times)
+
+**No sold_date — accepted risk:** Without a sale date, matches are address-only. We accept this because:
+1. Structural renovations changing bedroom/bathroom counts are rare
+2. Even if a property sold twice, the bedroom count is almost always the same
+3. The spot-check of 30 random matches showed no obvious errors
+
+**Retry logic:** API occasionally returns 400 or times out on deeper pages (page 7+). `fetch_ljhooker.py` implements 3-attempt exponential backoff per page. Always verify `total_sold` vs `records built` in output — partial harvests are recoverable by re-running.
+
+---
+
+## Match confidence tiers — how we accept a match
+
+All enrichment decisions are recorded in `match_confidence` on `property_sales`. This documents what each value means and why it was accepted.
+
+### `exact`
+**Agency sources:** Ray White, McGrath, LJ Hooker (and any future agency)
+**How matched:** Street number + normalised street name + street type + suburb. All must match exactly (after normalisation — case, punctuation, abbreviation expansion).
+**Date validation:** Ray White and McGrath records are also filtered to `sold_date` within the VG enrichment window before matching. LJ Hooker has no sold_date so date validation is not possible.
+**Deduplication:** Any agency record matching more than one VG record is dropped. Any VG record matched by more than one agency record is dropped.
+**Confidence:** High. Address specificity is strong; the main risk is a property selling twice in the window at the same address, which is rare.
+
+### `historical`
+**Agency sources:** Ray White, McGrath (sources with sold_date only)
+**How matched:** Same address matching as `exact`, but the agency's sold_date falls *outside* the current VG enrichment window. The match was identified by `find_historical_matches.py` (stored in `outside_window_property_id` and `window_gap_days`) and promoted by `promote_historical_matches.py`.
+**Gap tolerance:** ≤ 730 days (2 years). Beyond that, ambiguity is too high.
+**Reasoning accepted:** Even if a property sold twice within 2 years, the bedroom/bathroom/car space count is almost always identical — structural renovations changing room counts are rare events. The data describes the physical property, not the specific transaction.
+**Confidence:** Medium-high. Lower than `exact` because date alignment is not confirmed, but accepted as reliable for the purposes of this tool.
+
+### `probable` — REMOVED
+**Was:** Same street number + street name, suburb ignored (designed to catch minor suburb name variations like "St Marys" vs "Saint Marys").
+**Why removed:** Produced too many false positives. "64 Clyde Ave, Moorebank" was matching "64 Clyde Street, Granville" — completely different suburbs sharing a street name and number. NSW is large enough that this is common. The no-suburb fallback adds more noise than signal.
+**Status:** Any `probable` flags in the database from earlier runs should be treated as unreliable. Run `cleanup_probable_ljhooker.py` to clear LJ Hooker probable flags. Ray White and McGrath probable flags (if any exist from earlier runs) should also be cleared.
+
+### Overwrite priority rule
+If a VG property_sales row has `match_confidence='historical'` or no match, and a subsequent run finds an `exact` match from a date-verified source (Ray White or McGrath with sold_date in window), the exact match overwrites the historical one. Date-verified exact matches always win.
+
+LJ Hooker exact matches (no sold_date) do not currently auto-overwrite historical matches. If Ray White or McGrath later matches the same property within the VG window, their match should take precedence.
+
+---
+
 ## Domain.com.au suburb profiles (VIC + QLD bedroom-level data)
 
 **Outcome: ❌ Blocked**
