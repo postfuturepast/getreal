@@ -70,7 +70,9 @@ Probable matching was removed from all scripts — produced false positives (sam
 ## Deployment
 - GitHub: https://github.com/postfuturepast/getreal
 - Cloudflare Pages: get-real.co (auto-deploys from main branch)
-- Push command: `git add -A && git commit -m "message" && git push`
+- **The sandbox cannot run git commands** — the overlay filesystem can create lock files but not delete them, so git commits fail. Always give Tristan the exact commands to run in his Mac Terminal and ask him to run them.
+- Push command (give to Tristan): `git add <specific files> && git commit -m "message" && git push`
+- **NEVER use `git add -A`** — the sandbox may have stale versions of files that were updated in a previous session. Always add files explicitly by name. Using `git add -A` has previously caused good commits to be silently overwritten (e.g. the 4-tool homepage layout was lost this way).
 
 ## Data refresh process (when new VIC quarterly data is released)
 1. Download new XLS files from land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics

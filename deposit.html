@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deposit checker — GetReal</title>
+  <meta name="description" content="Find out how much stamp duty you'll owe on your property purchase. Free, for Australians.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="Deposit checker — GetReal">
+  <meta property="og:description" content="Stamp duty calculator for every Australian state and territory.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .wizard-wrap {
+      min-height: calc(100vh - 54px);
+      display: flex;
+      flex-direction: column;
+    }
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      padding: 1.25rem var(--pad-page) 2rem;
+      gap: 1.1rem;
+      max-width: 560px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .screen.active { display: flex; }
+
+    /* Nav meta bar */
+    .step-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-top: 0.25rem;
+    }
+    .step-back {
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0;
+    }
+    .step-back:hover { color: var(--text); }
+    .step-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Question heading */
+    .q-label {
+      font-size: clamp(1.35rem, 5.5vw, 1.85rem);
+      font-weight: 800;
+      line-height: 1.15;
+    }
+    .q-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      line-height: 1.65;
+    }
+
+    /* Choice buttons */
+    .choices { display: flex; flex-direction: column; gap: 0.45rem; }
+    .choice-btn {
+      display: block;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      font-weight: 600;
+      text-align: left;
+      padding: 0.85rem 1.1rem;
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+      line-height: 1.3;
+    }
+    .choice-btn:hover, .choice-btn:focus-visible {
+      border-color: var(--text);
+      background: #181818;
+      outline: none;
+    }
+    .choice-sub {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--dim);
+      margin-top: 0.2rem;
+      font-family: var(--font-mono);
+    }
+
+    /* State grid */
+    .state-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45rem;
+    }
+    .state-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 0.9rem;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .state-btn:hover, .state-btn:focus-visible {
+      border-color: var(--text);
+      background: #181818;
+      outline: none;
+    }
+
+    /* Price input */
+    .price-input-wrap { position: relative; }
+    .price-prefix {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--font-mono);
+      font-size: 1.25rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .price-input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      padding: 0.85rem 1rem 0.85rem 2.1rem;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+    .price-input::-webkit-outer-spin-button,
+    .price-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .price-input:focus { border-color: var(--text); }
+    .price-hint {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.05em;
+    }
+
+    /* Result */
+    .result-amount {
+      font-size: clamp(2.8rem, 12vw, 4.5rem);
+      font-weight: 800;
+      font-family: var(--font-mono);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .result-label-sm {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.35rem;
+    }
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .result-card-head {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.1rem;
+    }
+    .rrow {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      gap: 1rem;
+    }
+    .rrow .rl { color: var(--muted); flex: 1; }
+    .rrow .rv { color: var(--text); font-weight: 700; text-align: right; white-space: nowrap; }
+    .rrow .rv.dim { color: var(--dim); font-weight: 400; }
+    .rdivider { border: none; border-top: 1px solid var(--border-subtle); }
+
+    /* Toggle */
+    .toggle-wrap { display: flex; flex-direction: column; gap: 0; }
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0.5rem 0;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .toggle-btn:hover { color: var(--muted); }
+    .toggle-body {
+      display: none;
+      flex-direction: column;
+      gap: 0.6rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1rem 1.1rem;
+      margin-top: 0.25rem;
+    }
+    .toggle-body.open { display: flex; }
+    .method-text {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* Advisory */
+    .advisory {
+      background: rgba(240,165,0,0.05);
+      border-left: 2px solid #f0a500;
+      padding: 0.7rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .advisory strong { color: var(--text); }
+    .advisory a { color: var(--dim); }
+
+    /* WIP / note boxes */
+    .note-box {
+      background: var(--card);
+      border-left: 2px solid var(--border);
+      padding: 0.65rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--dim);
+      line-height: 1.65;
+    }
+    .note-box strong { color: var(--muted); }
+    .note-box a { color: var(--dim); text-decoration: underline; }
+    .note-box.blue { border-left-color: var(--blue); }
+
+    /* Spacer */
+    .push { flex: 1; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="wizard-wrap" id="wizard">
+
+  <!-- ── Screen 0: Intro ─────────────────────────────────────────────────── -->
+  <div class="screen active" id="screen-intro">
+    <div style="padding-top: 0.35rem;">
+      <div class="eyebrow" style="margin-bottom: 0.75rem;">Tool 03 — Work in progress</div>
+      <div class="q-label" style="margin-bottom: 0.65rem;">Is your deposit<br>the wall?</div>
+    </div>
+
+    <div class="inset">
+      We're building a tool to show you the maximum property you could buy with your deposit — after stamp duty, LMI, and transfer fees come out. <strong style="color: var(--text);">Right now: stamp duty only.</strong>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+      <div class="note-box">→ Stamp duty for every Australian state &amp; territory</div>
+      <div class="note-box">→ FHB exemptions and concessions where they apply</div>
+      <div class="note-box">→ Full methodology — source, bracket data, last checked</div>
+    </div>
+
+    <div class="note-box" style="border-left-color: var(--border-subtle);">
+      Brackets are sourced from state revenue offices, last checked June 2026. We're fairly confident it's right, but verify with your conveyancer before acting on it.
+    </div>
+
+    <div class="push"></div>
+    <button class="btn" onclick="goTo('state')" style="width: 100%; text-align: center;">
+      Let's go →
+    </button>
+    <div class="footer-note" style="padding: 0.5rem 0 0; font-size: 0.62rem;">
+      Full deposit checker coming. Stamp duty is the first piece.
+    </div>
+  </div>
+
+  <!-- ── Screen 1: State ─────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-state">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">State</span>
+    </div>
+    <div class="q-label">Which state or territory?</div>
+    <div class="state-grid">
+      <button class="state-btn" onclick="selectState('NSW')">NSW</button>
+      <button class="state-btn" onclick="selectState('VIC')">VIC</button>
+      <button class="state-btn" onclick="selectState('QLD')">QLD</button>
+      <button class="state-btn" onclick="selectState('WA')">WA</button>
+      <button class="state-btn" onclick="selectState('SA')">SA</button>
+      <button class="state-btn" onclick="selectState('TAS')">TAS</button>
+      <button class="state-btn" onclick="selectState('ACT')">ACT</button>
+      <button class="state-btn" onclick="selectState('NT')">NT</button>
+    </div>
+  </div>
+
+  <!-- ── Screen 2a: FHB ──────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-fhb">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Buyer type</span>
+    </div>
+    <div class="q-label">First home buyer?</div>
+    <div class="q-sub" id="fhb-sub">You may qualify for a stamp duty exemption or concession.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectFHB(true)">
+        Yes — first property I've ever owned
+      </button>
+      <button class="choice-btn" onclick="selectFHB(false)">
+        No — I've owned property before
+        <span class="choice-sub">Standard rates apply</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Screen 2b: HBCS (ACT only) ─────────────────────────────────────── -->
+  <div class="screen" id="screen-hbcs">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Concession eligibility</span>
+    </div>
+    <div class="q-label">Do you qualify for the ACT Home Buyer Concession Scheme?</div>
+    <div class="q-sub">The HBCS gives a full stamp duty exemption to income-eligible buyers — it's not limited to first home buyers. Approximate income threshold: ~$160,000/year for singles, higher for couples and families with dependants. The property must be your principal place of residence.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectHBCS(true)">
+        Yes — I expect to qualify
+        <span class="choice-sub">Full exemption — duty = $0</span>
+      </button>
+      <button class="choice-btn" onclick="selectHBCS(false)">
+        No / not sure
+        <span class="choice-sub">Standard ACT conveyance duty applies</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Screen 3a: OO vs investor (VIC non-FHB only) ───────────────────── -->
+  <div class="screen" id="screen-oo">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Property use</span>
+    </div>
+    <div class="q-label">How do you plan to use this property?</div>
+    <div class="q-sub">VIC has a lower rate schedule (PPR concession) for owner-occupiers on homes up to $550,000.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectOO(true)">
+        I'll live in it
+        <span class="choice-sub">Principal place of residence — PPR concession may apply ≤ $550k</span>
+      </button>
+      <button class="choice-btn" onclick="selectOO(false)">
+        Investment / I won't live there
+        <span class="choice-sub">General rates apply</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Screen 3b: New vs established (TAS FHB only) ──────────────────── -->
+  <div class="screen" id="screen-newbuild">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Build type</span>
+    </div>
+    <div class="q-label">New build or established home?</div>
+    <div class="q-sub">In Tasmania, the 50% FHB stamp duty discount applies to established homes only. New builds attract the standard rate (but may qualify for the $30,000 FHOG — separate from duty).</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectNewBuild(false)">
+        Established home
+        <span class="choice-sub">50% discount on duty for purchases under $600,000</span>
+      </button>
+      <button class="choice-btn" onclick="selectNewBuild(true)">
+        New build / off the plan
+        <span class="choice-sub">Standard duty rates apply</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Screen 4: Price ─────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-price">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Property price</span>
+    </div>
+    <div class="q-label">What's the purchase price?</div>
+    <div class="q-sub">Enter the contract price or your best estimate.</div>
+    <div class="price-input-wrap">
+      <span class="price-prefix">$</span>
+      <input
+        class="price-input"
+        type="text"
+        id="price-input"
+        inputmode="numeric"
+        placeholder="0"
+        autocomplete="off"
+        oninput="onPriceInput(this)"
+        onkeydown="onPriceKey(event)"
+      >
+    </div>
+    <div class="price-hint">Maximum $5,000,000 — above this, speak to a financial planner.</div>
+    <div class="push"></div>
+    <button class="btn" id="price-submit" onclick="submitPrice()" style="width: 100%; text-align: center; opacity: 0.35;" disabled>
+      Calculate stamp duty →
+    </button>
+  </div>
+
+  <!-- ── Screen 5: Result ────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-result">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Result</span>
+    </div>
+
+    <div>
+      <div class="result-label-sm">Stamp duty estimate</div>
+      <div class="result-amount" id="result-amount">$0</div>
+    </div>
+
+    <div class="result-card" id="result-breakdown"></div>
+
+    <div id="result-advisories" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+
+    <!-- Methodology toggle -->
+    <div class="toggle-wrap">
+      <button class="toggle-btn" onclick="toggleEl('methodology-body', this)">
+        <span id="toggle-icon-meth">▸</span> How we calculated this
+      </button>
+      <div class="toggle-body" id="methodology-body"></div>
+    </div>
+
+    <div class="result-card">
+      <div class="result-card-head">Also budget separately</div>
+      <div class="rrow"><span class="rl">Transfer &amp; registration fees</span><span class="rv">~$500</span></div>
+      <hr class="rdivider">
+      <div class="rrow"><span class="rl">Conveyancing</span><span class="rv dim">$1,500–$2,500</span></div>
+      <div class="rrow"><span class="rl">Building &amp; pest inspection</span><span class="rv dim">$500–$800</span></div>
+    </div>
+
+    <div class="note-box">
+      <strong>Estimate only.</strong> Verify with your conveyancer or the relevant state revenue office before acting on this figure.
+    </div>
+
+    <div class="note-box blue">
+      <strong style="color: var(--text);">Coming next:</strong> Enter your deposit to find the maximum property you could buy — after stamp duty, LMI, and registration are taken out.
+    </div>
+
+    <button class="btn" onclick="restart()" style="align-self: flex-start;">
+      Calculate again
+    </button>
+  </div>
+
+</div><!-- /wizard-wrap -->
+
+<script>
+// ─── State ──────────────────────────────────────────────────────────────────
+const d = {
+  state: null,
+  isFHB: null,
+  isOO: null,         // VIC only
+  isNewBuild: null,   // TAS only
+  isHBCS: null,       // ACT only
+  price: 0,
+};
+
+const navHistory = ['intro'];
+let activeScreen = 'intro';
+
+// ─── Navigation ─────────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  activeScreen = id;
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function goTo(id) {
+  navHistory.push(id);
+  show(id);
+}
+
+function goBack() {
+  if (navHistory.length <= 1) return;
+  navHistory.pop();
+  show(navHistory[navHistory.length - 1]);
+}
+
+function restart() {
+  Object.assign(d, { state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null, price: 0 });
+  navHistory.length = 0;
+  navHistory.push('intro');
+  const inp = document.getElementById('price-input');
+  inp.value = '';
+  setPriceBtn(false);
+  show('intro');
+}
+
+// ─── Selection handlers ──────────────────────────────────────────────────────
+function selectState(s) {
+  d.state = s;
+  if (s === 'SA') {
+    goTo('price');
+  } else if (s === 'ACT') {
+    goTo('hbcs');
+  } else {
+    // NSW, VIC, QLD, WA, TAS, NT all have FHB question
+    const subs = {
+      NSW: 'NSW FHBAS: zero duty on homes up to $800k. Sliding scale $800k–$1M.',
+      VIC: 'VIC FHB exemption: zero duty on homes up to $600k. Sliding scale $600k–$750k.',
+      QLD: 'QLD FHB exemption: zero duty on homes up to $500k. Sliding scale $500k–$550k.',
+      WA:  'WA FHB exemption: zero duty on homes up to $430k. Sliding scale $430k–$530k.',
+      TAS: 'TAS FHBs get a 50% discount on established homes under $600k.',
+      NT:  'NT FHOD: up to $18,601 off stamp duty for homes valued under $650k.',
+    };
+    document.getElementById('fhb-sub').textContent = subs[s] || '';
+    goTo('fhb');
+  }
+}
+
+function selectFHB(isFHB) {
+  d.isFHB = isFHB;
+  if (d.state === 'VIC' && !isFHB) {
+    goTo('oo');
+  } else if (d.state === 'TAS' && isFHB) {
+    goTo('newbuild');
+  } else {
+    goTo('price');
+  }
+}
+
+function selectOO(isOO)         { d.isOO = isOO;           goTo('price'); }
+function selectNewBuild(isNew)  { d.isNewBuild = isNew;     goTo('price'); }
+function selectHBCS(isHBCS)     { d.isHBCS = isHBCS;        goTo('price'); }
+
+// ─── Price input ─────────────────────────────────────────────────────────────
+function onPriceInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.price = 0; setPriceBtn(false); return; }
+  let num = parseInt(raw, 10);
+  if (num > 5000000) num = 5000000;
+  d.price = num;
+  el.value = num.toLocaleString('en-AU');
+  setPriceBtn(num > 0);
+}
+
+function onPriceKey(e) {
+  if (e.key === 'Enter' && d.price > 0) submitPrice();
+}
+
+function setPriceBtn(enabled) {
+  const btn = document.getElementById('price-submit');
+  btn.disabled = !enabled;
+  btn.style.opacity = enabled ? '1' : '0.35';
+}
+
+function submitPrice() {
+  if (!d.price) return;
+  renderResult();
+  goTo('result');
+}
+
+// ─── Toggle utility ──────────────────────────────────────────────────────────
+function toggleEl(id, btn) {
+  const el = document.getElementById(id);
+  const iconId = btn.querySelector('span').id;
+  const open = el.classList.toggle('open');
+  document.getElementById(iconId).textContent = open ? '▾' : '▸';
+}
+
+// ─── Stamp duty engine ───────────────────────────────────────────────────────
+
+function brackets(price, tbl) {
+  for (const b of tbl) {
+    if (price <= b.max) return b.base + (price - b.min) * b.rate;
+  }
+  return 0;
+}
+
+function nswDuty(p) {
+  return brackets(p, [
+    { min: 0,       max: 16000,    base: 0,      rate: 0.0125 },
+    { min: 16000,   max: 35000,    base: 200,    rate: 0.015  },
+    { min: 35000,   max: 93000,    base: 485,    rate: 0.0175 },
+    { min: 93000,   max: 351000,   base: 1500,   rate: 0.035  },
+    { min: 351000,  max: 1168000,  base: 10530,  rate: 0.045  },
+    { min: 1168000, max: 3505000,  base: 47295,  rate: 0.055  },
+    { min: 3505000, max: Infinity, base: 175830, rate: 0.07   },
+  ]);
+}
+
+function vicGeneral(p) {
+  if (p <= 25000)   return p * 0.014;
+  if (p <= 130000)  return 350   + (p - 25000)   * 0.024;
+  if (p <= 960000)  return 2870  + (p - 130000)  * 0.06;
+  if (p <= 2000000) return p * 0.055;               // flat on FULL price
+  return 110000 + (p - 2000000) * 0.065;
+}
+
+function vicPPR(p) {
+  // Owner-occupier concession ≤ $550k; above that reverts to general
+  if (p <= 25000)   return p * 0.014;
+  if (p <= 130000)  return 350   + (p - 25000)   * 0.024;
+  if (p <= 440000)  return 2870  + (p - 130000)  * 0.05;
+  if (p <= 550000)  return 18370 + (p - 440000)  * 0.06;
+  return vicGeneral(p);
+}
+
+function qldDuty(p) {
+  return brackets(p, [
+    { min: 0,       max: 5000,     base: 0,     rate: 0      },
+    { min: 5000,    max: 75000,    base: 0,     rate: 0.015  },
+    { min: 75000,   max: 540000,   base: 1050,  rate: 0.035  },
+    { min: 540000,  max: 1000000,  base: 17325, rate: 0.045  },
+    { min: 1000000, max: Infinity, base: 38025, rate: 0.0575 },
+  ]);
+}
+
+function waDuty(p) {
+  return brackets(p, [
+    { min: 0,       max: 120000,   base: 0,     rate: 0.019  },
+    { min: 120000,  max: 150000,   base: 2280,  rate: 0.0285 },
+    { min: 150000,  max: 360000,   base: 3135,  rate: 0.038  },
+    { min: 360000,  max: 725000,   base: 11115, rate: 0.0475 },
+    { min: 725000,  max: Infinity, base: 28453, rate: 0.0515 },
+  ]);
+}
+
+function saDuty(p) {
+  return brackets(p, [
+    { min: 0,       max: 12000,    base: 0,     rate: 0.01   },
+    { min: 12000,   max: 30000,    base: 120,   rate: 0.02   },
+    { min: 30000,   max: 50000,    base: 480,   rate: 0.03   },
+    { min: 50000,   max: 100000,   base: 1080,  rate: 0.035  },
+    { min: 100000,  max: 200000,   base: 2830,  rate: 0.04   },
+    { min: 200000,  max: 250000,   base: 6830,  rate: 0.0425 },
+    { min: 250000,  max: 300000,   base: 8955,  rate: 0.0475 },
+    { min: 300000,  max: 500000,   base: 11330, rate: 0.05   },
+    { min: 500000,  max: Infinity, base: 21330, rate: 0.055  },
+  ]);
+}
+
+function tasDuty(p) {
+  if (p <= 3000)   return 50;
+  if (p <= 25000)  return 50    + (p - 3000)   * 0.0175;
+  if (p <= 75000)  return 435   + (p - 25000)  * 0.0225;
+  if (p <= 200000) return 1560  + (p - 75000)  * 0.035;
+  if (p <= 375000) return 5935  + (p - 200000) * 0.04;
+  if (p <= 725000) return 12935 + (p - 375000) * 0.0425;
+  return 27810 + (p - 725000) * 0.045;
+}
+
+function actDuty(p) {
+  return brackets(p, [
+    { min: 0,        max: 200000,   base: 0,     rate: 0.022  },
+    { min: 200000,   max: 300000,   base: 4400,  rate: 0.034  },
+    { min: 300000,   max: 500000,   base: 7800,  rate: 0.0432 },
+    { min: 500000,   max: 750000,   base: 16440, rate: 0.059  },
+    { min: 750000,   max: 1000000,  base: 31190, rate: 0.064  },
+    { min: 1000000,  max: 1455000,  base: 47190, rate: 0.072  },
+    { min: 1455000,  max: Infinity, base: 80034, rate: 0.0454 },
+  ]);
+}
+
+function ntDuty(p) {
+  if (p <= 525000) {
+    const V = p / 1000;
+    return 0.06571441 * V * V + 15 * V;
+  }
+  return p * 0.0495;
+}
+
+function calcDuty() {
+  const { state, isFHB, isOO, isNewBuild, isHBCS, price: p } = d;
+
+  switch (state) {
+    case 'NSW': {
+      const full = nswDuty(p);
+      if (isFHB) {
+        if (p <= 800000) return result(0, full, 'FHBAS — full exemption (≤ $800k)');
+        if (p <= 1000000) {
+          const duty = Math.round(full * (p - 800000) / 200000);
+          return result(duty, full, 'FHBAS — tapered concession ($800k–$1M)');
+        }
+      }
+      return result(full, full, null);
+    }
+
+    case 'VIC': {
+      if (isFHB) {
+        const full = vicGeneral(p);
+        if (p <= 600000) return result(0, full, 'FHB exemption — full (≤ $600k)');
+        if (p <= 750000) {
+          const duty = Math.round(full * (p - 600000) / 150000);
+          return result(duty, full, 'FHB tapered concession ($600k–$750k)');
+        }
+        return result(full, full, null);
+      }
+      if (isOO && p <= 550000) {
+        const ppr = vicPPR(p);
+        const gen = vicGeneral(p);
+        return result(ppr, gen, 'PPR (owner-occupier) concession', Math.round(gen - ppr));
+      }
+      const gen = vicGeneral(p);
+      return result(gen, gen, null);
+    }
+
+    case 'QLD': {
+      const full = qldDuty(p);
+      if (isFHB) {
+        if (p <= 500000) return result(0, full, 'FHB concession — nil duty (≤ $500k)');
+        if (p <= 550000) {
+          const duty = Math.round(full * (p - 500000) / 50000);
+          return result(duty, full, 'FHB tapered concession ($500k–$550k)');
+        }
+      }
+      return result(full, full, null);
+    }
+
+    case 'WA': {
+      const full = waDuty(p);
+      if (isFHB) {
+        if (p <= 430000) return result(0, full, 'FHB exemption — full (≤ $430k)');
+        if (p <= 530000) {
+          const duty = Math.round(full * (p - 430000) / 100000);
+          return result(duty, full, 'FHB tapered concession ($430k–$530k)');
+        }
+      }
+      return result(full, full, null);
+    }
+
+    case 'SA': {
+      const full = saDuty(p);
+      return result(full, full, null);
+    }
+
+    case 'TAS': {
+      const full = tasDuty(p);
+      if (isFHB && !isNewBuild && p < 600000) {
+        const duty = Math.round(full * 0.5);
+        return result(duty, full, 'FHB 50% discount — established home (< $600k)');
+      }
+      return result(full, full, null);
+    }
+
+    case 'ACT': {
+      const full = actDuty(p);
+      if (isHBCS) return result(0, full, 'HBCS — full exemption (income-eligible buyer)');
+      return result(full, full, null);
+    }
+
+    case 'NT': {
+      const full = ntDuty(p);
+      if (isFHB && p < 650000) {
+        const maxD = 18601;
+        const factor = p <= 500000 ? 1 : (650000 - p) / 150000;
+        const discount = Math.min(full, maxD * factor);
+        const duty = Math.max(0, full - discount);
+        return result(duty, full, 'FHOD — estimated (up to $18,601 off for homes < $650k)');
+      }
+      return result(full, full, null);
+    }
+  }
+}
+
+function result(duty, fullDuty, concession, saving) {
+  return {
+    duty: Math.round(duty),
+    fullDuty: Math.round(fullDuty),
+    concession,
+    saving: saving ? Math.round(saving) : null,
+  };
+}
+
+// ─── Render result screen ────────────────────────────────────────────────────
+const STATE_INFO = {
+  NSW: { name: 'New South Wales',         taxName: 'Transfer duty',     source: 'Revenue NSW',                    url: 'https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/transfer-duty',     lastChecked: 'June 2026' },
+  VIC: { name: 'Victoria',                taxName: 'Land transfer duty', source: 'State Revenue Office Victoria',  url: 'https://www.sro.vic.gov.au/land-transfer-duty',                                  lastChecked: 'June 2026' },
+  QLD: { name: 'Queensland',              taxName: 'Transfer duty',     source: 'Queensland Revenue Office',      url: 'https://www.qld.gov.au/housing/buying-owning-home/advice-buying-home/transfer-duty', lastChecked: 'June 2026' },
+  WA:  { name: 'Western Australia',       taxName: 'Transfer duty',     source: 'WA Revenue',                     url: 'https://www.wa.gov.au/service/financial-management/taxation/calculate-transfer-duty', lastChecked: 'June 2026' },
+  SA:  { name: 'South Australia',         taxName: 'Stamp duty',        source: 'RevenueSA',                      url: 'https://www.revenuesa.sa.gov.au/taxes-and-duties/stamp-duties/real-property',      lastChecked: 'June 2026' },
+  TAS: { name: 'Tasmania',                taxName: 'Duty',              source: 'SRO Tasmania',                   url: 'https://www.sro.tas.gov.au/duties',                                               lastChecked: 'June 2026' },
+  ACT: { name: 'Australian Capital Territory', taxName: 'Conveyance duty', source: 'ACT Revenue Office',         url: 'https://www.revenue.act.gov.au/duties/conveyance-duty',                           lastChecked: 'June 2026' },
+  NT:  { name: 'Northern Territory',      taxName: 'Stamp duty',        source: 'NT Revenue',                     url: 'https://treasury.nt.gov.au/dtf/territory-revenue-office/stamp-duty',              lastChecked: 'June 2026' },
+};
+
+const METHOD_TEXT = {
+  NSW: 'Marginal bracket calculation. Brackets: 1.25% (≤ $16k) through 7.00% (> $3.505M). FHB: nil duty ≤ $800k; duty × (price − $800k) ÷ $200k for $800k–$1M.',
+  VIC: 'Marginal bracket calculation. General rate: 1.4% (≤ $25k) through 6.5% (> $2M), with a flat 5.5% on the full price for $960k–$2M (not marginal). PPR concession: separate lower bracket table applies to owner-occupiers on homes ≤ $550k. FHB exemption takes precedence over PPR. FHB: nil duty ≤ $600k; tapered $600k–$750k.',
+  QLD: 'Marginal bracket calculation. Brackets: nil (≤ $5k) through 5.75% (> $1M). FHB concession: nil duty ≤ $500k; tapered $500k–$550k. Same rates for OO and investor.',
+  WA:  'Marginal bracket calculation. Brackets: 1.90% (≤ $120k) through 5.15% (> $725k). FHB concession: nil duty ≤ $430k; tapered $430k–$530k. Same rates for OO and investor.',
+  SA:  'Marginal bracket calculation. Brackets: 1.00% (≤ $12k) through 5.50% (> $500k). SA has no stamp duty concession for first home buyers on established homes.',
+  TAS: 'Marginal bracket calculation. Brackets: $50 minimum (≤ $3k) through 4.50% (> $725k). FHB discount: 50% off standard duty for established home purchases under $600k. New builds attract full duty but may qualify for the $30,000 FHOG.',
+  ACT: 'Marginal bracket calculation. Brackets: 2.20% (≤ $200k) through 4.54% (> $1.455M). Note: rate drops from 7.20% to 4.54% above $1.455M — this is the published ACT schedule structure. HBCS: full exemption for income-eligible buyers regardless of FHB status (~$160k income threshold for singles).',
+  NT:  'Formula-based calculation unique to the NT. ≤ $525k: D = 0.06571441 × V² + 15 × V where V = price ÷ 1,000. > $525k: flat 4.95% on full price. FHOD: up to $18,601 off duty for FHBs on homes < $650k. Phaseout modelled linearly between $500k–$650k (phaseout formula is not publicly documented in detail).',
+};
+
+function fmt(n)  { return '$' + Math.round(n).toLocaleString('en-AU'); }
+function pct(n)  { return (n * 100).toFixed(2) + '%'; }
+
+function rrow(label, value, dim) {
+  return `<div class="rrow"><span class="rl">${label}</span><span class="rv${dim ? ' dim' : ''}">${value}</span></div>`;
+}
+
+function renderResult() {
+  const r = calcDuty();
+  const info = STATE_INFO[d.state];
+
+  // Main figure
+  document.getElementById('result-amount').textContent = fmt(r.duty);
+
+  // Breakdown card
+  let html = `<div class="result-card-head">Breakdown</div>`;
+  html += rrow('Property price', fmt(d.price));
+  html += `<hr class="rdivider">`;
+  if (r.concession && r.fullDuty !== r.duty) {
+    html += rrow('Standard ' + info.taxName.toLowerCase(), fmt(r.fullDuty), true);
+    html += rrow('Concession applied', r.concession, true);
+    html += `<hr class="rdivider">`;
+    html += rrow(info.taxName + ' payable', fmt(r.duty));
+    if (r.saving) html += rrow('Saving vs standard rate', fmt(r.saving), true);
+  } else {
+    html += rrow(info.taxName, fmt(r.duty));
+  }
+  // Effective rate
+  if (d.price > 0) {
+    html += `<hr class="rdivider">`;
+    html += rrow('Effective rate', pct(r.duty / d.price), true);
+  }
+  document.getElementById('result-breakdown').innerHTML = html;
+
+  // Advisories
+  const advEl = document.getElementById('result-advisories');
+  const advisories = [];
+
+  if (d.state === 'NT') {
+    // Always show THOD note for NT
+    advisories.push(`<div class="advisory"><strong>NT Territory Home Owner Discount:</strong> If you've lived in the NT for 12+ months, the THOD may reduce your duty further. We've applied the standard rate — the discount amount isn't publicly documented. Check with <a href="https://treasury.nt.gov.au/dtf/territory-revenue-office/stamp-duty" target="_blank" rel="noopener">NT Revenue</a> or your conveyancer.</div>`);
+    if (d.isFHB && d.price < 650000) {
+      advisories.push(`<div class="advisory"><strong>FHOD phaseout:</strong> The exact phaseout formula isn't publicly documented. We've estimated a linear phaseout between $500k–$650k. The actual figure may differ — verify with NT Revenue.</div>`);
+    }
+  }
+  if (d.state === 'SA') {
+    advisories.push(`<div class="advisory">SA has no stamp duty concession for FHBs on established homes. The $15,000 First Home Owner Grant (new builds &lt; $650k) is separate and not calculated here.</div>`);
+  }
+  if (d.state === 'QLD' && d.isFHB) {
+    advisories.push(`<div class="advisory"><strong>QLD FHOG:</strong> You may also be eligible for the $30,000 First Home Owner Grant on new builds under $750,000. This is separate from duty.</div>`);
+  }
+  if (d.state === 'TAS' && d.isFHB) {
+    advisories.push(`<div class="advisory"><strong>TAS FHOG:</strong> You may also be eligible for the $30,000 First Home Owner Grant on new builds under $750,000. This is separate from duty.</div>`);
+  }
+  if (d.state === 'NSW' && d.isFHB) {
+    advisories.push(`<div class="advisory"><strong>NSW FHOG:</strong> FHBs buying new builds up to $600k may be eligible for the $10,000 First Home Owner Grant. Separate from duty.</div>`);
+  }
+
+  if (advisories.length) {
+    advEl.style.display = 'flex';
+    advEl.innerHTML = advisories.join('');
+  } else {
+    advEl.style.display = 'none';
+    advEl.innerHTML = '';
+  }
+
+  // Methodology panel
+  let buyerDesc = d.isFHB ? 'First home buyer' : 'Non-FHB / subsequent buyer';
+  if (d.state === 'ACT') buyerDesc = d.isHBCS ? 'HBCS-eligible buyer' : 'Standard buyer';
+  if (d.state === 'SA')  buyerDesc = 'Standard buyer (no FHB concession in SA)';
+
+  let methHtml = '';
+  if (d.state === 'VIC' && d.isFHB === false) {
+    methHtml += rrow('Property use', d.isOO ? 'Owner-occupier (PPR rate applied ≤ $550k)' : 'Investment (general rate)');
+  }
+  if (d.state === 'TAS' && d.isFHB) {
+    methHtml += rrow('Build type', d.isNewBuild ? 'New build (standard rate — no FHB discount)' : 'Established (50% FHB discount if < $600k)');
+  }
+
+  document.getElementById('methodology-body').innerHTML = `
+    <div class="result-card-head">Inputs</div>
+    ${rrow('State', info.name)}
+    ${rrow('Tax type', info.taxName)}
+    ${rrow('Purchase price', fmt(d.price))}
+    ${rrow('Buyer', buyerDesc)}
+    ${methHtml}
+    <hr class="rdivider">
+    <div class="result-card-head">Method</div>
+    <div class="method-text">${METHOD_TEXT[d.state]}</div>
+    <hr class="rdivider">
+    <div class="result-card-head">Source</div>
+    ${rrow('Authority', `<a href="${info.url}" target="_blank" rel="noopener" style="color:var(--dim);text-decoration:underline;">${info.source}</a>`)}
+    ${rrow('Via', '<a href="https://auscalcs.com.au/stamp-duty/" target="_blank" rel="noopener" style="color:var(--dim);text-decoration:underline;">AusCalcs</a>')}
+    ${rrow('Brackets last checked', info.lastChecked)}
+  `;
+}
+</script>
+
+</body>
+</html>
