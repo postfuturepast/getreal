@@ -162,18 +162,6 @@
     <div class="label">TOTAL COVERAGE</div>
     <div class="value" id="s-pct">—</div>
   </div>
-  <div class="stat blue">
-    <div class="label">RAY WHITE</div>
-    <div class="value" id="s-rw">—</div>
-  </div>
-  <div class="stat orange">
-    <div class="label">MCGRATH</div>
-    <div class="value" id="s-mc">—</div>
-  </div>
-  <div class="stat" style="border-left:4px solid #1a6a5a;">
-    <div class="label">LJ HOOKER</div>
-    <div class="value" id="s-ljh">—</div>
-  </div>
 </div>
 
 <div class="grid-2">
@@ -420,9 +408,6 @@ async function loadOverall() {
   document.getElementById('s-enriched').textContent = fmt(exact);
   document.getElementById('s-enriched-hist').textContent = fmt(hist);
   document.getElementById('s-pct').textContent = pctStr(enriched, total);
-  document.getElementById('s-rw').textContent = fmt(rw);
-  document.getElementById('s-mc').textContent = fmt(mc);
-  document.getElementById('s-ljh').textContent = fmt(ljh);
   return { total, enriched, exact, hist, rw, mc, ljh };
 }
 
