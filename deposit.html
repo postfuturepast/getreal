@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Deposit checker — GetReal</title>
-  <meta name="description" content="Find out how much stamp duty you'll owe on your property purchase. Free, for Australians.">
+  <title>Deposit ceiling calculator — GetReal</title>
+  <meta name="description" content="Find the maximum property price your savings can reach, after stamp duty, LMI, and registration fees. Free, for Australians.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <meta property="og:title" content="Deposit checker — GetReal">
-  <meta property="og:description" content="Stamp duty calculator for every Australian state and territory.">
+  <meta property="og:title" content="Deposit ceiling calculator — GetReal">
+  <meta property="og:description" content="What's the most you can buy? Enter your savings and find out.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -28,7 +28,6 @@
     }
     .screen.active { display: flex; }
 
-    /* Nav meta bar */
     .step-meta {
       display: flex;
       align-items: center;
@@ -55,7 +54,6 @@
       text-transform: uppercase;
     }
 
-    /* Question heading */
     .q-label {
       font-size: clamp(1.35rem, 5.5vw, 1.85rem);
       font-weight: 800;
@@ -68,7 +66,6 @@
       line-height: 1.65;
     }
 
-    /* Choice buttons */
     .choices { display: flex; flex-direction: column; gap: 0.45rem; }
     .choice-btn {
       display: block;
@@ -99,7 +96,6 @@
       font-family: var(--font-mono);
     }
 
-    /* State grid */
     .state-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -124,7 +120,6 @@
       outline: none;
     }
 
-    /* Price input */
     .price-input-wrap { position: relative; }
     .price-prefix {
       position: absolute;
@@ -203,25 +198,6 @@
     .rrow .rv.dim { color: var(--dim); font-weight: 400; }
     .rdivider { border: none; border-top: 1px solid var(--border-subtle); margin: -0.3rem 0; }
 
-    /* Toggle */
-    .toggle-wrap { display: flex; flex-direction: column; gap: 0; }
-    .toggle-btn {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      padding: 0.6rem 0;
-      text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-    }
     .rrow-pct {
       background: var(--blue);
       color: #fff;
@@ -234,25 +210,8 @@
       padding: 0.55rem 1rem;
       margin-top: 0.2rem;
     }
-    .toggle-btn:hover { color: var(--text); }
-    .toggle-body {
-      display: none;
-      flex-direction: column;
-      gap: 0.6rem;
-      background: var(--card);
-      border: 1px solid var(--border);
-      padding: 1rem 1.1rem;
-      margin-top: 0.25rem;
-    }
-    .toggle-body.open { display: flex; }
-    .method-text {
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: var(--muted);
-      line-height: 1.65;
-    }
 
-    /* Advisory */
+    /* Advisory / note boxes */
     .advisory {
       background: rgba(240,165,0,0.05);
       border-left: 2px solid #f0a500;
@@ -263,9 +222,7 @@
       line-height: 1.65;
     }
     .advisory strong { color: var(--text); }
-    .advisory a { color: var(--dim); }
 
-    /* WIP / note boxes */
     .note-box {
       background: var(--card);
       border-left: 2px solid var(--border);
@@ -277,10 +234,52 @@
     }
     .note-box strong { color: var(--muted); }
     .note-box a { color: var(--dim); text-decoration: underline; }
+    .note-box.wip { border-left-color: #f0a500; }
     .note-box.blue { border-left-color: var(--blue); }
 
-    /* Spacer */
-    .push { flex: 1; }
+    .prop-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.45rem;
+    }
+    .prop-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 0.85rem 0.5rem;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: border-color 0.12s, background 0.12s;
+      line-height: 1.4;
+    }
+    .prop-btn:hover, .prop-btn:focus-visible {
+      border-color: var(--text);
+      background: #181818;
+      outline: none;
+    }
+    .prop-btn small {
+      display: block;
+      font-size: 0.6rem;
+      color: var(--dim);
+      font-weight: 400;
+      margin-top: 0.25rem;
+      letter-spacing: 0.02em;
+      text-transform: none;
+    }
+
+    .error-box {
+      background: rgba(220,38,38,0.06);
+      border-left: 2px solid #dc2626;
+      padding: 0.7rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #fca5a5;
+      line-height: 1.65;
+    }
   </style>
 </head>
 <body>
@@ -302,30 +301,26 @@
   <div class="screen active" id="screen-intro">
     <div style="padding-top: 0.35rem;">
       <div class="eyebrow" style="margin-bottom: 0.75rem;">Tool 01 — Work in progress</div>
-      <div class="q-label" style="margin-bottom: 0.65rem;">Is your deposit the wall?</div>
+      <div class="q-label" style="margin-bottom: 0.65rem;">What's the most I can buy?</div>
     </div>
 
     <div class="inset">
-      Three things put a ceiling on what you can borrow. Your deposit. Your debt relative to your income. And whether your income covers the repayments after living costs.
+      Three things put a ceiling on what you can borrow. Your deposit. Your debt relative to income. And whether your income covers repayments after living costs.
     </div>
 
     <div class="inset">
-      Most property searches start one of two ways: a bank mortgage calculator that only deals with the third, or straight onto realestate.com.au with a number that feels about right.
+      This tool solves the first: given your savings, what's the highest purchase price you can reach — after stamp duty eats into your deposit, LMI gets added to your loan (if your LVR is above 80%), and registration fees are paid?
     </div>
 
-    <div class="inset">
-      We're starting with the first — because it needs the least from you, and it's the one most calculators get wrong.
-    </div>
-
-    <div class="note-box" style="border-left-color: var(--border-subtle);">
-      Right now: stamp duty only, all eight states and territories. Full deposit-to-max-price calculator coming.
+    <div class="note-box wip">
+      <strong>Work in progress, built in public.</strong> The deposit ceiling calculation below is live and working. Income-based limits — Debt-to-Income (Stage 2) and serviceability (Stage 3) — are coming next.
     </div>
 
     <button class="btn" onclick="goTo('state')" style="width: 100%; text-align: center;">
-      Let's go →
+      Let's work it out →
     </button>
     <div class="footer-note" style="padding: 0.5rem 0 0; font-size: 0.62rem;">
-      Brackets from state revenue offices, last checked June 2026. We won't be offended if you double-check elsewhere.
+      Stamp duty from state revenue offices (June 2026). LMI rates indicative — actual premiums vary by lender and insurer. Registration fees approximate. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology →</a>
     </div>
   </div>
 
@@ -333,8 +328,10 @@
   <div class="screen" id="screen-state">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Step 1 of 5</span>
     </div>
     <div class="q-label">Which state or territory?</div>
+    <div class="q-sub">Stamp duty rates vary significantly by state and affect how much of your savings is available for deposit.</div>
     <div class="state-grid">
       <button class="state-btn" onclick="selectState('NSW')">NSW</button>
       <button class="state-btn" onclick="selectState('VIC')">VIC</button>
@@ -351,6 +348,7 @@
   <div class="screen" id="screen-fhb">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Step 2 of 5</span>
     </div>
     <div class="q-label">First home buyer?</div>
     <div class="choices">
@@ -368,6 +366,7 @@
   <div class="screen" id="screen-hbcs">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Step 2 of 5</span>
     </div>
     <div class="q-label">Do you qualify for the ACT Home Buyer Concession Scheme?</div>
     <div class="choices">
@@ -378,30 +377,34 @@
         No / not sure
       </button>
     </div>
-    <div class="q-sub">The ACT Home Buyer Concession Scheme gives a full stamp duty exemption to income-eligible buyers — it's not limited to first home buyers. Approximate threshold: around $160,000/year for singles, higher for couples and families. The property must be your principal place of residence.</div>
+    <div class="q-sub">The ACT Home Buyer Concession Scheme gives a full stamp duty exemption to income-eligible buyers — not limited to first home buyers. Approximate threshold: ~$160,000/year for singles. Property must be your principal place of residence (which also sets your LVR ceiling to owner-occupier rates).</div>
   </div>
 
-  <!-- ── Screen 3a: OO vs investor (VIC non-FHB only) ───────────────────── -->
+  <!-- ── Screen 3a: OO vs investor — VIC non-FHB (covers stamp duty + LVR ceiling) ── -->
   <div class="screen" id="screen-oo">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Step 3 of 5</span>
     </div>
     <div class="q-label">How do you plan to use this property?</div>
     <div class="choices">
       <button class="choice-btn" onclick="selectOO(true)">
         Live in it — my principal residence
+        <span class="choice-sub">Up to 95% LVR (houses/townhouses), 90% (apartments)</span>
       </button>
       <button class="choice-btn" onclick="selectOO(false)">
         I won't live in it — investment
+        <span class="choice-sub">Up to 90% LVR (houses/townhouses), 80% (apartments)</span>
       </button>
     </div>
-    <div class="q-sub">You can only have one principal place of residence at a time. Victoria charges a lower rate for owner-occupiers on homes up to $550,000.</div>
+    <div class="q-sub">Victoria charges a lower stamp duty rate for owner-occupiers on homes up to $550,000. This answer also determines your maximum LVR — lenders cap investor borrowing lower than owner-occupier.</div>
   </div>
 
   <!-- ── Screen 3b: New vs established (TAS FHB only) ──────────────────── -->
   <div class="screen" id="screen-newbuild">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Step 3 of 5</span>
     </div>
     <div class="q-label">New build or established home?</div>
     <div class="choices">
@@ -412,93 +415,167 @@
         New build / off the plan
       </button>
     </div>
-    <div class="q-sub">In Tasmania, the 50% first home buyer stamp duty discount applies to established homes only. New builds get standard rates — but may qualify for the $30,000 First Home Owner Grant, which is separate from duty.</div>
+    <div class="q-sub">In Tasmania, the 50% first home buyer stamp duty discount applies to established homes only. New builds pay standard rates.</div>
   </div>
 
-  <!-- ── Screen 4: Price ─────────────────────────────────────────────────── -->
-  <div class="screen" id="screen-price">
+  <!-- ── Screen 3c: Purpose (everyone except VIC non-FHB and ACT HBCS=true) ── -->
+  <div class="screen" id="screen-purpose">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Step 3 of 5</span>
     </div>
-    <div class="q-label">What's the price?</div>
-    <div class="q-sub">Best estimate is fine — you can always run it again.</div>
+    <div class="q-label">Will you live in it?</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectPurpose(true)">
+        Yes — my home, I'll live there
+        <span class="choice-sub">Up to 95% LVR (houses/townhouses), 90% (apartments)</span>
+      </button>
+      <button class="choice-btn" onclick="selectPurpose(false)">
+        No — investment property
+        <span class="choice-sub">Up to 90% LVR (houses/townhouses), 80% (apartments)</span>
+      </button>
+    </div>
+    <div class="q-sub">Lenders cap investment borrowing lower than owner-occupier. This affects your maximum LVR and therefore the purchase price your deposit can reach.</div>
+  </div>
+
+  <!-- ── Screen 4: Property type ─────────────────────────────────────────── -->
+  <div class="screen" id="screen-proptype">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Step 4 of 5</span>
+    </div>
+    <div class="q-label">What type of property?</div>
+    <div class="prop-grid">
+      <button class="prop-btn" onclick="selectPropType('house')">
+        House
+        <small>OO: 95% max LVR<br>Inv: 90%</small>
+      </button>
+      <button class="prop-btn" onclick="selectPropType('townhouse')">
+        Townhouse
+        <small>OO: 95% max LVR<br>Inv: 90%</small>
+      </button>
+      <button class="prop-btn" onclick="selectPropType('apartment')">
+        Apartment
+        <small>OO: 90% max LVR<br>Inv: 80%</small>
+      </button>
+    </div>
+    <div class="q-sub">Many lenders impose a lower maximum LVR on apartments — typically 90% for owner-occupiers and 80% for investors. This directly reduces the purchase price your deposit can reach.</div>
+  </div>
+
+  <!-- ── Screen 5: Savings ───────────────────────────────────────────────── -->
+  <div class="screen" id="screen-savings">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Step 5 of 5</span>
+    </div>
+    <div class="q-label">How much have you saved?</div>
+    <div class="q-sub">Total savings you'd put toward this purchase — including your deposit, stamp duty, and registration fees. Don't subtract anything yet; the calculator does that.</div>
     <div class="price-input-wrap">
       <span class="price-prefix">$</span>
       <input
         class="price-input"
         type="text"
-        id="price-input"
+        id="savings-input"
         inputmode="numeric"
         placeholder="0"
         autocomplete="off"
-        oninput="onPriceInput(this)"
-        onkeydown="onPriceKey(event)"
+        oninput="onSavingsInput(this)"
+        onkeydown="onSavingsKey(event)"
       >
     </div>
-    <div class="price-hint">Spending more than $5 million? At that point you probably have enough money to hire someone who doesn't get their calculations from the internet.</div>
-    <button class="btn" id="price-submit" onclick="submitPrice()" style="width: 100%; text-align: center; opacity: 0.35;" disabled>
-      Calculate stamp duty →
+    <div class="price-hint" id="savings-hint">Enter your total savings.</div>
+    <button class="btn" id="savings-submit" onclick="submitSavings()" style="width: 100%; text-align: center; opacity: 0.35;" disabled>
+      Find my ceiling →
     </button>
   </div>
 
-  <!-- ── Screen 5: Result ────────────────────────────────────────────────── -->
-  <div class="screen" id="screen-result">
+  <!-- ── Screen 6: Deposit result ───────────────────────────────────────── -->
+  <div class="screen" id="screen-deposit-result">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
 
-    <div>
-      <div class="result-label-sm">Stamp duty estimate</div>
-      <div class="result-amount" id="result-amount">$0</div>
+    <div id="deposit-result-main"></div>
+
+    <div id="deposit-result-breakdown"></div>
+
+    <div id="deposit-advisories" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+
+    <div class="note-box blue" id="deposit-stage2-note">
+      <strong>Ceiling 1 of 3 — deposit.</strong> Banks also cap total debt at 6× gross income (APRA Debt-to-Income limit, Feb 2026) and require repayments to be serviceable after living costs and a 3% interest rate buffer. Stage 2 coming.
     </div>
 
-    <div class="result-card" id="result-breakdown"></div>
-
-    <div id="result-advisories" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
-
-    <!-- Methodology toggle -->
-    <div class="toggle-wrap">
-      <button class="toggle-btn" onclick="toggleEl('methodology-body', this)">
-        <span id="toggle-icon-meth">▸</span> How we calculated this
-      </button>
-      <div class="toggle-body" id="methodology-body"></div>
+    <div class="note-box wip">
+      <strong>Work in progress.</strong> This tool is being built in public. <a href="deposit-faq.html">Read the full methodology →</a>
     </div>
 
-    <div class="note-box">
-      <strong>Estimate only.</strong> We're pretty confident this is right, but we won't be offended if you double-check elsewhere.
-    </div>
-
-    <div class="note-box blue">
-      <strong style="color: var(--text);">Coming next:</strong> Enter your deposit to find the maximum property you could buy — after stamp duty, LMI, and registration are taken out.
-    </div>
-
-    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem;">
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
       <button class="btn" onclick="restart()">Start again</button>
-      <a href="https://get-real.co/search-intro" style="font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); text-decoration: none; white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 0.4rem;">Move to Tool 2 <span style="font-size: 1rem; line-height: 1;">→</span></a>
+      <a href="deposit-faq.html" style="font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); text-decoration: underline;">How this is calculated →</a>
     </div>
   </div>
 
 </div><!-- /wizard-wrap -->
 
 <script>
-// ─── State ──────────────────────────────────────────────────────────────────
+// ─── Supabase config ─────────────────────────────────────────────────────────
+const SB_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
+const SB_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
+
+let lmiRates     = [];
+let lmiSdRates   = {};  // state → decimal rate (e.g. 0.10 for 10%)
+let regFees      = {};  // state → total fee amount
+let dataLoaded   = false;
+let dataError    = false;
+
+async function loadData() {
+  try {
+    const headers = {
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
+    };
+    const [lmiRes, sdRes, regRes] = await Promise.all([
+      fetch(`${SB_URL}/rest/v1/lmi_rates?select=*&order=lvr_min,loan_max`, { headers }),
+      fetch(`${SB_URL}/rest/v1/lmi_stamp_duty_rates?select=*`, { headers }),
+      fetch(`${SB_URL}/rest/v1/registration_fees?select=*`, { headers }),
+    ]);
+    if (!lmiRes.ok || !sdRes.ok || !regRes.ok) throw new Error('HTTP error');
+
+    lmiRates = await lmiRes.json();
+    const sdRows  = await sdRes.json();
+    const regRows = await regRes.json();
+
+    sdRows.forEach(r  => { lmiSdRates[r.state] = r.rate_pct / 100; });
+    regRows.forEach(r => { regFees[r.state] = (regFees[r.state] || 0) + r.amount; });
+
+    dataLoaded = true;
+    updateSavingsHint();
+  } catch (e) {
+    dataError = true;
+    console.error('Failed to load rate data:', e);
+    updateSavingsHint();
+  }
+}
+
+loadData();
+
+// ─── App state ───────────────────────────────────────────────────────────────
 const d = {
   state: null,
   isFHB: null,
-  isOO: null,         // VIC only
-  isNewBuild: null,   // TAS only
-  isHBCS: null,       // ACT only
-  price: 0,
+  isOO: null,
+  isNewBuild: null,
+  isHBCS: null,
+  propType: null,
+  savings: 0,
 };
 
 const navHistory = ['intro'];
-let activeScreen = 'intro';
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
-  activeScreen = id;
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
@@ -514,33 +591,34 @@ function goBack() {
 }
 
 function restart() {
-  Object.assign(d, { state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null, price: 0 });
+  Object.assign(d, { state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null, propType: null, savings: 0 });
   navHistory.length = 0;
   navHistory.push('intro');
-  const inp = document.getElementById('price-input');
-  inp.value = '';
-  setPriceBtn(false);
+  const inp = document.getElementById('savings-input');
+  if (inp) { inp.value = ''; }
+  setSavingsBtn(false);
   show('intro');
 }
 
 // ─── Selection handlers ──────────────────────────────────────────────────────
+const FHB_SUBS = {
+  NSW: 'First home buyers in NSW pay zero stamp duty on homes up to $800,000, with a sliding scale up to $1,000,000. Less stamp duty means more of your savings available as deposit.',
+  VIC: 'First home buyers in VIC pay zero stamp duty on homes up to $600,000, with a sliding scale up to $750,000.',
+  QLD: 'First home buyers in QLD pay zero stamp duty on homes up to $500,000, with a sliding scale up to $550,000.',
+  WA:  'First home buyers in WA pay zero stamp duty on homes up to $430,000, with a sliding scale up to $530,000.',
+  TAS: 'First home buyers in Tasmania get a 50% discount on stamp duty for established homes under $600,000.',
+  NT:  'First home buyers in the NT can get up to $18,601 off stamp duty on homes valued under $650,000.',
+};
+
 function selectState(s) {
   d.state = s;
   if (s === 'SA') {
-    goTo('price');
+    // SA: no FHB question, stamp duty unaffected by buyer type → go straight to purpose
+    goTo('purpose');
   } else if (s === 'ACT') {
     goTo('hbcs');
   } else {
-    // NSW, VIC, QLD, WA, TAS, NT all have FHB question
-    const subs = {
-      NSW: 'First home buyers in NSW pay zero stamp duty on homes up to $800,000, with a sliding scale up to $1,000,000.',
-      VIC: 'First home buyers in VIC pay zero stamp duty on homes up to $600,000, with a sliding scale up to $750,000.',
-      QLD: 'First home buyers in QLD pay zero stamp duty on homes up to $500,000, with a sliding scale up to $550,000.',
-      WA:  'First home buyers in WA pay zero stamp duty on homes up to $430,000, with a sliding scale up to $530,000.',
-      TAS: 'First home buyers in Tasmania get a 50% discount on stamp duty for established homes under $600,000.',
-      NT:  'First home buyers in the NT can get up to $18,601 off stamp duty on homes valued under $650,000.',
-    };
-    document.getElementById('fhb-sub').textContent = subs[s] || '';
+    document.getElementById('fhb-sub').textContent = FHB_SUBS[s] || '';
     goTo('fhb');
   }
 }
@@ -548,62 +626,116 @@ function selectState(s) {
 function selectFHB(isFHB) {
   d.isFHB = isFHB;
   if (d.state === 'VIC' && !isFHB) {
+    // VIC non-FHB: screen-oo covers both stamp duty PPR concession AND LVR purpose
     goTo('oo');
   } else if (d.state === 'TAS' && isFHB) {
     goTo('newbuild');
   } else {
-    goTo('price');
+    goTo('purpose');
   }
 }
 
-function selectOO(isOO)         { d.isOO = isOO;           goTo('price'); }
-function selectNewBuild(isNew)  { d.isNewBuild = isNew;     goTo('price'); }
-function selectHBCS(isHBCS)     { d.isHBCS = isHBCS;        goTo('price'); }
+function selectOO(isOO) {
+  // VIC non-FHB path: covers stamp duty + LVR ceiling
+  d.isOO = isOO;
+  goTo('proptype');
+}
 
-// ─── Price input ─────────────────────────────────────────────────────────────
-function onPriceInput(el) {
+function selectNewBuild(isNew) {
+  d.isNewBuild = isNew;
+  goTo('purpose');
+}
+
+function selectHBCS(isHBCS) {
+  d.isHBCS = isHBCS;
+  if (isHBCS) {
+    d.isOO = true;  // HBCS requires principal place of residence
+    goTo('proptype');
+  } else {
+    goTo('purpose');
+  }
+}
+
+function selectPurpose(isOO) {
+  d.isOO = isOO;
+  goTo('proptype');
+}
+
+function selectPropType(type) {
+  d.propType = type;
+  goTo('savings');
+  updateSavingsHint();
+}
+
+// ─── Savings input ───────────────────────────────────────────────────────────
+function onSavingsInput(el) {
   const raw = el.value.replace(/[^0-9]/g, '');
-  if (!raw) { el.value = ''; d.price = 0; setPriceBtn(false); return; }
+  if (!raw) { el.value = ''; d.savings = 0; setSavingsBtn(false); return; }
   let num = parseInt(raw, 10);
-  if (num > 5000000) num = 5000000;
-  d.price = num;
+  d.savings = num;
   el.value = num.toLocaleString('en-AU');
-  setPriceBtn(num > 0);
+  setSavingsBtn(num > 0);
 }
 
-function onPriceKey(e) {
-  if (e.key === 'Enter' && d.price > 0) submitPrice();
+function onSavingsKey(e) {
+  if (e.key === 'Enter' && d.savings > 0) submitSavings();
 }
 
-function setPriceBtn(enabled) {
-  const btn = document.getElementById('price-submit');
-  btn.disabled = !enabled;
-  btn.style.opacity = enabled ? '1' : '0.35';
+function setSavingsBtn(enabled) {
+  const btn = document.getElementById('savings-submit');
+  if (!btn) return;
+  const ready = enabled && dataLoaded;
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.35';
 }
 
-function submitPrice() {
-  if (!d.price) return;
-  renderResult();
-  goTo('result');
+function updateSavingsHint() {
+  const hint = document.getElementById('savings-hint');
+  if (!hint) return;
+  if (dataError) {
+    hint.textContent = 'Could not load LMI rate data. Please refresh and try again.';
+    hint.style.color = '#fca5a5';
+  } else if (!dataLoaded) {
+    hint.textContent = 'Loading LMI rate data…';
+  } else {
+    hint.textContent = 'Include everything — the calculator deducts stamp duty, registration fees, and LMI from this total.';
+    hint.style.color = '';
+  }
 }
 
-// ─── Toggle utility ──────────────────────────────────────────────────────────
-function toggleEl(id, btn) {
-  const el = document.getElementById(id);
-  const iconId = btn.querySelector('span').id;
-  const open = el.classList.toggle('open');
-  document.getElementById(iconId).textContent = open ? '▾' : '▸';
+function submitSavings() {
+  if (!d.savings || !dataLoaded) return;
+  renderDepositResult();
+  goTo('deposit-result');
+}
+
+// ─── LVR ceiling ─────────────────────────────────────────────────────────────
+function getMaxLVR() {
+  if (d.propType === 'apartment') {
+    return d.isOO ? 0.90 : 0.80;
+  }
+  return d.isOO ? 0.95 : 0.90;
+}
+
+// ─── LMI rate lookup ─────────────────────────────────────────────────────────
+function lookupLMIRate(lvrPct, baseLoan) {
+  // lvrPct is the LVR as a percentage, e.g. 85 for 85%
+  // loan_max null = no upper limit on loan size
+  const row = lmiRates.find(r =>
+    lvrPct > r.lvr_min &&
+    lvrPct <= r.lvr_max &&
+    (r.loan_max === null || baseLoan <= r.loan_max)
+  );
+  return row ? row.rate_pct / 100 : 0;
 }
 
 // ─── Stamp duty engine ───────────────────────────────────────────────────────
-
 function brackets(price, tbl) {
   for (const b of tbl) {
     if (price <= b.max) return b.base + (price - b.min) * b.rate;
   }
   return 0;
 }
-
 function nswDuty(p) {
   return brackets(p, [
     { min: 0,       max: 16000,    base: 0,      rate: 0.0125 },
@@ -615,24 +747,20 @@ function nswDuty(p) {
     { min: 3505000, max: Infinity, base: 175830, rate: 0.07   },
   ]);
 }
-
 function vicGeneral(p) {
   if (p <= 25000)   return p * 0.014;
   if (p <= 130000)  return 350   + (p - 25000)   * 0.024;
   if (p <= 960000)  return 2870  + (p - 130000)  * 0.06;
-  if (p <= 2000000) return p * 0.055;               // flat on FULL price
+  if (p <= 2000000) return p * 0.055;
   return 110000 + (p - 2000000) * 0.065;
 }
-
 function vicPPR(p) {
-  // Owner-occupier concession ≤ $550k; above that reverts to general
   if (p <= 25000)   return p * 0.014;
   if (p <= 130000)  return 350   + (p - 25000)   * 0.024;
   if (p <= 440000)  return 2870  + (p - 130000)  * 0.05;
   if (p <= 550000)  return 18370 + (p - 440000)  * 0.06;
   return vicGeneral(p);
 }
-
 function qldDuty(p) {
   return brackets(p, [
     { min: 0,       max: 5000,     base: 0,     rate: 0      },
@@ -642,7 +770,6 @@ function qldDuty(p) {
     { min: 1000000, max: Infinity, base: 38025, rate: 0.0575 },
   ]);
 }
-
 function waDuty(p) {
   return brackets(p, [
     { min: 0,       max: 120000,   base: 0,     rate: 0.019  },
@@ -652,7 +779,6 @@ function waDuty(p) {
     { min: 725000,  max: Infinity, base: 28453, rate: 0.0515 },
   ]);
 }
-
 function saDuty(p) {
   return brackets(p, [
     { min: 0,       max: 12000,    base: 0,     rate: 0.01   },
@@ -666,7 +792,6 @@ function saDuty(p) {
     { min: 500000,  max: Infinity, base: 21330, rate: 0.055  },
   ]);
 }
-
 function tasDuty(p) {
   if (p <= 3000)   return 50;
   if (p <= 25000)  return 50    + (p - 3000)   * 0.0175;
@@ -676,7 +801,6 @@ function tasDuty(p) {
   if (p <= 725000) return 12935 + (p - 375000) * 0.0425;
   return 27810 + (p - 725000) * 0.045;
 }
-
 function actDuty(p) {
   return brackets(p, [
     { min: 0,        max: 200000,   base: 0,     rate: 0.022  },
@@ -688,7 +812,6 @@ function actDuty(p) {
     { min: 1455000,  max: Infinity, base: 80034, rate: 0.0454 },
   ]);
 }
-
 function ntDuty(p) {
   if (p <= 525000) {
     const V = p / 1000;
@@ -697,232 +820,219 @@ function ntDuty(p) {
   return p * 0.0495;
 }
 
-function calcDuty() {
-  const { state, isFHB, isOO, isNewBuild, isHBCS, price: p } = d;
-
+function calcDutyForPrice(p) {
+  const { state, isFHB, isOO, isNewBuild, isHBCS } = d;
   switch (state) {
     case 'NSW': {
       const full = nswDuty(p);
       if (isFHB) {
-        if (p <= 800000) return result(0, full, 'First Home Buyer — full exemption');
-        if (p <= 1000000) {
-          const duty = Math.round(full * (p - 800000) / 200000);
-          return result(duty, full, 'First Home Buyer — partial concession');
-        }
+        if (p <= 800000) return 0;
+        if (p <= 1000000) return Math.round(full * (p - 800000) / 200000);
       }
-      return result(full, full, null);
+      return Math.round(full);
     }
-
     case 'VIC': {
       if (isFHB) {
         const full = vicGeneral(p);
-        if (p <= 600000) return result(0, full, 'First Home Buyer — full exemption');
-        if (p <= 750000) {
-          const duty = Math.round(full * (p - 600000) / 150000);
-          return result(duty, full, 'First Home Buyer — partial concession');
-        }
-        return result(full, full, null);
+        if (p <= 600000) return 0;
+        if (p <= 750000) return Math.round(full * (p - 600000) / 150000);
+        return Math.round(full);
       }
-      if (isOO && p <= 550000) {
-        const ppr = vicPPR(p);
-        const gen = vicGeneral(p);
-        return result(ppr, gen, 'Owner-occupier (PPR concession)', Math.round(gen - ppr));
-      }
-      const gen = vicGeneral(p);
-      return result(gen, gen, null);
+      if (isOO && p <= 550000) return Math.round(vicPPR(p));
+      return Math.round(vicGeneral(p));
     }
-
     case 'QLD': {
       const full = qldDuty(p);
       if (isFHB) {
-        if (p <= 500000) return result(0, full, 'First Home Buyer — full exemption');
-        if (p <= 550000) {
-          const duty = Math.round(full * (p - 500000) / 50000);
-          return result(duty, full, 'First Home Buyer — partial concession');
-        }
+        if (p <= 500000) return 0;
+        if (p <= 550000) return Math.round(full * (p - 500000) / 50000);
       }
-      return result(full, full, null);
+      return Math.round(full);
     }
-
     case 'WA': {
       const full = waDuty(p);
       if (isFHB) {
-        if (p <= 430000) return result(0, full, 'First Home Buyer — full exemption');
-        if (p <= 530000) {
-          const duty = Math.round(full * (p - 430000) / 100000);
-          return result(duty, full, 'First Home Buyer — partial concession');
-        }
+        if (p <= 430000) return 0;
+        if (p <= 530000) return Math.round(full * (p - 430000) / 100000);
       }
-      return result(full, full, null);
+      return Math.round(full);
     }
-
-    case 'SA': {
-      const full = saDuty(p);
-      return result(full, full, 'none-available');
-    }
-
+    case 'SA':  return Math.round(saDuty(p));
     case 'TAS': {
       const full = tasDuty(p);
-      if (isFHB && !isNewBuild && p < 600000) {
-        const duty = Math.round(full * 0.5);
-        return result(duty, full, 'First Home Buyer — 50% discount');
-      }
-      return result(full, full, null);
+      if (isFHB && !isNewBuild && p < 600000) return Math.round(full * 0.5);
+      return Math.round(full);
     }
-
     case 'ACT': {
-      const full = actDuty(p);
-      if (isHBCS) return result(0, full, 'Home Buyer Concession Scheme — full exemption');
-      return result(full, full, null);
+      if (isHBCS) return 0;
+      return Math.round(actDuty(p));
     }
-
     case 'NT': {
       const full = ntDuty(p);
       if (isFHB && p < 650000) {
-        const maxD = 18601;
         const factor = p <= 500000 ? 1 : (650000 - p) / 150000;
-        const discount = Math.min(full, maxD * factor);
-        const duty = Math.max(0, full - discount);
-        return result(duty, full, 'First Home Owner Discount (NT) — estimated');
+        const discount = Math.min(full, 18601 * factor);
+        return Math.max(0, Math.round(full - discount));
       }
-      return result(full, full, null);
+      return Math.round(full);
     }
+    default: return 0;
   }
 }
 
-function result(duty, fullDuty, concession, saving) {
-  return {
-    duty: Math.round(duty),
-    fullDuty: Math.round(fullDuty),
-    concession,
-    saving: saving ? Math.round(saving) : null,
-  };
+// ─── Binary search + LMI solve ───────────────────────────────────────────────
+function computeAtPrice(price, savings, maxLVR, regFee, lmiSdRate) {
+  const stampDuty = calcDutyForPrice(price);
+
+  // Inner loop: converge LMI stamp duty (circular dependency)
+  let lmiSd      = 0;
+  let lmiPremium = 0;
+  let availDeposit, baseLoan, baseLVR, effectiveLoan, effectiveLVR;
+
+  for (let inner = 0; inner < 6; inner++) {
+    const upfront = stampDuty + regFee + lmiSd;
+    availDeposit  = savings - upfront;
+    if (availDeposit <= 0) return null;
+
+    baseLoan = price - availDeposit;
+    if (baseLoan <= 0) return null;  // savings alone would cover price — no loan needed
+
+    baseLVR = baseLoan / price;
+    if (baseLVR > maxLVR) return null;
+
+    if (baseLVR <= 0.80) {
+      // No LMI
+      lmiPremium = 0;
+      lmiSd      = 0;
+      effectiveLoan = baseLoan;
+      effectiveLVR  = baseLVR;
+      break;
+    }
+
+    const lvrPct  = baseLVR * 100;
+    const rate    = lookupLMIRate(lvrPct, baseLoan);
+    lmiPremium    = baseLoan * rate;
+    effectiveLoan = baseLoan + lmiPremium;
+    effectiveLVR  = effectiveLoan / price;
+
+    if (effectiveLVR > maxLVR) return null;
+
+    lmiSd = lmiPremium * lmiSdRate;
+  }
+
+  return { price, stampDuty, regFee, lmiSd, availDeposit, baseLoan, baseLVR, lmiPremium, effectiveLoan, effectiveLVR };
 }
 
-// ─── Render result screen ────────────────────────────────────────────────────
-const STATE_INFO = {
-  NSW: { name: 'New South Wales',         taxName: 'Transfer duty',     source: 'Revenue NSW',                    url: 'https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/transfer-duty',     lastChecked: 'June 2026' },
-  VIC: { name: 'Victoria',                taxName: 'Land transfer duty', source: 'State Revenue Office Victoria',  url: 'https://www.sro.vic.gov.au/land-transfer-duty',                                  lastChecked: 'June 2026' },
-  QLD: { name: 'Queensland',              taxName: 'Transfer duty',     source: 'Queensland Revenue Office',      url: 'https://www.qld.gov.au/housing/buying-owning-home/advice-buying-home/transfer-duty', lastChecked: 'June 2026' },
-  WA:  { name: 'Western Australia',       taxName: 'Transfer duty',     source: 'WA Revenue',                     url: 'https://www.wa.gov.au/service/financial-management/taxation/calculate-transfer-duty', lastChecked: 'June 2026' },
-  SA:  { name: 'South Australia',         taxName: 'Stamp duty',        source: 'RevenueSA',                      url: 'https://www.revenuesa.sa.gov.au/taxes-and-duties/stamp-duties/real-property',      lastChecked: 'June 2026' },
-  TAS: { name: 'Tasmania',                taxName: 'Duty',              source: 'SRO Tasmania',                   url: 'https://www.sro.tas.gov.au/duties',                                               lastChecked: 'June 2026' },
-  ACT: { name: 'Australian Capital Territory', taxName: 'Conveyance duty', source: 'ACT Revenue Office',         url: 'https://www.revenue.act.gov.au/duties/conveyance-duty',                           lastChecked: 'June 2026' },
-  NT:  { name: 'Northern Territory',      taxName: 'Stamp duty',        source: 'NT Revenue',                     url: 'https://treasury.nt.gov.au/dtf/territory-revenue-office/stamp-duty',              lastChecked: 'June 2026' },
-};
+function findMaxPrice(savings) {
+  const maxLVR    = getMaxLVR();
+  const regFee    = regFees[d.state]    || 400;
+  const lmiSdRate = lmiSdRates[d.state] || 0;
 
-const METHOD_TEXT = {
-  NSW: 'Marginal bracket calculation. Brackets: 1.25% (≤ $16k) through 7.00% (> $3.505M). FHB: nil duty ≤ $800k; duty × (price − $800k) ÷ $200k for $800k–$1M.',
-  VIC: 'Marginal bracket calculation. General rate: 1.4% (≤ $25k) through 6.5% (> $2M), with a flat 5.5% on the full price for $960k–$2M (not marginal). PPR concession: separate lower bracket table applies to owner-occupiers on homes ≤ $550k. FHB exemption takes precedence over PPR. FHB: nil duty ≤ $600k; tapered $600k–$750k.',
-  QLD: 'Marginal bracket calculation. Brackets: nil (≤ $5k) through 5.75% (> $1M). FHB concession: nil duty ≤ $500k; tapered $500k–$550k. Same rates for OO and investor.',
-  WA:  'Marginal bracket calculation. Brackets: 1.90% (≤ $120k) through 5.15% (> $725k). FHB concession: nil duty ≤ $430k; tapered $430k–$530k. Same rates for OO and investor.',
-  SA:  'Marginal bracket calculation. Brackets: 1.00% (≤ $12k) through 5.50% (> $500k). SA has no stamp duty concession for first home buyers on established homes.',
-  TAS: 'Marginal bracket calculation. Brackets: $50 minimum (≤ $3k) through 4.50% (> $725k). FHB discount: 50% off standard duty for established home purchases under $600k. New builds attract full duty but may qualify for the $30,000 FHOG.',
-  ACT: 'Marginal bracket calculation. Brackets: 2.20% (≤ $200k) through 4.54% (> $1.455M). Note: rate drops from 7.20% to 4.54% above $1.455M — this is the published ACT schedule structure. HBCS: full exemption for income-eligible buyers regardless of FHB status (~$160k income threshold for singles).',
-  NT:  'Formula-based calculation unique to the NT. ≤ $525k: D = 0.06571441 × V² + 15 × V where V = price ÷ 1,000. > $525k: flat 4.95% on full price. FHOD: up to $18,601 off duty for FHBs on homes < $650k. Phaseout modelled linearly between $500k–$650k (phaseout formula is not publicly documented in detail).',
-};
+  let low  = 0;
+  // Upper bound: if there were 0 upfront costs and you could borrow at 100% LVR
+  // Generous cap at savings * 25 (assumes ~4% deposit + costs) or $15M
+  let high  = Math.min(Math.ceil(savings * 25), 15000000);
+  let best  = null;
 
-function fmt(n)  { return '$' + Math.round(n).toLocaleString('en-AU'); }
-function pct(n)  { return (n * 100).toFixed(2) + '%'; }
+  for (let i = 0; i < 60; i++) {
+    const mid = Math.floor((low + high) / 2);
+    if (mid <= 0) { high = mid - 1; continue; }
+
+    const r = computeAtPrice(mid, savings, maxLVR, regFee, lmiSdRate);
+    if (r !== null) {
+      best = r;
+      low  = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return best;
+}
+
+// ─── Render deposit result ───────────────────────────────────────────────────
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-AU'); }
+function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
 
 function rrow(label, value, dim) {
   return `<div class="rrow"><span class="rl">${label}</span><span class="rv${dim ? ' dim' : ''}">${value}</span></div>`;
 }
 
-function renderResult() {
-  const r = calcDuty();
-  const info = STATE_INFO[d.state];
+function renderDepositResult() {
+  const r = findMaxPrice(d.savings);
 
-  // Main figure
-  document.getElementById('result-amount').textContent = fmt(r.duty);
+  const mainEl = document.getElementById('deposit-result-main');
+  const breakEl = document.getElementById('deposit-result-breakdown');
+  const advEl = document.getElementById('deposit-advisories');
+  const stage2El = document.getElementById('deposit-stage2-note');
 
-  // Breakdown card — always 4 rows + blue pct bar
-  let html = rrow('Property price', fmt(d.price));
+  if (!r) {
+    mainEl.innerHTML = `
+      <div class="result-label-sm">Deposit ceiling</div>
+      <div class="result-amount" style="font-size: 1.8rem; color: #fca5a5;">No result</div>
+    `;
+    breakEl.innerHTML = `<div class="error-box">Your savings don't cover the upfront costs (stamp duty + registration fees) for a viable loan at the LVR limits for a ${d.isOO ? 'owner-occupier' : 'investor'} ${d.propType} in ${d.state}. Try increasing your savings or checking the stamp duty calculator for your state.</div>`;
+    advEl.innerHTML = '';
+    stage2El.style.display = 'none';
+    return;
+  }
+
+  stage2El.style.display = '';
+
+  // Headline
+  mainEl.innerHTML = `
+    <div class="result-label-sm">Deposit ceiling</div>
+    <div class="result-amount">${fmt(r.price)}</div>
+  `;
+
+  // Breakdown card
+  const hasLMI = r.lmiPremium > 0;
+  const lmiSdRate = lmiSdRates[d.state] || 0;
+
+  let html = `<div class="result-card">`;
+  html += rrow('Your savings', fmt(d.savings));
   html += `<hr class="rdivider">`;
-  html += rrow('Standard stamp duty', fmt(r.fullDuty), true);
-
-  // Concession row — always present
-  let concessionText;
-  if (r.concession === 'none-available') {
-    concessionText = 'None available';
-  } else if (r.concession) {
-    concessionText = r.concession;
+  html += rrow('Stamp duty', `−${fmt(r.stampDuty)}`, r.stampDuty === 0);
+  html += rrow('Reg. &amp; transfer fees (~)', `−${fmt(r.regFee)}`, true);
+  if (hasLMI && r.lmiSd > 0) {
+    html += rrow('LMI stamp duty (~)', `−${fmt(r.lmiSd)}`, true);
+  }
+  html += `<hr class="rdivider">`;
+  html += rrow('Available deposit', fmt(r.availDeposit));
+  html += `<hr class="rdivider">`;
+  html += rrow('Base loan required', fmt(r.baseLoan));
+  html += rrow('Base LVR', fmtPct(r.baseLVR), true);
+  if (hasLMI) {
+    html += rrow('LMI premium (added to loan)', fmt(r.lmiPremium));
+    html += rrow('Effective LVR (incl. LMI)', fmtPct(r.effectiveLVR));
   } else {
-    concessionText = 'None';
+    html += rrow('LMI premium', 'None — LVR ≤ 80%', true);
   }
-  html += rrow('Concession', concessionText, true);
-
-  html += `<hr class="rdivider">`;
-  html += rrow('Stamp duty after concession', fmt(r.duty));
-
-  // Blue percentage bar
-  if (d.price > 0) {
-    const rate = pct(r.duty / d.price);
-    html += `<div class="rrow-pct">That's ${rate} of the purchase price</div>`;
-  }
-  document.getElementById('result-breakdown').innerHTML = html;
+  // Blue badge
+  const depositPct = fmtPct(r.availDeposit / r.price);
+  html += `<div class="rrow-pct">That's a ${depositPct} deposit on a ${fmt(r.price)} purchase</div>`;
+  html += `</div>`;
+  breakEl.innerHTML = html;
 
   // Advisories
-  const advEl = document.getElementById('result-advisories');
   const advisories = [];
 
-  if (d.state === 'NT') {
-    // Always show THOD note for NT
-    advisories.push(`<div class="advisory"><strong>NT Territory Home Owner Discount:</strong> If you've lived in the NT for 12+ months, the Territory Home Owner Discount may reduce your duty further. We've applied the standard rate — the discount amount isn't publicly documented in a usable form. Worth checking directly with <a href="https://treasury.nt.gov.au/dtf/territory-revenue-office/stamp-duty" target="_blank" rel="noopener">NT Revenue</a>.</div>`);
-    if (d.isFHB && d.price < 650000) {
-      advisories.push(`<div class="advisory"><strong>FHOD phaseout:</strong> The exact phaseout formula isn't publicly documented. We've estimated a linear phaseout between $500k–$650k. The actual figure may differ — verify with NT Revenue.</div>`);
+  if (hasLMI) {
+    let lmiSdNote = '';
+    if (lmiSdRate > 0) {
+      lmiSdNote = ` In ${d.state}, ${(lmiSdRate * 100).toFixed(0)}% stamp duty applies to the LMI premium (~${fmt(r.lmiSd)} included in the solve above).`;
+    } else {
+      lmiSdNote = ` ${d.state} charges no stamp duty on LMI premiums.`;
     }
-  }
-  if (d.state === 'SA') {
-    advisories.push(`<div class="advisory">SA has no stamp duty concession for FHBs on established homes. The $15,000 First Home Owner Grant (new builds &lt; $650k) is separate and not calculated here.</div>`);
-  }
-  if (d.state === 'QLD' && d.isFHB) {
-    advisories.push(`<div class="advisory"><strong>QLD FHOG:</strong> You may also be eligible for the $30,000 First Home Owner Grant on new builds under $750,000. This is separate from duty.</div>`);
-  }
-  if (d.state === 'TAS' && d.isFHB) {
-    advisories.push(`<div class="advisory"><strong>TAS FHOG:</strong> You may also be eligible for the $30,000 First Home Owner Grant on new builds under $750,000. This is separate from duty.</div>`);
-  }
-  if (d.state === 'NSW' && d.isFHB) {
-    advisories.push(`<div class="advisory"><strong>NSW FHOG:</strong> FHBs buying new builds up to $600k may be eligible for the $10,000 First Home Owner Grant. Separate from duty.</div>`);
+    advisories.push(`<div class="advisory"><strong>LMI adds ${fmt(r.lmiPremium)} to your loan.</strong> Lenders Mortgage Insurance protects the lender (not you) when LVR is above 80%. It's capitalised into the loan — you don't pay it upfront, but it increases what you owe.${lmiSdNote}</div>`);
   }
 
-  if (advisories.length) {
-    advEl.style.display = 'flex';
-    advEl.innerHTML = advisories.join('');
-  } else {
-    advEl.style.display = 'none';
-    advEl.innerHTML = '';
+  if (d.state === 'NT') {
+    advisories.push(`<div class="advisory"><strong>NT stamp duty:</strong> The FHOD phaseout formula is not publicly documented. We've modelled a linear phaseout between $500k–$650k — actual figure may differ.</div>`);
   }
 
-  // Methodology panel
-  let buyerDesc = d.isFHB ? 'First home buyer' : 'Non-FHB / subsequent buyer';
-  if (d.state === 'ACT') buyerDesc = d.isHBCS ? 'HBCS-eligible buyer' : 'Standard buyer';
-  if (d.state === 'SA')  buyerDesc = 'Standard buyer (no FHB concession in SA)';
-
-  let methHtml = '';
-  if (d.state === 'VIC' && d.isFHB === false) {
-    methHtml += rrow('Property use', d.isOO ? 'Owner-occupier (PPR rate applied ≤ $550k)' : 'Investment (general rate)');
-  }
-  if (d.state === 'TAS' && d.isFHB) {
-    methHtml += rrow('Build type', d.isNewBuild ? 'New build (standard rate — no FHB discount)' : 'Established (50% FHB discount if < $600k)');
-  }
-
-  document.getElementById('methodology-body').innerHTML = `
-    <div class="result-card-head">Inputs</div>
-    ${rrow('State', info.name)}
-    ${rrow('Tax type', info.taxName)}
-    ${rrow('Purchase price', fmt(d.price))}
-    ${rrow('Buyer', buyerDesc)}
-    ${methHtml}
-    <hr class="rdivider">
-    <div class="result-card-head">Method</div>
-    <div class="method-text">${METHOD_TEXT[d.state]}</div>
-    <hr class="rdivider">
-    <div class="result-card-head">Source</div>
-    ${rrow('Authority', `<a href="${info.url}" target="_blank" rel="noopener" style="color:var(--dim);text-decoration:underline;">${info.source}</a>`)}
-    ${rrow('Via', '<a href="https://auscalcs.com.au/stamp-duty/" target="_blank" rel="noopener" style="color:var(--dim);text-decoration:underline;">AusCalcs</a>')}
-    ${rrow('Brackets last checked', info.lastChecked)}
-  `;
+  advEl.style.display = advisories.length ? 'flex' : 'none';
+  advEl.innerHTML = advisories.join('');
 }
 </script>
 

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How the deposit calculator works — GetReal</title>
+  <meta name="description" content="Full methodology for GetReal's deposit ceiling calculator. Stamp duty, LMI, LVR ceilings, binary search — all explained.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .faq-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2rem var(--pad-page) 4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .faq-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .faq-title {
+      font-size: clamp(1.6rem, 6vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 0.75rem;
+    }
+
+    .faq-lead {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+      border-left: 2px solid var(--border);
+      padding: 0.5rem 0.9rem;
+    }
+
+    .faq-section {
+      border-top: 1px solid var(--border);
+      padding: 2rem 0 0;
+      margin-bottom: 2.5rem;
+    }
+
+    .faq-section-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .faq-section-num {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      min-width: 2.5rem;
+    }
+
+    .faq-body {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.75;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .faq-body p { margin: 0; }
+
+    .faq-body strong { color: var(--text); }
+
+    .faq-body a {
+      color: var(--dim);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    /* Code / pseudocode blocks */
+    .code-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--blue);
+      padding: 1rem 1.15rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.7;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .code-block .kw  { color: var(--text);    }   /* keywords / numbers */
+    .code-block .cm  { color: #444;           }   /* comments */
+    .code-block .hl  { color: #f0a500;        }   /* highlight / key values */
+
+    /* Data table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+    }
+    .data-table th {
+      text-align: left;
+      color: var(--dim);
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.62rem;
+      padding: 0.4rem 0.75rem 0.4rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 0.45rem 0.75rem 0.45rem 0;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: top;
+    }
+    .data-table td:first-child { color: var(--text); font-weight: 700; }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    .advisory {
+      background: rgba(240,165,0,0.05);
+      border-left: 2px solid #f0a500;
+      padding: 0.7rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .advisory strong { color: var(--text); }
+
+    .note-box {
+      background: var(--card);
+      border-left: 2px solid var(--border);
+      padding: 0.65rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--dim);
+      line-height: 1.65;
+    }
+    .note-box strong { color: var(--muted); }
+    .note-box a { color: var(--dim); text-decoration: underline; }
+
+    .faq-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--dim);
+      line-height: 1.7;
+    }
+
+    .tag-inline {
+      display: inline-block;
+      background: var(--blue);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.45rem;
+      vertical-align: middle;
+      margin-right: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="faq-wrap">
+
+  <div class="faq-eyebrow">Tool 01 — Deposit calculator — Methodology</div>
+  <h1 class="faq-title">How the deposit calculator works</h1>
+
+  <div class="faq-lead">
+    This page explains every calculation in the deposit ceiling tool. If you think something is wrong, or we've made a simplifying assumption you disagree with, the methodology is here so you can check. Every number the tool produces can be traced back to a specific formula or data source.
+  </div>
+
+  <!-- ── 1. The problem ──────────────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">01</span>
+      What the calculator is actually solving
+    </div>
+    <div class="faq-body">
+      <p>The question sounds simple: "I have $X saved — what's the most expensive property I can buy?" But it's circular, and can't be solved with a single formula.</p>
+      <p>Here's why. To find the maximum purchase price, you need to know the stamp duty — but stamp duty depends on the purchase price. You need to know whether LMI applies — but LMI depends on the loan amount, which depends on how much of your savings is left after stamp duty and registration fees. And LMI itself changes depending on the exact loan amount, which changes at every candidate price.</p>
+      <p>So the tool runs a <strong>binary search</strong> across candidate prices and finds the highest one that is viable. "Viable" means your savings cover the upfront costs and the resulting loan stays within the LVR ceiling.</p>
+    </div>
+  </div>
+
+  <!-- ── 2. Three ceilings ──────────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">02</span>
+      Three ceilings — this tool covers one
+    </div>
+    <div class="faq-body">
+      <p>Every mortgage application is subject to three independent limits. This tool calculates only the first:</p>
+      <p><strong>Ceiling 1 — Deposit / LVR.</strong> How much can your savings buy after stamp duty, registration fees, and LMI? This is what this tool calculates.</p>
+      <p><strong>Ceiling 2 — Debt-to-Income (DTI).</strong> APRA requires lenders to consider total debt against gross income. Practical cap is roughly 6× annual gross income across all debts. This is coming in Stage 2.</p>
+      <p><strong>Ceiling 3 — Serviceability.</strong> Lenders must verify you can meet monthly repayments after living costs (HEM benchmarks) with a 3% interest rate buffer above the actual rate. This is coming in Stage 3.</p>
+      <p>Your maximum purchase price is the lowest of the three ceilings — whichever one bites first. For buyers with modest savings relative to income, the deposit ceiling is usually the binding constraint. For buyers with large savings but lower incomes, DTI or serviceability often binds first.</p>
+    </div>
+  </div>
+
+  <!-- ── 3. LVR ceilings ────────────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">03</span>
+      LVR ceilings by property type and purpose
+    </div>
+    <div class="faq-body">
+      <p>Loan-to-Value Ratio (LVR) is the loan amount as a percentage of the purchase price. Lenders impose maximums that vary by property type and whether you'll live there:</p>
+
+      <table class="data-table" style="margin: 0.5rem 0;">
+        <thead>
+          <tr>
+            <th>Property type</th>
+            <th>Owner-occupier</th>
+            <th>Investment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>House</td>
+            <td>95%</td>
+            <td>90%</td>
+          </tr>
+          <tr>
+            <td>Townhouse</td>
+            <td>95%</td>
+            <td>90%</td>
+          </tr>
+          <tr>
+            <td>Apartment</td>
+            <td>90%</td>
+            <td>80%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>These are the practical market maximums at most mainstream lenders. Individual lenders may apply lower caps — particularly for apartments in high-density postcodes, or for borrowers with other risk factors. The tool uses these as the ceiling; your actual approval may be lower.</p>
+      <p><strong>The LVR ceiling used in the binary search is the effective LVR</strong> — meaning after LMI is capitalised into the loan (added to the loan balance). This is the correct definition: you can't borrow at 95% and then add LMI on top and end up at 97%.</p>
+    </div>
+  </div>
+
+  <!-- ── 4. The binary search ───────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">04</span>
+      The binary search algorithm
+    </div>
+    <div class="faq-body">
+      <p>The tool evaluates candidate purchase prices and finds the highest viable one. Binary search means: start in the middle of a range, halve the range each iteration based on whether the mid-point is viable or not. 60 iterations resolves a $15M search range to within $1.</p>
+      <div class="code-block"><span class="kw">low</span>  = 0
+<span class="kw">high</span> = min(savings × 25, $15,000,000)  <span class="cm">// generous upper bound</span>
+<span class="kw">best</span> = null
+
+<span class="kw">repeat</span> 60 times:
+  candidate = floor((low + high) / 2)
+  result    = computeAtPrice(candidate, savings)
+
+  <span class="kw">if</span> result is viable:
+    best = result
+    low  = candidate + 1   <span class="cm">// try higher</span>
+  <span class="kw">else</span>:
+    high = candidate - 1   <span class="cm">// too expensive</span>
+
+<span class="kw">return</span> best               <span class="cm">// highest viable price</span></div>
+
+      <p>For each candidate price, <code>computeAtPrice</code> runs the full cost calculation — stamp duty, LMI, registration fees — and returns the result if the effective LVR stays within the ceiling, or null if it doesn't.</p>
+    </div>
+  </div>
+
+  <!-- ── 5. Computing a single candidate price ─────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">05</span>
+      What happens at each candidate price
+    </div>
+    <div class="faq-body">
+      <p>For each candidate price P, the calculation runs as follows. The inner loop resolves the circular dependency between LMI stamp duty and available deposit:</p>
+      <div class="code-block"><span class="cm">// Given: price P, savings, maxLVR, regFee, lmiSdRate</span>
+<span class="kw">stampDuty</span> = calcStampDuty(P)    <span class="cm">// see Section 06</span>
+<span class="kw">lmiSd</span>     = 0                   <span class="cm">// initial estimate</span>
+
+<span class="kw">repeat</span> 6 times:               <span class="cm">// inner loop — converges LMI stamp duty</span>
+  upfront       = stampDuty + regFee + lmiSd
+  availDeposit  = savings − upfront
+  <span class="kw">if</span> availDeposit ≤ 0: <span class="kw">return</span> null   <span class="cm">// can't afford upfront costs</span>
+
+  baseLoan      = P − availDeposit
+  <span class="kw">if</span> baseLoan ≤ 0: <span class="kw">return</span> null      <span class="cm">// savings alone cover price</span>
+
+  baseLVR       = baseLoan / P
+  <span class="kw">if</span> baseLVR > maxLVR: <span class="kw">return</span> null   <span class="cm">// too high before LMI</span>
+
+  <span class="kw">if</span> baseLVR ≤ <span class="hl">0.80</span>:
+    lmiPremium = 0                  <span class="cm">// no LMI needed</span>
+    lmiSd      = 0
+    effectiveLVR = baseLVR
+    <span class="kw">break</span>
+
+  <span class="cm">// LMI applies — look up rate by LVR band and loan size</span>
+  rate        = lookupLMI(baseLVR × 100, baseLoan)
+  lmiPremium  = baseLoan × rate
+  effectiveLoan = baseLoan + lmiPremium   <span class="cm">// LMI capitalised into loan</span>
+  effectiveLVR  = effectiveLoan / P
+
+  <span class="kw">if</span> effectiveLVR > maxLVR: <span class="kw">return</span> null  <span class="cm">// LMI pushes over ceiling</span>
+
+  lmiSd = lmiPremium × lmiSdRate      <span class="cm">// LMI stamp duty for next iteration</span>
+
+<span class="kw">return</span> { P, stampDuty, regFee, lmiSd, availDeposit,
+          baseLoan, baseLVR, lmiPremium, effectiveLVR }</div>
+
+      <p><strong>Why 6 inner iterations?</strong> The LMI stamp duty creates a circular dependency: LMI stamp duty reduces available deposit → changes loan amount → changes LMI premium → changes LMI stamp duty. Starting at lmiSd = 0, each iteration refines the estimate. In practice it converges within 3 iterations; 6 is conservative.</p>
+      <p>For states with no LMI stamp duty (NSW, ACT — 0% rate), there's no circularity and the loop exits in 1 pass.</p>
+    </div>
+  </div>
+
+  <!-- ── 6. Stamp duty engine ───────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">06</span>
+      Stamp duty calculation
+    </div>
+    <div class="faq-body">
+      <p>Stamp duty (officially "transfer duty" in most states) is calculated fresh at every candidate price during the binary search. The brackets are hardcoded in the tool as of June 2026. Source: each state's revenue office, cross-referenced against <a href="https://auscalcs.com.au/stamp-duty/" target="_blank" rel="noopener">AusCalcs</a>.</p>
+
+      <table class="data-table" style="margin: 0.5rem 0 1rem;">
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Method</th>
+            <th>FHB concession</th>
+            <th>OO concession</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>NSW</td>
+            <td>Marginal brackets</td>
+            <td>Nil ≤ $800k; tapered to $1M</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td>VIC</td>
+            <td>Marginal brackets (general); flat 5.5% on full price $960k–$2M</td>
+            <td>Nil ≤ $600k; tapered to $750k</td>
+            <td>PPR rate ≤ $550k</td>
+          </tr>
+          <tr>
+            <td>QLD</td>
+            <td>Marginal brackets</td>
+            <td>Nil ≤ $500k; tapered to $550k</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td>WA</td>
+            <td>Marginal brackets</td>
+            <td>Nil ≤ $430k; tapered to $530k</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td>SA</td>
+            <td>Marginal brackets</td>
+            <td>None</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td>TAS</td>
+            <td>Marginal brackets; $50 minimum</td>
+            <td>50% discount (established, &lt; $600k)</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td>ACT</td>
+            <td>Marginal brackets</td>
+            <td>None (HBCS covers all eligible buyers)</td>
+            <td>None (HBCS = full exemption)</td>
+          </tr>
+          <tr>
+            <td>NT</td>
+            <td>Quadratic formula ≤ $525k; flat 4.95% above</td>
+            <td>Up to $18,601 off; phaseout $500k–$650k (estimated)</td>
+            <td>None</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>NT quadratic formula (≤ $525,000):</strong></p>
+      <div class="code-block">V = price ÷ 1,000
+D = <span class="hl">0.06571441</span> × V² + <span class="hl">15</span> × V</div>
+      <p>Above $525,000: D = price × 4.95%. Source: NT Revenue. The coefficients are stored in the <code>nt_duty_formula</code> Supabase table so they can be updated without a code deploy.</p>
+
+      <p><strong>VIC flat-rate band ($960k–$2M):</strong> This is not a marginal bracket — the duty is 5.5% of the <em>full</em> purchase price, not the marginal amount above $960k. It results in an abrupt drop in effective rate at $2M (where it switches to 6.5% marginal). This is the published VIC schedule.</p>
+    </div>
+  </div>
+
+  <!-- ── 7. LMI ─────────────────────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">07</span>
+      Lenders Mortgage Insurance (LMI)
+    </div>
+    <div class="faq-body">
+      <p><strong>What it is.</strong> LMI is insurance that protects the lender — not you — if you default on a loan with an LVR above 80%. You pay the premium, the lender is covered. The premium is typically capitalised into the loan (added to what you owe), which is how this tool models it.</p>
+      <p><strong>When it applies.</strong> When the base LVR (before LMI is added) is above 80%. At exactly 80% or below, no LMI applies.</p>
+      <p><strong>How the rate is looked up.</strong> The tool fetches the <code>lmi_rates</code> table from Supabase (75 rows: 15 LVR bands × 5 loan size bands). The matching row satisfies:</p>
+      <div class="code-block">lvrPct > row.lvr_min
+AND lvrPct ≤ row.lvr_max
+AND baseLoan ≤ row.loan_max  <span class="cm">// loan_max null = no upper limit</span></div>
+      <p>LMI premium = base loan × rate_pct / 100.</p>
+      <p><strong>Source:</strong> Home Loan Experts indicative LMI rate table (May 2026). These are indicative rates — actual premiums are set by the insurer (Helia or QBE) based on the specific loan, lender, and borrower profile. Actual premiums may be higher or lower.</p>
+      <p><strong>Capitalisation.</strong> LMI is added to the loan balance, not paid upfront. This is standard practice. The tool computes:</p>
+      <div class="code-block">effectiveLoan = baseLoan + lmiPremium
+effectiveLVR  = effectiveLoan ÷ price</div>
+      <p>The effective LVR (not the base LVR) must be within the ceiling. This is the correct constraint: you can't borrow at 95% base and then add LMI to push effective LVR to 97%.</p>
+
+      <div class="advisory">
+        <strong>Important:</strong> LMI rates vary significantly by lender and insurer. Some lenders have exclusive rate arrangements. The rates used here are indicative only — treat the LMI figure as an order-of-magnitude estimate, not a quote.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 8. LMI stamp duty ─────────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">08</span>
+      Stamp duty on LMI premiums
+    </div>
+    <div class="faq-body">
+      <p>Several states charge stamp duty on the LMI premium itself. This is separate from, and in addition to, stamp duty on the property purchase price. The rates are stored in the <code>lmi_stamp_duty_rates</code> Supabase table:</p>
+
+      <table class="data-table" style="margin: 0.5rem 0;">
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Rate on LMI premium</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>NSW</td><td>0% — no stamp duty on LMI</td></tr>
+          <tr><td>VIC</td><td>10%</td></tr>
+          <tr><td>QLD</td><td>9%</td></tr>
+          <tr><td>WA</td><td>10%</td></tr>
+          <tr><td>SA</td><td>11%</td></tr>
+          <tr><td>TAS</td><td>10%</td></tr>
+          <tr><td>ACT</td><td>0% — no stamp duty on LMI</td></tr>
+          <tr><td>NT</td><td>10%</td></tr>
+        </tbody>
+      </table>
+
+      <p>LMI stamp duty is included in the binary search solve — it reduces your available deposit in the same inner loop as the LMI premium calculation. See Section 05 for the full algorithm.</p>
+      <p>It is also disclosed separately in the result breakdown so you can see its exact contribution.</p>
+    </div>
+  </div>
+
+  <!-- ── 9. Registration fees ───────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">09</span>
+      Registration and transfer fees
+    </div>
+    <div class="faq-body">
+      <p>Every property purchase involves two government registration fees: the title transfer fee and the mortgage registration fee. These are paid at settlement and come out of your savings before a dollar goes toward deposit.</p>
+      <p>Exact fee schedules are complex — fees are often tiered by property value or a fixed government charge. The figures used here are approximate totals per state and are stored in the <code>registration_fees</code> Supabase table (two rows per state: transfer + mortgage). NSW figures are exact ($165.40 each); other states are estimated pending verification.</p>
+
+      <table class="data-table" style="margin: 0.5rem 0;">
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Approximate total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>NSW</td><td>~$330</td><td>Exact ($165.40 × 2)</td></tr>
+          <tr><td>VIC</td><td>~$300</td><td>Estimated</td></tr>
+          <tr><td>QLD</td><td>~$600</td><td>Estimated</td></tr>
+          <tr><td>WA</td><td>~$400</td><td>Estimated</td></tr>
+          <tr><td>SA</td><td>~$250</td><td>Estimated</td></tr>
+          <tr><td>TAS</td><td>~$250</td><td>Estimated</td></tr>
+          <tr><td>ACT</td><td>~$400</td><td>Estimated</td></tr>
+          <tr><td>NT</td><td>~$250</td><td>Estimated</td></tr>
+        </tbody>
+      </table>
+
+      <p>Registration fees are small relative to the total purchase costs and are clearly labelled as approximate in the result. A future update will verify and correct all state figures.</p>
+    </div>
+  </div>
+
+  <!-- ── 10. Data sources ───────────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">10</span>
+      Data sources
+    </div>
+    <div class="faq-body">
+      <table class="data-table" style="margin: 0.5rem 0;">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Source</th>
+            <th>Last checked</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Stamp duty brackets</td>
+            <td>State revenue offices; cross-referenced with <a href="https://auscalcs.com.au/stamp-duty/" target="_blank" rel="noopener">AusCalcs</a></td>
+            <td>June 2026</td>
+          </tr>
+          <tr>
+            <td>LMI rates</td>
+            <td><a href="https://www.homeloanexperts.com.au/lenders-mortgage-insurance/lmi-premium-rates/" target="_blank" rel="noopener">Home Loan Experts</a> indicative table</td>
+            <td>May 2026</td>
+          </tr>
+          <tr>
+            <td>LMI stamp duty rates</td>
+            <td>State legislation; cross-referenced AusCalcs</td>
+            <td>June 2026</td>
+          </tr>
+          <tr>
+            <td>Registration fees</td>
+            <td>NSW: exact (LRS). Others: estimated from published schedules</td>
+            <td>June 2026</td>
+          </tr>
+          <tr>
+            <td>LVR ceilings</td>
+            <td>Mainstream lender policy (major banks); APRA guidance</td>
+            <td>June 2026</td>
+          </tr>
+          <tr>
+            <td>NT quadratic formula</td>
+            <td><a href="https://treasury.nt.gov.au/dtf/territory-revenue-office/stamp-duty" target="_blank" rel="noopener">NT Revenue</a></td>
+            <td>June 2026</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Stamp duty brackets, LMI rates, LMI stamp duty rates, and registration fees are stored in Supabase lookup tables, not hardcoded in the tool. This means they can be updated — when rates change — without a code deploy.</p>
+    </div>
+  </div>
+
+  <!-- ── 11. Limitations ────────────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">11</span>
+      Limitations and what this tool does not cover
+    </div>
+    <div class="faq-body">
+      <p><strong>Income limits are not calculated.</strong> Two of the three ceilings — DTI and serviceability — require income information and are not yet implemented. Your deposit ceiling may be higher than what you can actually borrow once income limits are applied.</p>
+      <p><strong>LMI rates are indicative.</strong> Actual LMI premiums depend on the lender, insurer, property location, borrower risk profile, and loan features. The tool uses publicly available indicative rates; actual quotes may be higher or lower.</p>
+      <p><strong>LVR ceilings are market maximums.</strong> Individual lenders may apply lower caps — particularly for high-density apartments, regional postcodes, or non-standard loan structures. The ceiling used here is the practical market maximum at most mainstream lenders.</p>
+      <p><strong>NT FHOD phaseout is estimated.</strong> The exact NT First Home Owner Discount phaseout formula is not publicly documented. The tool models a linear phaseout between $500k–$650k. The actual figure may differ.</p>
+      <p><strong>Off-the-plan, SMSF, and non-standard loans are not modelled.</strong> Different rules apply to self-managed super fund purchases, construction loans, and some off-the-plan contracts.</p>
+      <p><strong>Conveyancer and legal fees are not included.</strong> Budget approximately $1,500–$3,000 for conveyancing on top of what this calculator shows.</p>
+    </div>
+  </div>
+
+  <!-- ── 12. What's coming ──────────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">12</span>
+      What's coming — Stage 2 and Stage 3
+    </div>
+    <div class="faq-body">
+      <p><strong>Stage 2 — Debt-to-Income ceiling.</strong> Enter your gross annual income and the tool will calculate your DTI ceiling (APRA's practical 6× limit as of February 2026) and compare it against your deposit ceiling. Whichever is lower becomes your effective maximum.</p>
+      <p><strong>Stage 3 — Serviceability ceiling.</strong> Enter income, living situation, and dependants. The tool will model monthly repayments at a 3% buffer above the actual rate against HEM benchmarks (Melbourne Institute, metro vs regional) and APRA serviceability requirements, and calculate the third ceiling.</p>
+      <p>Once all three stages are live, the tool will show all three ceilings and indicate which one is binding for your specific situation.</p>
+    </div>
+  </div>
+
+  <div class="note-box" style="margin-bottom: 2rem;">
+    <strong>Found an error?</strong> If you believe a bracket, rate, or formula is wrong, <a href="manifesto.html">we want to know</a>. The methodology is public precisely so errors can be caught and corrected.
+  </div>
+
+  <div class="faq-footer">
+    <div style="margin-bottom: 0.5rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+      <a href="deposit.html" style="color: var(--dim); text-decoration: underline;">← Back to the calculator</a>
+      <a href="stamp-duty.html" style="color: var(--dim); text-decoration: underline;">Stamp duty calculator</a>
+      <a href="faq.html" style="color: var(--dim); text-decoration: underline;">General FAQ</a>
+    </div>
+    GetReal — get-real.co — built in public. Not financial advice.
+  </div>
+
+</div><!-- /faq-wrap -->
+
+</body>
+</html>
