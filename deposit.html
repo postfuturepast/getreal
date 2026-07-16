@@ -201,7 +201,7 @@
     .rrow .rl { color: var(--muted); flex: 1; }
     .rrow .rv { color: var(--text); font-weight: 700; text-align: right; white-space: nowrap; }
     .rrow .rv.dim { color: var(--dim); font-weight: 400; }
-    .rdivider { border: none; border-top: 1px solid var(--border-subtle); }
+    .rdivider { border: none; border-top: 1px solid var(--border-subtle); margin: -0.3rem 0; }
 
     /* Toggle */
     .toggle-wrap { display: flex; flex-direction: column; gap: 0; }
@@ -231,8 +231,8 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       text-align: center;
-      padding: 0.6rem 1rem;
-      margin: 0 -1.25rem -1rem;
+      padding: 0.55rem 1rem;
+      margin-top: 0.2rem;
     }
     .toggle-btn:hover { color: var(--text); }
     .toggle-body {
@@ -474,7 +474,7 @@
 
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem;">
       <button class="btn" onclick="restart()">Start again</button>
-      <a href="https://get-real.co/search-intro" style="font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); text-decoration: none; white-space: nowrap; flex-shrink: 0;">Move to Tool 2 →</a>
+      <a href="https://get-real.co/search-intro" style="font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); text-decoration: none; white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 0.4rem;">Move to Tool 2 <span style="font-size: 1rem; line-height: 1;">→</span></a>
     </div>
   </div>
 
