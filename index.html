@@ -40,7 +40,7 @@
             display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
         }
         .tool-title { font-size: 1.1rem; font-weight: 700; }
-        .tool-tagline { font-size: 0.85rem; color: var(--muted); font-style: italic; }
+        .tool-tagline { font-size: 0.85rem; color: var(--muted); font-style: italic; border-left: 2px solid var(--border); padding: 0.6rem 0.9rem; }
         /* Force tool tags to match badge height exactly */
         .tool-card-header .tag {
             font-size: 0.75rem;
@@ -69,6 +69,9 @@
             .hero { padding: 3rem 2rem 1.5rem; }
             .tools { padding: 1.5rem 2rem; flex-direction: row; flex-wrap: wrap; }
             .tool-card { flex: 1 1 calc(50% - 0.5rem); min-width: 0; }
+        }
+        @media (min-width: 1100px) {
+            .tool-card { flex: 1 1 calc(25% - 0.75rem); }
         }
     </style>
 </head>
