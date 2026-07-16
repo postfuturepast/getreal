@@ -44,17 +44,19 @@
         /* Status badges */
         .badge {
             font-family: var(--font-mono);
-            font-size: 0.6rem;
+            font-size: 0.75rem;
             font-weight: 700;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            padding: 0.2em 0.5em;
+            padding: 0.3rem 0.7rem;
             border: 1px solid;
+            line-height: 1;
         }
-        .badge-alpha  { color: #f0a500; border-color: #f0a500; background: rgba(240,165,0,0.08); }
-        .badge-wip    { color: #e07b39; border-color: #e07b39; background: rgba(224,123,57,0.08); }
-        .badge-idea   { color: #7b9ebd; border-color: #7b9ebd; background: rgba(123,158,189,0.1);
-                        font-size: 0.7rem; padding: 0.25em 0.65em; }
+        .badge-idea       { color: #555;    border-color: #3a3a3a; background: rgba(80,80,80,0.06); }
+        .badge-inprogress { color: #2a7a42; border-color: #1a5c2e; background: rgba(42,122,66,0.08); }
+        .badge-alpha      { color: #1a9940; border-color: #117730; background: rgba(26,153,64,0.08); }
+        .badge-beta       { color: #00dd38; border-color: #00b02c; background: rgba(0,221,56,0.08); }
+        .badge-live       { color: #0a0a0a; border-color: #00ff41; background: #00ff41; }
         @media (min-width: 600px) {
             .hero { padding: 3rem 2rem 1.5rem; }
             .tools { padding: 1.5rem 2rem; flex-direction: row; flex-wrap: wrap; }
@@ -77,7 +79,7 @@
 
 <div class="hero">
     <div class="eyebrow">A side project</div>
-    <div class="headline">Property is<br>complicated enough.</div>
+    <div class="headline">Property is complicated enough.</div>
     <div class="subline">Tools that cut through the noise. Free, for Australians.</div>
 </div>
 
@@ -112,7 +114,7 @@
     <div class="tool-card">
         <div class="tool-card-header">
             <div class="tag">Tool 01</div>
-            <span class="badge badge-wip">In progress</span>
+            <span class="badge badge-inprogress">In progress</span>
         </div>
         <div class="tool-title">Building a deposit?</div>
         <div class="tool-tagline">What's the maximum you could buy — and what would it cost you?</div>
@@ -134,7 +136,7 @@
     <div class="tool-card">
         <div class="tool-card-header">
             <div class="tag">Tool 03</div>
-            <span class="badge badge-wip">In progress</span>
+            <span class="badge badge-inprogress">In progress</span>
         </div>
         <div class="tool-title">Paying it off?</div>
         <div class="tool-tagline">Find out if you're paying the lazy tax.</div>
