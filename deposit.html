@@ -210,7 +210,7 @@
       border: none;
       color: var(--muted);
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 0.85rem;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       cursor: pointer;
@@ -221,6 +221,18 @@
       gap: 0.4rem;
       text-decoration: underline;
       text-underline-offset: 3px;
+    }
+    .rrow-pct {
+      background: var(--blue);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 0.6rem 1rem;
+      margin: 0 -1.25rem -1rem;
     }
     .toggle-btn:hover { color: var(--text); }
     .toggle-body {
@@ -433,7 +445,6 @@
   <div class="screen" id="screen-result">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Result</span>
     </div>
 
     <div>
@@ -461,9 +472,10 @@
       <strong style="color: var(--text);">Coming next:</strong> Enter your deposit to find the maximum property you could buy — after stamp duty, LMI, and registration are taken out.
     </div>
 
-    <button class="btn" onclick="restart()" style="align-self: flex-start;">
-      Start again
-    </button>
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem;">
+      <button class="btn" onclick="restart()">Start again</button>
+      <a href="https://get-real.co/search-intro" style="font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); text-decoration: none; white-space: nowrap; flex-shrink: 0;">Move to Tool 2 →</a>
+    </div>
   </div>
 
 </div><!-- /wizard-wrap -->
@@ -692,10 +704,10 @@ function calcDuty() {
     case 'NSW': {
       const full = nswDuty(p);
       if (isFHB) {
-        if (p <= 800000) return result(0, full, 'FHBAS — full exemption (≤ $800k)');
+        if (p <= 800000) return result(0, full, 'First Home Buyer — full exemption');
         if (p <= 1000000) {
           const duty = Math.round(full * (p - 800000) / 200000);
-          return result(duty, full, 'FHBAS — tapered concession ($800k–$1M)');
+          return result(duty, full, 'First Home Buyer — partial concession');
         }
       }
       return result(full, full, null);
@@ -704,17 +716,17 @@ function calcDuty() {
     case 'VIC': {
       if (isFHB) {
         const full = vicGeneral(p);
-        if (p <= 600000) return result(0, full, 'FHB exemption — full (≤ $600k)');
+        if (p <= 600000) return result(0, full, 'First Home Buyer — full exemption');
         if (p <= 750000) {
           const duty = Math.round(full * (p - 600000) / 150000);
-          return result(duty, full, 'FHB tapered concession ($600k–$750k)');
+          return result(duty, full, 'First Home Buyer — partial concession');
         }
         return result(full, full, null);
       }
       if (isOO && p <= 550000) {
         const ppr = vicPPR(p);
         const gen = vicGeneral(p);
-        return result(ppr, gen, 'PPR (owner-occupier) concession', Math.round(gen - ppr));
+        return result(ppr, gen, 'Owner-occupier (PPR concession)', Math.round(gen - ppr));
       }
       const gen = vicGeneral(p);
       return result(gen, gen, null);
@@ -723,10 +735,10 @@ function calcDuty() {
     case 'QLD': {
       const full = qldDuty(p);
       if (isFHB) {
-        if (p <= 500000) return result(0, full, 'FHB concession — nil duty (≤ $500k)');
+        if (p <= 500000) return result(0, full, 'First Home Buyer — full exemption');
         if (p <= 550000) {
           const duty = Math.round(full * (p - 500000) / 50000);
-          return result(duty, full, 'FHB tapered concession ($500k–$550k)');
+          return result(duty, full, 'First Home Buyer — partial concession');
         }
       }
       return result(full, full, null);
@@ -735,10 +747,10 @@ function calcDuty() {
     case 'WA': {
       const full = waDuty(p);
       if (isFHB) {
-        if (p <= 430000) return result(0, full, 'FHB exemption — full (≤ $430k)');
+        if (p <= 430000) return result(0, full, 'First Home Buyer — full exemption');
         if (p <= 530000) {
           const duty = Math.round(full * (p - 430000) / 100000);
-          return result(duty, full, 'FHB tapered concession ($430k–$530k)');
+          return result(duty, full, 'First Home Buyer — partial concession');
         }
       }
       return result(full, full, null);
@@ -746,21 +758,21 @@ function calcDuty() {
 
     case 'SA': {
       const full = saDuty(p);
-      return result(full, full, null);
+      return result(full, full, 'none-available');
     }
 
     case 'TAS': {
       const full = tasDuty(p);
       if (isFHB && !isNewBuild && p < 600000) {
         const duty = Math.round(full * 0.5);
-        return result(duty, full, 'FHB 50% discount — established home (< $600k)');
+        return result(duty, full, 'First Home Buyer — 50% discount');
       }
       return result(full, full, null);
     }
 
     case 'ACT': {
       const full = actDuty(p);
-      if (isHBCS) return result(0, full, 'HBCS — full exemption (income-eligible buyer)');
+      if (isHBCS) return result(0, full, 'Home Buyer Concession Scheme — full exemption');
       return result(full, full, null);
     }
 
@@ -771,7 +783,7 @@ function calcDuty() {
         const factor = p <= 500000 ? 1 : (650000 - p) / 150000;
         const discount = Math.min(full, maxD * factor);
         const duty = Math.max(0, full - discount);
-        return result(duty, full, 'FHOD — estimated (up to $18,601 off for homes < $650k)');
+        return result(duty, full, 'First Home Owner Discount (NT) — estimated');
       }
       return result(full, full, null);
     }
@@ -824,23 +836,29 @@ function renderResult() {
   // Main figure
   document.getElementById('result-amount').textContent = fmt(r.duty);
 
-  // Breakdown card
+  // Breakdown card — always 4 rows + blue pct bar
   let html = rrow('Property price', fmt(d.price));
   html += `<hr class="rdivider">`;
-  if (r.concession && r.fullDuty !== r.duty) {
-    html += rrow('Standard stamp duty', fmt(r.fullDuty), true);
-    html += rrow('Concession', r.concession, true);
-    html += `<hr class="rdivider">`;
-    html += rrow('Stamp duty payable', fmt(r.duty));
-    if (r.saving) html += rrow('Saving', fmt(r.saving), true);
+  html += rrow('Standard stamp duty', fmt(r.fullDuty), true);
+
+  // Concession row — always present
+  let concessionText;
+  if (r.concession === 'none-available') {
+    concessionText = 'None available';
+  } else if (r.concession) {
+    concessionText = r.concession;
   } else {
-    html += rrow('Stamp duty', fmt(r.duty));
+    concessionText = 'None';
   }
-  // Effective rate — highlighted
+  html += rrow('Concession', concessionText, true);
+
+  html += `<hr class="rdivider">`;
+  html += rrow('Stamp duty after concession', fmt(r.duty));
+
+  // Blue percentage bar
   if (d.price > 0) {
     const rate = pct(r.duty / d.price);
-    html += `<hr class="rdivider">`;
-    html += `<div class="rrow"><span class="rl">That's</span><span class="rv" style="color:var(--blue);font-size:0.9rem;">${rate} of the purchase price</span></div>`;
+    html += `<div class="rrow-pct">That's ${rate} of the purchase price</div>`;
   }
   document.getElementById('result-breakdown').innerHTML = html;
 
