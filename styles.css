@@ -98,6 +98,7 @@ body {
     text-transform: uppercase;
     padding: 0.3rem 0.7rem;
     line-height: 1;
+    border: 1px solid transparent;
 }
 
 /* ── Status badges (score / data availability) ── */
