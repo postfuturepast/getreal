@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Is your search realistic? — GetReal</title>
+  <meta name="description" content="Check whether your budget is realistic for the suburbs you're searching. Based on real sold property data.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="Is your search realistic? — GetReal">
+  <meta property="og:description" content="Check whether your budget is realistic for the suburbs you're searching. Based on real sold property data.">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Is your search realistic? — GetReal">
+  <meta name="twitter:description" content="Check whether your budget is realistic for the suburbs you're searching. Based on real sold property data.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .intro-wrap {
+      min-height: calc(100vh - 54px);
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem var(--pad-page) 2rem;
+      gap: 1.1rem;
+      max-width: 560px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .note-box {
+      background: var(--card);
+      border-left: 2px solid var(--border);
+      padding: 0.65rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--dim);
+      line-height: 1.65;
+    }
+    .note-box strong { color: var(--muted); }
+    .q-label {
+      font-size: clamp(1.35rem, 5.5vw, 1.85rem);
+      font-weight: 800;
+      line-height: 1.15;
+    }
+    .push { flex: 1; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="site-logo">GetReal</a>
+</header>
+
+<div class="intro-wrap">
+
+  <div style="padding-top: 0.35rem;">
+    <div class="eyebrow" style="margin-bottom: 0.75rem;">Tool 02 — Alpha</div>
+    <div class="q-label" style="margin-bottom: 0.65rem;">Is your search realistic?</div>
+  </div>
+
+  <div class="inset">
+    You pick a suburb and a budget. We tell you what share of properties actually sold there you could have afforded. Not vibes — real sales data.
+  </div>
+
+  <div class="note-box">
+    <strong>NSW</strong> — 146,000+ individual sale records from the NSW Valuer General. Real prices, real addresses, real counts. This is as good as free data gets in Australia.
+  </div>
+
+  <div class="note-box">
+    <strong>VIC</strong> — No individual sale records are publicly available. Scores are estimated using NSW market distribution curves matched to VIC suburb medians. Directionally useful, not exact.
+  </div>
+
+  <div class="note-box" style="border-left-color: var(--border-subtle);">
+    <strong>All other states</strong> — Not yet. Individual sale records aren't publicly available for free anywhere else in Australia. We're working on it.
+  </div>
+
+  <div class="push"></div>
+
+  <a href="search.html" class="btn" style="width: 100%; text-align: center;">
+    Let's go →
+  </a>
+
+  <div class="footer-note" style="padding: 0.5rem 0 0; font-size: 0.62rem;">
+    NSW data from the NSW Valuer General bulk PSI download. VIC data from the Victorian Valuer General quarterly reports. Last updated July 2026.
+  </div>
+
+</div>
+
+</body>
+</html>
