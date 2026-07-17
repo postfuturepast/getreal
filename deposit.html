@@ -301,20 +301,33 @@
   <div class="screen active" id="screen-intro">
     <div style="padding-top: 0.35rem;">
       <div class="eyebrow" style="margin-bottom: 0.75rem;">Deposit ceiling calculator</div>
-      <div class="q-label" style="margin-bottom: 0.65rem;">What's the most you can actually buy?</div>
+      <div class="q-label" style="margin-bottom: 0.65rem;">What's your real buying ceiling?</div>
     </div>
 
-    <p style="color: var(--muted); line-height: 1.7; margin: 0;">
-      Estate agents want a higher price. Property platforms want you scrolling listings you can't afford. Nobody in property is working for you. They're working on you.
-    </p>
-
-    <div class="inset">
-      Tell us your savings. We calculate the maximum purchase price you can reach, after stamp duty takes its cut, LMI gets added if your deposit is under 20%, and fees are paid. Then we show what it costs to repay.
+    <p class="q-sub" style="margin: 0;">Three things cap what you can buy:</p>
+    <div class="inset" style="display: flex; flex-direction: column; gap: 0.6rem;">
+      <div style="display: flex; align-items: baseline; gap: 0.6rem; font-family: var(--font-mono); font-size: 0.72rem;">
+        <span style="color: var(--dim); flex-shrink: 0;">1.</span>
+        <span style="color: var(--muted); flex: 1;">Your deposit</span>
+        <span style="color: #6b7280; border: 1px solid #374151; border-radius: 3px; padding: 1px 6px; font-size: 0.63rem; white-space: nowrap;">least info</span>
+      </div>
+      <div style="display: flex; align-items: baseline; gap: 0.6rem; font-family: var(--font-mono); font-size: 0.72rem;">
+        <span style="color: var(--dim); flex-shrink: 0;">2.</span>
+        <span style="color: var(--muted); flex: 1;">Your income relative to total debt</span>
+        <span style="color: #bfdbfe; border: 1px solid #93c5fd; border-radius: 3px; padding: 1px 6px; font-size: 0.63rem; white-space: nowrap;">a bit more</span>
+      </div>
+      <div style="display: flex; align-items: baseline; gap: 0.6rem; font-family: var(--font-mono); font-size: 0.72rem;">
+        <span style="color: var(--dim); flex-shrink: 0;">3.</span>
+        <span style="color: var(--muted); flex: 1;">If you can make the repayments</span>
+        <span style="color: #60a5fa; border: 1px solid #3b82f6; border-radius: 3px; padding: 1px 6px; font-size: 0.63rem; white-space: nowrap;">a little more</span>
+      </div>
     </div>
+    <p class="q-sub" style="margin: 0;">This tool tackles the first.</p>
 
-    <p style="color: var(--muted); line-height: 1.7; margin: 0;">
-      If the number is lower than you hoped, you'll know exactly why. If you're in range, we check whether your income can service the loan.
-    </p>
+    <div class="note-box blue" style="color: var(--muted);">
+      <strong>You give:</strong> your deposit and a few details.<br>
+      <strong>You get:</strong> the maximum price your deposit can reach.
+    </div>
 
     <div class="note-box wip">
       <strong>Work in progress, built in public.</strong> Deposit ceiling and repayment estimates are live. Full income serviceability check coming next.
