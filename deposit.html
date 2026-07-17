@@ -495,19 +495,30 @@
     <div class="q-label">Who's buying?</div>
     <div class="q-sub">Banks use a minimum living cost benchmark that varies by household type. This determines which figure applies to you.</div>
     <div class="choices">
-      <button class="choice-btn" onclick="selectHousehold('single', false)">
+      <button class="choice-btn" onclick="selectHousehold('single')">
         Just me
+        <span class="choice-sub">Single applicant</span>
       </button>
-      <button class="choice-btn" onclick="selectHousehold('couple', false)">
+      <button class="choice-btn" onclick="selectHousehold('couple')">
         Me and a partner
+        <span class="choice-sub">Joint applicants</span>
       </button>
-      <button class="choice-btn" onclick="selectHousehold('single', true)">
-        Me and dependants
-        <span class="choice-sub">Single parent or guardian</span>
-      </button>
-      <button class="choice-btn" onclick="selectHousehold('couple', true)">
-        Me, a partner, and dependants
-      </button>
+    </div>
+  </div>
+
+  <!-- ── Screen 4c2: Dependants ─────────────────────────────────────────────── -->
+  <div class="screen" id="screen-dependants">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Dependants</span>
+    </div>
+    <div class="q-label">How many dependants?</div>
+    <div class="q-sub">Children or other dependants you financially support. Banks factor minimum living costs per dependant.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectDependants(0)">None</button>
+      <button class="choice-btn" onclick="selectDependants(1)">1</button>
+      <button class="choice-btn" onclick="selectDependants(2)">2</button>
+      <button class="choice-btn" onclick="selectDependants(3)">3 or more</button>
     </div>
   </div>
 
@@ -686,10 +697,10 @@ const d = {
   propType: null,
   savings: 0,
   // HEM optional flow
-  hemOptIn:     null,   // true = user answered household/location, false = skipped
-  household:    null,   // 'single' | 'couple'
-  hasDependants: null,  // true | false
-  locationType: null,   // 'metro' | 'regional'
+  hemOptIn:      null,   // true = user answered household/location, false = skipped
+  household:     null,   // 'single' | 'couple'
+  numDependants: null,   // 0 | 1 | 2 | 3 (3 = "3 or more")
+  locationType:  null,   // 'metro' | 'regional'
   suburbName:   null,   // display label e.g. "Parramatta NSW 2150"
 };
 
@@ -714,7 +725,7 @@ function goBack() {
 }
 
 function restart() {
-  Object.assign(d, { state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null, propType: null, savings: 0, hemOptIn: null, household: null, hasDependants: null, locationType: null, suburbName: null });
+  Object.assign(d, { state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null, propType: null, savings: 0, hemOptIn: null, household: null, numDependants: null, locationType: null, suburbName: null });
   navHistory.length = 0;
   navHistory.push('intro');
   const inp = document.getElementById('savings-input');
@@ -800,9 +811,13 @@ function selectHemGate(optIn) {
   }
 }
 
-function selectHousehold(type, hasDeps) {
-  d.household     = type;
-  d.hasDependants = hasDeps;
+function selectHousehold(type) {
+  d.household = type;
+  goTo('dependants');
+}
+
+function selectDependants(n) {
+  d.numDependants = n;
   // Set location question label based on OO vs investor
   const isOO = d.isOO;
   document.getElementById('location-q-label').textContent =
@@ -1167,18 +1182,16 @@ function findMaxPrice(savings) {
 
 // ─── HEM lookup ──────────────────────────────────────────────────────────────
 function lookupHEM() {
-  if (!d.hemOptIn || !d.household || d.hasDependants === null || !d.locationType) return null;
-  // Find best matching row: exact household + location, then closest dependants
-  const dep = d.hasDependants ? 1 : 0;
+  if (!d.hemOptIn || !d.household || d.numDependants === null || !d.locationType) return null;
+  const dep = d.numDependants;
   const candidates = hemData.filter(r =>
     r.household_type === d.household && r.location_type === d.locationType
   );
   if (!candidates.length) return null;
-  // Exact dependants match first, then closest
+  // Exact match first, then closest (handles 3+ by clamping to max available)
   const exact = candidates.find(r => r.dependants === dep);
   if (exact) return exact.monthly_amount;
-  // If no exact match, return the closest available
-  const sorted = candidates.sort((a, b) => Math.abs(a.dependants - dep) - Math.abs(b.dependants - dep));
+  const sorted = [...candidates].sort((a, b) => Math.abs(a.dependants - dep) - Math.abs(b.dependants - dep));
   return sorted[0].monthly_amount;
 }
 
@@ -1203,12 +1216,12 @@ function renderHEMBlock(monthlyStress) {
   }
 
   const minimumIncome = monthlyStress + hemMonthly;
-  const householdLabel = {
-    'single-false':  'Single, no dependants',
-    'single-true':   'Single with dependants',
-    'couple-false':  'Couple, no dependants',
-    'couple-true':   'Couple with dependants',
-  }[`${d.household}-${d.hasDependants}`] || d.household;
+  const depLabel = d.numDependants === 0 ? 'no dependants'
+    : d.numDependants === 1 ? '1 dependant'
+    : `${d.numDependants}+ dependants`;
+  const householdLabel = d.household === 'couple'
+    ? `Couple, ${depLabel}`
+    : `Single, ${depLabel}`;
   const locationLabel = d.locationType === 'metro' ? 'metropolitan' : 'regional';
   const suburbNote = d.suburbName ? ` (${d.suburbName})` : '';
 
@@ -1227,7 +1240,7 @@ function renderHEMBlock(monthlyStress) {
 
 function loopBackToHEM() {
   // Reset HEM state and go back to the gate screen
-  d.hemOptIn = null; d.household = null; d.hasDependants = null;
+  d.hemOptIn = null; d.household = null; d.numDependants = null;
   d.locationType = null; d.suburbName = null;
   navHistory.push('hem-gate');
   show('hem-gate');
