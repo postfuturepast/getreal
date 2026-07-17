@@ -300,27 +300,31 @@
   <!-- ── Screen 0: Intro ─────────────────────────────────────────────────── -->
   <div class="screen active" id="screen-intro">
     <div style="padding-top: 0.35rem;">
-      <div class="eyebrow" style="margin-bottom: 0.75rem;">Tool 01 — Work in progress</div>
-      <div class="q-label" style="margin-bottom: 0.65rem;">What's the most I can buy?</div>
+      <div class="eyebrow" style="margin-bottom: 0.75rem;">Deposit ceiling calculator</div>
+      <div class="q-label" style="margin-bottom: 0.65rem;">What's the most you can actually buy?</div>
     </div>
 
-    <div class="inset">
-      Three things put a ceiling on what you can borrow. Your deposit. Your debt relative to income. And whether your income covers repayments after living costs.
-    </div>
+    <p style="color: var(--muted); line-height: 1.7; margin: 0;">
+      Estate agents want a higher price. Property platforms want you scrolling listings you can't afford. Nobody in property is working for you. They're working on you.
+    </p>
 
     <div class="inset">
-      This tool solves the first: given your savings, what's the highest purchase price you can reach — after stamp duty eats into your deposit, LMI gets added to your loan (if your LVR is above 80%), and registration fees are paid?
+      Tell us your savings. We calculate the maximum purchase price you can reach, after stamp duty takes its cut, LMI gets added if your deposit is under 20%, and fees are paid. Then we show what it costs to repay.
     </div>
+
+    <p style="color: var(--muted); line-height: 1.7; margin: 0;">
+      If the number is lower than you hoped, you'll know exactly why. If you're in range, we check whether your income can service the loan.
+    </p>
 
     <div class="note-box wip">
-      <strong>Work in progress, built in public.</strong> The deposit ceiling calculation below is live and working. Income-based limits — Debt-to-Income (Stage 2) and serviceability (Stage 3) — are coming next.
+      <strong>Work in progress, built in public.</strong> Deposit ceiling and repayment estimates are live. Full income serviceability check coming next.
     </div>
 
     <button class="btn" onclick="goTo('state')" style="width: 100%; text-align: center;">
-      Let's work it out →
+      Work it out →
     </button>
     <div class="footer-note" style="padding: 0.5rem 0 0; font-size: 0.62rem;">
-      Stamp duty from state revenue offices (June 2026). LMI rates indicative — actual premiums vary by lender and insurer. Registration fees approximate. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology →</a>
+      Stamp duty from state revenue offices (June 2026). LMI rates indicative. Registration fees approximate. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology →</a>
     </div>
   </div>
 
