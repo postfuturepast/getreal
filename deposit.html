@@ -499,10 +499,12 @@
 
     <div id="deposit-result-breakdown"></div>
 
+    <div id="deposit-repayment"></div>
+
     <div id="deposit-advisories" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
 
     <div class="note-box blue" id="deposit-stage2-note">
-      <strong>Ceiling 1 of 3 — deposit.</strong> Banks also cap total debt at 6× gross income (APRA Debt-to-Income limit, Feb 2026) and require repayments to be serviceable after living costs and a 3% interest rate buffer. Stage 2 coming.
+      <strong>Ceiling 1 of 3 — deposit.</strong> Banks also cap total debt at 6× gross income (APRA Debt-to-Income limit, Feb 2026) and require repayments to be serviceable after living costs and a 3% interest rate buffer. Coming next: minimum income required.
     </div>
 
     <div class="note-box wip">
@@ -522,11 +524,12 @@
 const SB_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
 const SB_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
 
-let lmiRates     = [];
-let lmiSdRates   = {};  // state → decimal rate (e.g. 0.10 for 10%)
-let regFees      = {};  // state → total fee amount
-let dataLoaded   = false;
-let dataError    = false;
+let lmiRates        = [];
+let lmiSdRates      = {};  // state → decimal rate (e.g. 0.10 for 10%)
+let regFees         = {};  // state → total fee amount
+let benchmarkRates  = {};  // purpose ('oo'|'investor') → { rate_pct, reference_month }
+let dataLoaded      = false;
+let dataError       = false;
 
 async function loadData() {
   try {
@@ -534,19 +537,27 @@ async function loadData() {
       'apikey': SB_KEY,
       'Authorization': `Bearer ${SB_KEY}`,
     };
-    const [lmiRes, sdRes, regRes] = await Promise.all([
+    const [lmiRes, sdRes, regRes, rateRes] = await Promise.all([
       fetch(`${SB_URL}/rest/v1/lmi_rates?select=*&order=lvr_min,loan_max`, { headers }),
       fetch(`${SB_URL}/rest/v1/lmi_stamp_duty_rates?select=*`, { headers }),
       fetch(`${SB_URL}/rest/v1/registration_fees?select=*`, { headers }),
+      // OO and investor P&I new loan rates — aggregate (rate_type null = all rate types combined)
+      fetch(`${SB_URL}/rest/v1/benchmark_rates?select=purpose,rate_pct,reference_month&repayment_type=eq.pi&loan_status=eq.new&rate_type=is.null&lvr_band=is.null&loan_size_band=is.null&order=reference_month.desc&limit=4`, { headers }),
     ]);
-    if (!lmiRes.ok || !sdRes.ok || !regRes.ok) throw new Error('HTTP error');
+    if (!lmiRes.ok || !sdRes.ok || !regRes.ok || !rateRes.ok) throw new Error('HTTP error');
 
     lmiRates = await lmiRes.json();
-    const sdRows  = await sdRes.json();
-    const regRows = await regRes.json();
+    const sdRows   = await sdRes.json();
+    const regRows  = await regRes.json();
+    const rateRows = await rateRes.json();
 
     sdRows.forEach(r  => { lmiSdRates[r.state] = r.rate_pct / 100; });
     regRows.forEach(r => { regFees[r.state] = (regFees[r.state] || 0) + r.amount; });
+
+    // Keep latest row per purpose (rows are ordered desc by month, so first seen wins)
+    rateRows.forEach(r => {
+      if (!benchmarkRates[r.purpose]) benchmarkRates[r.purpose] = r;
+    });
 
     dataLoaded = true;
     updateSavingsHint();
@@ -950,6 +961,48 @@ function findMaxPrice(savings) {
   return best;
 }
 
+// ─── Repayment calculation ───────────────────────────────────────────────────
+function calcMonthlyRepayment(loan, annualRatePct) {
+  // Standard P&I formula: M = L × r(1+r)^n / ((1+r)^n − 1)
+  const r = annualRatePct / 100 / 12;
+  const n = 360; // 30 years
+  if (r === 0) return loan / n;
+  return loan * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+}
+
+function renderRepaymentBlock(effectiveLoan) {
+  const el = document.getElementById('deposit-repayment');
+  if (!el) return;
+
+  const purpose = d.isOO ? 'oo' : 'investor';
+  const rateRow = benchmarkRates[purpose];
+
+  if (!rateRow) {
+    el.innerHTML = '';
+    return;
+  }
+
+  const currentRate  = rateRow.rate_pct;
+  const stressRate   = currentRate + 3.0;  // APRA 3% serviceability buffer
+  const monthlyNow   = calcMonthlyRepayment(effectiveLoan, currentRate);
+  const monthlyStress = calcMonthlyRepayment(effectiveLoan, stressRate);
+
+  // Format reference month: "2026-05-31" → "May 2026"
+  const refDate = new Date(rateRow.reference_month + 'T00:00:00');
+  const refLabel = refDate.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+
+  el.innerHTML = `
+    <div class="result-card">
+      <div class="result-card-head">Loan repayments — ${fmt(effectiveLoan)} over 30 years</div>
+      ${rrow(`At current rate (${currentRate.toFixed(2)}% P&amp;I)`, fmt(monthlyNow) + '/mo')}
+      ${rrow(`At bank stress rate (${stressRate.toFixed(2)}% = rate + 3%)`, fmt(monthlyStress) + '/mo', true)}
+      <div style="font-family: var(--font-mono); font-size: 0.6rem; color: var(--dim); margin-top: 0.1rem; line-height: 1.5;">
+        Source: RBA average new ${purpose === 'oo' ? 'owner-occupier' : 'investor'} P&amp;I loan rate, ${refLabel}. Actual rate set by your lender. Stress rate = current rate + 3% APRA buffer.
+      </div>
+    </div>
+  `;
+}
+
 // ─── Render deposit result ───────────────────────────────────────────────────
 function fmt(n) { return '$' + Math.round(n).toLocaleString('en-AU'); }
 function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
@@ -972,6 +1025,7 @@ function renderDepositResult() {
       <div class="result-amount" style="font-size: 1.8rem; color: #fca5a5;">No result</div>
     `;
     breakEl.innerHTML = `<div class="error-box">Your savings don't cover the upfront costs (stamp duty + registration fees) for a viable loan at the LVR limits for a ${d.isOO ? 'owner-occupier' : 'investor'} ${d.propType} in ${d.state}. Try increasing your savings or checking the stamp duty calculator for your state.</div>`;
+    document.getElementById('deposit-repayment').innerHTML = '';
     advEl.innerHTML = '';
     stage2El.style.display = 'none';
     return;
@@ -1030,6 +1084,8 @@ function renderDepositResult() {
   if (d.state === 'NT') {
     advisories.push(`<div class="advisory"><strong>NT stamp duty:</strong> The FHOD phaseout formula is not publicly documented. We've modelled a linear phaseout between $500k–$650k — actual figure may differ.</div>`);
   }
+
+  renderRepaymentBlock(r.effectiveLoan);
 
   advEl.style.display = advisories.length ? 'flex' : 'none';
   advEl.innerHTML = advisories.join('');
