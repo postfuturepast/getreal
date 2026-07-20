@@ -627,6 +627,19 @@
     </button>
   </div>
 
+  <!-- ── Review screen ─────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-review">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Review</span>
+    </div>
+    <div class="q-label" style="margin-bottom: 0.65rem;">Check before we calculate.</div>
+    <div id="review-body"></div>
+    <button class="btn" onclick="calculateAndShow()" style="width: 100%; text-align: center; margin-top: 0.25rem;">
+      Calculate →
+    </button>
+  </div>
+
   <!-- ── Screen 6: Deposit result ───────────────────────────────────────── -->
   <div class="screen" id="screen-deposit-result">
     <div class="step-meta">
@@ -837,8 +850,7 @@ function selectHemGate(optIn) {
   if (optIn) {
     goTo('household');
   } else {
-    renderDepositResult();
-    goTo('deposit-result');
+    goToReview();
   }
 }
 
@@ -882,8 +894,7 @@ function showMetroToggle() {
 function selectLocationType(type) {
   d.locationType = type;
   d.suburbName   = null;
-  renderDepositResult();
-  goTo('deposit-result');
+  goToReview();
 }
 
 // Suburb typeahead
@@ -924,8 +935,7 @@ async function searchSuburbs(term, resultsEl) {
 function selectSuburb(suburb, postcode, state, locationType) {
   d.locationType = locationType || null;
   d.suburbName   = `${suburb} ${state} ${postcode}`;
-  renderDepositResult();
-  goTo('deposit-result');
+  goToReview();
 }
 
 // ─── Savings input ───────────────────────────────────────────────────────────
@@ -969,6 +979,142 @@ function submitSavings() {
   goTo('state');
 }
 
+// ─── Review screen ───────────────────────────────────────────────────────────
+function rvRow(label, value, screenId, dim = false) {
+  const link = screenId
+    ? `<button onclick="goTo('${screenId}')" style="font-family:var(--font-mono);font-size:0.63rem;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;margin-left:0.5rem;">change</button>`
+    : '';
+  return `<div style="display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;font-family:var(--font-mono);font-size:0.72rem;padding:0.3rem 0;border-bottom:1px solid var(--border);">
+    <span style="color:var(--muted);flex-shrink:0;">${label}</span>
+    <span style="display:flex;align-items:baseline;flex-shrink:0;">
+      <span style="color:${dim ? 'var(--dim)' : 'var(--text)'};">${value}</span>${link}
+    </span>
+  </div>`;
+}
+
+function rvInfo(label, value) {
+  return `<div style="display:flex;align-items:baseline;justify-content:space-between;gap:0.75rem;font-family:var(--font-mono);font-size:0.72rem;padding:0.3rem 0;border-bottom:1px solid var(--border);">
+    <span style="color:var(--muted);flex-shrink:0;">${label}</span>
+    <span style="color:var(--dim);text-align:right;">${value}</span>
+  </div>`;
+}
+
+function rvSection(title) {
+  return `<div style="font-family:var(--font-mono);font-size:0.63rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;margin:0.85rem 0 0.25rem;">${title}</div>`;
+}
+
+function renderReviewScreen() {
+  const el = document.getElementById('review-body');
+  if (!el) return;
+
+  const fmtSavings = '$' + Math.round(d.savings || 0).toLocaleString('en-AU');
+
+  // LVR cap
+  let lvrCap, lvrWhy;
+  if (d.propType === 'apartment') {
+    lvrCap = d.isOO ? '90%' : '80%';
+    lvrWhy = d.isOO ? 'OO apartment max' : 'investor apartment max';
+  } else {
+    lvrCap = d.isOO ? '95%' : '90%';
+    lvrWhy = d.isOO ? `OO ${d.propType} max` : `investor ${d.propType} max`;
+  }
+
+  // Purpose screen id
+  let purposeScreen = null;
+  if (!d.isHBCS) {
+    purposeScreen = (d.state === 'VIC' && !d.isFHB) ? 'oo' : 'purpose';
+  }
+
+  // Stamp duty note
+  const sdNote = (() => {
+    switch (d.state) {
+      case 'NSW': return d.isFHB ? 'Progressive. FHB: no duty ≤ $800k, tapered ≤ $1M.' : 'NSW progressive rates.';
+      case 'VIC': {
+        if (d.isFHB) return 'Progressive. FHB: waived ≤ $600k, tapered $600k–$750k.';
+        return d.isOO ? 'Progressive — OO rate (PPR discount ≤ $550k).' : 'Progressive — investor rate.';
+      }
+      case 'QLD': return d.isFHB ? 'Progressive. FHB: no duty ≤ $500k, tapered ≤ $550k.' : 'QLD progressive rates.';
+      case 'WA':  return d.isFHB ? 'Progressive. FHB: no duty ≤ $430k, tapered ≤ $530k.' : 'WA progressive rates.';
+      case 'SA':  return 'SA progressive rates. No FHB stamp duty concession.';
+      case 'TAS': {
+        if (d.isFHB) return d.isNewBuild ? 'Progressive. (50% FHB discount: established only — new build excluded.)' : 'Progressive. FHB: 50% off ≤ $600k (established homes).';
+        return 'TAS progressive rates.';
+      }
+      case 'ACT': return d.isHBCS ? 'HBCS: full duty exemption (income-tested).' : 'ACT progressive marginal rates.';
+      case 'NT':  return d.isFHB ? 'Formula-based. FHB discount up to $18,601 (homes ≤ $650k).' : 'NT formula-based rates.';
+      default:    return 'Progressive rates.';
+    }
+  })();
+
+  // Benchmark rate
+  const purpose  = d.isOO ? 'oo' : 'investor';
+  const rateRow  = benchmarkRates[purpose];
+  const rateStr  = rateRow ? `${rateRow.rate_pct.toFixed(2)}% P&I (RBA avg, ${rateRow.reference_month})` : '—';
+  const stressStr = rateRow ? `${(rateRow.rate_pct + 3).toFixed(2)}% (rate + 3% APRA buffer)` : '—';
+
+  // HEM
+  const hemAmount = lookupHEM();
+  const hemStr = hemAmount ? '$' + Math.round(hemAmount).toLocaleString('en-AU') + '/mo (indicative HEM)' : null;
+
+  // Dependant label
+  const depLabel = { 0: 'None', 1: '1', 2: '2', 3: '3 or more' };
+
+  let html = '';
+
+  // ── Your inputs ──
+  html += rvSection('Your inputs');
+  html += `<div style="border-top:1px solid var(--border);">`;
+  html += rvRow('Savings', fmtSavings, 'savings');
+  html += rvRow('State', d.state || '—', 'state');
+  html += rvRow('First home buyer', d.isFHB == null ? '—' : (d.isFHB ? 'Yes' : 'No'), 'fhb');
+  if (d.state === 'ACT') {
+    html += rvRow('ACT HBCS', d.isHBCS == null ? '—' : (d.isHBCS ? 'Yes' : 'No'), 'hbcs');
+  }
+  if (d.state === 'TAS' && d.isFHB) {
+    html += rvRow('New build', d.isNewBuild == null ? '—' : (d.isNewBuild ? 'Yes' : 'No'), 'newbuild');
+  }
+  html += rvRow('Purpose', d.isOO == null ? '—' : (d.isOO ? 'Owner-occupier' : 'Investment'), purposeScreen);
+  html += rvRow('Property type', d.propType ? (d.propType.charAt(0).toUpperCase() + d.propType.slice(1)) : '—', 'proptype');
+  html += `</div>`;
+
+  // ── Living expenses ──
+  html += rvSection('Living expenses (HEM)');
+  html += `<div style="border-top:1px solid var(--border);">`;
+  if (!d.hemOptIn) {
+    html += rvRow('HEM', 'Skipped', 'hem-gate', true);
+  } else {
+    const hhLabels = { single: 'Single', couple: 'Couple', family: 'Family' };
+    html += rvRow('Household', hhLabels[d.household] || d.household || '—', 'household');
+    html += rvRow('Dependants', d.numDependants == null ? '—' : (depLabel[d.numDependants] ?? String(d.numDependants)), 'dependants');
+    const locLabel = d.suburbName || (d.locationType === 'metro' ? 'Metropolitan' : d.locationType === 'regional' ? 'Regional' : '—');
+    html += rvRow('Location', locLabel, 'location');
+    if (hemStr) html += rvRow('HEM estimate', hemStr, null, true);
+  }
+  html += `</div>`;
+
+  // ── What we'll apply ──
+  html += rvSection("What we'll apply");
+  html += `<div style="border-top:1px solid var(--border);">`;
+  html += rvInfo('LVR cap', `${lvrCap} — ${lvrWhy}`);
+  html += rvInfo('LMI', 'Premium capitalised into loan if LVR > 80%');
+  html += rvInfo('Stamp duty', sdNote);
+  html += rvInfo('Interest rate', rateStr);
+  html += rvInfo('Stress rate', stressStr);
+  html += `</div>`;
+
+  el.innerHTML = html;
+}
+
+function goToReview() {
+  renderReviewScreen();
+  goTo('review');
+}
+
+function calculateAndShow() {
+  renderDepositResult();
+  goTo('deposit-result');
+}
+
 // ─── LVR ceiling ─────────────────────────────────────────────────────────────
 function getMaxLVR() {
   if (d.propType === 'apartment') {
@@ -980,13 +1126,14 @@ function getMaxLVR() {
 // ─── LMI rate lookup ─────────────────────────────────────────────────────────
 function lookupLMIRate(lvrPct, baseLoan) {
   // lvrPct is the LVR as a percentage, e.g. 85 for 85%
-  // loan_max null = no upper limit on loan size
-  const row = lmiRates.find(r =>
-    lvrPct > r.lvr_min &&
-    lvrPct <= r.lvr_max &&
-    (r.loan_max === null || baseLoan <= r.loan_max)
-  );
-  return row ? row.rate_pct / 100 : 0;
+  // Rows are ordered by lvr_min, loan_max ASC from Supabase
+  const lvrMatch = lmiRates.filter(r => lvrPct > r.lvr_min && lvrPct <= r.lvr_max);
+  if (!lvrMatch.length) return 0;
+  // Find matching loan band (null loan_max = unlimited)
+  const exact = lvrMatch.find(r => r.loan_max === null || baseLoan <= r.loan_max);
+  if (exact) return exact.rate_pct / 100;
+  // Loan exceeds all defined bands — use the highest band's rate
+  return lvrMatch[lvrMatch.length - 1].rate_pct / 100;
 }
 
 // ─── Stamp duty engine ───────────────────────────────────────────────────────
