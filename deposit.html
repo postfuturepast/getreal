@@ -327,9 +327,6 @@
     <button class="btn" onclick="goTo('intro2')" style="width: 100%; text-align: center;">
       Got it →
     </button>
-    <div class="footer-note" style="padding: 0.5rem 0 0; font-size: 0.62rem;">
-      Stamp duty from state revenue offices (June 2026). LMI rates indicative. Registration fees approximate. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology →</a>
-    </div>
   </div>
 
   <!-- ── Screen 0b: Intro 2 ────────────────────────────────────────────── -->
@@ -342,8 +339,8 @@
       <strong>You give:</strong> your deposit and a few details.<br>
       <strong>You get:</strong> the maximum price your deposit can reach.
     </div>
-    <div class="note-box wip">
-      <strong>Next up:</strong> <span style="color: var(--text);">Your limit from debt and repayments.</span>
+    <div class="note-box blue" style="color: var(--muted);">
+      <strong>Next up:</strong> <span style="color: var(--text);">Your limit from debt and repayments.</span> Once you have your deposit ceiling, check which of the three limits is actually binding for you.
     </div>
     <button class="btn" onclick="goTo('savings')" style="width: 100%; text-align: center;">
       Work it out →
@@ -357,7 +354,7 @@
       <span class="step-label">Step 2 of 5</span>
     </div>
     <div class="q-label">Which state or territory?</div>
-    <div class="q-sub">Stamp duty rates vary significantly by state and affect how much of your savings is available for deposit.</div>
+    <div class="q-sub">We use this to calculate how much stamp duty takes from your savings before it becomes deposit.</div>
     <div class="state-grid">
       <button class="state-btn" onclick="selectState('NSW')">NSW</button>
       <button class="state-btn" onclick="selectState('VIC')">VIC</button>
@@ -377,6 +374,7 @@
       <span class="step-label">Step 3 of 5</span>
     </div>
     <div class="q-label">First home buyer?</div>
+    <div class="q-sub" id="fhb-sub"></div>
     <div class="choices">
       <button class="choice-btn" onclick="selectFHB(true)">
         Yes — first property I've ever owned
@@ -385,7 +383,6 @@
         No — I've owned property before
       </button>
     </div>
-    <div class="q-sub" id="fhb-sub"></div>
   </div>
 
   <!-- ── Screen 2b: HBCS (ACT only) ─────────────────────────────────────── -->
@@ -416,11 +413,11 @@
     <div class="choices">
       <button class="choice-btn" onclick="selectOO(true)">
         Live in it — my principal residence
-        <span class="choice-sub">Up to 95% LVR (houses/townhouses), 90% (apartments)</span>
+        <span class="choice-sub">Borrow up to 95% of the purchase price (houses/townhouses), or 90% (apartments)</span>
       </button>
       <button class="choice-btn" onclick="selectOO(false)">
         I won't live in it — investment
-        <span class="choice-sub">Up to 90% LVR (houses/townhouses), 80% (apartments)</span>
+        <span class="choice-sub">Borrow up to 90% of the purchase price (houses/townhouses), or 80% (apartments)</span>
       </button>
     </div>
     <div class="q-sub">Victoria charges a lower stamp duty rate for owner-occupiers on homes up to $550,000. This answer also determines your maximum LVR — lenders cap investor borrowing lower than owner-occupier.</div>
@@ -454,11 +451,11 @@
     <div class="choices">
       <button class="choice-btn" onclick="selectPurpose(true)">
         Yes — my home, I'll live there
-        <span class="choice-sub">Up to 95% LVR (houses/townhouses), 90% (apartments)</span>
+        <span class="choice-sub">Borrow up to 95% of the purchase price (houses/townhouses), or 90% (apartments)</span>
       </button>
       <button class="choice-btn" onclick="selectPurpose(false)">
         No — investment property
-        <span class="choice-sub">Up to 90% LVR (houses/townhouses), 80% (apartments)</span>
+        <span class="choice-sub">Borrow up to 90% of the purchase price (houses/townhouses), or 80% (apartments)</span>
       </button>
     </div>
     <div class="q-sub">Lenders cap investment borrowing lower than owner-occupier. This affects your maximum LVR and therefore the purchase price your deposit can reach.</div>
@@ -474,15 +471,15 @@
     <div class="prop-grid">
       <button class="prop-btn" onclick="selectPropType('house')">
         House
-        <small>OO: 95% max LVR<br>Inv: 90%</small>
+        <small>OO: up to 95%<br>Inv: up to 90%</small>
       </button>
       <button class="prop-btn" onclick="selectPropType('townhouse')">
         Townhouse
-        <small>OO: 95% max LVR<br>Inv: 90%</small>
+        <small>OO: up to 95%<br>Inv: up to 90%</small>
       </button>
       <button class="prop-btn" onclick="selectPropType('apartment')">
         Apartment
-        <small>OO: 90% max LVR<br>Inv: 80%</small>
+        <small>OO: up to 90%<br>Inv: up to 80%</small>
       </button>
     </div>
     <div class="q-sub">Many lenders impose a lower maximum LVR on apartments — typically 90% for owner-occupiers and 80% for investors. This directly reduces the purchase price your deposit can reach.</div>
@@ -664,9 +661,13 @@
       <strong>Work in progress.</strong> This tool is being built in public. <a href="deposit-faq.html">Read the full methodology →</a>
     </div>
 
+    <div class="footer-note" style="padding: 0; font-size: 0.62rem;">
+      Stamp duty from state revenue offices (June 2026). LMI rates indicative. Registration fees approximate. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology →</a>
+    </div>
+
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
       <button class="btn" onclick="restart()">Start again</button>
-      <a href="deposit-faq.html" style="font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); text-decoration: underline;">How this is calculated →</a>
+      <button onclick="goToReview()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
     </div>
   </div>
 

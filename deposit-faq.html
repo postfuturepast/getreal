@@ -193,11 +193,26 @@
 
 <div class="faq-wrap">
 
+  <div style="margin-bottom: 1.5rem;">
+    <a href="deposit.html" style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--dim); text-decoration: underline; letter-spacing: 0.06em; text-transform: uppercase;">← Back to the calculator</a>
+  </div>
+
   <div class="faq-eyebrow">Tool 01 — Deposit calculator — Methodology</div>
   <h1 class="faq-title">How the deposit calculator works</h1>
 
   <div class="faq-lead">
     This page explains every calculation in the deposit ceiling tool. If you think something is wrong, or we've made a simplifying assumption you disagree with, the methodology is here so you can check. Every number the tool produces can be traced back to a specific formula or data source.
+  </div>
+
+  <!-- ── Plain-English summary ──────────────────────────────────────────── -->
+  <div style="background: var(--card); border: 1px solid var(--border); padding: 1.25rem 1.4rem; margin-bottom: 0.5rem;">
+    <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem;">Plain-English summary — what this tool actually does</div>
+    <div style="font-size: 0.88rem; color: var(--muted); line-height: 1.75; display: flex; flex-direction: column; gap: 0.65rem;">
+      <p style="margin:0;"><strong style="color: var(--text);">You enter your savings.</strong> The tool works backwards to find the highest property price those savings can reach — after stamp duty, LMI, and registration fees are taken out of your pocket before a dollar goes toward deposit.</p>
+      <p style="margin:0;"><strong style="color: var(--text);">It can't use a simple formula.</strong> Stamp duty depends on the price, and LMI depends on how much deposit is left after stamp duty — circular. So the tool tests thousands of candidate prices and finds the highest one that works. (Technical name: binary search.)</p>
+      <p style="margin:0;"><strong style="color: var(--text);">This is one of three limits.</strong> Your deposit ceiling is Ceiling 1. Banks also cap how much you can borrow relative to your income (Ceiling 2 — DTI), and require you to prove you can meet repayments after living costs (Ceiling 3 — serviceability). The deposit ceiling tells you the maximum you could buy with your savings. Whether a bank actually lends you that is a different question.</p>
+      <p style="margin:0;"><strong style="color: var(--text);">If you added household details</strong>, the tool also shows the HEM living expense benchmark — the floor the bank starts from when assessing your living costs. This is part of Ceiling 3 (serviceability).</p>
+    </div>
   </div>
 
   <!-- ── 1. The problem ──────────────────────────────────────────────────── -->
@@ -585,10 +600,29 @@ effectiveLVR  = effectiveLoan ÷ price</div>
     </div>
   </div>
 
-  <!-- ── 12. What's coming ──────────────────────────────────────────────── -->
+  <!-- ── 12. HEM ───────────────────────────────────────────────────────── -->
   <div class="faq-section">
     <div class="faq-section-title">
       <span class="faq-section-num">12</span>
+      Living expenses — HEM benchmarks
+    </div>
+    <div class="faq-body">
+      <p>After working out the deposit ceiling, the tool optionally shows the <strong>Household Expenditure Measure (HEM)</strong> — a living cost benchmark that banks use when assessing serviceability. This is part of Ceiling 3 (repayment capacity), not Ceiling 1 (deposit), but it's shown here so you can see the full picture in one place.</p>
+      <p><strong>What HEM is.</strong> HEM is a standardised benchmark produced by the Melbourne Institute. Banks are required by APRA to use it as the minimum assumed living cost when assessing a mortgage application. If your actual declared expenses are lower than HEM, the bank will use HEM anyway.</p>
+      <p><strong>How the tool looks it up.</strong> The tool fetches the <code>hem_benchmarks</code> Supabase table (14 rows) and matches on three dimensions:</p>
+      <div class="code-block">household_type → 'single' or 'couple'
+dependants     → 0, 1, 2, 3+
+location_type  → 'metro' or 'regional'</div>
+      <p>The matching row returns a monthly dollar amount. If you entered a specific suburb, the tool determines metro vs regional using the <code>postcode_locations</code> table, which is sourced from the ABS ASGS (Australian Statistical Geography Standard) remoteness categories — capital city boundaries define metropolitan, everywhere else is regional.</p>
+      <p><strong>What the tool shows.</strong> It combines your monthly loan repayment at the bank stress rate (current rate + 3% APRA buffer) with the HEM benchmark to show a combined minimum monthly income requirement. This is the floor the bank starts from — your actual approved borrowing capacity will depend on your declared income, other debts, and how the lender assesses your specific situation.</p>
+      <p><strong>Source:</strong> HEM figures are indicative benchmarks sourced from JMD Mortgages (March 2026). These are not the Melbourne Institute's published figures (which are not publicly available) — they are indicative equivalents used by mortgage brokers for initial planning. Treat as directional, not definitive.</p>
+    </div>
+  </div>
+
+  <!-- ── 13. What's coming ──────────────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">13</span>
       What's coming — Stage 2 and Stage 3
     </div>
     <div class="faq-body">
@@ -602,11 +636,16 @@ effectiveLVR  = effectiveLoan ÷ price</div>
     <strong>Found an error?</strong> If you believe a bracket, rate, or formula is wrong, <a href="manifesto.html">we want to know</a>. The methodology is public precisely so errors can be caught and corrected.
   </div>
 
+  <div style="background: var(--card); border: 1px solid var(--border); padding: 1.1rem 1.4rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+    <span style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted);">Ready to check your ceiling?</span>
+    <a href="deposit.html" class="btn" style="text-decoration: none; padding: 0.65rem 1.25rem; font-size: 0.82rem;">Back to the calculator →</a>
+  </div>
+
   <div class="faq-footer">
     <div style="margin-bottom: 0.5rem; display: flex; gap: 1.5rem; flex-wrap: wrap;">
       <a href="deposit.html" style="color: var(--dim); text-decoration: underline;">← Back to the calculator</a>
       <a href="stamp-duty.html" style="color: var(--dim); text-decoration: underline;">Stamp duty calculator</a>
-      <a href="faq.html" style="color: var(--dim); text-decoration: underline;">General FAQ</a>
+      <a href="search-intro.html" style="color: var(--dim); text-decoration: underline;">Is my search realistic?</a>
     </div>
     GetReal — get-real.co — built in public. Not financial advice.
   </div>

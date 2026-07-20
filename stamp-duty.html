@@ -287,7 +287,7 @@
     </div>
 
     <div class="inset">
-      Stamp duty — or transfer duty, depending where you live — is levied by state governments on every property purchase. It's calculated on the purchase price, paid at settlement, and can add tens of thousands to what you need ready on the day.
+      Stamp duty — or transfer duty, depending where you live — is levied by state governments on every property purchase. It's calculated on the purchase price and paid at settlement, coming straight out of your savings before your deposit. For most buyers it's the biggest upfront cost after the deposit itself.
     </div>
 
     <div class="inset">
@@ -308,6 +308,7 @@
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
     <div class="q-label">Which state or territory?</div>
+    <div class="q-sub">Each state sets its own rates and thresholds — the difference can be tens of thousands of dollars on the same price.</div>
     <div class="state-grid">
       <button class="state-btn" onclick="selectState('NSW')">NSW</button>
       <button class="state-btn" onclick="selectState('VIC')">VIC</button>
@@ -326,6 +327,7 @@
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
     <div class="q-label">First home buyer?</div>
+    <div class="q-sub" id="fhb-sub"></div>
     <div class="choices">
       <button class="choice-btn" onclick="selectFHB(true)">
         Yes — first property I've ever owned
@@ -334,7 +336,6 @@
         No — I've owned property before
       </button>
     </div>
-    <div class="q-sub" id="fhb-sub"></div>
   </div>
 
   <!-- ── Screen 2b: HBCS (ACT only) ─────────────────────────────────────── -->
@@ -394,7 +395,7 @@
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
     <div class="q-label">What's the price?</div>
-    <div class="q-sub">Best estimate is fine — you can always run it again.</div>
+    <div class="q-sub">Stamp duty is calculated on the purchase price. Best estimate is fine — you can run it again once you have a number.</div>
     <div class="price-input-wrap">
       <span class="price-prefix">$</span>
       <input
@@ -440,13 +441,13 @@
       <strong>Estimate only.</strong> We're pretty confident this is right, but we won't be offended if you double-check elsewhere.
     </div>
 
-    <div class="note-box">
-      <strong>Also from GetReal:</strong> <a href="deposit.html">Enter your savings to find your maximum purchase price</a> — calculated after stamp duty, LMI, and registration fees are taken out.
+    <div class="note-box blue">
+      <strong>Now: see how this affects your deposit ceiling.</strong> The deposit calculator takes your total savings, deducts stamp duty (and LMI if applicable), and shows the maximum purchase price your deposit can reach. <a href="deposit.html" style="color: var(--dim); text-decoration: underline;">Find my ceiling →</a>
     </div>
 
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem;">
       <button class="btn" onclick="restart()">Start again</button>
-      <a href="https://get-real.co/search-intro" style="font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); text-decoration: none; white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 0.4rem;">Move to Tool 2 <span style="font-size: 1rem; line-height: 1;">→</span></a>
+      <a href="https://get-real.co/search-intro" style="font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); text-decoration: underline; white-space: nowrap; flex-shrink: 0;">Is my search realistic? →</a>
     </div>
   </div>
 
