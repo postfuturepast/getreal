@@ -324,28 +324,37 @@
     </div>
     <p class="q-sub" style="margin: 0;">This tool tackles them in order. You'll know which one is your limit, and what to change if you need.</p>
 
-    <div class="note-box blue" style="color: var(--muted);">
-      <strong>You give:</strong> your deposit and a few details.<br>
-      <strong>You get:</strong> the maximum price your deposit can reach.
-    </div>
-
-    <div class="note-box wip">
-      <strong>Next up:</strong> <span style="color: var(--text);">Your limit from debt and repayments.</span>
-    </div>
-
-    <button class="btn" onclick="goTo('state')" style="width: 100%; text-align: center;">
-      Work it out →
+    <button class="btn" onclick="goTo('intro2')" style="width: 100%; text-align: center;">
+      Got it →
     </button>
     <div class="footer-note" style="padding: 0.5rem 0 0; font-size: 0.62rem;">
       Stamp duty from state revenue offices (June 2026). LMI rates indicative. Registration fees approximate. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology →</a>
     </div>
   </div>
 
+  <!-- ── Screen 0b: Intro 2 ────────────────────────────────────────────── -->
+  <div class="screen" id="screen-intro2">
+    <div style="padding-top: 0.35rem;">
+      <div class="eyebrow" style="margin-bottom: 0.75rem;">Deposit ceiling calculator</div>
+      <div class="q-label" style="margin-bottom: 0.65rem;">Here's the deal.</div>
+    </div>
+    <div class="note-box blue" style="color: var(--muted);">
+      <strong>You give:</strong> your deposit and a few details.<br>
+      <strong>You get:</strong> the maximum price your deposit can reach.
+    </div>
+    <div class="note-box wip">
+      <strong>Next up:</strong> <span style="color: var(--text);">Your limit from debt and repayments.</span>
+    </div>
+    <button class="btn" onclick="goTo('savings')" style="width: 100%; text-align: center;">
+      Work it out →
+    </button>
+  </div>
+
   <!-- ── Screen 1: State ─────────────────────────────────────────────────── -->
   <div class="screen" id="screen-state">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Step 1 of 5</span>
+      <span class="step-label">Step 2 of 5</span>
     </div>
     <div class="q-label">Which state or territory?</div>
     <div class="q-sub">Stamp duty rates vary significantly by state and affect how much of your savings is available for deposit.</div>
@@ -365,7 +374,7 @@
   <div class="screen" id="screen-fhb">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Step 2 of 5</span>
+      <span class="step-label">Step 3 of 5</span>
     </div>
     <div class="q-label">First home buyer?</div>
     <div class="choices">
@@ -383,7 +392,7 @@
   <div class="screen" id="screen-hbcs">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Step 2 of 5</span>
+      <span class="step-label">Step 3 of 5</span>
     </div>
     <div class="q-label">Do you qualify for the ACT Home Buyer Concession Scheme?</div>
     <div class="choices">
@@ -401,7 +410,7 @@
   <div class="screen" id="screen-oo">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Step 3 of 5</span>
+      <span class="step-label">Step 4 of 5</span>
     </div>
     <div class="q-label">How do you plan to use this property?</div>
     <div class="choices">
@@ -421,7 +430,7 @@
   <div class="screen" id="screen-newbuild">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Step 3 of 5</span>
+      <span class="step-label">Step 4 of 5</span>
     </div>
     <div class="q-label">New build or established home?</div>
     <div class="choices">
@@ -439,7 +448,7 @@
   <div class="screen" id="screen-purpose">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Step 3 of 5</span>
+      <span class="step-label">Step 4 of 5</span>
     </div>
     <div class="q-label">Will you live in it?</div>
     <div class="choices">
@@ -459,7 +468,7 @@
   <div class="screen" id="screen-proptype">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Step 4 of 5</span>
+      <span class="step-label">Step 5 of 5</span>
     </div>
     <div class="q-label">What type of property?</div>
     <div class="prop-grid">
@@ -595,7 +604,7 @@
   <div class="screen" id="screen-savings">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Step 5 of 5</span>
+      <span class="step-label">Step 1 of 5</span>
     </div>
     <div class="q-label">How much have you saved?</div>
     <div class="q-sub">Total savings you'd put toward this purchase — including your deposit, stamp duty, and registration fees. Don't subtract anything yet; the calculator does that.</div>
@@ -823,8 +832,8 @@ function selectHemGate(optIn) {
   if (optIn) {
     goTo('household');
   } else {
-    goTo('savings');
-    updateSavingsHint();
+    renderDepositResult();
+    goTo('deposit-result');
   }
 }
 
@@ -868,8 +877,8 @@ function showMetroToggle() {
 function selectLocationType(type) {
   d.locationType = type;
   d.suburbName   = null;
-  goTo('savings');
-  updateSavingsHint();
+  renderDepositResult();
+  goTo('deposit-result');
 }
 
 // Suburb typeahead
@@ -910,8 +919,8 @@ async function searchSuburbs(term, resultsEl) {
 function selectSuburb(suburb, postcode, state, locationType) {
   d.locationType = locationType || null;
   d.suburbName   = `${suburb} ${state} ${postcode}`;
-  goTo('savings');
-  updateSavingsHint();
+  renderDepositResult();
+  goTo('deposit-result');
 }
 
 // ─── Savings input ───────────────────────────────────────────────────────────
@@ -952,8 +961,7 @@ function updateSavingsHint() {
 
 function submitSavings() {
   if (!d.savings || !dataLoaded) return;
-  renderDepositResult();
-  goTo('deposit-result');
+  goTo('state');
 }
 
 // ─── LVR ceiling ─────────────────────────────────────────────────────────────
