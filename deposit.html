@@ -694,6 +694,11 @@ async function loadData() {
     const rateRows = await rateRes.json();
     hemData        = await hemRes.json();
 
+    // RLS guard: if any critical table returns empty, Supabase likely blocked the read
+    if (!lmiRates.length || !sdRows.length || !regRows.length || !rateRows.length) {
+      throw new Error('Rate tables returned empty — check Supabase RLS policies for anon read access on lmi_rates, lmi_stamp_duty_rates, registration_fees, benchmark_rates');
+    }
+
     sdRows.forEach(r  => { lmiSdRates[r.state] = r.rate_pct / 100; });
     regRows.forEach(r => { regFees[r.state] = (regFees[r.state] || 0) + r.amount; });
 
