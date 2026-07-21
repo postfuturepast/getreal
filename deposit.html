@@ -875,14 +875,147 @@
     </div>
     <div id="c2-result-main"></div>
     <div class="note-box blue" style="margin-top: 0.25rem;">
-      <strong>Next: Ceiling 3 — serviceability.</strong> Can you actually meet the repayments each month, accounting for living expenses and a 3% interest rate buffer? That's the final check.
+      <strong>Ceiling 2 done.</strong> One more check — can you actually service these repayments every month after living costs?
     </div>
-    <div class="note-box wip">
-      <strong>Ceiling 3 in progress.</strong> For now, the lower of Ceiling 1 and Ceiling 2 is your working maximum. Run it by a broker before making offers. <a href="deposit-faq.html">Full methodology →</a>
-    </div>
+    <button class="btn" onclick="goToC3Gate()" style="width: 100%; text-align: center;">
+      Check Ceiling 3 — Serviceability →
+    </button>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
       <button class="btn" onclick="restart()">Start again</button>
       <button onclick="goTo('deposit-result')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Ceiling 1</button>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── CEILING 3: Serviceability ───────────────────────────────────────── -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- C3 Gate ────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-gate">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div style="padding-top: 0.25rem;">
+      <div class="eyebrow" style="margin-bottom: 0.75rem;">Ceiling 3 of 3 — Serviceability</div>
+      <div class="q-label" style="margin-bottom: 0.65rem;">Last check: can you meet the repayments?</div>
+    </div>
+    <div class="note-box blue" style="color: var(--muted);">
+      <strong>You give:</strong> your household type and living expenses.<br>
+      <strong>You get:</strong> the maximum loan your income can actually service, accounting for a 3% interest rate buffer and a minimum living cost floor that every bank uses — whether you declare it or not.
+    </div>
+    <div class="inset">
+      Banks assess every mortgage application against a minimum benchmark called HEM — the Household Expenditure Measure. Even if your actual expenses are lower, the bank assumes at least HEM. This screen shows what that means for your ceiling.
+    </div>
+    <button class="btn" onclick="startC3()" style="width: 100%; text-align: center;">
+      Let's check →
+    </button>
+  </div>
+
+  <!-- C3 Household ────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-household">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 3 — Household</span>
+    </div>
+    <div class="q-label">Who's buying?</div>
+    <div class="q-sub">HEM varies by household type. Banks use this to set the minimum living cost floor for your application.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="c3SelectHousehold('single')">
+        Just me
+        <span class="choice-sub">Single applicant</span>
+      </button>
+      <button class="choice-btn" onclick="c3SelectHousehold('couple')">
+        Me and a partner
+        <span class="choice-sub">Joint applicants</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- C3 Dependants ───────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-dependants">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 3 — Dependants</span>
+    </div>
+    <div class="q-label">How many dependants?</div>
+    <div class="q-sub">Children or others you financially support. Each adds to the HEM minimum the bank assumes for your household.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="c3SelectDependants(0)">None</button>
+      <button class="choice-btn" onclick="c3SelectDependants(1)">1</button>
+      <button class="choice-btn" onclick="c3SelectDependants(2)">2</button>
+      <button class="choice-btn" onclick="c3SelectDependants(3)">3 or more</button>
+    </div>
+  </div>
+
+  <!-- C3 Location ─────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-location">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 3 — Location</span>
+    </div>
+    <div class="q-label">Metro or regional?</div>
+    <div class="q-sub">HEM benchmarks differ between capital cities and regional areas. Banks look at where you live, not where the property is.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="c3SelectLocation('metro')">
+        Metropolitan
+        <span class="choice-sub">Capital city or major urban area — Sydney, Melbourne, Brisbane, Perth, Adelaide, Hobart, Darwin, Canberra</span>
+      </button>
+      <button class="choice-btn" onclick="c3SelectLocation('regional')">
+        Regional or rural
+        <span class="choice-sub">Anywhere outside the major capital city boundaries</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- C3 HEM ──────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-hem">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 3 — Living expenses</span>
+    </div>
+    <div class="q-label">Your minimum living expenses</div>
+    <div id="c3-hem-statement" class="inset"></div>
+    <div class="choices" id="c3-hem-choices">
+      <button class="choice-btn" id="c3-use-hem-btn" onclick="c3UseHEM()">
+        <!-- populated by renderC3HEM() -->
+      </button>
+      <button class="choice-btn" onclick="c3ShowHEMOverride()">
+        My actual expenses are higher — I'll enter them
+        <span class="choice-sub">You can enter a higher amount. The bank floor stays the same regardless.</span>
+      </button>
+    </div>
+    <div id="c3-hem-override-wrap" style="display: none; flex-direction: column; gap: 0.75rem;">
+      <div class="debt-row">
+        <div class="debt-label">My actual monthly expenses</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="price-input" type="text" id="c3-hem-override-input" inputmode="numeric" placeholder="0"
+            autocomplete="off" oninput="onC3HEMInput(this)">
+        </div>
+        <div class="debt-note" id="c3-hem-floor-note"></div>
+      </div>
+      <button class="btn" id="c3-hem-override-submit" onclick="submitC3HEM()" style="width: 100%; text-align: center; opacity: 0.35;" disabled>
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- Outcome ─────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-outcome">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Your maximum</span>
+    </div>
+    <div id="outcome-main"></div>
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem;">
+      <a href="search-intro.html" class="btn" style="text-decoration: none; text-align: center; flex: 1;">
+        Check a suburb at this budget →
+      </a>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
+      <button class="btn" onclick="restart()">Start again</button>
+      <button onclick="goTo('c2-result')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Ceiling 2</button>
     </div>
   </div>
 
@@ -970,6 +1103,8 @@ const d = {
   c2CreditCards:    0,     // total credit card limits (not balances)
   c2PersonalLoans:  0,     // personal + car loan balances
   c2OtherMortgages: 0,    // other mortgage balances (not this purchase)
+  // Ceiling 3 — Serviceability
+  c3HemAmount:      null,  // chosen monthly living expenses (HEM or user override)
 };
 
 const navHistory = ['intro'];
@@ -999,6 +1134,7 @@ function restart() {
     hemOptIn: null, household: null, numDependants: null, locationType: null, suburbName: null,
     c2Applicants: null, c2GrossIncome: 0, c2RentalIncome: 0,
     c2CreditCards: 0, c2PersonalLoans: 0, c2OtherMortgages: 0,
+    c3HemAmount: null,
   });
   lastC1Result = null;
   navHistory.length = 0;
@@ -1891,6 +2027,237 @@ function renderC2Result() {
   } else {
     html += `<div class="note-box" style="margin-top:0.45rem;"><strong>Deposit is your binding ceiling.</strong> Your DTI is ${dtiStr} — below 6×, so income isn't the constraint. Your savings are the limit.</div>`;
   }
+
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── CEILING 3: Serviceability ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── C3 navigation ───────────────────────────────────────────────────────────
+function goToC3Gate() {
+  goTo('c3-gate');
+}
+
+function startC3() {
+  // If household/dependants/location already collected (via C1 HEM flow), skip to HEM screen
+  if (d.household !== null && d.numDependants !== null && d.locationType) {
+    renderC3HEM();
+    goTo('c3-hem');
+  } else {
+    goTo('c3-household');
+  }
+}
+
+// ─── C3 household / dependants / location ────────────────────────────────────
+function c3SelectHousehold(type) {
+  d.household = type;
+  goTo('c3-dependants');
+}
+
+function c3SelectDependants(n) {
+  d.numDependants = n;
+  goTo('c3-location');
+}
+
+function c3SelectLocation(type) {
+  d.locationType = type;
+  d.suburbName   = null;
+  renderC3HEM();
+  goTo('c3-hem');
+}
+
+// ─── C3 HEM screen ───────────────────────────────────────────────────────────
+function renderC3HEM() {
+  const hemAmount = lookupHEM();
+  const depLabel  = d.numDependants === 0 ? 'no dependants'
+    : d.numDependants === 1 ? '1 dependant'
+    : `${d.numDependants}+ dependants`;
+  const hhLabel   = d.household === 'couple' ? 'couple' : 'single';
+  const locLabel  = d.locationType === 'metro' ? 'metropolitan' : 'regional';
+
+  const stEl  = document.getElementById('c3-hem-statement');
+  const btnEl = document.getElementById('c3-use-hem-btn');
+  const floorEl = document.getElementById('c3-hem-floor-note');
+
+  if (!hemAmount) {
+    if (stEl) stEl.innerHTML = '<span style="color:#fca5a5;">Could not look up HEM — household data missing.</span>';
+    return;
+  }
+
+  if (stEl) {
+    stEl.innerHTML = `The bank minimum for a <strong>${hhLabel}</strong> with <strong>${depLabel}</strong> in a <strong>${locLabel}</strong> area is <strong>${fmt(hemAmount)}/month</strong>. No matter what expenses you declare on your application, the bank assumes at least this figure.`;
+  }
+  if (btnEl) {
+    btnEl.innerHTML = `Use the bank minimum — ${fmt(hemAmount)}/month<span class="choice-sub">My actual spending is around this or lower</span>`;
+  }
+  if (floorEl) {
+    floorEl.textContent = `Must be at least ${fmt(hemAmount)}/month — that's the bank's floor.`;
+  }
+  // Reset override state
+  const overrideWrap = document.getElementById('c3-hem-override-wrap');
+  const choicesEl    = document.getElementById('c3-hem-choices');
+  const overrideInput = document.getElementById('c3-hem-override-input');
+  const overrideBtn  = document.getElementById('c3-hem-override-submit');
+  if (overrideWrap)  overrideWrap.style.display  = 'none';
+  if (choicesEl)     choicesEl.style.display      = 'flex';
+  if (overrideInput) overrideInput.value           = '';
+  if (overrideBtn)   { overrideBtn.disabled = true; overrideBtn.style.opacity = '0.35'; }
+  d.c3HemAmount = null;
+}
+
+function c3UseHEM() {
+  const hemAmount = lookupHEM();
+  if (!hemAmount) return;
+  d.c3HemAmount = hemAmount;
+  renderOutcome();
+  goTo('outcome');
+}
+
+function c3ShowHEMOverride() {
+  document.getElementById('c3-hem-choices').style.display    = 'none';
+  document.getElementById('c3-hem-override-wrap').style.display = 'flex';
+  document.getElementById('c3-hem-override-input').focus();
+}
+
+function onC3HEMInput(el) {
+  const hemFloor = lookupHEM() || 0;
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c3HemAmount = null; setC3HEMBtn(false); return; }
+  const num = parseInt(raw, 10);
+  el.value = num.toLocaleString('en-AU');
+  const valid = num >= hemFloor;
+  d.c3HemAmount = valid ? num : null;
+  setC3HEMBtn(valid);
+}
+
+function setC3HEMBtn(enabled) {
+  const btn = document.getElementById('c3-hem-override-submit');
+  if (!btn) return;
+  btn.disabled = !enabled;
+  btn.style.opacity = enabled ? '1' : '0.35';
+}
+
+function submitC3HEM() {
+  if (!d.c3HemAmount) return;
+  renderOutcome();
+  goTo('outcome');
+}
+
+// ─── Serviceability calculation ───────────────────────────────────────────────
+function computeServiceability() {
+  const rentalAnnual   = d.isOO ? 0 : d.c2RentalIncome * 52 * 0.80;
+  const totalIncome    = d.c2GrossIncome + rentalAnnual;
+  const monthlyIncome  = totalIncome / 12;
+  const hemMonthly     = d.c3HemAmount || 0;
+
+  // Max monthly repayment the income can support after HEM
+  const maxMonthlyRepayment = monthlyIncome - hemMonthly;
+  if (maxMonthlyRepayment <= 0) {
+    return { c3CeilingPrice: 0, maxMonthlyRepayment, monthlyIncome, hemMonthly, maxLoan: 0 };
+  }
+
+  // Stress rate: current rate + 3% APRA buffer
+  const purpose    = d.isOO ? 'oo' : 'investor';
+  const rateRow    = benchmarkRates[purpose];
+  const stressRateAnnual = rateRow ? rateRow.rate_pct + 3.0 : 9.0; // fallback 9%
+  const r = stressRateAnnual / 100 / 12;
+  const n = 360; // 30-year loan
+
+  // Inverse P&I formula: loan from monthly payment
+  const maxLoan = r > 0
+    ? maxMonthlyRepayment * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n))
+    : maxMonthlyRepayment * n;
+
+  // Price = loan / effective LVR from C1
+  const effectiveLVR = lastC1Result && lastC1Result.effectiveLVR > 0
+    ? lastC1Result.effectiveLVR
+    : getMaxLVR();
+  const c3CeilingPrice = effectiveLVR > 0 ? Math.floor(maxLoan / effectiveLVR) : 0;
+
+  return { c3CeilingPrice, maxMonthlyRepayment, monthlyIncome, hemMonthly, maxLoan, stressRateAnnual };
+}
+
+// ─── Final outcome screen ────────────────────────────────────────────────────
+function renderOutcome() {
+  const el = document.getElementById('outcome-main');
+  if (!el) return;
+
+  const c1Price = lastC1Result ? lastC1Result.price : 0;
+  const dti     = computeDTI();
+  const svc     = computeServiceability();
+  const c2Price = dti.dtiCeilingPrice > 0 ? dti.dtiCeilingPrice : 0;
+  const c3Price = svc.c3CeilingPrice  > 0 ? svc.c3CeilingPrice  : 0;
+
+  const prices  = [c1Price, c2Price, c3Price].filter(p => p > 0);
+  const maximum = prices.length ? Math.min(...prices) : 0;
+
+  // Which ceiling binds?
+  let bindingCeiling = 'deposit';
+  if (maximum === c2Price && c2Price > 0 && c2Price <= c1Price && c2Price <= c3Price) bindingCeiling = 'dti';
+  if (maximum === c3Price && c3Price > 0 && c3Price <= c1Price && c3Price <= c2Price) bindingCeiling = 'serviceability';
+  // Tie-break: if equal prefer the more binding label (deposit > dti > serviceability)
+
+  const bindingLabel = { deposit: 'Ceiling 1 — Deposit', dti: 'Ceiling 2 — Debt-to-income', serviceability: 'Ceiling 3 — Serviceability' };
+
+  let html = '';
+
+  // ── Headline ──
+  if (maximum <= 0) {
+    html += `<div class="result-label-sm">Calculated maximum</div>`;
+    html += `<div class="result-amount" style="font-size: 1.8rem; color: #fca5a5;">Check your inputs</div>`;
+    html += `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);margin-bottom:0.75rem;">One or more ceilings returned zero — review your figures.</div>`;
+  } else {
+    html += `<div class="result-label-sm">Your calculated maximum</div>`;
+    html += `<div class="result-amount">${fmt(maximum)}</div>`;
+    html += `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);margin-bottom:0.75rem;">Binding: ${bindingLabel[bindingCeiling]}</div>`;
+  }
+
+  // ── Three ceiling cards ──
+  const cards = [
+    { key: 'deposit',       label: 'Ceiling 1 — Deposit',          price: c1Price, note: 'Maximum price your savings can reach after stamp duty and LMI.' },
+    { key: 'dti',           label: 'Ceiling 2 — Debt-to-income',   price: c2Price, note: 'Maximum price at 6× gross income, after existing debts.' },
+    { key: 'serviceability',label: 'Ceiling 3 — Serviceability',   price: c3Price, note: `Maximum price where repayments at ${svc.stressRateAnnual ? svc.stressRateAnnual.toFixed(2) : '—'}% (stress rate) fit within income after HEM.` },
+  ];
+
+  html += '<div style="display:flex;flex-direction:column;gap:0.45rem;">';
+  for (const card of cards) {
+    const isBinding = card.key === bindingCeiling && maximum > 0;
+    const isDimmed  = !isBinding && card.price > 0;
+    html += `<div class="ceiling-card${isBinding ? ' binding' : ''}">`;
+    html += `<div class="result-card-head">${card.label}${isBinding ? ' ← binding' : ''}</div>`;
+    if (card.price <= 0) {
+      html += `<div class="ceiling-amount dimmed">—</div>`;
+      html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:#fca5a5;">Ceiling not met — income or savings insufficient at current inputs.</div>`;
+    } else {
+      html += `<div class="ceiling-amount${isDimmed ? ' dimmed' : ''}">${fmt(card.price)}</div>`;
+      html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--dim);">${card.note}</div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // ── Serviceability breakdown ──
+  if (svc.maxMonthlyRepayment > 0) {
+    html += '<div class="result-card" style="margin-top:0.45rem;">';
+    html += '<div class="result-card-head">Serviceability breakdown</div>';
+    html += rrow('Monthly income (gross ÷ 12)', fmt(svc.monthlyIncome) + '/mo');
+    html += rrow('Less: HEM living expenses', '−' + fmt(svc.hemMonthly) + '/mo', true);
+    html += '<hr class="rdivider">';
+    html += rrow('Max monthly repayment', fmt(svc.maxMonthlyRepayment) + '/mo');
+    if (svc.stressRateAnnual) {
+      html += rrow('Stress rate applied', svc.stressRateAnnual.toFixed(2) + '% (current + 3%)', true);
+    }
+    html += '<hr class="rdivider">';
+    html += rrow('Max loan at stress rate', fmt(svc.maxLoan));
+    html += '</div>';
+  }
+
+  // ── What this is (and isn't) ──
+  html += `<div class="advisory" style="margin-top:0.45rem;">
+    <strong>This is a ceiling, not an approval.</strong> These are calculated maximums based on the inputs you gave and published benchmark data. Real bank approvals account for income shading, property-specific risk, your full credit history, and internal policies that vary by lender and change without notice. The actual approved amount is often lower — sometimes materially so. <strong>Get a formal pre-approval from a broker or bank before inspecting properties seriously, and certainly before bidding.</strong>
+  </div>`;
 
   el.innerHTML = html;
 }
