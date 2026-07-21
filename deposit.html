@@ -840,17 +840,45 @@
       <button class="step-back" onclick="goBack()">← back</button>
       <span class="step-label">Ceiling 3 — Location</span>
     </div>
-    <div class="q-label">Metro or regional?</div>
-    <div class="q-sub">HEM benchmarks differ between capital cities and regional areas. Banks look at where you live, not where the property is.</div>
-    <div class="choices">
-      <button class="choice-btn" onclick="c3SelectLocation('metro')">
-        Metropolitan
-        <span class="choice-sub">Capital city or major urban area — Sydney, Melbourne, Brisbane, Perth, Adelaide, Hobart, Darwin, Canberra</span>
+    <div class="q-label">Where do you live?</div>
+    <div class="q-sub">HEM benchmarks differ between capital cities and regional areas. Banks look at where <em>you</em> live, not where the property is.</div>
+
+    <!-- Initial two-path choice -->
+    <div class="choices" id="c3-loc-choices">
+      <button class="choice-btn" onclick="showC3SuburbSearch()">
+        I know my suburb — look it up
+        <span class="choice-sub">We'll automatically classify metro or regional from our database</span>
       </button>
-      <button class="choice-btn" onclick="c3SelectLocation('regional')">
-        Regional or rural
-        <span class="choice-sub">Anywhere outside the major capital city boundaries</span>
+      <button class="choice-btn" onclick="showC3MetroToggle()">
+        I'll estimate
+        <span class="choice-sub">Tell us whether you're in a capital city or regional area</span>
       </button>
+    </div>
+
+    <!-- Suburb search panel -->
+    <div id="c3-suburb-search" style="display:none; flex-direction:column; gap:0.75rem;">
+      <div style="position:relative;">
+        <input type="text" id="c3-suburb-input" placeholder="Start typing a suburb…"
+          autocomplete="off" oninput="onC3SuburbInput(this)"
+          style="width:100%;box-sizing:border-box;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.85rem;padding:0.65rem 0.9rem;outline:none;">
+      </div>
+      <div id="c3-suburb-results"></div>
+      <button class="step-back" onclick="c3BackToLocChoice()">← different option</button>
+    </div>
+
+    <!-- Manual metro/regional toggle -->
+    <div id="c3-metro-toggle" style="display:none; flex-direction:column; gap:0.75rem;">
+      <div class="choices">
+        <button class="choice-btn" onclick="c3SelectLocation('metro')">
+          Metropolitan
+          <span class="choice-sub">Capital city or major urban area — Sydney, Melbourne, Brisbane, Perth, Adelaide, Hobart, Darwin, Canberra</span>
+        </button>
+        <button class="choice-btn" onclick="c3SelectLocation('regional')">
+          Regional or rural
+          <span class="choice-sub">Anywhere outside the major capital city boundaries</span>
+        </button>
+      </div>
+      <button class="step-back" onclick="c3BackToLocChoice()">← back</button>
     </div>
   </div>
 
@@ -980,6 +1008,7 @@ const d = {
   household:     null,   // 'single' | 'couple'
   numDependants: null,   // 0 | 1 | 2 | 3 (3 = "3 or more")
   locationType:  null,   // 'metro' | 'regional'
+  suburbName:    null,   // display name from suburb_postcodes lookup (C3)
   // Ceiling 2 — Debt-to-income
   c2Applicants:     null,  // 'sole' | 'joint'
   c2GrossIncome:    0,
@@ -1015,7 +1044,7 @@ function restart() {
   Object.assign(d, {
     state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null,
     propType: null, savings: 0,
-    household: null, numDependants: null, locationType: null,
+    household: null, numDependants: null, locationType: null, suburbName: null,
     c2Applicants: null, c2GrossIncome: 0, c2RentalIncome: 0,
     c2CreditCards: 0, c2PersonalLoans: 0, c2OtherMortgages: 0,
     c3HemAmount: null,
@@ -1783,6 +1812,67 @@ function c3SelectDependants(n) {
   goTo('c3-location');
 }
 
+// ─── C3 Location — suburb search ─────────────────────────────────────────────
+let c3SuburbTimer = null;
+
+function showC3SuburbSearch() {
+  document.getElementById('c3-loc-choices').style.display = 'none';
+  const panel = document.getElementById('c3-suburb-search');
+  panel.style.display = 'flex';
+  document.getElementById('c3-suburb-input').focus();
+}
+
+function showC3MetroToggle() {
+  document.getElementById('c3-loc-choices').style.display = 'none';
+  document.getElementById('c3-metro-toggle').style.display = 'flex';
+}
+
+function c3BackToLocChoice() {
+  document.getElementById('c3-loc-choices').style.display = '';
+  document.getElementById('c3-suburb-search').style.display = 'none';
+  document.getElementById('c3-metro-toggle').style.display = 'none';
+  document.getElementById('c3-suburb-input').value = '';
+  document.getElementById('c3-suburb-results').innerHTML = '';
+}
+
+function onC3SuburbInput(el) {
+  clearTimeout(c3SuburbTimer);
+  const q = el.value.trim();
+  if (q.length < 2) { document.getElementById('c3-suburb-results').innerHTML = ''; return; }
+  c3SuburbTimer = setTimeout(() => searchC3Suburbs(q), 220);
+}
+
+async function searchC3Suburbs(query) {
+  const resultsEl = document.getElementById('c3-suburb-results');
+  resultsEl.innerHTML = '<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);padding:0.5rem 0;">Searching…</div>';
+  try {
+    const encoded = encodeURIComponent(query + '*');
+    const url = `${SB_URL}/rest/v1/suburb_postcodes?select=suburb,state,postcode,location_type&suburb=ilike.${encoded}&location_type=not.is.null&order=suburb&limit=8`;
+    const res  = await fetch(url, { headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` } });
+    if (!res.ok) throw new Error('fetch failed');
+    const rows = await res.json();
+    if (!rows.length) {
+      resultsEl.innerHTML = '<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);padding:0.5rem 0;">No suburbs found — try a different spelling or choose "I\'ll estimate".</div>';
+      return;
+    }
+    resultsEl.innerHTML = rows.map(r => `
+      <button onclick="selectC3Suburb('${r.suburb.replace(/'/g,"\\'")}','${r.state}','${r.location_type}')"
+        style="display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.82rem;padding:0.55rem 0.9rem;cursor:pointer;margin-bottom:2px;">
+        <strong>${r.suburb}</strong> <span style="color:var(--dim)">${r.state} ${r.postcode}</span>
+        <span style="float:right;font-size:0.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;">${r.location_type}</span>
+      </button>`).join('');
+  } catch (e) {
+    resultsEl.innerHTML = '<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);padding:0.5rem 0;">Search failed — choose "I\'ll estimate" instead.</div>';
+  }
+}
+
+function selectC3Suburb(suburb, state, locationType) {
+  d.suburbName  = `${suburb}, ${state}`;
+  d.locationType = locationType;
+  renderC3HEM();
+  goTo('c3-hem');
+}
+
 function c3SelectLocation(type) {
   d.locationType = type;
   d.suburbName   = null;
@@ -1798,6 +1888,7 @@ function renderC3HEM() {
     : `${d.numDependants}+ dependants`;
   const hhLabel   = d.household === 'couple' ? 'couple' : 'single';
   const locLabel  = d.locationType === 'metro' ? 'metropolitan' : 'regional';
+  const suburbNote = d.suburbName ? ` (${d.suburbName})` : '';
 
   const stEl  = document.getElementById('c3-hem-statement');
   const btnEl = document.getElementById('c3-use-hem-btn');
@@ -1809,7 +1900,7 @@ function renderC3HEM() {
   }
 
   if (stEl) {
-    stEl.innerHTML = `The bank minimum for a <strong>${hhLabel}</strong> with <strong>${depLabel}</strong> in a <strong>${locLabel}</strong> area is <strong>${fmt(hemAmount)}/month</strong>. No matter what expenses you declare on your application, the bank assumes at least this figure.`;
+    stEl.innerHTML = `The bank minimum for a <strong>${hhLabel}</strong> with <strong>${depLabel}</strong> in a <strong>${locLabel}</strong> area${suburbNote ? ' <span style="color:var(--dim)">(' + d.suburbName + ')</span>' : ''} is <strong>${fmt(hemAmount)}/month</strong>. No matter what expenses you declare on your application, the bank assumes at least this figure.`;
   }
   if (btnEl) {
     btnEl.innerHTML = `Use the bank minimum — ${fmt(hemAmount)}/month<span class="choice-sub">My actual spending is around this or lower</span>`;
