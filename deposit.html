@@ -536,118 +536,6 @@
     <div class="q-sub">Many lenders impose a lower maximum LVR on apartments — typically 90% for owner-occupiers and 80% for investors. This directly reduces the purchase price your deposit can reach.</div>
   </div>
 
-  <!-- ── Screen 4b: HEM gate (optional) ───────────────────────────────────── -->
-  <div class="screen" id="screen-hem-gate">
-    <div class="step-meta">
-      <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Optional</span>
-    </div>
-    <div class="q-label">Want a more complete picture?</div>
-    <div class="inset">
-      Banks don't just look at your deposit and loan size. They also factor in a minimum living expenses benchmark called HEM — based on your household and where you live.
-    </div>
-    <div class="inset" style="color: var(--dim);">
-      Two quick questions and we'll show you the minimum monthly income the bank assumes you need before they'll approve anything. Skip if you just want the deposit ceiling.
-    </div>
-    <div class="choices">
-      <button class="choice-btn" onclick="selectHemGate(true)">
-        Add my household details
-        <span class="choice-sub">Two more questions — household type + location</span>
-      </button>
-      <button class="choice-btn" onclick="selectHemGate(false)">
-        Skip — just show my deposit ceiling
-      </button>
-    </div>
-  </div>
-
-  <!-- ── Screen 4c: Household ───────────────────────────────────────────────── -->
-  <div class="screen" id="screen-household">
-    <div class="step-meta">
-      <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Household</span>
-    </div>
-    <div class="q-label">Who's buying?</div>
-    <div class="q-sub">Banks use a minimum living cost benchmark that varies by household type. This determines which figure applies to you.</div>
-    <div class="choices">
-      <button class="choice-btn" onclick="selectHousehold('single')">
-        Just me
-        <span class="choice-sub">Single applicant</span>
-      </button>
-      <button class="choice-btn" onclick="selectHousehold('couple')">
-        Me and a partner
-        <span class="choice-sub">Joint applicants</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- ── Screen 4c2: Dependants ─────────────────────────────────────────────── -->
-  <div class="screen" id="screen-dependants">
-    <div class="step-meta">
-      <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Dependants</span>
-    </div>
-    <div class="q-label">How many dependants?</div>
-    <div class="q-sub">Children or other dependants you financially support. Banks factor minimum living costs per dependant.</div>
-    <div class="choices">
-      <button class="choice-btn" onclick="selectDependants(0)">None</button>
-      <button class="choice-btn" onclick="selectDependants(1)">1</button>
-      <button class="choice-btn" onclick="selectDependants(2)">2</button>
-      <button class="choice-btn" onclick="selectDependants(3)">3 or more</button>
-    </div>
-  </div>
-
-  <!-- ── Screen 4d: Location ────────────────────────────────────────────────── -->
-  <div class="screen" id="screen-location">
-    <div class="step-meta">
-      <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Location</span>
-    </div>
-    <div class="q-label" id="location-q-label">Do you have a suburb in mind?</div>
-    <div class="q-sub" id="location-q-sub">We'll use this to determine whether metro or regional living cost benchmarks apply.</div>
-
-    <!-- Suburb known / not known toggle -->
-    <div class="choices" id="location-know-choices">
-      <button class="choice-btn" onclick="showSuburbSearch()">
-        Yes — I'll search for it
-      </button>
-      <button class="choice-btn" onclick="showMetroToggle()">
-        No — I'll estimate
-        <span class="choice-sub">Metropolitan or regional/rural</span>
-      </button>
-    </div>
-
-    <!-- Suburb search (hidden until "Yes") -->
-    <div id="suburb-search-wrap" style="display:none; flex-direction:column; gap:0.5rem;">
-      <div class="price-input-wrap">
-        <input
-          class="price-input"
-          type="text"
-          id="suburb-input"
-          placeholder="Start typing a suburb…"
-          autocomplete="off"
-          style="font-size: 1rem; padding: 0.85rem 1rem;"
-          oninput="onSuburbInput(this)"
-        >
-      </div>
-      <div id="suburb-results" style="display:flex; flex-direction:column; gap:0.3rem;"></div>
-      <div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--dim);">Can't find it? <button onclick="showMetroToggle()" style="background:none;border:none;color:var(--dim);font-family:var(--font-mono);font-size:0.62rem;text-decoration:underline;cursor:pointer;padding:0;">Choose metro / regional instead</button></div>
-    </div>
-
-    <!-- Metro/regional toggle (hidden until "No" or fallback) -->
-    <div id="metro-toggle-wrap" style="display:none; flex-direction:column; gap:0.5rem;">
-      <div class="choices">
-        <button class="choice-btn" onclick="selectLocationType('metro')">
-          Metropolitan
-          <span class="choice-sub">Capital city or major urban area — Sydney, Melbourne, Brisbane, Perth, Adelaide, Hobart, Darwin, Canberra</span>
-        </button>
-        <button class="choice-btn" onclick="selectLocationType('regional')">
-          Regional or rural
-          <span class="choice-sub">Anywhere outside the major capital city boundaries</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- ── Screen 5: Savings ───────────────────────────────────────────────── -->
   <div class="screen" id="screen-savings">
     <div class="step-meta">
@@ -699,8 +587,6 @@
     <div id="deposit-result-breakdown"></div>
 
     <div id="deposit-repayment"></div>
-
-    <div id="deposit-hem"></div>
 
     <div id="deposit-advisories" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
 
@@ -1090,12 +976,10 @@ const d = {
   isHBCS: null,
   propType: null,
   savings: 0,
-  // HEM optional flow
-  hemOptIn:      null,   // true = user answered household/location, false = skipped
+  // HEM — collected in Ceiling 3
   household:     null,   // 'single' | 'couple'
   numDependants: null,   // 0 | 1 | 2 | 3 (3 = "3 or more")
   locationType:  null,   // 'metro' | 'regional'
-  suburbName:    null,   // display label e.g. "Parramatta NSW 2150"
   // Ceiling 2 — Debt-to-income
   c2Applicants:     null,  // 'sole' | 'joint'
   c2GrossIncome:    0,
@@ -1131,7 +1015,7 @@ function restart() {
   Object.assign(d, {
     state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null,
     propType: null, savings: 0,
-    hemOptIn: null, household: null, numDependants: null, locationType: null, suburbName: null,
+    household: null, numDependants: null, locationType: null,
     c2Applicants: null, c2GrossIncome: 0, c2RentalIncome: 0,
     c2CreditCards: 0, c2PersonalLoans: 0, c2OtherMortgages: 0,
     c3HemAmount: null,
@@ -1208,102 +1092,9 @@ function selectPurpose(isOO) {
 
 function selectPropType(type) {
   d.propType = type;
-  goTo('hem-gate');
-}
-
-// ─── HEM flow handlers ───────────────────────────────────────────────────────
-function selectHemGate(optIn) {
-  d.hemOptIn = optIn;
-  if (optIn) {
-    goTo('household');
-  } else {
-    goToReview();
-  }
-}
-
-function selectHousehold(type) {
-  d.household = type;
-  goTo('dependants');
-}
-
-function selectDependants(n) {
-  d.numDependants = n;
-  // Set location question label based on OO vs investor
-  const isOO = d.isOO;
-  document.getElementById('location-q-label').textContent =
-    isOO ? 'Do you have a suburb in mind?' : 'Where do you currently live?';
-  document.getElementById('location-q-sub').textContent =
-    isOO
-      ? 'We\'ll use this to determine whether metro or regional living cost benchmarks apply.'
-      : 'HEM is based on where you live, not where the investment is.';
-  // Reset location screen state
-  document.getElementById('location-know-choices').style.display = 'flex';
-  document.getElementById('suburb-search-wrap').style.display = 'none';
-  document.getElementById('metro-toggle-wrap').style.display = 'none';
-  document.getElementById('suburb-input').value = '';
-  document.getElementById('suburb-results').innerHTML = '';
-  goTo('location');
-}
-
-function showSuburbSearch() {
-  document.getElementById('location-know-choices').style.display = 'none';
-  document.getElementById('suburb-search-wrap').style.display = 'flex';
-  document.getElementById('metro-toggle-wrap').style.display = 'none';
-  document.getElementById('suburb-input').focus();
-}
-
-function showMetroToggle() {
-  document.getElementById('location-know-choices').style.display = 'none';
-  document.getElementById('suburb-search-wrap').style.display = 'none';
-  document.getElementById('metro-toggle-wrap').style.display = 'flex';
-}
-
-function selectLocationType(type) {
-  d.locationType = type;
-  d.suburbName   = null;
   goToReview();
 }
 
-// Suburb typeahead
-let suburbTimer = null;
-function onSuburbInput(el) {
-  const term = el.value.trim();
-  clearTimeout(suburbTimer);
-  const resultsEl = document.getElementById('suburb-results');
-  if (term.length < 2) { resultsEl.innerHTML = ''; return; }
-  suburbTimer = setTimeout(() => searchSuburbs(term, resultsEl), 300);
-}
-
-async function searchSuburbs(term, resultsEl) {
-  const headers = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
-  // For OO, filter by the state they selected. Investor: all states.
-  const stateFilter = d.isOO ? `&state=eq.${d.state}` : '';
-  const encoded = encodeURIComponent(term);
-  const url = `${SB_URL}/rest/v1/suburb_postcodes?select=suburb,postcode,state,location_type&suburb=ilike.${encoded}*${stateFilter}&order=suburb&limit=8`;
-  try {
-    const resp = await fetch(url, { headers });
-    if (!resp.ok) { resultsEl.innerHTML = ''; return; }
-    const rows = await resp.json();
-    if (!rows.length) {
-      resultsEl.innerHTML = `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);padding:0.5rem 0;">No results — try a different spelling</div>`;
-      return;
-    }
-    resultsEl.innerHTML = rows.map(r => `
-      <button class="choice-btn" onclick="selectSuburb('${r.suburb.replace(/'/g, "\\'")}','${r.postcode}','${r.state}','${r.location_type || ''}')" style="font-size:0.85rem;padding:0.65rem 0.9rem;">
-        ${r.suburb}
-        <span class="choice-sub">${r.state} ${r.postcode}${r.location_type ? ' — ' + r.location_type : ''}</span>
-      </button>
-    `).join('');
-  } catch {
-    resultsEl.innerHTML = '';
-  }
-}
-
-function selectSuburb(suburb, postcode, state, locationType) {
-  d.locationType = locationType || null;
-  d.suburbName   = `${suburb} ${state} ${postcode}`;
-  goToReview();
-}
 
 // ─── Savings input ───────────────────────────────────────────────────────────
 function onSavingsInput(el) {
@@ -1419,11 +1210,7 @@ function renderReviewScreen() {
   const rateStr  = rateRow ? `${rateRow.rate_pct.toFixed(2)}% P&I (RBA avg, ${rateRow.reference_month})` : '—';
   const stressStr = rateRow ? `${(rateRow.rate_pct + 3).toFixed(2)}% (rate + 3% APRA buffer)` : '—';
 
-  // HEM
-  const hemAmount = lookupHEM();
-  const hemStr = hemAmount ? '$' + Math.round(hemAmount).toLocaleString('en-AU') + '/mo (indicative HEM)' : null;
-
-  // Dependant label
+  // Dependant label (unused in review; kept for potential future use)
   const depLabel = { 0: 'None', 1: '1', 2: '2', 3: '3 or more' };
 
   let html = '';
@@ -1442,21 +1229,6 @@ function renderReviewScreen() {
   }
   html += rvRow('Purpose', d.isOO == null ? '—' : (d.isOO ? 'Owner-occupier' : 'Investment'), purposeScreen);
   html += rvRow('Property type', d.propType ? (d.propType.charAt(0).toUpperCase() + d.propType.slice(1)) : '—', 'proptype');
-  html += `</div>`;
-
-  // ── Living expenses ──
-  html += rvSection('Living expenses (HEM)');
-  html += `<div style="border-top:1px solid var(--border);">`;
-  if (!d.hemOptIn) {
-    html += rvRow('HEM', 'Skipped', 'hem-gate', true);
-  } else {
-    const hhLabels = { single: 'Single', couple: 'Couple', family: 'Family' };
-    html += rvRow('Household', hhLabels[d.household] || d.household || '—', 'household');
-    html += rvRow('Dependants', d.numDependants == null ? '—' : (depLabel[d.numDependants] ?? String(d.numDependants)), 'dependants');
-    const locLabel = d.suburbName || (d.locationType === 'metro' ? 'Metropolitan' : d.locationType === 'regional' ? 'Regional' : '—');
-    html += rvRow('Location', locLabel, 'location');
-    if (hemStr) html += rvRow('HEM estimate', hemStr, null, true);
-  }
   html += `</div>`;
 
   // ── What we'll apply ──
@@ -1726,7 +1498,7 @@ function findMaxPrice(savings) {
 
 // ─── HEM lookup ──────────────────────────────────────────────────────────────
 function lookupHEM() {
-  if (!d.hemOptIn || !d.household || d.numDependants === null || !d.locationType) return null;
+  if (!d.household || d.numDependants === null || !d.locationType) return null;
   const dep = d.numDependants;
   const candidates = hemData.filter(r =>
     r.household_type === d.household && r.location_type === d.locationType
@@ -1739,56 +1511,6 @@ function lookupHEM() {
   return sorted[0].monthly_amount;
 }
 
-function renderHEMBlock(monthlyStress) {
-  const el = document.getElementById('deposit-hem');
-  if (!el) return;
-
-  // Skipped path — show a prompt to loop back
-  if (!d.hemOptIn) {
-    el.innerHTML = `
-      <div class="note-box" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;">
-        <span><strong>Minimum living expenses:</strong> not calculated.</span>
-        <button onclick="loopBackToHEM()" style="background:none;border:none;color:var(--dim);font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;text-decoration:underline;cursor:pointer;white-space:nowrap;">Add details →</button>
-      </div>`;
-    return;
-  }
-
-  const hemMonthly = lookupHEM();
-  if (!hemMonthly) {
-    el.innerHTML = `<div class="note-box"><strong>Living expenses (HEM):</strong> Could not calculate — data missing.</div>`;
-    return;
-  }
-
-  const minimumIncome = monthlyStress + hemMonthly;
-  const depLabel = d.numDependants === 0 ? 'no dependants'
-    : d.numDependants === 1 ? '1 dependant'
-    : `${d.numDependants}+ dependants`;
-  const householdLabel = d.household === 'couple'
-    ? `Couple, ${depLabel}`
-    : `Single, ${depLabel}`;
-  const locationLabel = d.locationType === 'metro' ? 'metropolitan' : 'regional';
-  const suburbNote = d.suburbName ? ` (${d.suburbName})` : '';
-
-  el.innerHTML = `
-    <div class="result-card">
-      <div class="result-card-head">Minimum monthly income — bank's view</div>
-      ${rrow('Loan repayment (stress rate)', fmt(monthlyStress) + '/mo', true)}
-      ${rrow('Min. living expenses — HEM', fmt(hemMonthly) + '/mo', true)}
-      <hr class="rdivider">
-      ${rrow('Combined minimum', fmt(minimumIncome) + '/mo')}
-      <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--dim);margin-top:0.25rem;line-height:1.6;">
-        HEM: ${householdLabel}, ${locationLabel}${suburbNote}. This is the floor the bank starts from — your actual expenses, other debts, and how the bank assesses your income type will all affect this number. Likely higher in practice.
-      </div>
-    </div>`;
-}
-
-function loopBackToHEM() {
-  // Reset HEM state and go back to the gate screen
-  d.hemOptIn = null; d.household = null; d.numDependants = null;
-  d.locationType = null; d.suburbName = null;
-  navHistory.push('hem-gate');
-  show('hem-gate');
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── CEILING 2: Debt-to-Income ────────────────────────────────────────────────
@@ -2392,14 +2114,6 @@ function renderDepositResult() {
   }
 
   renderRepaymentBlock(r.effectiveLoan);
-
-  // HEM block — needs stress rate from repayment calc
-  const purpose = d.isOO ? 'oo' : 'investor';
-  const rateRow = benchmarkRates[purpose];
-  const stressRate = rateRow ? rateRow.rate_pct + 3.0 : null;
-  const monthlyStress = stressRate ? calcMonthlyRepayment(r.effectiveLoan, stressRate) : null;
-  if (monthlyStress) renderHEMBlock(monthlyStress);
-  else { const el = document.getElementById('deposit-hem'); if (el) el.innerHTML = ''; }
 
   advEl.style.display = advisories.length ? 'flex' : 'none';
   advEl.innerHTML = advisories.join('');

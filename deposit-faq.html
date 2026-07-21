@@ -601,7 +601,7 @@ effectiveLVR  = effectiveLoan ÷ price</div>
   </div>
 
   <!-- ── 12. HEM ───────────────────────────────────────────────────────── -->
-  <div class="faq-section">
+  <div class="faq-section" id="section-12">
     <div class="faq-section-title">
       <span class="faq-section-num">12</span>
       Living expenses — HEM benchmarks
@@ -619,16 +619,94 @@ location_type  → 'metro' or 'regional'</div>
     </div>
   </div>
 
-  <!-- ── 13. What's coming ──────────────────────────────────────────────── -->
-  <div class="faq-section">
+  <!-- ── 13. Why 6× DTI ───────────────────────────────────────────────── -->
+  <div class="faq-section" id="dti-methodology">
     <div class="faq-section-title">
       <span class="faq-section-num">13</span>
-      What's coming — Stage 2 and Stage 3
+      Why we use 6× as the DTI threshold
     </div>
     <div class="faq-body">
-      <p><strong>Stage 2 — Debt-to-Income ceiling.</strong> Enter your gross annual income and the tool will calculate your DTI ceiling (APRA's practical 6× limit as of February 2026) and compare it against your deposit ceiling. Whichever is lower becomes your effective maximum.</p>
-      <p><strong>Stage 3 — Serviceability ceiling.</strong> Enter income, living situation, and dependants. The tool will model monthly repayments at a 3% buffer above the actual rate against HEM benchmarks (Melbourne Institute, metro vs regional) and APRA serviceability requirements, and calculate the third ceiling.</p>
-      <p>Once all three stages are live, the tool will show all three ceilings and indicate which one is binding for your specific situation.</p>
+      <p>When the tool flags your debt-to-income ratio, it uses 6× gross annual income as the threshold. Here's why — and why that number is more nuanced than it looks.</p>
+
+      <p><strong>What the 6× rule actually is.</strong> APRA's DTI rule (effective 1 February 2026) is not a per-borrower hard ban. It's a <em>portfolio-level quota</em>: banks cannot write more than 20% of their new residential mortgage lending at DTI ≥ 6× in any quarter. A borrower at 6.5× can still be approved — their application just consumes the bank's limited high-DTI quota for that quarter. There is no statutory individual limit anywhere in Australian lending law.</p>
+
+      <p><strong>Why individual caps are higher — but hidden.</strong> Individual lender hard caps, communicated through broker channels rather than published publicly, are typically higher than 6×. Based on verified broker documentation and lender credit guidelines current as of July 2026:</p>
+
+      <div class="code-block">CBA         ~7× (flags at 4.5×; ≥7× requires manual credit approval)
+NAB          7× hard cap
+Westpac      7× (referred to credit department above this)
+ANZ          7.5× hard cap
+Macquarie    8× hard cap (published broker guidelines v14, Jul 2026)
+             — LVR capped at 80% if DTI >6×</div>
+
+      <p>ING, Suncorp, BOQ, Bendigo, AMP, ME Bank, St George, and Bankwest do not publish individual caps. They manage DTI exposure through internal credit policy and their APRA quota.</p>
+
+      <p><strong>Non-banks are exempt entirely.</strong> APRA's DTI quota only applies to authorised deposit-taking institutions (ADIs). True non-banks — Pepper Money, Liberty Financial, La Trobe Financial, Athena — are not ADIs and are not subject to the 6× portfolio rule. They assess high-DTI applications case by case. ADI-backed digital lenders (Unloan, which is a CBA subsidiary; Tic:Toc / Tiimely, backed by Bendigo Bank) count within their parent's quota.</p>
+
+      <p><strong>So why show 6×?</strong> Because it's the most defensible public threshold we can show without misrepresenting the rules. Above 6× DTI, you are in territory where:</p>
+      <ul>
+        <li>Your application consumes an ADI's limited high-DTI quota — if that quota is full, you're declined regardless of creditworthiness</li>
+        <li>Most mainstream lenders will refer your application to credit department for manual review</li>
+        <li>Your LVR ceiling may drop (Macquarie's 80% cap above 6× is an example; others may apply similar rules internally)</li>
+        <li>You will likely need a specialist broker and possibly a non-bank lender, which typically means a higher interest rate</li>
+      </ul>
+      <p>Showing 7× or 8× as the limit would imply a degree of certainty that doesn't exist — those caps vary by lender, aren't publicly confirmed for most, and can change without notice. 6× is the one number APRA has published, attached a quota to, and which the market has organised itself around.</p>
+
+      <p><strong>What counts as debt.</strong> Credit card limits are counted in full — not your balance, your limit. A $20,000 credit card limit you never use still adds $20,000 to the DTI numerator at every Australian lender. Personal loan and car loan balances, and existing mortgage balances, are included. HECS/HELP debt was excluded from DTI calculations at most lenders from 30 September 2025 — it still reduces your assessed income in serviceability calculations, but it no longer sits in the numerator.</p>
+
+      <p><strong>This tool's DTI ceiling is Ceiling 2.</strong> It sits between your deposit ceiling (Ceiling 1 — what your savings can reach) and your serviceability ceiling (Ceiling 3 — what your income can repay each month). All three need to clear for a loan to proceed. Whichever is lowest is the one that binds you.</p>
+    </div>
+  </div>
+
+  <!-- ── 14. Ceiling 2 methodology ───────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">14</span>
+      Ceiling 2 — Debt-to-income: how it's calculated
+    </div>
+    <div class="faq-body">
+      <p>Ceiling 2 answers: given your income and existing debts, what's the largest loan the APRA DTI threshold allows?</p>
+
+      <p><strong>What the tool collects.</strong> Your existing debts (credit card limits in full, personal and car loan balances, other mortgage balances) and your gross annual income. If the purchase is an investment, the tool also asks for expected weekly rent and applies 80% of that as additional assessable income — the standard lender shading for rental income.</p>
+
+      <p><strong>The calculation.</strong></p>
+      <div class="code-block">assessedIncome   = grossSalary + (weeklyRent × 52 × 0.80)  // investment only
+maxTotalDebt     = assessedIncome × 6
+maxNewMortgage   = maxTotalDebt − creditCardLimits − personalLoans − otherMortgages
+dtiCeilingPrice  = maxNewMortgage ÷ effectiveLVR            // LVR from Ceiling 1 solve</div>
+
+      <p><strong>Why gross income.</strong> DTI is assessed on gross (pre-tax) income at every Australian lender. Superannuation is excluded — it's not income you can service debt with. Bonuses and overtime require a 2-year history before most lenders count them; base salary is the conservative input.</p>
+
+      <p><strong>What "binding" means.</strong> The tool shows both Ceiling 1 (deposit) and Ceiling 2 (DTI) and flags whichever is lower as the current binding ceiling. If your deposit ceiling is $900k but your DTI ceiling is $750k, you can't borrow to $900k regardless of your savings — income is the constraint. See <a href="#dti-methodology">Section 13</a> for why 6× is the threshold used.</p>
+    </div>
+  </div>
+
+  <!-- ── 15. Ceiling 3 methodology ───────────────────────────────────────── -->
+  <div class="faq-section">
+    <div class="faq-section-title">
+      <span class="faq-section-num">15</span>
+      Ceiling 3 — Serviceability: how it's calculated
+    </div>
+    <div class="faq-body">
+      <p>Ceiling 3 answers: given your income and living costs, can you actually afford the monthly repayments — and if so, up to what property price?</p>
+
+      <p><strong>The stress rate.</strong> APRA requires all lenders to assess serviceability at the actual loan rate plus a 3% buffer. The tool uses the RBA average new loan rate for your loan type (owner-occupier or investor P&amp;I), sourced from the same <code>benchmark_rates</code> table as the repayment block in Ceiling 1. Stress rate = that rate + 3%.</p>
+
+      <p><strong>HEM — the living cost floor.</strong> Banks are required by APRA to assume minimum living costs equal to the Household Expenditure Measure (HEM) for your household type, regardless of what expenses you declare. The tool looks up HEM from the <code>hem_benchmarks</code> table using three inputs: household type (single or couple), number of dependants, and metro vs regional location. See <a href="#section-12">Section 12</a> for the HEM source and methodology.</p>
+
+      <p>You can enter your actual expenses if they're higher than HEM. The tool won't allow a figure below HEM — that's the bank's floor and it can't be overridden.</p>
+
+      <p><strong>The calculation.</strong></p>
+      <div class="code-block">monthlyIncome         = assessedIncome ÷ 12
+maxMonthlyRepayment   = monthlyIncome − hemMonthly
+maxLoan               = P&amp;I inverse formula at stress rate over 30 years
+c3CeilingPrice        = maxLoan ÷ effectiveLVR</div>
+
+      <p>The inverse P&amp;I formula derives the loan amount from a given monthly repayment: <code>L = M × ((1+r)^n − 1) / (r × (1+r)^n)</code>, where r is the monthly stress rate and n = 360 months.</p>
+
+      <p><strong>What the outcome screen shows.</strong> All three ceilings side by side, with the lowest one flagged as binding. The serviceability breakdown shows: monthly income, minus HEM, equals maximum monthly repayment, converted to a maximum loan at the stress rate, converted to a maximum property price. The outcome also shows which ceiling is limiting your search — deposit, income, or repayment capacity — so you know what to change if the number isn't where you need it.</p>
+
+      <p><strong>What this is not.</strong> A formal pre-approval. These ceilings are calculated from published benchmarks and the inputs you provided. Lenders apply additional factors — income shading, credit history, property-specific risk, internal policy buffers — that can reduce the approved amount, sometimes materially. Get formal pre-approval from a broker or bank before inspecting properties seriously, and before making any offer.</p>
     </div>
   </div>
 
