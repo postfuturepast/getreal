@@ -629,62 +629,167 @@
     <div class="inset">
       APRA limits banks to writing more than 20% of new mortgages at debt loads above 6× gross income. This is the portfolio threshold where lender books start tightening — two more ceilings to check.
     </div>
-    <button class="btn" onclick="startC2Debts()" style="width: 100%; text-align: center;">
+    <button class="btn" onclick="goTo('c2-mortgages')" style="width: 100%; text-align: center;">
       Let's check →
     </button>
   </div>
 
-  <!-- C2 Debts ────────────────────────────────────────────────────────────── -->
-  <div class="screen" id="screen-c2-debts">
+  <!-- C2 Mortgages ───────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-mortgages">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Debt</span>
+      <span class="step-label">Ceiling 2 — Other mortgages</span>
     </div>
-    <div class="q-label">What debt do you carry?</div>
-    <div class="q-sub">All of this is counted against your income. High card limits you never use count in full — it's the limit, not the balance.</div>
-
-    <div class="debt-row">
-      <div class="debt-label">Mortgage on this purchase</div>
-      <div class="price-input-wrap">
-        <span class="price-prefix">$</span>
-        <input class="debt-input" type="text" id="c2-mortgage-display" disabled>
-      </div>
-      <div class="debt-note">From your deposit ceiling — the loan your savings require. Not editable here.</div>
+    <div class="q-label">Other properties after this purchase?</div>
+    <div class="q-sub">We're asking about mortgages that will <em>continue</em> after you buy this property — other investment or owner-occupied properties you already have loans against. Not the home you're selling to fund this purchase.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="c2SelectHasOtherMortgages(false)">
+        No — this will be my only mortgage
+        <span class="choice-sub">Or I'm paying off any other properties before settlement</span>
+      </button>
+      <button class="choice-btn" onclick="c2SelectHasOtherMortgages(true)">
+        Yes — I'll still have other mortgaged properties
+        <span class="choice-sub">Investment properties, holiday homes, or a family home I'm keeping</span>
+      </button>
     </div>
+  </div>
 
-    <div class="debt-row">
-      <div class="debt-label">Credit card limits — total</div>
-      <div class="price-input-wrap">
-        <span class="price-prefix">$</span>
-        <input class="debt-input" type="text" id="c2-cards-input" inputmode="numeric" placeholder="0"
-          autocomplete="off" oninput="onDebtInput('c2CreditCards', this)">
-      </div>
-      <div class="debt-note">Add up all your card <em>limits</em> — not what you owe, the limit. A $20,000 limit you never use = $20,000 debt in every lender's DTI calculation. Leave blank if none.</div>
+  <!-- C2 Mortgage Count ──────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-mortgage-count">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Other mortgages</span>
     </div>
-
-    <div class="debt-row">
-      <div class="debt-label">Personal + car loans</div>
-      <div class="price-input-wrap">
-        <span class="price-prefix">$</span>
-        <input class="debt-input" type="text" id="c2-loans-input" inputmode="numeric" placeholder="0"
-          autocomplete="off" oninput="onDebtInput('c2PersonalLoans', this)">
-      </div>
-      <div class="debt-note">Total outstanding balance across all personal loans, car finance, and BNPL. Leave blank if none.</div>
+    <div class="q-label">How many mortgaged properties?</div>
+    <div class="q-sub">Count each property you'll still have a mortgage against after this purchase settles.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="c2SetMortgageCount(1)">1 property</button>
+      <button class="choice-btn" onclick="c2SetMortgageCount(2)">2 properties</button>
+      <button class="choice-btn" onclick="c2SetMortgageCount(3)">3 properties</button>
+      <button class="choice-btn" onclick="c2SetMortgageCount(99)">More than 3</button>
     </div>
+  </div>
 
-    <div class="debt-row">
-      <div class="debt-label">Other mortgage balances</div>
-      <div class="price-input-wrap">
-        <span class="price-prefix">$</span>
-        <input class="debt-input" type="text" id="c2-othermortgages-input" inputmode="numeric" placeholder="0"
-          autocomplete="off" oninput="onDebtInput('c2OtherMortgages', this)">
-      </div>
-      <div class="debt-note">Outstanding balance on any other property loans you already hold. Not this purchase — that's above.</div>
+  <!-- C2 Too Many Mortgages ──────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-too-many">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
     </div>
+    <div class="q-label">Four properties.</div>
+    <div class="q-sub">GetReal isn't built for portfolios this size. If you hold 4 or more mortgaged properties, your situation involves enough moving parts that this tool will mislead more than it helps. You need a broker, not a score.</div>
+    <div class="inset">Talk to a mortgage broker who specialises in portfolio lending. They can run the actual serviceability models lenders use.</div>
+    <button class="btn" onclick="restart()" style="width: 100%; text-align: center;">Start over</button>
+  </div>
 
-    <button class="btn" onclick="goTo('c2-applicant')" style="width: 100%; text-align: center;">
+  <!-- C2 Mortgage Details ────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-mortgage-details">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Mortgage details</span>
+    </div>
+    <div class="q-label">Tell us about each property.</div>
+    <div class="q-sub">Enter the current outstanding mortgage balance, whether it will be rented or owner-occupied, and (if rented) the expected weekly rent you'll receive.</div>
+    <div id="c2-mortgage-rows" style="display:flex;flex-direction:column;gap:1.25rem;"></div>
+    <button class="btn" id="c2-mortgage-submit" onclick="submitC2MortgageDetails()" style="width:100%;text-align:center;margin-top:0.5rem;opacity:0.35;" disabled>
       Continue →
     </button>
+  </div>
+
+  <!-- C2 Credit Cards ────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-cards">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Credit cards</span>
+    </div>
+    <div class="q-label">Do you have credit cards?</div>
+    <div class="q-sub">Lenders count your total approved <em>limit</em> — not your balance. A $20,000 limit you never touch = $20,000 of debt in every DTI calculation.</div>
+    <div class="choices" id="c2-cards-choices">
+      <button class="choice-btn" onclick="c2SelectHasCards(false)">No credit cards</button>
+      <button class="choice-btn" onclick="c2SelectHasCards(true)">Yes — I have credit cards</button>
+    </div>
+    <div id="c2-cards-detail" style="display:none;flex-direction:column;gap:0.85rem;">
+      <div class="debt-row">
+        <div class="debt-label">Total combined limit across all cards</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="debt-input" type="text" id="c2-cards-limit-input" inputmode="numeric" placeholder="0"
+            autocomplete="off" oninput="onC2CardLimitInput(this)">
+        </div>
+        <div class="debt-note">Add up every card's limit. If you have two cards at $10,000 each, enter $20,000.</div>
+      </div>
+      <div id="c2-cards-intent-wrap" style="display:none;flex-direction:column;gap:0.5rem;">
+        <div class="debt-label" style="margin-bottom:0.25rem;">Before settlement, are you planning to…</div>
+        <div class="choices" style="gap:0.35rem;">
+          <button class="choice-btn" onclick="c2SelectCardIntent('keep')" id="c2-card-keep">Keep all cards at current limits</button>
+          <button class="choice-btn" onclick="c2SelectCardIntent('reduce')" id="c2-card-reduce">
+            Reduce one or more limits
+            <span class="choice-sub">Reducing limits before applying can materially improve your DTI</span>
+          </button>
+          <button class="choice-btn" onclick="c2SelectCardIntent('close')" id="c2-card-close">
+            Close some or all cards
+            <span class="choice-sub">The most effective move — closed cards are excluded from DTI entirely</span>
+          </button>
+        </div>
+      </div>
+      <div id="c2-cards-new-limit-wrap" style="display:none;flex-direction:column;gap:0.5rem;">
+        <div class="debt-row">
+          <div class="debt-label" id="c2-cards-new-limit-label">What will the remaining total limit be?</div>
+          <div class="price-input-wrap">
+            <span class="price-prefix">$</span>
+            <input class="debt-input" type="text" id="c2-cards-new-limit-input" inputmode="numeric" placeholder="0"
+              autocomplete="off" oninput="onC2CardNewLimitInput(this)">
+          </div>
+          <div class="debt-note">Enter 0 if you're closing all cards entirely.</div>
+        </div>
+        <button class="btn" id="c2-cards-confirm" onclick="confirmC2Cards()" style="width:100%;text-align:center;opacity:0.35;" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- C2 HECS ────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-hecs">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Student debt</span>
+    </div>
+    <div class="q-label">HECS/HELP student debt?</div>
+    <div class="q-sub">Since September 2025, HECS/HELP is excluded from lender debt-to-income calculations.</div>
+    <div class="choices" id="c2-hecs-choices">
+      <button class="choice-btn" onclick="c2SelectHECS(false)">No HECS/HELP debt</button>
+      <button class="choice-btn" onclick="c2SelectHECS(true)">Yes — I have HECS/HELP</button>
+    </div>
+    <div id="c2-hecs-info" style="display:none;flex-direction:column;gap:0.75rem;">
+      <div class="note-box blue">
+        <strong>Good news — HECS/HELP is excluded from the DTI cap.</strong> Since 30 September 2025, APRA-regulated lenders must exclude HECS/HELP balances when calculating your debt-to-income ratio. It won't count against your borrowing cap here.<br><br>
+        It does still reduce your take-home pay (the ATO compulsorily withholds repayments above certain income thresholds), which matters for your Ceiling 3 serviceability check.
+      </div>
+      <button class="btn" onclick="goTo('c2-otherloans')" style="width:100%;text-align:center;">Continue →</button>
+    </div>
+  </div>
+
+  <!-- C2 Other Loans ─────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-otherloans">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Other loans</span>
+    </div>
+    <div class="q-label">Any other ongoing debt?</div>
+    <div class="q-sub">Car loans, personal loans, buy-now-pay-later. Not including what we've already covered above.</div>
+    <div class="choices" id="c2-loans-choices">
+      <button class="choice-btn" onclick="c2SelectHasOtherLoans(false)">No other loans</button>
+      <button class="choice-btn" onclick="c2SelectHasOtherLoans(true)">Yes — I have other loans</button>
+    </div>
+    <div id="c2-loans-detail" style="display:none;flex-direction:column;gap:0.85rem;">
+      <div class="debt-label" style="margin-bottom:0;">How many separate loans?</div>
+      <div class="choices" style="gap:0.35rem;" id="c2-loans-count-choices">
+        <button class="choice-btn" onclick="c2SetLoanCount(1)">1</button>
+        <button class="choice-btn" onclick="c2SetLoanCount(2)">2</button>
+        <button class="choice-btn" onclick="c2SetLoanCount(3)">3</button>
+        <button class="choice-btn" onclick="c2SetLoanCount(99)">More than 3 — I'll combine them</button>
+      </div>
+      <div id="c2-loan-rows" style="display:flex;flex-direction:column;gap:1rem;"></div>
+      <button class="btn" id="c2-loans-submit" onclick="submitC2OtherLoans()" style="width:100%;text-align:center;display:none;">Continue →</button>
+    </div>
   </div>
 
   <!-- C2 Applicant ────────────────────────────────────────────────────────── -->
@@ -734,6 +839,7 @@
       </div>
       <div class="debt-note">The rent you expect to receive on this investment. Lenders count 80% of gross rent as assessable income — we apply that shading automatically.</div>
     </div>
+    <div id="c2-existing-rentals-note" style="display:none;flex-direction:column;"></div>
 
     <button class="btn" id="c2-income-submit" onclick="submitC2Income()" style="width: 100%; text-align: center; opacity: 0.35;" disabled>
       Review →
@@ -795,6 +901,34 @@
     </div>
     <button class="btn" onclick="startC3()" style="width: 100%; text-align: center;">
       Let's check →
+    </button>
+  </div>
+
+  <!-- C3 Mortgage Repayments ─────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-mortgage-repayments">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 3 — Mortgage repayments</span>
+    </div>
+    <div class="q-label">Monthly repayments on other mortgages</div>
+    <div class="q-sub">Enter what you currently pay, or let us estimate. Either is valid — an estimate assumes a fresh 30-year P&I loan at the stress rate from your current balance.</div>
+    <div id="c3-mortgage-repayment-rows" style="display:flex;flex-direction:column;gap:1.25rem;"></div>
+    <button class="btn" id="c3-mortgage-rep-submit" onclick="submitC3MortgageRepayments()" style="width:100%;text-align:center;margin-top:0.5rem;opacity:0.35;" disabled>
+      Continue →
+    </button>
+  </div>
+
+  <!-- C3 Loan Repayments ──────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-loan-repayments">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 3 — Loan repayments</span>
+    </div>
+    <div class="q-label">Monthly repayments on other loans</div>
+    <div class="q-sub">What do you currently pay per month on each loan? We're assuming these continue unchanged — wrapping consumer debt into your mortgage could increase your ceiling, but we won't assume that here.</div>
+    <div id="c3-loan-repayment-rows" style="display:flex;flex-direction:column;gap:1rem;"></div>
+    <button class="btn" id="c3-loan-rep-submit" onclick="submitC3LoanRepayments()" style="width:100%;text-align:center;margin-top:0.5rem;opacity:0.35;" disabled>
+      Continue →
     </button>
   </div>
 
@@ -1010,14 +1144,17 @@ const d = {
   locationType:  null,   // 'metro' | 'regional'
   suburbName:    null,   // display name from suburb_postcodes lookup (C3)
   // Ceiling 2 — Debt-to-income
-  c2Applicants:     null,  // 'sole' | 'joint'
-  c2GrossIncome:    0,
-  c2RentalIncome:   0,     // weekly rent (investment path)
-  c2CreditCards:    0,     // total credit card limits (not balances)
-  c2PersonalLoans:  0,     // personal + car loan balances
-  c2OtherMortgages: 0,    // other mortgage balances (not this purchase)
+  c2Applicants:          null,  // 'sole' | 'joint'
+  c2GrossIncome:         0,
+  c2RentalIncome:        0,     // weekly rent on NEW purchase (investment path)
+  c2CreditCards:         0,     // final combined card limit after close/reduce decision
+  c2HasHECS:             false,
+  c2Mortgages:           [],    // [{balance, isInvestment, weeklyRent}] — other mortgages continuing
+  c2OtherLoans:          [],    // [{amount, type}] — car/personal/other
   // Ceiling 3 — Serviceability
-  c3HemAmount:      null,  // chosen monthly living expenses (HEM or user override)
+  c3MortgageRepayments:  [],    // monthly repayment per c2Mortgage (entered or estimated)
+  c3LoanRepayments:      [],    // monthly repayment per c2OtherLoan
+  c3HemAmount:           null,  // chosen monthly living expenses (HEM or user override)
 };
 
 const navHistory = ['intro'];
@@ -1046,8 +1183,8 @@ function restart() {
     propType: null, savings: 0,
     household: null, numDependants: null, locationType: null, suburbName: null,
     c2Applicants: null, c2GrossIncome: 0, c2RentalIncome: 0,
-    c2CreditCards: 0, c2PersonalLoans: 0, c2OtherMortgages: 0,
-    c3HemAmount: null,
+    c2CreditCards: 0, c2HasHECS: false, c2Mortgages: [], c2OtherLoans: [],
+    c3MortgageRepayments: [], c3LoanRepayments: [], c3HemAmount: null,
   });
   lastC1Result = null;
   navHistory.length = 0;
@@ -1550,30 +1687,247 @@ function goToC2Gate() {
   goTo('c2-gate');
 }
 
-function startC2Debts() {
-  // Pre-populate mortgage from cached C1 result
-  const mortgageEl = document.getElementById('c2-mortgage-display');
-  if (mortgageEl && lastC1Result) {
-    mortgageEl.value = Math.round(lastC1Result.effectiveLoan).toLocaleString('en-AU');
+// ─── C2 Mortgages screen ─────────────────────────────────────────────────────
+function c2SelectHasOtherMortgages(hasOther) {
+  if (!hasOther) {
+    d.c2Mortgages = [];
+    goTo('c2-cards');
+  } else {
+    goTo('c2-mortgage-count');
   }
-  // Re-populate debt inputs from d state (on revisit)
-  const fill = (id, field) => {
-    const el = document.getElementById(id);
-    if (el && d[field] > 0) el.value = d[field].toLocaleString('en-AU');
-  };
-  fill('c2-cards-input',        'c2CreditCards');
-  fill('c2-loans-input',        'c2PersonalLoans');
-  fill('c2-othermortgages-input','c2OtherMortgages');
-  goTo('c2-debts');
 }
 
-// ─── C2 debt inputs ──────────────────────────────────────────────────────────
-function onDebtInput(field, el) {
+function c2SetMortgageCount(n) {
+  if (n === 99) { goTo('c2-too-many'); return; }
+  d.c2Mortgages = Array.from({ length: n }, (_, i) =>
+    d.c2Mortgages[i] || { balance: 0, isInvestment: null, weeklyRent: 0 }
+  );
+  renderC2MortgageDetails();
+  goTo('c2-mortgage-details');
+}
+
+function renderC2MortgageDetails() {
+  const container = document.getElementById('c2-mortgage-rows');
+  if (!container) return;
+  container.innerHTML = d.c2Mortgages.map((m, i) => `
+    <div style="border:1px solid var(--border);padding:0.85rem;display:flex;flex-direction:column;gap:0.6rem;">
+      <div style="font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);">Property ${i + 1}</div>
+      <div class="debt-row">
+        <div class="debt-label">Outstanding mortgage balance</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="debt-input" type="text" id="c2-mort-bal-${i}" inputmode="numeric" placeholder="0"
+            autocomplete="off" value="${m.balance > 0 ? m.balance.toLocaleString('en-AU') : ''}"
+            oninput="onC2MortgageBalanceInput(${i}, this)">
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.4rem;">
+        <div class="debt-label">How will this property be used after purchase?</div>
+        <div style="display:flex;gap:0.5rem;">
+          <button onclick="c2SetMortgageType(${i},'oo')" id="c2-mort-oo-${i}"
+            style="flex:1;padding:0.45rem;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;background:${m.isInvestment === false ? 'var(--text)' : 'var(--card)'};color:${m.isInvestment === false ? 'var(--bg)' : 'var(--dim)'};border:1px solid var(--border);cursor:pointer;">
+            Owner-occupied
+          </button>
+          <button onclick="c2SetMortgageType(${i},'investment')" id="c2-mort-inv-${i}"
+            style="flex:1;padding:0.45rem;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;background:${m.isInvestment === true ? 'var(--text)' : 'var(--card)'};color:${m.isInvestment === true ? 'var(--bg)' : 'var(--dim)'};border:1px solid var(--border);cursor:pointer;">
+            Investment (rented)
+          </button>
+        </div>
+      </div>
+      <div id="c2-mort-rent-wrap-${i}" style="display:${m.isInvestment ? 'flex' : 'none'};flex-direction:column;gap:0.35rem;">
+        <div class="debt-row">
+          <div class="debt-label">Expected weekly rent on this property</div>
+          <div class="price-input-wrap">
+            <span class="price-prefix">$</span>
+            <input class="debt-input" type="text" id="c2-mort-rent-${i}" inputmode="numeric" placeholder="0"
+              autocomplete="off" value="${m.weeklyRent > 0 ? m.weeklyRent.toLocaleString('en-AU') : ''}"
+              oninput="onC2MortgageRentInput(${i}, this)">
+          </div>
+          <div class="debt-note">Lenders count 80% of gross rent — we apply that automatically.</div>
+        </div>
+      </div>
+    </div>`).join('');
+  checkC2MortgageSubmit();
+}
+
+function onC2MortgageBalanceInput(i, el) {
   const raw = el.value.replace(/[^0-9]/g, '');
-  if (!raw) { el.value = ''; d[field] = 0; return; }
-  const num = parseInt(raw, 10);
-  d[field] = num;
-  el.value = num.toLocaleString('en-AU');
+  if (!raw) { el.value = ''; d.c2Mortgages[i].balance = 0; }
+  else { const n = parseInt(raw, 10); d.c2Mortgages[i].balance = n; el.value = n.toLocaleString('en-AU'); }
+  checkC2MortgageSubmit();
+}
+
+function c2SetMortgageType(i, type) {
+  d.c2Mortgages[i].isInvestment = (type === 'investment');
+  if (type !== 'investment') d.c2Mortgages[i].weeklyRent = 0;
+  renderC2MortgageDetails(); // re-render to update button styles and show/hide rent
+}
+
+function onC2MortgageRentInput(i, el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c2Mortgages[i].weeklyRent = 0; }
+  else { const n = parseInt(raw, 10); d.c2Mortgages[i].weeklyRent = n; el.value = n.toLocaleString('en-AU'); }
+  checkC2MortgageSubmit();
+}
+
+function checkC2MortgageSubmit() {
+  const btn = document.getElementById('c2-mortgage-submit');
+  if (!btn) return;
+  const ready = d.c2Mortgages.every(m =>
+    m.balance > 0 && m.isInvestment !== null &&
+    (m.isInvestment === false || m.weeklyRent > 0)
+  );
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.35';
+}
+
+function submitC2MortgageDetails() {
+  goTo('c2-cards');
+}
+
+// ─── C2 Credit Cards screen ───────────────────────────────────────────────────
+function c2SelectHasCards(hasCards) {
+  if (!hasCards) {
+    d.c2CreditCards = 0;
+    document.getElementById('c2-cards-choices').style.display = 'none';
+    goTo('c2-hecs');
+    return;
+  }
+  document.getElementById('c2-cards-choices').style.display = 'none';
+  const detail = document.getElementById('c2-cards-detail');
+  detail.style.display = 'flex';
+  const inp = document.getElementById('c2-cards-limit-input');
+  if (inp && d.c2CreditCards > 0) inp.value = d.c2CreditCards.toLocaleString('en-AU');
+}
+
+function onC2CardLimitInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; return; }
+  const n = parseInt(raw, 10);
+  el.value = n.toLocaleString('en-AU');
+  // Show intent options once a non-zero limit is entered
+  const intentWrap = document.getElementById('c2-cards-intent-wrap');
+  if (intentWrap) intentWrap.style.display = n > 0 ? 'flex' : 'none';
+}
+
+function c2SelectCardIntent(intent) {
+  const limitInput = document.getElementById('c2-cards-limit-input');
+  const currentLimit = limitInput ? parseInt(limitInput.value.replace(/[^0-9]/g,''), 10) || 0 : 0;
+  if (intent === 'keep') {
+    d.c2CreditCards = currentLimit;
+    goTo('c2-hecs');
+    return;
+  }
+  // reduce or close — show new limit input
+  const newWrap = document.getElementById('c2-cards-new-limit-wrap');
+  const newLabel = document.getElementById('c2-cards-new-limit-label');
+  if (newWrap) newWrap.style.display = 'flex';
+  if (newLabel) newLabel.textContent = intent === 'close'
+    ? 'What will the remaining total limit be after closing? (enter 0 if closing all)'
+    : 'What will the new total combined limit be after reducing?';
+}
+
+function onC2CardNewLimitInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (raw === '') { el.value = ''; return; }
+  const n = parseInt(raw, 10);
+  el.value = n.toLocaleString('en-AU');
+  const btn = document.getElementById('c2-cards-confirm');
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+function confirmC2Cards() {
+  const inp = document.getElementById('c2-cards-new-limit-input');
+  const raw = inp ? inp.value.replace(/[^0-9]/g, '') : '';
+  d.c2CreditCards = raw ? parseInt(raw, 10) : 0;
+  goTo('c2-hecs');
+}
+
+// ─── C2 HECS screen ───────────────────────────────────────────────────────────
+function c2SelectHECS(has) {
+  d.c2HasHECS = has;
+  if (!has) {
+    goTo('c2-otherloans');
+    return;
+  }
+  document.getElementById('c2-hecs-choices').style.display = 'none';
+  const info = document.getElementById('c2-hecs-info');
+  if (info) info.style.display = 'flex';
+}
+
+// ─── C2 Other Loans screen ────────────────────────────────────────────────────
+function c2SelectHasOtherLoans(has) {
+  if (!has) {
+    d.c2OtherLoans = [];
+    goTo('c2-applicant');
+    return;
+  }
+  document.getElementById('c2-loans-choices').style.display = 'none';
+  const detail = document.getElementById('c2-loans-detail');
+  if (detail) detail.style.display = 'flex';
+}
+
+function c2SetLoanCount(n) {
+  const combined = n === 99;
+  const count = combined ? 1 : n;
+  d.c2OtherLoans = Array.from({ length: count }, (_, i) =>
+    d.c2OtherLoans[i] || { amount: 0, type: combined ? 'combined' : '' }
+  );
+  renderC2LoanRows(combined);
+}
+
+function renderC2LoanRows(combined) {
+  const container = document.getElementById('c2-loan-rows');
+  if (!container) return;
+  container.innerHTML = d.c2OtherLoans.map((l, i) => `
+    <div style="display:flex;flex-direction:column;gap:0.5rem;">
+      <div class="debt-row">
+        <div class="debt-label">${combined ? 'Total combined outstanding balance' : `Loan ${i+1} — outstanding balance`}</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="debt-input" type="text" id="c2-loan-amt-${i}" inputmode="numeric" placeholder="0"
+            autocomplete="off" value="${l.amount > 0 ? l.amount.toLocaleString('en-AU') : ''}"
+            oninput="onC2LoanAmtInput(${i}, this)">
+        </div>
+      </div>
+      ${combined ? '' : `
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        ${['Car','Personal','BNPL','Other'].map(t => `
+          <button onclick="c2SetLoanType(${i},'${t}')"
+            style="padding:0.3rem 0.65rem;font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;background:${l.type===t?'var(--text)':'var(--card)'};color:${l.type===t?'var(--bg)':'var(--dim)'};border:1px solid var(--border);cursor:pointer;">
+            ${t}
+          </button>`).join('')}
+      </div>`}
+    </div>`).join('');
+  const submitBtn = document.getElementById('c2-loans-submit');
+  if (submitBtn) submitBtn.style.display = 'block';
+  checkC2LoansSubmit();
+}
+
+function onC2LoanAmtInput(i, el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c2OtherLoans[i].amount = 0; }
+  else { const n = parseInt(raw, 10); d.c2OtherLoans[i].amount = n; el.value = n.toLocaleString('en-AU'); }
+  checkC2LoansSubmit();
+}
+
+function c2SetLoanType(i, type) {
+  d.c2OtherLoans[i].type = type;
+  renderC2LoanRows(false);
+}
+
+function checkC2LoansSubmit() {
+  const btn = document.getElementById('c2-loans-submit');
+  if (!btn) return;
+  const ready = d.c2OtherLoans.every(l => l.amount > 0);
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.35';
+}
+
+function submitC2OtherLoans() {
+  // Reset C3 loan repayments since loans changed
+  d.c3LoanRepayments = [];
+  goTo('c2-applicant');
 }
 
 // ─── C2 applicant selection ───────────────────────────────────────────────────
@@ -1589,9 +1943,22 @@ function selectC2Applicant(type) {
   if (subEl) subEl.textContent = joint
     ? 'Combined, before tax. Add both applicants\' base salaries. Bonuses and overtime need a 2-year history before most lenders count them. Superannuation is not included.'
     : 'Before tax. Base salary is the safest figure — bonuses and overtime need a 2-year history before most lenders will count them. Superannuation is not included.';
-  // Show/hide rental field (investment path only)
+  // Show/hide new-property rental field
   const rentalWrap = document.getElementById('c2-rental-wrap');
   if (rentalWrap) rentalWrap.style.display = d.isOO ? 'none' : 'flex';
+  // Show existing investment property rents note
+  const existingInvProps = d.c2Mortgages.filter(m => m.isInvestment && m.weeklyRent > 0);
+  const noteEl = document.getElementById('c2-existing-rentals-note');
+  if (noteEl) {
+    if (existingInvProps.length > 0) {
+      const totalWeekly = existingInvProps.reduce((s, m) => s + m.weeklyRent, 0);
+      const totalAssessed = Math.round(totalWeekly * 52 * 0.80);
+      noteEl.style.display = 'flex';
+      noteEl.innerHTML = `<div class="debt-note">We're also counting rental income from your ${existingInvProps.length} existing investment propert${existingInvProps.length > 1 ? 'ies' : 'y'}: <strong>${fmt(totalWeekly)}/wk combined</strong>. Assessed at 80%: <strong>${fmt(totalAssessed)}/yr</strong>.</div>`;
+    } else {
+      noteEl.style.display = 'none';
+    }
+  }
   // Reset income inputs
   const incEl    = document.getElementById('c2-income-input');
   const rentEl   = document.getElementById('c2-rental-input');
@@ -1641,15 +2008,27 @@ function renderC2Review() {
   const el = document.getElementById('c2-review-body');
   if (!el) return;
   const mortgageAmt  = lastC1Result ? Math.round(lastC1Result.effectiveLoan) : 0;
-  const rentalAssessed = d.isOO ? 0 : Math.round(d.c2RentalIncome * 52 * 0.80);
+  const newPropRental = d.isOO ? 0 : Math.round(d.c2RentalIncome * 52 * 0.80);
+  const existInvRental = Math.round(
+    d.c2Mortgages.filter(m => m.isInvestment && m.weeklyRent > 0)
+      .reduce((s, m) => s + m.weeklyRent * 52 * 0.80, 0)
+  );
 
   let html = '';
   html += rvSection('Debt');
   html += '<div style="border-top:1px solid var(--border);">';
   html += rvRow('Mortgage (this purchase)', fmt(mortgageAmt), null, true);
-  html += rvRow('Credit card limits', fmt(d.c2CreditCards), 'c2-debts');
-  html += rvRow('Personal + car loans', fmt(d.c2PersonalLoans), 'c2-debts');
-  html += rvRow('Other mortgages', fmt(d.c2OtherMortgages), 'c2-debts');
+  if (d.c2Mortgages.length > 0) {
+    d.c2Mortgages.forEach((m, i) => {
+      html += rvRow(`Other mortgage ${i+1} (${m.isInvestment ? 'investment' : 'OO'})`, fmt(m.balance), 'c2-mortgage-details');
+    });
+  }
+  if (d.c2CreditCards > 0) html += rvRow('Credit card limits', fmt(d.c2CreditCards), 'c2-cards');
+  if (d.c2OtherLoans.length > 0) {
+    d.c2OtherLoans.forEach((l, i) => {
+      html += rvRow(`${l.type || 'Loan'} ${d.c2OtherLoans.length > 1 ? i+1 : ''}`.trim(), fmt(l.amount), 'c2-otherloans');
+    });
+  }
   html += '</div>';
 
   html += rvSection('Income');
@@ -1657,8 +2036,11 @@ function renderC2Review() {
   html += rvRow('Application', d.c2Applicants === 'joint' ? 'Joint' : 'Sole', 'c2-applicant');
   html += rvRow('Gross annual income', fmt(d.c2GrossIncome), 'c2-income');
   if (!d.isOO && d.c2RentalIncome > 0) {
-    html += rvRow('Rental income (weekly)', fmt(d.c2RentalIncome) + '/wk', 'c2-income');
-    html += rvRow('Rental assessed (×52 × 80%)', fmt(rentalAssessed) + '/yr', null, true);
+    html += rvRow('New property rent (weekly)', fmt(d.c2RentalIncome) + '/wk', 'c2-income');
+    html += rvRow('→ Assessed at 80%', fmt(newPropRental) + '/yr', null, true);
+  }
+  if (existInvRental > 0) {
+    html += rvRow('Existing investment rents (80%)', fmt(existInvRental) + '/yr', 'c2-mortgage-details', true);
   }
   html += '</div>';
 
@@ -1667,23 +2049,28 @@ function renderC2Review() {
 
 // ─── DTI calculation ─────────────────────────────────────────────────────────
 function computeDTI() {
-  const rentalAnnual  = d.isOO ? 0 : d.c2RentalIncome * 52 * 0.80;
-  const totalIncome   = d.c2GrossIncome + rentalAnnual;
-  const newMortgage   = lastC1Result ? lastC1Result.effectiveLoan : 0;
-  const existingDebt  = d.c2CreditCards + d.c2PersonalLoans + d.c2OtherMortgages;
-  const totalDebt     = newMortgage + existingDebt;
-  const currentDTI    = totalIncome > 0 ? totalDebt / totalIncome : Infinity;
+  const newPropRental   = d.isOO ? 0 : d.c2RentalIncome * 52 * 0.80;
+  const existInvRental  = d.c2Mortgages
+    .filter(m => m.isInvestment && m.weeklyRent > 0)
+    .reduce((s, m) => s + m.weeklyRent * 52 * 0.80, 0);
+  const totalIncome     = d.c2GrossIncome + newPropRental + existInvRental;
 
-  const maxTotalDebt   = totalIncome * 6;
-  const maxNewMortgage = Math.max(0, maxTotalDebt - existingDebt);
+  const newMortgage     = lastC1Result ? lastC1Result.effectiveLoan : 0;
+  const mortgageBalances = d.c2Mortgages.reduce((s, m) => s + m.balance, 0);
+  const loanBalances     = d.c2OtherLoans.reduce((s, l) => s + l.amount, 0);
+  const existingDebt    = d.c2CreditCards + mortgageBalances + loanBalances;
+  const totalDebt       = newMortgage + existingDebt;
+  const currentDTI      = totalIncome > 0 ? totalDebt / totalIncome : Infinity;
 
-  // Convert max mortgage → property price using C1 effective LVR
+  const maxTotalDebt    = totalIncome * 6;
+  const maxNewMortgage  = Math.max(0, maxTotalDebt - existingDebt);
+
   const effectiveLVR = lastC1Result && lastC1Result.effectiveLVR > 0
     ? lastC1Result.effectiveLVR
     : getMaxLVR();
   const dtiCeilingPrice = effectiveLVR > 0 ? Math.floor(maxNewMortgage / effectiveLVR) : 0;
 
-  return { rentalAnnual, totalIncome, newMortgage, existingDebt, totalDebt, currentDTI, maxTotalDebt, maxNewMortgage, dtiCeilingPrice };
+  return { newPropRental, existInvRental, totalIncome, newMortgage, mortgageBalances, loanBalances, existingDebt, totalDebt, currentDTI, maxTotalDebt, maxNewMortgage, dtiCeilingPrice };
 }
 
 // ─── C2 result render ────────────────────────────────────────────────────────
@@ -1748,16 +2135,22 @@ function renderC2Result() {
   html += '<div class="result-card" style="margin-top:0.45rem;">';
   html += '<div class="result-card-head">Debt-to-income breakdown</div>';
   html += rrow('Gross income', fmt(dti.totalIncome) + '/yr');
-  if (!d.isOO && dti.rentalAnnual > 0) {
-    html += rrow('Incl. rental income (80% assessed)', fmt(dti.rentalAnnual) + '/yr', true);
+  if (dti.newPropRental > 0) {
+    html += rrow('Incl. new property rental (80%)', fmt(dti.newPropRental) + '/yr', true);
+  }
+  if (dti.existInvRental > 0) {
+    html += rrow('Incl. existing investment rents (80%)', fmt(dti.existInvRental) + '/yr', true);
   }
   html += rrow('6× income = max total debt', fmt(dti.maxTotalDebt));
   html += '<hr class="rdivider">';
-  if (d.c2CreditCards + d.c2PersonalLoans > 0) {
-    html += rrow('Less: cards + personal loans', '−' + fmt(d.c2CreditCards + d.c2PersonalLoans), true);
+  if (dti.mortgageBalances > 0) {
+    html += rrow('Less: other mortgage balances', '−' + fmt(dti.mortgageBalances), true);
   }
-  if (d.c2OtherMortgages > 0) {
-    html += rrow('Less: other mortgage balances', '−' + fmt(d.c2OtherMortgages), true);
+  if (dti.loanBalances > 0) {
+    html += rrow('Less: other loan balances', '−' + fmt(dti.loanBalances), true);
+  }
+  if (d.c2CreditCards > 0) {
+    html += rrow('Less: credit card limits', '−' + fmt(d.c2CreditCards), true);
   }
   html += '<hr class="rdivider">';
   html += rrow('Max new mortgage (6× DTI)', fmt(Math.max(0, dti.maxNewMortgage)));
@@ -1792,13 +2185,164 @@ function goToC3Gate() {
 }
 
 function startC3() {
-  // If household/dependants/location already collected (via C1 HEM flow), skip to HEM screen
+  // Step 1: mortgage repayments (if other mortgages exist)
+  if (d.c2Mortgages.length > 0) {
+    renderC3MortgageRepayments();
+    goTo('c3-mortgage-repayments');
+    return;
+  }
+  // Step 2: loan repayments (if other loans exist)
+  if (d.c2OtherLoans.length > 0) {
+    renderC3LoanRepayments();
+    goTo('c3-loan-repayments');
+    return;
+  }
+  // Step 3: household / dependants / location / HEM
+  c3GoToHouseholdOrHEM();
+}
+
+function c3GoToHouseholdOrHEM() {
   if (d.household !== null && d.numDependants !== null && d.locationType) {
     renderC3HEM();
     goTo('c3-hem');
   } else {
     goTo('c3-household');
   }
+}
+
+// ─── C3 Mortgage Repayments screen ───────────────────────────────────────────
+function estimateMortgageRepayment(balance) {
+  const purpose = d.isOO ? 'oo' : 'investor';
+  const rateRow = benchmarkRates[purpose];
+  const stressRate = rateRow ? rateRow.rate_pct + 3.0 : 9.0;
+  const r = stressRate / 100 / 12;
+  const n = 360;
+  return r > 0 ? balance * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1) : balance / n;
+}
+
+function renderC3MortgageRepayments() {
+  const container = document.getElementById('c3-mortgage-repayment-rows');
+  if (!container) return;
+  // Ensure array is right size
+  while (d.c3MortgageRepayments.length < d.c2Mortgages.length) d.c3MortgageRepayments.push(null);
+
+  container.innerHTML = d.c2Mortgages.map((m, i) => {
+    const est = Math.round(estimateMortgageRepayment(m.balance));
+    return `
+    <div style="border:1px solid var(--border);padding:0.85rem;display:flex;flex-direction:column;gap:0.6rem;">
+      <div style="font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);">
+        Property ${i+1} — ${m.isInvestment ? 'Investment' : 'Owner-occupied'} — balance ${fmt(m.balance)}
+      </div>
+      <div style="display:flex;gap:0.5rem;">
+        <button onclick="c3SetMortgageRepEst(${i},${est})" id="c3-mort-rep-est-btn-${i}"
+          style="flex:1;padding:0.45rem;font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;background:${d.c3MortgageRepayments[i]===est?'var(--text)':'var(--card)'};color:${d.c3MortgageRepayments[i]===est?'var(--bg)':'var(--dim)'};border:1px solid var(--border);cursor:pointer;">
+          Estimate — ${fmt(est)}/mo
+        </button>
+        <button onclick="c3ShowMortgageRepInput(${i})" id="c3-mort-rep-enter-btn-${i}"
+          style="flex:1;padding:0.45rem;font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;background:${d.c3MortgageRepayments[i]&&d.c3MortgageRepayments[i]!==est?'var(--text)':'var(--card)'};color:${d.c3MortgageRepayments[i]&&d.c3MortgageRepayments[i]!==est?'var(--bg)':'var(--dim)'};border:1px solid var(--border);cursor:pointer;">
+          Enter actual
+        </button>
+      </div>
+      <div id="c3-mort-rep-input-wrap-${i}" style="display:${d.c3MortgageRepayments[i]&&d.c3MortgageRepayments[i]!==est?'flex':'none'};flex-direction:column;gap:0.35rem;">
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="debt-input" type="text" id="c3-mort-rep-input-${i}" inputmode="numeric" placeholder="0"
+            autocomplete="off" value="${d.c3MortgageRepayments[i]&&d.c3MortgageRepayments[i]!==est?Math.round(d.c3MortgageRepayments[i]).toLocaleString('en-AU'):''}"
+            oninput="onC3MortRepInput(${i},this)">
+        </div>
+        <div class="debt-note">Monthly P&I repayment you currently make.</div>
+      </div>
+    </div>`;
+  }).join('');
+  checkC3MortgageRepSubmit();
+}
+
+function c3SetMortgageRepEst(i, est) {
+  d.c3MortgageRepayments[i] = est;
+  renderC3MortgageRepayments();
+}
+
+function c3ShowMortgageRepInput(i) {
+  const wrap = document.getElementById(`c3-mort-rep-input-wrap-${i}`);
+  if (wrap) wrap.style.display = 'flex';
+  const inp = document.getElementById(`c3-mort-rep-input-${i}`);
+  if (inp) inp.focus();
+}
+
+function onC3MortRepInput(i, el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c3MortgageRepayments[i] = null; }
+  else { const n = parseInt(raw, 10); d.c3MortgageRepayments[i] = n; el.value = n.toLocaleString('en-AU'); }
+  checkC3MortgageRepSubmit();
+}
+
+function checkC3MortgageRepSubmit() {
+  const btn = document.getElementById('c3-mortgage-rep-submit');
+  if (!btn) return;
+  const ready = d.c3MortgageRepayments.slice(0, d.c2Mortgages.length).every(r => r !== null && r > 0);
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.35';
+}
+
+function submitC3MortgageRepayments() {
+  if (d.c2OtherLoans.length > 0) {
+    renderC3LoanRepayments();
+    goTo('c3-loan-repayments');
+  } else {
+    c3GoToHouseholdOrHEM();
+  }
+}
+
+// ─── C3 Loan Repayments screen ────────────────────────────────────────────────
+function renderC3LoanRepayments() {
+  const container = document.getElementById('c3-loan-repayment-rows');
+  if (!container) return;
+  while (d.c3LoanRepayments.length < d.c2OtherLoans.length) d.c3LoanRepayments.push(null);
+
+  container.innerHTML = d.c2OtherLoans.map((l, i) => `
+    <div style="display:flex;flex-direction:column;gap:0.5rem;">
+      <div class="debt-label">${l.type ? l.type + ' loan' : 'Loan'} ${d.c2OtherLoans.length > 1 ? i+1 : ''} — balance ${fmt(l.amount)}</div>
+      <div class="price-input-wrap">
+        <span class="price-prefix">$</span>
+        <input class="debt-input" type="text" id="c3-loan-rep-${i}" inputmode="numeric" placeholder="0/month"
+          autocomplete="off" value="${d.c3LoanRepayments[i] ? Math.round(d.c3LoanRepayments[i]).toLocaleString('en-AU') : ''}"
+          oninput="onC3LoanRepInput(${i},this)">
+      </div>
+      <div class="debt-note">Monthly repayment amount.</div>
+    </div>`).join('');
+  checkC3LoanRepSubmit();
+}
+
+function onC3LoanRepInput(i, el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c3LoanRepayments[i] = null; }
+  else { const n = parseInt(raw, 10); d.c3LoanRepayments[i] = n; el.value = n.toLocaleString('en-AU'); }
+  checkC3LoanRepSubmit();
+}
+
+function checkC3LoanRepSubmit() {
+  const btn = document.getElementById('c3-loan-rep-submit');
+  if (!btn) return;
+  const ready = d.c3LoanRepayments.slice(0, d.c2OtherLoans.length).every(r => r !== null && r > 0);
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.35';
+}
+
+function submitC3LoanRepayments() {
+  c3GoToHouseholdOrHEM();
+}
+
+// ─── Income tax calculation (ATO 2025-26 brackets) ───────────────────────────
+function calcAnnualTax(grossIncome) {
+  let tax = 0;
+  if (grossIncome <= 18200)       tax = 0;
+  else if (grossIncome <= 45000)  tax = (grossIncome - 18200) * 0.19;
+  else if (grossIncome <= 120000) tax = 5092 + (grossIncome - 45000) * 0.325;
+  else if (grossIncome <= 180000) tax = 29467 + (grossIncome - 120000) * 0.37;
+  else                            tax = 51667 + (grossIncome - 180000) * 0.45;
+  // Medicare levy 2% (simplified — ignores low-income reduction thresholds)
+  const medicare = grossIncome >= 26000 ? grossIncome * 0.02 : 0;
+  return tax + medicare;
 }
 
 // ─── C3 household / dependants / location ────────────────────────────────────
@@ -1960,36 +2504,53 @@ function submitC3HEM() {
 
 // ─── Serviceability calculation ───────────────────────────────────────────────
 function computeServiceability() {
-  const rentalAnnual   = d.isOO ? 0 : d.c2RentalIncome * 52 * 0.80;
-  const totalIncome    = d.c2GrossIncome + rentalAnnual;
-  const monthlyIncome  = totalIncome / 12;
+  // ── Income ──
+  const newPropRental  = d.isOO ? 0 : d.c2RentalIncome * 52 * 0.80;
+  const existInvRental = d.c2Mortgages
+    .filter(m => m.isInvestment && m.weeklyRent > 0)
+    .reduce((s, m) => s + m.weeklyRent * 52 * 0.80, 0);
+  const totalRental    = newPropRental + existInvRental;
+
+  // Net income: tax applied to salary only (rental already shaded at 80%; simplified)
+  const annualTax      = calcAnnualTax(d.c2GrossIncome);
+  const netIncome      = (d.c2GrossIncome - annualTax) + totalRental;
+  const netMonthly     = netIncome / 12;
+
   const hemMonthly     = d.c3HemAmount || 0;
 
-  // Max monthly repayment the income can support after HEM
-  const maxMonthlyRepayment = monthlyIncome - hemMonthly;
+  // ── Existing monthly debt commitments ──
+  const mortgageMonthly = d.c3MortgageRepayments
+    .slice(0, d.c2Mortgages.length).reduce((s, r) => s + (r || 0), 0);
+  const loanMonthly     = d.c3LoanRepayments
+    .slice(0, d.c2OtherLoans.length).reduce((s, r) => s + (r || 0), 0);
+  const cardMonthly     = d.c2CreditCards * 0.03; // 3% of limit/month (maxed assumption)
+  const existingMonthly = mortgageMonthly + loanMonthly + cardMonthly;
+
+  // ── Maximum new repayment available ──
+  const maxMonthlyRepayment = netMonthly - hemMonthly - existingMonthly;
   if (maxMonthlyRepayment <= 0) {
-    return { c3CeilingPrice: 0, maxMonthlyRepayment, monthlyIncome, hemMonthly, maxLoan: 0 };
+    return { c3CeilingPrice: 0, maxMonthlyRepayment, netMonthly, hemMonthly,
+             mortgageMonthly, loanMonthly, cardMonthly, existingMonthly, maxLoan: 0 };
   }
 
-  // Stress rate: current rate + 3% APRA buffer
-  const purpose    = d.isOO ? 'oo' : 'investor';
-  const rateRow    = benchmarkRates[purpose];
-  const stressRateAnnual = rateRow ? rateRow.rate_pct + 3.0 : 9.0; // fallback 9%
+  // ── Stress rate: benchmark + 3% APRA buffer ──
+  const purpose          = d.isOO ? 'oo' : 'investor';
+  const rateRow          = benchmarkRates[purpose];
+  const stressRateAnnual = rateRow ? rateRow.rate_pct + 3.0 : 9.0;
   const r = stressRateAnnual / 100 / 12;
-  const n = 360; // 30-year loan
+  const n = 360;
 
-  // Inverse P&I formula: loan from monthly payment
   const maxLoan = r > 0
-    ? maxMonthlyRepayment * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n))
+    ? maxMonthlyRepayment * (Math.pow(1+r, n) - 1) / (r * Math.pow(1+r, n))
     : maxMonthlyRepayment * n;
 
-  // Price = loan / effective LVR from C1
   const effectiveLVR = lastC1Result && lastC1Result.effectiveLVR > 0
-    ? lastC1Result.effectiveLVR
-    : getMaxLVR();
+    ? lastC1Result.effectiveLVR : getMaxLVR();
   const c3CeilingPrice = effectiveLVR > 0 ? Math.floor(maxLoan / effectiveLVR) : 0;
 
-  return { c3CeilingPrice, maxMonthlyRepayment, monthlyIncome, hemMonthly, maxLoan, stressRateAnnual };
+  return { c3CeilingPrice, maxMonthlyRepayment, netMonthly, hemMonthly,
+           mortgageMonthly, loanMonthly, cardMonthly, existingMonthly,
+           maxLoan, stressRateAnnual, newPropRental, existInvRental };
 }
 
 // ─── Final outcome screen ────────────────────────────────────────────────────
@@ -2055,8 +2616,13 @@ function renderOutcome() {
   if (svc.maxMonthlyRepayment > 0) {
     html += '<div class="result-card" style="margin-top:0.45rem;">';
     html += '<div class="result-card-head">Serviceability breakdown</div>';
-    html += rrow('Monthly income (gross ÷ 12)', fmt(svc.monthlyIncome) + '/mo');
+    html += rrow('Net monthly income (after tax)', fmt(svc.netMonthly) + '/mo');
+    if (svc.newPropRental > 0) html += rrow('Incl. new property rental (80%)', '+' + fmt(svc.newPropRental / 12) + '/mo', true);
+    if (svc.existInvRental > 0) html += rrow('Incl. existing inv. rents (80%)', '+' + fmt(svc.existInvRental / 12) + '/mo', true);
     html += rrow('Less: HEM living expenses', '−' + fmt(svc.hemMonthly) + '/mo', true);
+    if (svc.mortgageMonthly > 0) html += rrow('Less: other mortgage repayments', '−' + fmt(svc.mortgageMonthly) + '/mo', true);
+    if (svc.loanMonthly > 0) html += rrow('Less: other loan repayments', '−' + fmt(svc.loanMonthly) + '/mo', true);
+    if (svc.cardMonthly > 0) html += rrow('Less: credit card minimums (3% of limit)', '−' + fmt(svc.cardMonthly) + '/mo', true);
     html += '<hr class="rdivider">';
     html += rrow('Max monthly repayment', fmt(svc.maxMonthlyRepayment) + '/mo');
     if (svc.stressRateAnnual) {
