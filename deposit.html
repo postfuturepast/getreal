@@ -280,6 +280,57 @@
       color: #fca5a5;
       line-height: 1.65;
     }
+
+    /* ── Ceiling 2: Debt input rows ──────────────────────────────────────── */
+    .debt-row { display: flex; flex-direction: column; gap: 0.35rem; }
+    .debt-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .debt-note {
+      font-family: var(--font-mono);
+      font-size: 0.61rem;
+      color: var(--dim);
+      line-height: 1.6;
+    }
+    .debt-input {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 1.25rem;
+      font-weight: 700;
+      padding: 0.75rem 1rem 0.75rem 2.1rem;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+    .debt-input::-webkit-outer-spin-button,
+    .debt-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .debt-input:focus { border-color: var(--text); }
+    .debt-input:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Ceiling 2: Comparison cards ─────────────────────────────────────── */
+    .ceiling-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .ceiling-card.binding { border-color: var(--blue); }
+    .ceiling-amount {
+      font-size: clamp(1.8rem, 7vw, 2.8rem);
+      font-weight: 800;
+      font-family: var(--font-mono);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .ceiling-amount.dimmed { color: var(--dim); }
   </style>
 </head>
 <body>
@@ -654,12 +705,12 @@
     <div id="deposit-advisories" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
 
     <div class="note-box blue" id="deposit-stage2-note">
-      <strong>Ceiling 1 of 3 — deposit.</strong> Banks also cap total debt at 6× gross income (APRA Debt-to-Income limit, Feb 2026) and require repayments to be serviceable after living costs and a 3% interest rate buffer. Coming next: minimum income required.
+      <strong>Ceiling 1 of 3 — done.</strong> Your deposit limit is above. Now check whether your income and existing debt load change this number.
     </div>
 
-    <div class="note-box wip">
-      <strong>Work in progress.</strong> This tool is being built in public. <a href="deposit-faq.html">Read the full methodology →</a>
-    </div>
+    <button class="btn" id="c2-cta-btn" onclick="goToC2Gate()" style="width: 100%; text-align: center; display: none;">
+      Check Ceiling 2 — Debt-to-income →
+    </button>
 
     <div class="footer-note" style="padding: 0; font-size: 0.62rem;">
       Stamp duty from state revenue offices (June 2026). LMI rates indicative. Registration fees approximate. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology →</a>
@@ -668,6 +719,170 @@
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
       <button class="btn" onclick="restart()">Start again</button>
       <button onclick="goToReview()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── CEILING 2: Debt-to-Income ───────────────────────────────────────── -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- C2 Gate: You give, you get ─────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-gate">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div style="padding-top: 0.25rem;">
+      <div class="eyebrow" style="margin-bottom: 0.75rem;">Ceiling 2 of 3 — Debt-to-income</div>
+      <div class="q-label" style="margin-bottom: 0.65rem;">Now for your debt limit.</div>
+    </div>
+    <div class="note-box blue" style="color: var(--muted);">
+      <strong>You give:</strong> your existing debts and gross annual income.<br>
+      <strong>You get:</strong> the maximum borrowing your debt-to-income ratio allows — and whether it sits above or below your deposit ceiling.
+    </div>
+    <div class="inset">
+      APRA limits banks to writing more than 20% of new mortgages at debt loads above 6× gross income. This is the portfolio threshold where lender books start tightening — two more ceilings to check.
+    </div>
+    <button class="btn" onclick="startC2Debts()" style="width: 100%; text-align: center;">
+      Let's check →
+    </button>
+  </div>
+
+  <!-- C2 Debts ────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-debts">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Debt</span>
+    </div>
+    <div class="q-label">What debt do you carry?</div>
+    <div class="q-sub">All of this is counted against your income. High card limits you never use count in full — it's the limit, not the balance.</div>
+
+    <div class="debt-row">
+      <div class="debt-label">Mortgage on this purchase</div>
+      <div class="price-input-wrap">
+        <span class="price-prefix">$</span>
+        <input class="debt-input" type="text" id="c2-mortgage-display" disabled>
+      </div>
+      <div class="debt-note">From your deposit ceiling — the loan your savings require. Not editable here.</div>
+    </div>
+
+    <div class="debt-row">
+      <div class="debt-label">Credit card limits — total</div>
+      <div class="price-input-wrap">
+        <span class="price-prefix">$</span>
+        <input class="debt-input" type="text" id="c2-cards-input" inputmode="numeric" placeholder="0"
+          autocomplete="off" oninput="onDebtInput('c2CreditCards', this)">
+      </div>
+      <div class="debt-note">Add up all your card <em>limits</em> — not what you owe, the limit. A $20,000 limit you never use = $20,000 debt in every lender's DTI calculation. Leave blank if none.</div>
+    </div>
+
+    <div class="debt-row">
+      <div class="debt-label">Personal + car loans</div>
+      <div class="price-input-wrap">
+        <span class="price-prefix">$</span>
+        <input class="debt-input" type="text" id="c2-loans-input" inputmode="numeric" placeholder="0"
+          autocomplete="off" oninput="onDebtInput('c2PersonalLoans', this)">
+      </div>
+      <div class="debt-note">Total outstanding balance across all personal loans, car finance, and BNPL. Leave blank if none.</div>
+    </div>
+
+    <div class="debt-row">
+      <div class="debt-label">Other mortgage balances</div>
+      <div class="price-input-wrap">
+        <span class="price-prefix">$</span>
+        <input class="debt-input" type="text" id="c2-othermortgages-input" inputmode="numeric" placeholder="0"
+          autocomplete="off" oninput="onDebtInput('c2OtherMortgages', this)">
+      </div>
+      <div class="debt-note">Outstanding balance on any other property loans you already hold. Not this purchase — that's above.</div>
+    </div>
+
+    <button class="btn" onclick="goTo('c2-applicant')" style="width: 100%; text-align: center;">
+      Continue →
+    </button>
+  </div>
+
+  <!-- C2 Applicant ────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-applicant">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Applicant</span>
+    </div>
+    <div class="q-label">Sole or joint application?</div>
+    <div class="q-sub">Joint income counts toward your DTI — and so does both applicants' existing debt, which we've already captured above.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectC2Applicant('sole')">
+        Just me — sole applicant
+        <span class="choice-sub">My income only</span>
+      </button>
+      <button class="choice-btn" onclick="selectC2Applicant('joint')">
+        Me and a co-borrower — joint application
+        <span class="choice-sub">We'll ask for combined gross income on the next screen</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- C2 Income ───────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-income">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Income</span>
+    </div>
+    <div class="q-label" id="c2-income-label">What's your gross annual income?</div>
+    <div class="q-sub" id="c2-income-sub">Before tax. Base salary is the safest figure — bonuses and overtime need a 2-year history before most lenders will count them. Superannuation is not included.</div>
+
+    <div class="debt-row">
+      <div class="debt-label" id="c2-salary-label">Gross annual salary (before tax)</div>
+      <div class="price-input-wrap">
+        <span class="price-prefix">$</span>
+        <input class="price-input" type="text" id="c2-income-input" inputmode="numeric" placeholder="0"
+          autocomplete="off" oninput="onC2IncomeInput(this)" onkeydown="onC2IncomeKey(event)">
+      </div>
+    </div>
+
+    <div id="c2-rental-wrap" style="display: none; flex-direction: column; gap: 0.35rem;">
+      <div class="debt-label">Expected weekly rent on this property</div>
+      <div class="price-input-wrap">
+        <span class="price-prefix">$</span>
+        <input class="price-input" type="text" id="c2-rental-input" inputmode="numeric" placeholder="0"
+          autocomplete="off" oninput="onC2RentalInput(this)">
+      </div>
+      <div class="debt-note">The rent you expect to receive on this investment. Lenders count 80% of gross rent as assessable income — we apply that shading automatically.</div>
+    </div>
+
+    <button class="btn" id="c2-income-submit" onclick="submitC2Income()" style="width: 100%; text-align: center; opacity: 0.35;" disabled>
+      Review →
+    </button>
+  </div>
+
+  <!-- C2 Review ───────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-review">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Review</span>
+    </div>
+    <div class="q-label" style="margin-bottom: 0.65rem;">Check your numbers.</div>
+    <div id="c2-review-body"></div>
+    <button class="btn" onclick="calculateC2AndShow()" style="width: 100%; text-align: center; margin-top: 0.25rem;">
+      Calculate Ceiling 2 →
+    </button>
+  </div>
+
+  <!-- C2 Result ───────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-result">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+      <span class="step-label">Ceiling 2 — Result</span>
+    </div>
+    <div id="c2-result-main"></div>
+    <div class="note-box blue" style="margin-top: 0.25rem;">
+      <strong>Next: Ceiling 3 — serviceability.</strong> Can you actually meet the repayments each month, accounting for living expenses and a 3% interest rate buffer? That's the final check.
+    </div>
+    <div class="note-box wip">
+      <strong>Ceiling 3 in progress.</strong> For now, the lower of Ceiling 1 and Ceiling 2 is your working maximum. Run it by a broker before making offers. <a href="deposit-faq.html">Full methodology →</a>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
+      <button class="btn" onclick="restart()">Start again</button>
+      <button onclick="goTo('deposit-result')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Ceiling 1</button>
     </div>
   </div>
 
@@ -685,6 +900,7 @@ let benchmarkRates  = {};  // purpose ('oo'|'investor') → { rate_pct, referenc
 let hemData         = [];  // all rows from hem_benchmarks
 let dataLoaded      = false;
 let dataError       = false;
+let lastC1Result    = null; // cached C1 solve result for Ceiling 2
 
 async function loadData() {
   try {
@@ -746,7 +962,14 @@ const d = {
   household:     null,   // 'single' | 'couple'
   numDependants: null,   // 0 | 1 | 2 | 3 (3 = "3 or more")
   locationType:  null,   // 'metro' | 'regional'
-  suburbName:   null,   // display label e.g. "Parramatta NSW 2150"
+  suburbName:    null,   // display label e.g. "Parramatta NSW 2150"
+  // Ceiling 2 — Debt-to-income
+  c2Applicants:     null,  // 'sole' | 'joint'
+  c2GrossIncome:    0,
+  c2RentalIncome:   0,     // weekly rent (investment path)
+  c2CreditCards:    0,     // total credit card limits (not balances)
+  c2PersonalLoans:  0,     // personal + car loan balances
+  c2OtherMortgages: 0,    // other mortgage balances (not this purchase)
 };
 
 const navHistory = ['intro'];
@@ -770,7 +993,14 @@ function goBack() {
 }
 
 function restart() {
-  Object.assign(d, { state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null, propType: null, savings: 0, hemOptIn: null, household: null, numDependants: null, locationType: null, suburbName: null });
+  Object.assign(d, {
+    state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null,
+    propType: null, savings: 0,
+    hemOptIn: null, household: null, numDependants: null, locationType: null, suburbName: null,
+    c2Applicants: null, c2GrossIncome: 0, c2RentalIncome: 0,
+    c2CreditCards: 0, c2PersonalLoans: 0, c2OtherMortgages: 0,
+  });
+  lastC1Result = null;
   navHistory.length = 0;
   navHistory.push('intro');
   const inp = document.getElementById('savings-input');
@@ -1424,6 +1654,247 @@ function loopBackToHEM() {
   show('hem-gate');
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── CEILING 2: Debt-to-Income ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── C2 navigation ───────────────────────────────────────────────────────────
+function goToC2Gate() {
+  goTo('c2-gate');
+}
+
+function startC2Debts() {
+  // Pre-populate mortgage from cached C1 result
+  const mortgageEl = document.getElementById('c2-mortgage-display');
+  if (mortgageEl && lastC1Result) {
+    mortgageEl.value = Math.round(lastC1Result.effectiveLoan).toLocaleString('en-AU');
+  }
+  // Re-populate debt inputs from d state (on revisit)
+  const fill = (id, field) => {
+    const el = document.getElementById(id);
+    if (el && d[field] > 0) el.value = d[field].toLocaleString('en-AU');
+  };
+  fill('c2-cards-input',        'c2CreditCards');
+  fill('c2-loans-input',        'c2PersonalLoans');
+  fill('c2-othermortgages-input','c2OtherMortgages');
+  goTo('c2-debts');
+}
+
+// ─── C2 debt inputs ──────────────────────────────────────────────────────────
+function onDebtInput(field, el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d[field] = 0; return; }
+  const num = parseInt(raw, 10);
+  d[field] = num;
+  el.value = num.toLocaleString('en-AU');
+}
+
+// ─── C2 applicant selection ───────────────────────────────────────────────────
+function selectC2Applicant(type) {
+  d.c2Applicants = type;
+  const joint = type === 'joint';
+  // Update income screen copy
+  const labelEl    = document.getElementById('c2-income-label');
+  const salaryEl   = document.getElementById('c2-salary-label');
+  const subEl      = document.getElementById('c2-income-sub');
+  if (labelEl) labelEl.textContent = joint ? "What's your combined gross income?" : "What's your gross annual income?";
+  if (salaryEl) salaryEl.textContent = joint ? 'Combined gross annual salary (before tax)' : 'Gross annual salary (before tax)';
+  if (subEl) subEl.textContent = joint
+    ? 'Combined, before tax. Add both applicants\' base salaries. Bonuses and overtime need a 2-year history before most lenders count them. Superannuation is not included.'
+    : 'Before tax. Base salary is the safest figure — bonuses and overtime need a 2-year history before most lenders will count them. Superannuation is not included.';
+  // Show/hide rental field (investment path only)
+  const rentalWrap = document.getElementById('c2-rental-wrap');
+  if (rentalWrap) rentalWrap.style.display = d.isOO ? 'none' : 'flex';
+  // Reset income inputs
+  const incEl    = document.getElementById('c2-income-input');
+  const rentEl   = document.getElementById('c2-rental-input');
+  if (incEl)  { incEl.value  = d.c2GrossIncome  > 0 ? d.c2GrossIncome.toLocaleString('en-AU')  : ''; }
+  if (rentEl) { rentEl.value = d.c2RentalIncome > 0 ? d.c2RentalIncome.toLocaleString('en-AU') : ''; }
+  setC2IncomeBtn(d.c2GrossIncome > 0);
+  goTo('c2-income');
+}
+
+// ─── C2 income inputs ────────────────────────────────────────────────────────
+function onC2IncomeInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c2GrossIncome = 0; setC2IncomeBtn(false); return; }
+  const num = parseInt(raw, 10);
+  d.c2GrossIncome = num;
+  el.value = num.toLocaleString('en-AU');
+  setC2IncomeBtn(num > 0);
+}
+
+function onC2IncomeKey(e) {
+  if (e.key === 'Enter' && d.c2GrossIncome > 0) submitC2Income();
+}
+
+function onC2RentalInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c2RentalIncome = 0; return; }
+  const num = parseInt(raw, 10);
+  d.c2RentalIncome = num;
+  el.value = num.toLocaleString('en-AU');
+}
+
+function setC2IncomeBtn(enabled) {
+  const btn = document.getElementById('c2-income-submit');
+  if (!btn) return;
+  btn.disabled = !enabled;
+  btn.style.opacity = enabled ? '1' : '0.35';
+}
+
+function submitC2Income() {
+  if (!d.c2GrossIncome) return;
+  renderC2Review();
+  goTo('c2-review');
+}
+
+// ─── C2 review ───────────────────────────────────────────────────────────────
+function renderC2Review() {
+  const el = document.getElementById('c2-review-body');
+  if (!el) return;
+  const mortgageAmt  = lastC1Result ? Math.round(lastC1Result.effectiveLoan) : 0;
+  const rentalAssessed = d.isOO ? 0 : Math.round(d.c2RentalIncome * 52 * 0.80);
+
+  let html = '';
+  html += rvSection('Debt');
+  html += '<div style="border-top:1px solid var(--border);">';
+  html += rvRow('Mortgage (this purchase)', fmt(mortgageAmt), null, true);
+  html += rvRow('Credit card limits', fmt(d.c2CreditCards), 'c2-debts');
+  html += rvRow('Personal + car loans', fmt(d.c2PersonalLoans), 'c2-debts');
+  html += rvRow('Other mortgages', fmt(d.c2OtherMortgages), 'c2-debts');
+  html += '</div>';
+
+  html += rvSection('Income');
+  html += '<div style="border-top:1px solid var(--border);">';
+  html += rvRow('Application', d.c2Applicants === 'joint' ? 'Joint' : 'Sole', 'c2-applicant');
+  html += rvRow('Gross annual income', fmt(d.c2GrossIncome), 'c2-income');
+  if (!d.isOO && d.c2RentalIncome > 0) {
+    html += rvRow('Rental income (weekly)', fmt(d.c2RentalIncome) + '/wk', 'c2-income');
+    html += rvRow('Rental assessed (×52 × 80%)', fmt(rentalAssessed) + '/yr', null, true);
+  }
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+
+// ─── DTI calculation ─────────────────────────────────────────────────────────
+function computeDTI() {
+  const rentalAnnual  = d.isOO ? 0 : d.c2RentalIncome * 52 * 0.80;
+  const totalIncome   = d.c2GrossIncome + rentalAnnual;
+  const newMortgage   = lastC1Result ? lastC1Result.effectiveLoan : 0;
+  const existingDebt  = d.c2CreditCards + d.c2PersonalLoans + d.c2OtherMortgages;
+  const totalDebt     = newMortgage + existingDebt;
+  const currentDTI    = totalIncome > 0 ? totalDebt / totalIncome : Infinity;
+
+  const maxTotalDebt   = totalIncome * 6;
+  const maxNewMortgage = Math.max(0, maxTotalDebt - existingDebt);
+
+  // Convert max mortgage → property price using C1 effective LVR
+  const effectiveLVR = lastC1Result && lastC1Result.effectiveLVR > 0
+    ? lastC1Result.effectiveLVR
+    : getMaxLVR();
+  const dtiCeilingPrice = effectiveLVR > 0 ? Math.floor(maxNewMortgage / effectiveLVR) : 0;
+
+  return { rentalAnnual, totalIncome, newMortgage, existingDebt, totalDebt, currentDTI, maxTotalDebt, maxNewMortgage, dtiCeilingPrice };
+}
+
+// ─── C2 result render ────────────────────────────────────────────────────────
+function calculateC2AndShow() {
+  renderC2Result();
+  goTo('c2-result');
+}
+
+function renderC2Result() {
+  const el = document.getElementById('c2-result-main');
+  if (!el) return;
+  if (!lastC1Result) {
+    el.innerHTML = '<div class="error-box">Ceiling 1 result not found. Please restart.</div>';
+    return;
+  }
+
+  const c1Price = lastC1Result.price;
+  const dti     = computeDTI();
+  const binding = dti.dtiCeilingPrice < c1Price ? 'dti' : 'deposit';
+  const bindingPrice = Math.min(c1Price, dti.dtiCeilingPrice > 0 ? dti.dtiCeilingPrice : 0);
+
+  let html = '';
+
+  // ── Binding ceiling headline ──
+  if (dti.dtiCeilingPrice <= 0) {
+    html += `<div class="result-label-sm">Your ceiling right now</div>`;
+    html += `<div class="result-amount" style="font-size: 1.8rem; color: #fca5a5;">Over the limit</div>`;
+    html += `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);margin-bottom:0.75rem;">Existing debts exceed 6× income before adding this mortgage.</div>`;
+  } else {
+    html += `<div class="result-label-sm">Your ceiling right now</div>`;
+    html += `<div class="result-amount">${fmt(bindingPrice)}</div>`;
+    html += `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);margin-bottom:0.75rem;">Binding ceiling: ${binding === 'dti' ? 'Debt-to-income (Ceiling 2)' : 'Deposit (Ceiling 1)'}</div>`;
+  }
+
+  // ── Two ceiling cards ──
+  html += '<div style="display:flex;flex-direction:column;gap:0.45rem;">';
+
+  // C1 card
+  html += `<div class="ceiling-card${binding === 'deposit' ? ' binding' : ''}">`;
+  html += `<div class="result-card-head">Ceiling 1 — Deposit${binding === 'deposit' ? ' ← binding' : ''}</div>`;
+  html += `<div class="ceiling-amount${binding !== 'deposit' ? ' dimmed' : ''}">${fmt(c1Price)}</div>`;
+  html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--dim);">Maximum price your savings can reach after stamp duty and LMI.</div>`;
+  html += '</div>';
+
+  // C2 card
+  html += `<div class="ceiling-card${binding === 'dti' ? ' binding' : ''}">`;
+  html += `<div class="result-card-head">Ceiling 2 — Debt-to-income${binding === 'dti' ? ' ← binding' : ''}</div>`;
+  if (dti.dtiCeilingPrice <= 0) {
+    html += `<div class="ceiling-amount dimmed">—</div>`;
+    html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:#fca5a5;">Your existing debts alone exceed 6× income. A mainstream lender will not approve this loan until debt is reduced or income increases.</div>`;
+  } else {
+    html += `<div class="ceiling-amount${binding !== 'dti' ? ' dimmed' : ''}">${fmt(dti.dtiCeilingPrice)}</div>`;
+    html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--dim);">Maximum property price at 6× gross income, after existing debts.</div>`;
+  }
+  html += '</div>';
+  html += '</div>';
+
+  // ── DTI breakdown card ──
+  const dtiStr   = isFinite(dti.currentDTI) ? dti.currentDTI.toFixed(1) + '×' : 'N/A';
+  const dtiColor = dti.currentDTI > 7 ? '#fca5a5' : dti.currentDTI > 6 ? '#fbbf24' : 'var(--text)';
+
+  html += '<div class="result-card" style="margin-top:0.45rem;">';
+  html += '<div class="result-card-head">Debt-to-income breakdown</div>';
+  html += rrow('Gross income', fmt(dti.totalIncome) + '/yr');
+  if (!d.isOO && dti.rentalAnnual > 0) {
+    html += rrow('Incl. rental income (80% assessed)', fmt(dti.rentalAnnual) + '/yr', true);
+  }
+  html += rrow('6× income = max total debt', fmt(dti.maxTotalDebt));
+  html += '<hr class="rdivider">';
+  if (d.c2CreditCards + d.c2PersonalLoans > 0) {
+    html += rrow('Less: cards + personal loans', '−' + fmt(d.c2CreditCards + d.c2PersonalLoans), true);
+  }
+  if (d.c2OtherMortgages > 0) {
+    html += rrow('Less: other mortgage balances', '−' + fmt(d.c2OtherMortgages), true);
+  }
+  html += '<hr class="rdivider">';
+  html += rrow('Max new mortgage (6× DTI)', fmt(Math.max(0, dti.maxNewMortgage)));
+  html += '<hr class="rdivider">';
+  html += `<div class="rrow"><span class="rl">Your DTI at Ceiling 1 mortgage</span><span class="rv" style="color:${dtiColor};">${dtiStr} income</span></div>`;
+  html += '</div>';
+
+  // ── Context advisory ──
+  if (dti.dtiCeilingPrice <= 0 || dti.currentDTI > 6) {
+    const level = dti.currentDTI > 7 ? 'high' : 'moderate';
+    html += `<div class="advisory" style="margin-top:0.45rem;">`;
+    if (level === 'moderate') {
+      html += `<strong>Above 6× — but individual lender caps are higher.</strong> Most mainstream lenders hard-cap at 7–8× (CBA/NAB/Westpac ~7×, ANZ 7.5×, Macquarie 8×). At ${dtiStr} you may still find approval — but your application consumes the lender's high-DTI quota, which can fill early in the quarter.`;
+    } else {
+      html += `<strong>At ${dtiStr} income, options narrow significantly.</strong> Most mainstream lenders hard-cap at 7–7.5×. Macquarie caps at 8× but restricts LVR to 80% above 6×. At this level a specialist broker and/or non-bank lender is likely needed — typically at higher rates.`;
+    }
+    html += ` <a href="deposit-faq.html#dti-methodology" style="color:var(--dim);text-decoration:underline;">Why we use 6× →</a></div>`;
+  } else {
+    html += `<div class="note-box" style="margin-top:0.45rem;"><strong>Deposit is your binding ceiling.</strong> Your DTI is ${dtiStr} — below 6×, so income isn't the constraint. Your savings are the limit.</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
 // ─── Repayment calculation ───────────────────────────────────────────────────
 function calcMonthlyRepayment(loan, annualRatePct) {
   // Standard P&I formula: M = L × r(1+r)^n / ((1+r)^n − 1)
@@ -1476,11 +1947,13 @@ function rrow(label, value, dim) {
 
 function renderDepositResult() {
   const r = findMaxPrice(d.savings);
+  lastC1Result = r; // cache for Ceiling 2
 
-  const mainEl = document.getElementById('deposit-result-main');
+  const mainEl  = document.getElementById('deposit-result-main');
   const breakEl = document.getElementById('deposit-result-breakdown');
-  const advEl = document.getElementById('deposit-advisories');
+  const advEl   = document.getElementById('deposit-advisories');
   const stage2El = document.getElementById('deposit-stage2-note');
+  const c2Btn   = document.getElementById('c2-cta-btn');
 
   if (!r) {
     mainEl.innerHTML = `
@@ -1492,10 +1965,12 @@ function renderDepositResult() {
     document.getElementById('deposit-hem').innerHTML = '';
     advEl.innerHTML = '';
     stage2El.style.display = 'none';
+    if (c2Btn) c2Btn.style.display = 'none';
     return;
   }
 
   stage2El.style.display = '';
+  if (c2Btn) c2Btn.style.display = '';
 
   // Headline
   mainEl.innerHTML = `
