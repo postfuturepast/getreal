@@ -585,14 +585,25 @@
     </button>
   </div>
 
-  <!-- ── Review screen ─────────────────────────────────────────────────── -->
+  <!-- ── Review screen 1: Your inputs ─────────────────────────────────── -->
   <div class="screen" id="screen-review">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Review</span>
     </div>
-    <div class="q-label" style="margin-bottom: 0.65rem;">Check before we calculate.</div>
-    <div id="review-body"></div>
+    <div class="q-label" style="margin-bottom: 0.65rem;">Does this look right?</div>
+    <div id="review-inputs"></div>
+    <button class="btn" onclick="goToReviewApply()" style="width: 100%; text-align: center; margin-top: 0.25rem;">
+      Next →
+    </button>
+  </div>
+
+  <!-- ── Review screen 2: What we'll apply ─────────────────────────────── -->
+  <div class="screen" id="screen-review-apply">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label" style="margin-bottom: 0.65rem;">Here's what we'll apply.</div>
+    <div id="review-apply"></div>
     <button class="btn" onclick="calculateAndShow()" style="width: 100%; text-align: center; margin-top: 0.25rem;">
       Calculate →
     </button>
@@ -660,7 +671,7 @@
   <div class="screen" id="screen-c2-mortgages">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Other mortgages</span>
+
     </div>
     <div class="q-label">Other properties after this purchase?</div>
     <div class="q-sub">We're asking about mortgages that will <em>continue</em> after you buy this property — other investment or owner-occupied properties you already have loans against. Not the home you're selling to fund this purchase.</div>
@@ -680,7 +691,7 @@
   <div class="screen" id="screen-c2-mortgage-count">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Other mortgages</span>
+
     </div>
     <div class="q-label">How many mortgaged properties?</div>
     <div class="q-sub">Count each property you'll still have a mortgage against after this purchase settles.</div>
@@ -707,7 +718,7 @@
   <div class="screen" id="screen-c2-mortgage-details">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Mortgage details</span>
+
     </div>
     <div class="q-label">Tell us about each property.</div>
     <div class="q-sub">Enter the current outstanding mortgage balance, whether it will be rented or owner-occupied, and (if rented) the expected weekly rent you'll receive.</div>
@@ -721,7 +732,7 @@
   <div class="screen" id="screen-c2-cards">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Credit cards</span>
+
     </div>
     <div class="q-label">Do you have credit cards?</div>
     <div class="q-sub">Lenders count your total approved <em>limit</em> — not your balance. A $20,000 limit you never touch = $20,000 of debt in every DTI calculation.</div>
@@ -772,7 +783,7 @@
   <div class="screen" id="screen-c2-hecs">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Student debt</span>
+
     </div>
     <div class="q-label">HECS/HELP student debt?</div>
     <div class="q-sub">Since September 2025, HECS/HELP is excluded from lender debt-to-income calculations.</div>
@@ -793,7 +804,7 @@
   <div class="screen" id="screen-c2-otherloans">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Other loans</span>
+
     </div>
     <div class="q-label">Any other ongoing debt?</div>
     <div class="q-sub">Car loans, personal loans, buy-now-pay-later. Not including what we've already covered above.</div>
@@ -818,7 +829,7 @@
   <div class="screen" id="screen-c2-applicant">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Applicant</span>
+
     </div>
     <div class="q-label">Sole or joint application?</div>
     <div class="q-sub">Joint income counts toward your DTI — and so does both applicants' existing debt, which we've already captured above.</div>
@@ -838,7 +849,7 @@
   <div class="screen" id="screen-c2-income">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Income</span>
+
     </div>
     <div class="q-label" id="c2-income-label">What's your gross annual income?</div>
     <div class="q-sub" id="c2-income-sub">Before tax. Base salary is the safest figure — bonuses and overtime need a 2-year history before most lenders will count them. Superannuation is not included.</div>
@@ -872,7 +883,7 @@
   <div class="screen" id="screen-c2-review">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Review</span>
+
     </div>
     <div class="q-label" style="margin-bottom: 0.65rem;">Check your numbers.</div>
     <div id="c2-review-body"></div>
@@ -885,7 +896,7 @@
   <div class="screen" id="screen-c2-result">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 2 — Result</span>
+
     </div>
     <div id="c2-result-main"></div>
     <div class="note-box blue" style="margin-top: 0.25rem;">
@@ -930,7 +941,7 @@
   <div class="screen" id="screen-c3-mortgage-repayments">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 3 — Mortgage repayments</span>
+
     </div>
     <div class="q-label">Monthly repayments on other mortgages</div>
     <div class="q-sub">Enter what you currently pay, or let us estimate. Either is valid — an estimate assumes a fresh 30-year P&I loan at the stress rate from your current balance.</div>
@@ -944,7 +955,7 @@
   <div class="screen" id="screen-c3-loan-repayments">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 3 — Loan repayments</span>
+
     </div>
     <div class="q-label">Monthly repayments on other loans</div>
     <div class="q-sub">What do you currently pay per month on each loan? We're assuming these continue unchanged — wrapping consumer debt into your mortgage could increase your ceiling, but we won't assume that here.</div>
@@ -958,7 +969,7 @@
   <div class="screen" id="screen-c3-household">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 3 — Household</span>
+
     </div>
     <div class="q-label">Who's buying?</div>
     <div class="q-sub">HEM varies by household type. Banks use this to set the minimum living cost floor for your application.</div>
@@ -978,7 +989,7 @@
   <div class="screen" id="screen-c3-dependants">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 3 — Dependants</span>
+
     </div>
     <div class="q-label">How many dependants?</div>
     <div class="q-sub">Children or others you financially support. Each adds to the HEM minimum the bank assumes for your household.</div>
@@ -994,7 +1005,7 @@
   <div class="screen" id="screen-c3-location">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 3 — Location</span>
+
     </div>
     <div class="q-label">Where do you live?</div>
     <div class="q-sub">HEM benchmarks differ between capital cities and regional areas. Banks look at where <em>you</em> live, not where the property is.</div>
@@ -1042,7 +1053,7 @@
   <div class="screen" id="screen-c3-hem">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Ceiling 3 — Living expenses</span>
+
     </div>
     <div class="q-label">Your minimum living expenses</div>
     <div id="c3-hem-statement" class="inset"></div>
@@ -1075,7 +1086,7 @@
   <div class="screen" id="screen-outcome">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Your maximum</span>
+
     </div>
     <div id="outcome-main"></div>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem;">
@@ -1480,13 +1491,9 @@ function rvSection(title) {
   return `<div style="font-family:var(--font-mono);font-size:0.63rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.06em;margin:0.85rem 0 0.25rem;">${title}</div>`;
 }
 
-function renderReviewScreen() {
-  const el = document.getElementById('review-body');
-  if (!el) return;
-
+function getReviewData() {
   const fmtSavings = '$' + Math.round(d.savings || 0).toLocaleString('en-AU');
 
-  // LVR cap
   let lvrCap, lvrWhy;
   if (d.propType === 'apartment') {
     lvrCap = d.isOO ? '90%' : '80%';
@@ -1496,13 +1503,11 @@ function renderReviewScreen() {
     lvrWhy = d.isOO ? `OO ${d.propType} max` : `investor ${d.propType} max`;
   }
 
-  // Purpose screen id
   let purposeScreen = null;
   if (!d.isHBCS) {
     purposeScreen = (d.state === 'VIC' && !d.isFHB) ? 'oo' : 'purpose';
   }
 
-  // Stamp duty note — reflects new build concession where applicable
   const sdNote = (() => {
     const nb = d.isNewBuild;
     switch (d.state) {
@@ -1539,20 +1544,19 @@ function renderReviewScreen() {
     }
   })();
 
-  // Benchmark rate
-  const purpose  = d.isOO ? 'oo' : 'investor';
-  const rateRow  = benchmarkRates[purpose];
-  const rateStr  = rateRow ? `${rateRow.rate_pct.toFixed(2)}% P&I (RBA avg, ${rateRow.reference_month})` : '—';
+  const purpose   = d.isOO ? 'oo' : 'investor';
+  const rateRow   = benchmarkRates[purpose];
+  const rateStr   = rateRow ? `${rateRow.rate_pct.toFixed(2)}% P&I (RBA avg, ${rateRow.reference_month})` : '—';
   const stressStr = rateRow ? `${(rateRow.rate_pct + 3).toFixed(2)}% (rate + 3% APRA buffer)` : '—';
 
-  // Dependant label (unused in review; kept for potential future use)
-  const depLabel = { 0: 'None', 1: '1', 2: '2', 3: '3 or more' };
+  return { fmtSavings, lvrCap, lvrWhy, purposeScreen, sdNote, rateStr, stressStr };
+}
 
-  let html = '';
-
-  // ── Your inputs ──
-  html += rvSection('Your inputs');
-  html += `<div style="border-top:1px solid var(--border);">`;
+function renderReviewInputs() {
+  const el = document.getElementById('review-inputs');
+  if (!el) return;
+  const { fmtSavings, purposeScreen } = getReviewData();
+  let html = `<div style="border-top:1px solid var(--border);">`;
   html += rvRow('Savings', fmtSavings, 'savings');
   html += rvRow('State', d.state || '—', 'state');
   html += rvRow('First home buyer', d.isFHB == null ? '—' : (d.isFHB ? 'Yes' : 'No'), 'fhb');
@@ -1563,22 +1567,30 @@ function renderReviewScreen() {
   html += rvRow('Purpose', d.isOO == null ? '—' : (d.isOO ? 'Owner-occupier' : 'Investment'), purposeScreen);
   html += rvRow('Property type', d.propType ? (d.propType.charAt(0).toUpperCase() + d.propType.slice(1)) : '—', 'proptype');
   html += `</div>`;
+  el.innerHTML = html;
+}
 
-  // ── What we'll apply ──
-  html += rvSection("What we'll apply");
-  html += `<div style="border-top:1px solid var(--border);">`;
+function renderReviewApply() {
+  const el = document.getElementById('review-apply');
+  if (!el) return;
+  const { lvrCap, lvrWhy, sdNote, rateStr, stressStr } = getReviewData();
+  let html = `<div style="border-top:1px solid var(--border);">`;
   html += rvInfo('LVR cap', `${lvrCap} — ${lvrWhy}`);
   html += rvInfo('LMI', 'Premium capitalised into loan if LVR > 80%');
   html += rvInfo('Stamp duty', sdNote);
   html += rvInfo('Interest rate', rateStr);
   html += rvInfo('Stress rate', stressStr);
   html += `</div>`;
-
   el.innerHTML = html;
 }
 
+function goToReviewApply() {
+  renderReviewApply();
+  goTo('review-apply');
+}
+
 function goToReview() {
-  renderReviewScreen();
+  renderReviewInputs();
   goTo('review');
 }
 
