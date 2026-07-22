@@ -693,17 +693,17 @@
 
     </div>
     <div class="q-label">Other properties after this purchase?</div>
-    <div class="q-sub">We're asking about mortgages that will <em>continue</em> after you buy this property — other investment or owner-occupied properties you already have loans against. Not the home you're selling to fund this purchase.</div>
+    <div class="q-sub">Mortgages you'll still have after this purchase settles — not the one you're selling to fund it.</div>
     <div class="choices">
       <button class="choice-btn" onclick="c2SelectHasOtherMortgages(false)">
         No — this will be my only mortgage
-        <span class="choice-sub">Or I'm paying off any other properties before settlement</span>
       </button>
       <button class="choice-btn" onclick="c2SelectHasOtherMortgages(true)">
         Yes — I'll still have other mortgaged properties
-        <span class="choice-sub">Investment properties, holiday homes, or a family home I'm keeping</span>
       </button>
     </div>
+    <button class="fhb-toggle" onclick="toggleDetail('c2-mortgages-detail','c2-mortgages-arrow')"><span id="c2-mortgages-arrow">↓</span> Why does this matter?</button>
+    <div class="fhb-detail" id="c2-mortgages-detail" style="display:none">Each existing mortgage adds to your total debt. Lenders calculate your Debt-to-Income ratio (DTI) across all loans combined — the more you owe elsewhere, the less you can borrow for this purchase.</div>
   </div>
 
   <!-- C2 Mortgage Count ──────────────────────────────────────────────────── -->
@@ -747,54 +747,63 @@
     </button>
   </div>
 
-  <!-- C2 Credit Cards ────────────────────────────────────────────────────── -->
+  <!-- C2 Credit Cards ────────────────────────────────────────────────────────── -->
   <div class="screen" id="screen-c2-cards">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-
     </div>
     <div class="q-label">Do you have credit cards?</div>
-    <div class="q-sub">Lenders count your total approved <em>limit</em> — not your balance. A $20,000 limit you never touch = $20,000 of debt in every DTI calculation.</div>
-    <div class="choices" id="c2-cards-choices">
+    <div class="q-sub">Lenders count your total approved limit — not your balance. A $20,000 limit you never touch still counts as $20,000 of debt.</div>
+    <div class="choices">
       <button class="choice-btn" onclick="c2SelectHasCards(false)">No credit cards</button>
       <button class="choice-btn" onclick="c2SelectHasCards(true)">Yes — I have credit cards</button>
     </div>
-    <div id="c2-cards-detail" style="display:none;flex-direction:column;gap:0.85rem;">
+    <button class="fhb-toggle" onclick="toggleDetail('cards-why-detail','cards-why-arrow')"><span id="cards-why-arrow">↓</span> Why does this matter?</button>
+    <div class="fhb-detail" id="cards-why-detail" style="display:none">Credit card limits are treated as fully drawn debt in every DTI calculation — regardless of what you actually owe. A card with a $20,000 limit and a $0 balance still adds $20,000 to your total debt. Reducing or closing cards before applying can materially improve your borrowing limit.</div>
+  </div>
+
+  <!-- C2 Credit Card Limit ───────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-card-limit">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label">What's your total credit limit?</div>
+    <div class="q-sub">Add up the approved limit across all your cards — not what you currently owe.</div>
+    <div class="debt-row">
+      <div class="debt-label">Total combined limit across all cards</div>
+      <div class="price-input-wrap">
+        <span class="price-prefix">$</span>
+        <input class="debt-input" type="text" id="c2-cards-limit-input" inputmode="numeric" placeholder="0" autocomplete="off" oninput="onC2CardLimitInput(this)">
+      </div>
+      <div class="debt-note">If you have two cards at $10,000 each, enter $20,000.</div>
+    </div>
+    <button class="btn" id="c2-card-limit-submit" onclick="submitC2CardLimit()" style="width:100%;text-align:center;opacity:0.35;" disabled>Next →</button>
+  </div>
+
+  <!-- C2 Credit Card Intent ──────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-card-intent">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label">Are you planning to reduce or close any cards?</div>
+    <div class="q-sub">Doing this before you apply can meaningfully increase your borrowing limit.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="c2SelectCardIntent('keep')">No — keeping all cards as they are</button>
+      <button class="choice-btn" onclick="c2SelectCardIntent('reduce')">Yes — I'll reduce one or more limits</button>
+      <button class="choice-btn" onclick="c2SelectCardIntent('close')">Yes — I'll close some or all cards</button>
+    </div>
+    <button class="fhb-toggle" onclick="toggleDetail('card-intent-detail','card-intent-arrow')"><span id="card-intent-arrow">↓</span> Why would I do this?</button>
+    <div class="fhb-detail" id="card-intent-detail" style="display:none">Because lenders count your full approved limit as debt — not your balance. Reducing a $20,000 limit to $5,000 removes $15,000 from your debt load. Closing a card removes it entirely. Either move can push your DTI ratio down and meaningfully increase your borrowing limit. It's one of the quickest levers available before an application.</div>
+    <div id="c2-cards-new-limit-wrap" style="display:none;flex-direction:column;gap:0.5rem;margin-top:0.5rem;">
       <div class="debt-row">
-        <div class="debt-label">Total combined limit across all cards</div>
+        <div class="debt-label" id="c2-cards-new-limit-label">What will the remaining total limit be?</div>
         <div class="price-input-wrap">
           <span class="price-prefix">$</span>
-          <input class="debt-input" type="text" id="c2-cards-limit-input" inputmode="numeric" placeholder="0"
-            autocomplete="off" oninput="onC2CardLimitInput(this)">
+          <input class="debt-input" type="text" id="c2-cards-new-limit-input" inputmode="numeric" placeholder="0" autocomplete="off" oninput="onC2CardNewLimitInput(this)">
         </div>
-        <div class="debt-note">Add up every card's limit. If you have two cards at $10,000 each, enter $20,000.</div>
+        <div class="debt-note">Enter 0 if closing all cards entirely.</div>
       </div>
-      <div id="c2-cards-intent-wrap" style="display:none;flex-direction:column;gap:0.5rem;">
-        <div class="debt-label" style="margin-bottom:0.25rem;">Before settlement, are you planning to…</div>
-        <div class="choices" style="gap:0.35rem;">
-          <button class="choice-btn" onclick="c2SelectCardIntent('keep')" id="c2-card-keep">Keep all cards at current limits</button>
-          <button class="choice-btn" onclick="c2SelectCardIntent('reduce')" id="c2-card-reduce">
-            Reduce one or more limits
-            <span class="choice-sub">Reducing limits before applying can materially improve your DTI</span>
-          </button>
-          <button class="choice-btn" onclick="c2SelectCardIntent('close')" id="c2-card-close">
-            Close some or all cards
-            <span class="choice-sub">The most effective move — closed cards are excluded from DTI entirely</span>
-          </button>
-        </div>
-      </div>
-      <div id="c2-cards-new-limit-wrap" style="display:none;flex-direction:column;gap:0.5rem;">
-        <div class="debt-row">
-          <div class="debt-label" id="c2-cards-new-limit-label">What will the remaining total limit be?</div>
-          <div class="price-input-wrap">
-            <span class="price-prefix">$</span>
-            <input class="debt-input" type="text" id="c2-cards-new-limit-input" inputmode="numeric" placeholder="0"
-              autocomplete="off" oninput="onC2CardNewLimitInput(this)">
-          </div>
-          <div class="debt-note">Enter 0 if you're closing all cards entirely.</div>
-        </div>
-        <button class="btn" id="c2-cards-confirm" onclick="confirmC2Cards()" style="width:100%;text-align:center;opacity:0.35;" disabled>Continue →</button>
-      </div>
+      <button class="btn" id="c2-cards-confirm" onclick="confirmC2Cards()" style="width:100%;text-align:center;opacity:0.35;" disabled>Continue →</button>
     </div>
   </div>
 
@@ -851,17 +860,17 @@
 
     </div>
     <div class="q-label">Sole or joint application?</div>
-    <div class="q-sub">Joint income counts toward your DTI — and so does both applicants' existing debt, which we've already captured above.</div>
+    <div class="q-sub">A joint application combines both incomes — which can increase your borrowing limit.</div>
     <div class="choices">
       <button class="choice-btn" onclick="selectC2Applicant('sole')">
         Just me — sole applicant
-        <span class="choice-sub">My income only</span>
       </button>
       <button class="choice-btn" onclick="selectC2Applicant('joint')">
         Me and a co-borrower — joint application
-        <span class="choice-sub">We'll ask for combined gross income on the next screen</span>
       </button>
     </div>
+    <button class="fhb-toggle" onclick="toggleDetail('c2-applicant-detail','c2-applicant-arrow')"><span id="c2-applicant-arrow">↓</span> Why does this matter?</button>
+    <div class="fhb-detail" id="c2-applicant-detail" style="display:none">Lenders assess your Debt-to-Income ratio (DTI) using total gross income. A joint application adds both salaries, which lifts your borrowing cap. The debts captured above also count for both applicants combined.</div>
   </div>
 
   <!-- C2 Income ───────────────────────────────────────────────────────────── -->
@@ -991,17 +1000,17 @@
 
     </div>
     <div class="q-label">Who's buying?</div>
-    <div class="q-sub">HEM varies by household type. Banks use this to set the minimum living cost floor for your application.</div>
+    <div class="q-sub">Banks set a minimum living cost floor that varies by household size. Your answer sets that floor.</div>
     <div class="choices">
       <button class="choice-btn" onclick="c3SelectHousehold('single')">
         Just me
-        <span class="choice-sub">Single applicant</span>
       </button>
       <button class="choice-btn" onclick="c3SelectHousehold('couple')">
         Me and a partner
-        <span class="choice-sub">Joint applicants</span>
       </button>
     </div>
+    <button class="fhb-toggle" onclick="toggleDetail('c3-household-detail','c3-household-arrow')"><span id="c3-household-arrow">↓</span> What is this floor?</button>
+    <div class="fhb-detail" id="c3-household-detail" style="display:none">Banks use a benchmark called HEM — the Household Expenditure Measure — to set a minimum assumed living cost. Even if you spend less, the bank assumes at least HEM. A couple has a higher HEM than a single person, which reduces the surplus income available to service a mortgage.</div>
   </div>
 
   <!-- C3 Dependants ───────────────────────────────────────────────────────── -->
@@ -1033,11 +1042,9 @@
     <div class="choices" id="c3-loc-choices">
       <button class="choice-btn" onclick="showC3SuburbSearch()">
         I know my suburb — look it up
-        <span class="choice-sub">We'll automatically classify metro or regional from our database</span>
       </button>
       <button class="choice-btn" onclick="showC3MetroToggle()">
         I'll estimate
-        <span class="choice-sub">Tell us whether you're in a capital city or regional area</span>
       </button>
     </div>
 
@@ -1057,11 +1064,9 @@
       <div class="choices">
         <button class="choice-btn" onclick="c3SelectLocation('metro')">
           Metropolitan
-          <span class="choice-sub">Capital city or major urban area — Sydney, Melbourne, Brisbane, Perth, Adelaide, Hobart, Darwin, Canberra</span>
         </button>
         <button class="choice-btn" onclick="c3SelectLocation('regional')">
           Regional or rural
-          <span class="choice-sub">Anywhere outside the major capital city boundaries</span>
         </button>
       </div>
       <button class="step-back" onclick="c3BackToLocChoice()">← back</button>
@@ -2239,36 +2244,39 @@ function submitC2MortgageDetails() {
 function c2SelectHasCards(hasCards) {
   if (!hasCards) {
     d.c2CreditCards = 0;
-    document.getElementById('c2-cards-choices').style.display = 'none';
     goTo('c2-hecs');
     return;
   }
-  document.getElementById('c2-cards-choices').style.display = 'none';
-  const detail = document.getElementById('c2-cards-detail');
-  detail.style.display = 'flex';
-  const inp = document.getElementById('c2-cards-limit-input');
-  if (inp && d.c2CreditCards > 0) inp.value = d.c2CreditCards.toLocaleString('en-AU');
+  goTo('c2-card-limit');
 }
 
 function onC2CardLimitInput(el) {
   const raw = el.value.replace(/[^0-9]/g, '');
-  if (!raw) { el.value = ''; return; }
-  const n = parseInt(raw, 10);
-  el.value = n.toLocaleString('en-AU');
-  // Show intent options once a non-zero limit is entered
-  const intentWrap = document.getElementById('c2-cards-intent-wrap');
-  if (intentWrap) intentWrap.style.display = n > 0 ? 'flex' : 'none';
+  if (!raw) { el.value = ''; }
+  else { el.value = parseInt(raw, 10).toLocaleString('en-AU'); }
+  const btn = document.getElementById('c2-card-limit-submit');
+  if (btn) { const enabled = raw !== ''; btn.disabled = !enabled; btn.style.opacity = enabled ? '1' : '0.35'; }
+}
+
+function submitC2CardLimit() {
+  const inp = document.getElementById('c2-cards-limit-input');
+  const raw = inp ? inp.value.replace(/[^0-9]/g, '') : '';
+  d.c2CreditCards = raw ? parseInt(raw, 10) : 0;
+  // Reset intent screen state before navigating to it
+  const newWrap = document.getElementById('c2-cards-new-limit-wrap');
+  const newInp  = document.getElementById('c2-cards-new-limit-input');
+  const confirmBtn = document.getElementById('c2-cards-confirm');
+  if (newWrap) newWrap.style.display = 'none';
+  if (newInp)  newInp.value = '';
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.style.opacity = '0.35'; }
+  goTo('c2-card-intent');
 }
 
 function c2SelectCardIntent(intent) {
-  const limitInput = document.getElementById('c2-cards-limit-input');
-  const currentLimit = limitInput ? parseInt(limitInput.value.replace(/[^0-9]/g,''), 10) || 0 : 0;
   if (intent === 'keep') {
-    d.c2CreditCards = currentLimit;
     goTo('c2-hecs');
     return;
   }
-  // reduce or close — show new limit input
   const newWrap = document.getElementById('c2-cards-new-limit-wrap');
   const newLabel = document.getElementById('c2-cards-new-limit-label');
   if (newWrap) newWrap.style.display = 'flex';
