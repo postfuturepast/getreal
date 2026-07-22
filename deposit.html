@@ -543,7 +543,7 @@
       <span class="step-label">Step 1 of 5</span>
     </div>
     <div class="q-label">How much have you saved?</div>
-    <div class="q-sub">Total savings you'd put toward this purchase — including your deposit, stamp duty, and registration fees. Don't subtract anything yet; the calculator does that.</div>
+    <div class="q-sub">Everything you'd put toward this purchase — savings, investments, or the net proceeds from selling a property. Don't subtract stamp duty or fees; the calculator does that.</div>
     <div class="price-input-wrap">
       <span class="price-prefix">$</span>
       <input
@@ -557,9 +557,9 @@
         onkeydown="onSavingsKey(event)"
       >
     </div>
-    <div class="price-hint" id="savings-hint">Enter your total savings.</div>
+    <div class="price-hint" id="savings-hint"></div>
     <button class="btn" id="savings-submit" onclick="submitSavings()" style="width: 100%; text-align: center; opacity: 0.35;" disabled>
-      Find my ceiling →
+      Next →
     </button>
   </div>
 
@@ -1305,7 +1305,7 @@ function updateSavingsHint() {
   } else if (!dataLoaded) {
     hint.textContent = 'Loading LMI rate data…';
   } else {
-    hint.textContent = 'Include everything — the calculator deducts stamp duty, registration fees, and LMI from this total.';
+    hint.textContent = '';
     hint.style.color = '';
   }
 }
