@@ -695,11 +695,11 @@
     <div class="q-label">Other properties after this purchase?</div>
     <div class="q-sub">Mortgages you'll still have after this purchase settles — not the one you're selling to fund it.</div>
     <div class="choices">
-      <button class="choice-btn" onclick="c2SelectHasOtherMortgages(false)">
-        No — this will be my only mortgage
-      </button>
       <button class="choice-btn" onclick="c2SelectHasOtherMortgages(true)">
         Yes — I'll still have other mortgaged properties
+      </button>
+      <button class="choice-btn" onclick="c2SelectHasOtherMortgages(false)">
+        No — this will be my only mortgage
       </button>
     </div>
     <button class="fhb-toggle" onclick="toggleDetail('c2-mortgages-detail','c2-mortgages-arrow')"><span id="c2-mortgages-arrow">↓</span> Why does this matter?</button>
@@ -755,8 +755,8 @@
     <div class="q-label">Do you have credit cards?</div>
     <div class="q-sub">Lenders count your total approved limit — not your balance. A $20,000 limit you never touch still counts as $20,000 of debt.</div>
     <div class="choices">
-      <button class="choice-btn" onclick="c2SelectHasCards(false)">No credit cards</button>
       <button class="choice-btn" onclick="c2SelectHasCards(true)">Yes — I have credit cards</button>
+      <button class="choice-btn" onclick="c2SelectHasCards(false)">No — I don't have credit cards</button>
     </div>
     <button class="fhb-toggle" onclick="toggleDetail('cards-why-detail','cards-why-arrow')"><span id="cards-why-arrow">↓</span> Why does this matter?</button>
     <div class="fhb-detail" id="cards-why-detail" style="display:none">Credit card limits are treated as fully drawn debt in every DTI calculation — regardless of what you actually owe. A card with a $20,000 limit and a $0 balance still adds $20,000 to your total debt. Reducing or closing cards before applying can materially improve your borrowing limit.</div>
@@ -785,23 +785,23 @@
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
-    <div class="q-label">Are you planning to reduce or close any cards?</div>
+    <div class="q-label">What are you planning to do with your cards?</div>
     <div class="q-sub">Doing this before you apply can meaningfully increase your borrowing limit.</div>
     <div class="choices">
-      <button class="choice-btn" onclick="c2SelectCardIntent('keep')">No — keeping all cards as they are</button>
-      <button class="choice-btn" onclick="c2SelectCardIntent('reduce')">Yes — I'll reduce one or more limits</button>
-      <button class="choice-btn" onclick="c2SelectCardIntent('close')">Yes — I'll close some or all cards</button>
+      <button class="choice-btn" onclick="c2SelectCardIntent('keep')">Keep them as they are</button>
+      <button class="choice-btn" onclick="c2SelectCardIntent('reduce')">Reduce the limits</button>
+      <button class="choice-btn" onclick="c2SelectCardIntent('close')">Close them completely</button>
     </div>
     <button class="fhb-toggle" onclick="toggleDetail('card-intent-detail','card-intent-arrow')"><span id="card-intent-arrow">↓</span> Why would I do this?</button>
     <div class="fhb-detail" id="card-intent-detail" style="display:none">Because lenders count your full approved limit as debt — not your balance. Reducing a $20,000 limit to $5,000 removes $15,000 from your debt load. Closing a card removes it entirely. Either move can push your DTI ratio down and meaningfully increase your borrowing limit. It's one of the quickest levers available before an application.</div>
     <div id="c2-cards-new-limit-wrap" style="display:none;flex-direction:column;gap:0.5rem;margin-top:0.5rem;">
       <div class="debt-row">
-        <div class="debt-label" id="c2-cards-new-limit-label">What will the remaining total limit be?</div>
+        <div class="debt-label">What will the new total combined limit be?</div>
         <div class="price-input-wrap">
           <span class="price-prefix">$</span>
           <input class="debt-input" type="text" id="c2-cards-new-limit-input" inputmode="numeric" placeholder="0" autocomplete="off" oninput="onC2CardNewLimitInput(this)">
         </div>
-        <div class="debt-note">Enter 0 if closing all cards entirely.</div>
+        <div class="debt-note">Add up the new approved limits across all remaining cards.</div>
       </div>
       <button class="btn" id="c2-cards-confirm" onclick="confirmC2Cards()" style="width:100%;text-align:center;opacity:0.35;" disabled>Continue →</button>
     </div>
@@ -816,8 +816,8 @@
     <div class="q-label">HECS/HELP student debt?</div>
     <div class="q-sub">Since September 2025, HECS/HELP is excluded from lender debt-to-income calculations.</div>
     <div class="choices" id="c2-hecs-choices">
-      <button class="choice-btn" onclick="c2SelectHECS(false)">No HECS/HELP debt</button>
-      <button class="choice-btn" onclick="c2SelectHECS(true)">Yes — I have HECS/HELP</button>
+      <button class="choice-btn" onclick="c2SelectHECS(true)">Yes — I have HECS/HELP debt</button>
+      <button class="choice-btn" onclick="c2SelectHECS(false)">No — I don't have HECS/HELP debt</button>
     </div>
     <div id="c2-hecs-info" style="display:none;flex-direction:column;gap:0.75rem;">
       <div class="note-box blue">
@@ -837,8 +837,8 @@
     <div class="q-label">Any other ongoing debt?</div>
     <div class="q-sub">Car loans, personal loans, buy-now-pay-later. Not including what we've already covered above.</div>
     <div class="choices" id="c2-loans-choices">
-      <button class="choice-btn" onclick="c2SelectHasOtherLoans(false)">No other loans</button>
       <button class="choice-btn" onclick="c2SelectHasOtherLoans(true)">Yes — I have other loans</button>
+      <button class="choice-btn" onclick="c2SelectHasOtherLoans(false)">No — I don't have other loans</button>
     </div>
     <div id="c2-loans-detail" style="display:none;flex-direction:column;gap:0.85rem;">
       <div class="debt-label" style="margin-bottom:0;">How many separate loans?</div>
@@ -2286,12 +2286,18 @@ function c2SelectCardIntent(intent) {
     goTo('c2-hecs');
     return;
   }
+  if (intent === 'close') {
+    d.c2CreditCards = 0;
+    goTo('c2-hecs');
+    return;
+  }
+  // reduce — show new limit input
   const newWrap = document.getElementById('c2-cards-new-limit-wrap');
-  const newLabel = document.getElementById('c2-cards-new-limit-label');
+  const newInp  = document.getElementById('c2-cards-new-limit-input');
+  const confirmBtn = document.getElementById('c2-cards-confirm');
   if (newWrap) newWrap.style.display = 'flex';
-  if (newLabel) newLabel.textContent = intent === 'close'
-    ? 'What will the remaining total limit be after closing? (enter 0 if closing all)'
-    : 'What will the new total combined limit be after reducing?';
+  if (newInp)  { newInp.value = ''; }
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.style.opacity = '0.35'; }
 }
 
 function onC2CardNewLimitInput(el) {
