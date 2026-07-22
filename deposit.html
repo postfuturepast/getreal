@@ -590,7 +590,7 @@
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
-    <div class="q-label" style="margin-bottom: 0.65rem;">Does this look right?</div>
+    <div class="q-label" style="margin-bottom: 0.65rem;">Here's what you told us.</div>
     <div id="review-inputs"></div>
     <button class="btn" onclick="goToReviewApply()" style="width: 100%; text-align: center; margin-top: 0.25rem;">
       Next →
@@ -1563,7 +1563,7 @@ function renderReviewInputs() {
   if (d.state === 'ACT') {
     html += rvRow('ACT HBCS', d.isHBCS == null ? '—' : (d.isHBCS ? 'Yes' : 'No'), 'hbcs');
   }
-  html += rvRow('New build', d.isNewBuild == null ? '—' : (d.isNewBuild ? 'Yes — new build / off-the-plan' : 'No — established home'), 'newbuild');
+  html += rvRow('New build', d.isNewBuild == null ? '—' : (d.isNewBuild ? 'Yes' : 'No'), 'newbuild');
   html += rvRow('Purpose', d.isOO == null ? '—' : (d.isOO ? 'Owner-occupier' : 'Investment'), purposeScreen);
   html += rvRow('Property type', d.propType ? (d.propType.charAt(0).toUpperCase() + d.propType.slice(1)) : '—', 'proptype');
   html += `</div>`;
