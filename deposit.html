@@ -488,17 +488,19 @@
       <span class="step-label">Step 4 of 5</span>
     </div>
     <div class="q-label">How do you plan to use this property?</div>
+    <div class="q-sub">Your answer affects both stamp duty and how much you can borrow.</div>
     <div class="choices">
       <button class="choice-btn" onclick="selectOO(true)">
         Live in it — my principal residence
-        <span class="choice-sub">Borrow up to 95% of the purchase price (houses/townhouses), or 90% (apartments)</span>
       </button>
       <button class="choice-btn" onclick="selectOO(false)">
         I won't live in it — investment
-        <span class="choice-sub">Borrow up to 90% of the purchase price (houses/townhouses), or 80% (apartments)</span>
       </button>
     </div>
-    <div class="q-sub">Victoria charges a lower stamp duty rate for owner-occupiers on homes up to $550,000. This answer also determines your maximum LVR — lenders cap investor borrowing lower than owner-occupier.</div>
+    <button class="fhb-toggle" onclick="toggleDetail('oo-detail', 'oo-arrow')">
+      <span id="oo-arrow">↓</span> Why does this matter?
+    </button>
+    <div class="fhb-detail" id="oo-detail" style="display:none">Two things change. First, Victoria charges a lower stamp duty rate for owner-occupiers on homes up to $550,000 — less duty means more of your savings go toward deposit. Second, lenders cap investor borrowing lower than owner-occupier: investors are limited to 90% LVR (houses/townhouses) or 80% (apartments), versus 95% and 90% for owner-occupiers.</div>
   </div>
 
   <!-- ── Screen 3b: New vs established (all states) ───────────────────── -->
@@ -526,17 +528,19 @@
       <span class="step-label">Step 4 of 5</span>
     </div>
     <div class="q-label">Will you live in it?</div>
+    <div class="q-sub">Your answer affects how much you can borrow.</div>
     <div class="choices">
       <button class="choice-btn" onclick="selectPurpose(true)">
         Yes — my home, I'll live there
-        <span class="choice-sub">Borrow up to 95% of the purchase price (houses/townhouses), or 90% (apartments)</span>
       </button>
       <button class="choice-btn" onclick="selectPurpose(false)">
         No — investment property
-        <span class="choice-sub">Borrow up to 90% of the purchase price (houses/townhouses), or 80% (apartments)</span>
       </button>
     </div>
-    <div class="q-sub">Lenders cap investment borrowing lower than owner-occupier. This affects your maximum LVR and therefore the purchase price your deposit can reach.</div>
+    <button class="fhb-toggle" onclick="toggleDetail('purpose-detail', 'purpose-arrow')">
+      <span id="purpose-arrow">↓</span> Why does this matter?
+    </button>
+    <div class="fhb-detail" id="purpose-detail" style="display:none">Lenders cap investment borrowing lower than owner-occupier rates. Owner-occupiers can borrow up to 95% (houses/townhouses) or 90% (apartments). Investors are capped at 90% and 80% respectively. A lower borrowing cap means your deposit has less leverage — so the same savings buy less property.</div>
   </div>
 
   <!-- ── Screen 4: Property type ─────────────────────────────────────────── -->
@@ -546,21 +550,16 @@
       <span class="step-label">Step 5 of 5</span>
     </div>
     <div class="q-label">What type of property?</div>
+    <div class="q-sub">Property type affects how much you can borrow.</div>
     <div class="prop-grid">
-      <button class="prop-btn" onclick="selectPropType('house')">
-        House
-        <small>OO: up to 95%<br>Inv: up to 90%</small>
-      </button>
-      <button class="prop-btn" onclick="selectPropType('townhouse')">
-        Townhouse
-        <small>OO: up to 95%<br>Inv: up to 90%</small>
-      </button>
-      <button class="prop-btn" onclick="selectPropType('apartment')">
-        Apartment
-        <small>OO: up to 90%<br>Inv: up to 80%</small>
-      </button>
+      <button class="prop-btn" onclick="selectPropType('house')">House</button>
+      <button class="prop-btn" onclick="selectPropType('townhouse')">Townhouse</button>
+      <button class="prop-btn" onclick="selectPropType('apartment')">Apartment</button>
     </div>
-    <div class="q-sub">Many lenders impose a lower maximum LVR on apartments — typically 90% for owner-occupiers and 80% for investors. This directly reduces the purchase price your deposit can reach.</div>
+    <button class="fhb-toggle" onclick="toggleDetail('proptype-detail', 'proptype-arrow')">
+      <span id="proptype-arrow">↓</span> Why does this matter?
+    </button>
+    <div class="fhb-detail" id="proptype-detail" style="display:none">Many lenders impose a lower maximum LVR on apartments — typically 90% for owner-occupiers and 80% for investors, versus 95% and 90% for houses and townhouses. A lower LVR cap means your deposit needs to cover a larger share of the purchase price, which reduces how far your savings go.</div>
   </div>
 
   <!-- ── Screen 5: Savings ───────────────────────────────────────────────── -->
@@ -1287,6 +1286,14 @@ function toggleFHBDetail() {
   fhbDetailOpen = !fhbDetailOpen;
   document.getElementById('fhb-detail').style.display = fhbDetailOpen ? 'block' : 'none';
   document.getElementById('fhb-toggle-arrow').textContent = fhbDetailOpen ? '↑' : '↓';
+}
+
+function toggleDetail(panelId, arrowId) {
+  const panel = document.getElementById(panelId);
+  const arrow = document.getElementById(arrowId);
+  const open  = panel.style.display === 'block';
+  panel.style.display = open ? 'none' : 'block';
+  arrow.textContent   = open ? '↓' : '↑';
 }
 
 function selectState(s) {
