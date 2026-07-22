@@ -1091,17 +1091,26 @@ async function loadData() {
       'Authorization': `Bearer ${SB_KEY}`,
     };
     const today = new Date().toISOString().split('T')[0];
-    const [lmiRes, sdRes, regRes, rateRes, hemRes, nbRes] = await Promise.all([
+    const [lmiRes, sdRes, regRes, rateRes, hemRes] = await Promise.all([
       fetch(`${SB_URL}/rest/v1/lmi_rates?select=*&order=lvr_min,loan_max`, { headers }),
       fetch(`${SB_URL}/rest/v1/lmi_stamp_duty_rates?select=*`, { headers }),
       fetch(`${SB_URL}/rest/v1/registration_fees?select=*`, { headers }),
       // OO and investor P&I new loan rates — aggregate (rate_type null = all rate types combined)
       fetch(`${SB_URL}/rest/v1/benchmark_rates?select=purpose,rate_pct,reference_month&repayment_type=eq.pi&loan_status=eq.new&rate_type=is.null&lvr_band=is.null&loan_size_band=is.null&order=reference_month.desc&limit=4`, { headers }),
       fetch(`${SB_URL}/rest/v1/hem_benchmarks?select=*`, { headers }),
-      // New build concessions — filter to currently active rows only
-      fetch(`${SB_URL}/rest/v1/newbuild_concessions?select=*&or=(effective_until.is.null,effective_until.gte.${today})`, { headers }),
     ]);
-    if (!lmiRes.ok || !sdRes.ok || !regRes.ok || !rateRes.ok || !hemRes.ok || !nbRes.ok) throw new Error('HTTP error');
+    if (!lmiRes.ok || !sdRes.ok || !regRes.ok || !rateRes.ok || !hemRes.ok) throw new Error('HTTP error');
+
+    // New build concessions — fetched separately so a failure here doesn't break the whole load
+    try {
+      const nbRes = await fetch(
+        `${SB_URL}/rest/v1/newbuild_concessions?select=*&or=(effective_until.is.null,effective_until.gte.${today})`,
+        { headers }
+      );
+      if (nbRes.ok) newbuildConcessions = await nbRes.json();
+    } catch (nbErr) {
+      console.warn('Could not load newbuild_concessions — new build stamp duty concessions will not apply:', nbErr);
+    }
 
     lmiRates = await lmiRes.json();
     const sdRows   = await sdRes.json();
@@ -1732,6 +1741,27 @@ function findMaxPrice(savings) {
   return best;
 }
 
+// ─── Required deposit for a given price and LVR tier ─────────────────────────
+// Returns the minimum savings a buyer needs to purchase at `price` using `lvrTier`
+// (0.80 / 0.90 / 0.95). Includes deposit component, stamp duty, reg fee, and LMI
+// stamp duty (if applicable). Used by C2/C3 to verify deposit sufficiency.
+function requiredSavingsForPrice(price, lvrTier) {
+  if (price <= 0 || lvrTier <= 0) return null;
+  const stampDuty = calcDutyForPrice(price);
+  const regFee    = regFees[d.state]    || 400;
+  const lmiSdRate = lmiSdRates[d.state] || 0;
+  const baseLoan  = Math.round(price * lvrTier);
+  const depositComponent = price - baseLoan;
+  let lmiPremium = 0, lmiSd = 0;
+  if (lvrTier > 0.80) {
+    const rate = lookupLMIRate(lvrTier * 100, baseLoan);
+    lmiPremium = Math.round(baseLoan * rate);
+    lmiSd      = Math.round(lmiPremium * lmiSdRate);
+  }
+  const requiredSavings = depositComponent + stampDuty + regFee + lmiSd;
+  return { requiredSavings, depositComponent, stampDuty, regFee, lmiPremium, lmiSd, lvrTier };
+}
+
 // ─── HEM lookup ──────────────────────────────────────────────────────────────
 function lookupHEM() {
   if (!d.household || d.numDependants === null || !d.locationType) return null;
@@ -2140,7 +2170,23 @@ function computeDTI() {
   const lvrTier = lastC1Result?.lvrTier || getMaxLVR();
   const dtiCeilingPrice = lvrTier > 0 ? Math.floor(maxNewMortgage / lvrTier) : 0;
 
-  return { newPropRental, existInvRental, totalIncome, newMortgage, mortgageBalances, loanBalances, existingDebt, totalDebt, currentDTI, maxTotalDebt, maxNewMortgage, dtiCeilingPrice, lvrTier };
+  // ── Deposit check: what savings are needed at this ceiling price? ──
+  // If C2 binds (C1 > C2), user's savings already exceed what's needed here —
+  // but we compute and surface this for transparency.
+  let dtiDepositCheck = null;
+  if (dtiCeilingPrice > 0) {
+    const maxLVR_    = getMaxLVR();
+    const regFee_    = regFees[d.state]    || 400;
+    const lmiSdRate_ = lmiSdRates[d.state] || 0;
+    // Use computeAtPrice to determine the actual LVR tier achievable at this price
+    // (may be lower than C1's tier if user has more equity at a lower price)
+    const check = computeAtPrice(dtiCeilingPrice, d.savings, maxLVR_, regFee_, lmiSdRate_);
+    const tierForDisplay = check ? check.lvrTier : lvrTier;
+    const req = requiredSavingsForPrice(dtiCeilingPrice, tierForDisplay);
+    if (req) dtiDepositCheck = { ...req, userSavings: d.savings, sufficient: d.savings >= req.requiredSavings };
+  }
+
+  return { newPropRental, existInvRental, totalIncome, newMortgage, mortgageBalances, loanBalances, existingDebt, totalDebt, currentDTI, maxTotalDebt, maxNewMortgage, dtiCeilingPrice, lvrTier, dtiDepositCheck };
 }
 
 // ─── C2 result render ────────────────────────────────────────────────────────
@@ -2227,6 +2273,24 @@ function renderC2Result() {
   html += '<hr class="rdivider">';
   html += `<div class="rrow"><span class="rl">Your DTI at Ceiling 1 mortgage</span><span class="rv" style="color:${dtiColor};">${dtiStr} income</span></div>`;
   html += '</div>';
+
+  // ── Deposit check at DTI ceiling ──
+  if (dti.dtiCeilingPrice > 0 && dti.dtiDepositCheck) {
+    const dc = dti.dtiDepositCheck;
+    const statusColor = dc.sufficient ? '#4ade80' : '#fca5a5';
+    const statusLabel = dc.sufficient ? '✓ Your savings cover this' : '✗ Savings fall short';
+    html += '<div class="result-card" style="margin-top:0.45rem;">';
+    html += '<div class="result-card-head">Deposit needed at Ceiling 2 price</div>';
+    html += rrow('Property deposit (' + fmtPct(1 - dc.lvrTier) + ' at ' + fmtPct(dc.lvrTier) + ' LVR)', fmt(dc.depositComponent), true);
+    html += rrow('Stamp duty', fmt(dc.stampDuty), true);
+    html += rrow('Registration fee', fmt(dc.regFee), true);
+    if (dc.lmiSd > 0) html += rrow('LMI stamp duty', fmt(dc.lmiSd), true);
+    html += '<hr class="rdivider">';
+    html += rrow('Total required savings', fmt(dc.requiredSavings));
+    html += rrow('Your savings', fmt(dc.userSavings));
+    html += `<div class="rrow"><span class="rl">&nbsp;</span><span class="rv" style="color:${statusColor};font-family:var(--font-mono);font-size:0.7rem;">${statusLabel}</span></div>`;
+    html += '</div>';
+  }
 
   // ── Context advisory ──
   if (dti.dtiCeilingPrice <= 0 || dti.currentDTI > 6) {
@@ -2617,9 +2681,22 @@ function computeServiceability() {
   const lvrTier = lastC1Result?.lvrTier || getMaxLVR();
   const c3CeilingPrice = lvrTier > 0 ? Math.floor(maxLoan / lvrTier) : 0;
 
+  // ── Deposit check: what savings are needed at this ceiling price? ──
+  let c3DepositCheck = null;
+  if (c3CeilingPrice > 0) {
+    const maxLVR_    = getMaxLVR();
+    const regFee_    = regFees[d.state]    || 400;
+    const lmiSdRate_ = lmiSdRates[d.state] || 0;
+    // Determine actual LVR tier achievable at this (lower) price with user's savings
+    const check = computeAtPrice(c3CeilingPrice, d.savings, maxLVR_, regFee_, lmiSdRate_);
+    const tierForDisplay = check ? check.lvrTier : lvrTier;
+    const req = requiredSavingsForPrice(c3CeilingPrice, tierForDisplay);
+    if (req) c3DepositCheck = { ...req, userSavings: d.savings, sufficient: d.savings >= req.requiredSavings };
+  }
+
   return { c3CeilingPrice, maxMonthlyRepayment, netMonthly, hemMonthly,
            mortgageMonthly, loanMonthly, cardMonthly, existingMonthly,
-           maxLoan, stressRateAnnual, newPropRental, existInvRental, lvrTier };
+           maxLoan, stressRateAnnual, newPropRental, existInvRental, lvrTier, c3DepositCheck };
 }
 
 // ─── Final outcome screen ────────────────────────────────────────────────────
@@ -2699,6 +2776,21 @@ function renderOutcome() {
     }
     html += '<hr class="rdivider">';
     html += rrow('Max loan at stress rate', fmt(svc.maxLoan));
+    if (svc.c3DepositCheck) {
+      const dc = svc.c3DepositCheck;
+      const statusColor = dc.sufficient ? '#4ade80' : '#fca5a5';
+      const statusLabel = dc.sufficient ? '✓ Your savings cover this' : '✗ Savings fall short';
+      html += '<hr class="rdivider">';
+      html += '<div class="result-card-head" style="margin-top:0.5rem;">Deposit needed at Ceiling 3 price</div>';
+      html += rrow('Property deposit (' + fmtPct(1 - dc.lvrTier) + ' at ' + fmtPct(dc.lvrTier) + ' LVR)', fmt(dc.depositComponent), true);
+      html += rrow('Stamp duty', fmt(dc.stampDuty), true);
+      html += rrow('Registration fee', fmt(dc.regFee), true);
+      if (dc.lmiSd > 0) html += rrow('LMI stamp duty', fmt(dc.lmiSd), true);
+      html += '<hr class="rdivider">';
+      html += rrow('Total required savings', fmt(dc.requiredSavings));
+      html += rrow('Your savings', fmt(dc.userSavings));
+      html += `<div class="rrow"><span class="rl">&nbsp;</span><span class="rv" style="color:${statusColor};font-family:var(--font-mono);font-size:0.7rem;">${statusLabel}</span></div>`;
+    }
     html += '</div>';
   }
 
