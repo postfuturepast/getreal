@@ -514,8 +514,8 @@
         New build / off the plan
       </button>
     </div>
-    <button class="fhb-toggle" id="newbuild-toggle" onclick="toggleDetail('newbuild-detail', 'newbuild-arrow')" style="display:none">
-      <span id="newbuild-arrow">↓</span> What concessions apply in <span id="newbuild-toggle-state"></span>?
+    <button class="fhb-toggle" id="newbuild-toggle" onclick="toggleDetail('newbuild-detail', 'newbuild-arrow')">
+      <span id="newbuild-arrow">↓</span> What does this mean in <span id="newbuild-toggle-state"></span>?
     </button>
     <div class="fhb-detail" id="newbuild-detail" style="display:none"></div>
   </div>
@@ -1377,12 +1377,9 @@ function goToNewBuild() {
   const toggleBtn  = document.getElementById('newbuild-toggle');
   const detailEl   = document.getElementById('newbuild-detail');
   document.getElementById('newbuild-toggle-state').textContent = STATE_NAMES[d.state] || d.state;
-  if (desc) {
-    detailEl.textContent   = desc;
-    toggleBtn.style.display = 'inline';
-  } else {
-    toggleBtn.style.display = 'none';
-  }
+  const name = STATE_NAMES[d.state] || d.state;
+  detailEl.textContent = desc ||
+    `There are no special new build stamp duty concessions in ${name} — the same rates apply to new and established homes. Your answer here helps us apply the right rules if concessions are introduced in future.`;
   goTo('newbuild');
 }
 
