@@ -96,6 +96,25 @@
       font-family: var(--font-mono);
     }
 
+    .apply-item {
+      padding: 0.9rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .apply-item:first-child { border-top: 1px solid var(--border); }
+    .apply-heading {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+      line-height: 1.3;
+    }
+    .apply-body {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
     .fhb-toggle {
       background: none;
       border: none;
@@ -1573,15 +1592,147 @@ function renderReviewInputs() {
 function renderReviewApply() {
   const el = document.getElementById('review-apply');
   if (!el) return;
-  const { lvrCap, lvrWhy, sdNote, rateStr, stressStr } = getReviewData();
-  let html = `<div style="border-top:1px solid var(--border);">`;
-  html += rvInfo('LVR cap', `${lvrCap} — ${lvrWhy}`);
-  html += rvInfo('LMI', 'Premium capitalised into loan if LVR > 80%');
-  html += rvInfo('Stamp duty', sdNote);
-  html += rvInfo('Interest rate', rateStr);
-  html += rvInfo('Stress rate', stressStr);
-  html += `</div>`;
-  el.innerHTML = html;
+  const { lvrCap, rateStr, stressStr } = getReviewData();
+
+  const propLabel = d.propType || 'property';
+  const purposeLabel = d.isOO ? 'owner-occupier' : 'investor';
+
+  // ── LVR sentence ──
+  let lvrHeading, lvrBody;
+  if (d.propType === 'apartment') {
+    lvrHeading = `You can borrow up to ${lvrCap} of the purchase price.`;
+    lvrBody = d.isOO
+      ? `Lenders treat apartments as slightly higher risk than houses, so the cap is a little lower — even for owner-occupiers. This percentage is called your LVR (Loan to Value Ratio).`
+      : `Investor + apartment is the most conservative combination — lenders apply lower caps to both separately. This percentage is called your LVR (Loan to Value Ratio).`;
+  } else {
+    lvrHeading = `You can borrow up to ${lvrCap} of the purchase price.`;
+    lvrBody = d.isOO
+      ? `That's the highest available — you're buying a ${propLabel} as an owner-occupier. This percentage is called your LVR (Loan to Value Ratio).`
+      : `Investment loans are capped lower than owner-occupier loans — lenders see them as higher risk. This percentage is called your LVR (Loan to Value Ratio).`;
+  }
+
+  // ── LMI sentence ──
+  const lmiHeading = 'If your deposit is under 20%, lenders charge an insurance premium.';
+  const lmiBody = `It's called LMI — Lenders Mortgage Insurance. It protects the lender (not you) if you can't repay. We add it to your loan rather than your upfront costs, but it does increase what you owe and affects your ceiling.`;
+
+  // ── Stamp duty sentence ──
+  let sdHeading, sdBody;
+  const nb = d.isNewBuild;
+  switch (d.state) {
+    case 'NSW':
+      if (d.isFHB) {
+        sdHeading = `As an NSW first home buyer, you'll pay less stamp duty than most.`;
+        sdBody = `Zero duty on homes up to $800,000, with a sliding scale up to $1,000,000. That's real money staying in your deposit instead of going to the government.`;
+      } else {
+        sdHeading = `NSW stamp duty applies at standard progressive rates.`;
+        sdBody = `We calculate the exact amount for each price we test. It comes straight out of your savings before a dollar goes toward deposit.`;
+      }
+      break;
+    case 'VIC':
+      if (d.isFHB) {
+        sdHeading = `As a Victorian first home buyer, stamp duty is reduced.`;
+        sdBody = `Waived entirely up to $600,000, with a sliding scale to $750,000. More of your savings become deposit.`;
+      } else if (d.isOO) {
+        sdHeading = `Victoria charges a lower rate for owner-occupiers on homes up to $550,000.`;
+        sdBody = `Above that threshold, standard progressive rates apply. We calculate the exact amount at each price.`;
+      } else {
+        sdHeading = `VIC investor stamp duty applies at standard progressive rates.`;
+        sdBody = `No concessions apply for investors in Victoria. We calculate the exact amount at each price.`;
+      }
+      break;
+    case 'QLD':
+      if (d.isFHB && nb) {
+        sdHeading = `Queensland FHB new build: zero stamp duty — no price cap.`;
+        sdBody = `One of the most generous concessions in the country. Buying new means you keep significantly more of your savings.`;
+      } else if (d.isFHB) {
+        sdHeading = `As a Queensland first home buyer, stamp duty is waived up to $500,000.`;
+        sdBody = `A sliding scale applies up to $550,000. Above that, standard rates kick in.`;
+      } else {
+        sdHeading = `Queensland stamp duty applies at standard progressive rates.`;
+        sdBody = `We calculate the exact amount at each price we test.`;
+      }
+      break;
+    case 'WA':
+      if (nb && d.isOO) {
+        sdHeading = `WA off-the-plan: zero stamp duty up to $800,000.`;
+        sdBody = `A sliding scale applies up to $900,000. Buying new in WA as an owner-occupier gives a meaningful concession.`;
+      } else if (d.isFHB) {
+        sdHeading = `As a WA first home buyer, stamp duty is waived up to $600,000.`;
+        sdBody = `A sliding scale applies up to $800,000 (from 7 May 2026). More of your savings go toward deposit.`;
+      } else {
+        sdHeading = `WA stamp duty applies at standard progressive rates.`;
+        sdBody = `We calculate the exact amount at each price we test.`;
+      }
+      break;
+    case 'SA':
+      if (d.isFHB && nb) {
+        sdHeading = `SA first home buyer new build: zero stamp duty — no price cap.`;
+        sdBody = `South Australia waives duty entirely for FHBs buying new. A significant saving.`;
+      } else {
+        sdHeading = `SA stamp duty applies at standard progressive rates.`;
+        sdBody = `No FHB concession applies to established homes in South Australia.`;
+      }
+      break;
+    case 'TAS':
+      if (d.isFHB && !nb) {
+        sdHeading = `As a Tasmanian first home buyer, you get a 50% stamp duty discount.`;
+        sdBody = `Applies to established homes under $600,000. Half the duty means more deposit.`;
+      } else {
+        sdHeading = `Tasmania stamp duty applies at standard progressive rates.`;
+        sdBody = d.isFHB ? `Note: the 50% FHB discount applies to established homes only — not new builds.` : `We calculate the exact amount at each price we test.`;
+      }
+      break;
+    case 'ACT':
+      if (d.isFHB) {
+        sdHeading = `ACT first home buyers pay zero stamp duty — no price cap, no income test.`;
+        sdBody = `From 1 July 2026, all FHBs in the ACT get a full exemption. One of the most generous policies in the country.`;
+      } else if (d.isHBCS) {
+        sdHeading = `ACT Home Buyer Concession Scheme: full stamp duty exemption.`;
+        sdBody = `Applies to eligible pensioners, NDIS recipients, and non-property-owners within 5 years.`;
+      } else {
+        sdHeading = `ACT stamp duty applies at standard progressive marginal rates.`;
+        sdBody = `We calculate the exact amount at each price we test.`;
+      }
+      break;
+    case 'NT':
+      if (d.isFHB) {
+        sdHeading = `NT first home buyers can get up to $18,601 off stamp duty.`;
+        sdBody = `Applies to homes valued under $650,000. The NT uses a formula-based system — we calculate the exact discount at each price.`;
+      } else {
+        sdHeading = `NT stamp duty is calculated using a formula-based system.`;
+        sdBody = `Unlike most states, NT doesn't use simple brackets. We calculate the exact amount at each price we test.`;
+      }
+      break;
+    default:
+      sdHeading = `Stamp duty applies at progressive rates.`;
+      sdBody = `We calculate the exact amount at each price we test.`;
+  }
+
+  // ── Interest rate sentence ──
+  const rateRow    = benchmarkRates[d.isOO ? 'oo' : 'investor'];
+  const ratePct    = rateRow ? rateRow.rate_pct.toFixed(2) : null;
+  const stressPct  = rateRow ? (rateRow.rate_pct + 3).toFixed(2) : null;
+  const rateMonth  = rateRow ? rateRow.reference_month : null;
+  const rateHeading = ratePct ? `We're using a ${ratePct}% interest rate.` : `Interest rate: loading…`;
+  const rateBody    = ratePct
+    ? `That's the current RBA average for ${purposeLabel} P&I loans (${rateMonth}). It's what we use to calculate your monthly repayments.`
+    : `Rate data unavailable.`;
+
+  // ── Stress rate sentence ──
+  const stressHeading = stressPct ? `We also test affordability at ${stressPct}%.` : `Stress rate: loading…`;
+  const stressBody    = stressPct
+    ? `APRA requires lenders to check you can still afford repayments if rates rise 3 percentage points. This stress rate is what limits your borrowing in Ceiling 3 — it's why your serviceability ceiling is often lower than your deposit ceiling.`
+    : `Stress rate data unavailable.`;
+
+  const item = (heading, body) =>
+    `<div class="apply-item"><div class="apply-heading">${heading}</div><div class="apply-body">${body}</div></div>`;
+
+  el.innerHTML =
+    item(lvrHeading, lvrBody) +
+    item(lmiHeading, lmiBody) +
+    item(sdHeading, sdBody) +
+    item(rateHeading, rateBody) +
+    item(stressHeading, stressBody);
 }
 
 function goToReviewApply() {
