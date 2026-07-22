@@ -1588,7 +1588,7 @@ function renderReviewInputs() {
     html += rvRow('ACT HBCS', d.isHBCS == null ? '—' : (d.isHBCS ? 'Yes' : 'No'), 'hbcs');
   }
   html += rvRow('New build', d.isNewBuild == null ? '—' : (d.isNewBuild ? 'Yes' : 'No'), 'newbuild');
-  html += rvRow('Purpose', d.isOO == null ? '—' : (d.isOO ? 'Owner-occupier' : 'Investment'), purposeScreen);
+  html += rvRow('Purpose', d.isOO == null ? '—' : (d.isOO ? 'Live-in' : 'Investment'), purposeScreen);
   html += rvRow('Property type', d.propType ? (d.propType.charAt(0).toUpperCase() + d.propType.slice(1)) : '—', 'proptype');
   html += `</div>`;
   el.innerHTML = html;
@@ -1615,6 +1615,9 @@ function renderReviewApply() {
       ? `That's the highest tier available — you're buying a ${propLabel} as an owner-occupier. Whether you reach it depends on your income and deposit. This percentage is called your LVR (Loan to Value Ratio).`
       : `Investment loans are capped lower than owner-occupier loans — lenders see them as higher risk. This percentage is called your LVR (Loan to Value Ratio).`;
   }
+
+  const item = (heading, body) =>
+    `<div class="apply-item"><div class="apply-heading">${heading}</div><div class="apply-body">${body}</div></div>`;
 
   // ── LMI sentence — only show if LVR cap is above 80% (otherwise LMI can't apply) ──
   const lvrNum = parseFloat(lvrCap);
@@ -1726,9 +1729,6 @@ function renderReviewApply() {
   const rateBody    = ratePct
     ? `${ratePct}% is the current RBA average for ${purposeLabel} P&I loans (${rateMonth}). APRA also requires lenders to check you can still afford repayments if rates rise 3 percentage points — so we test serviceability at ${stressPct}%. That's often what sets your borrowing limit in Ceiling 3.`
     : `Rate data unavailable.`;
-
-  const item = (heading, body) =>
-    `<div class="apply-item"><div class="apply-heading">${heading}</div><div class="apply-body">${body}</div></div>`;
 
   el.innerHTML =
     item(lvrHeading, lvrBody) +
