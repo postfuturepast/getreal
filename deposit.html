@@ -96,6 +96,29 @@
       font-family: var(--font-mono);
     }
 
+    .fhb-toggle {
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      cursor: pointer;
+      padding: 0;
+      text-align: left;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .fhb-toggle:hover { color: var(--text); }
+    .fhb-detail {
+      background: #161616;
+      border: 1px solid var(--border);
+      padding: 0.85rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
     .state-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -425,7 +448,7 @@
       <span class="step-label">Step 3 of 5</span>
     </div>
     <div class="q-label">First home buyer?</div>
-    <div class="q-sub" id="fhb-sub"></div>
+    <div class="q-sub">Stamp duty discounts can apply when buying your first home in Australia.</div>
     <div class="choices">
       <button class="choice-btn" onclick="selectFHB(true)">
         Yes — first property I've ever owned
@@ -434,6 +457,10 @@
         No — I've owned property before
       </button>
     </div>
+    <button class="fhb-toggle" id="fhb-toggle" onclick="toggleFHBDetail()" style="display:none">
+      <span id="fhb-toggle-arrow">↓</span> What does this mean in <span id="fhb-toggle-state"></span>?
+    </button>
+    <div class="fhb-detail" id="fhb-detail" style="display:none"></div>
   </div>
 
   <!-- ── Screen 2b: HBCS (ACT only) ─────────────────────────────────────── -->
@@ -1080,6 +1107,7 @@ let regFees         = {};  // state → total fee amount
 let benchmarkRates      = {};  // purpose ('oo'|'investor') → { rate_pct, reference_month }
 let hemData             = [];  // all rows from hem_benchmarks
 let newbuildConcessions = [];  // rows from newbuild_concessions, filtered to currently active
+let fhbConcessions     = {};  // state → { key → value } from stamp_duty_concessions
 let dataLoaded      = false;
 let dataError       = false;
 let lastC1Result    = null; // cached C1 solve result for Ceiling 2
@@ -1110,6 +1138,20 @@ async function loadData() {
       if (nbRes.ok) newbuildConcessions = await nbRes.json();
     } catch (nbErr) {
       console.warn('Could not load newbuild_concessions — new build stamp duty concessions will not apply:', nbErr);
+    }
+
+    // FHB concessions — used to generate dynamic description on the FHB screen
+    try {
+      const fcRes = await fetch(`${SB_URL}/rest/v1/stamp_duty_concessions?select=*`, { headers });
+      if (fcRes.ok) {
+        const fcRows = await fcRes.json();
+        fcRows.forEach(r => {
+          if (!fhbConcessions[r.state]) fhbConcessions[r.state] = {};
+          fhbConcessions[r.state][r.concession_key] = r.value;
+        });
+      }
+    } catch (fcErr) {
+      console.warn('Could not load stamp_duty_concessions — FHB detail text will be hidden:', fcErr);
     }
 
     lmiRates = await lmiRes.json();
@@ -1210,14 +1252,42 @@ function restart() {
 }
 
 // ─── Selection handlers ──────────────────────────────────────────────────────
-const FHB_SUBS = {
-  NSW: 'First home buyers in NSW pay zero stamp duty on homes up to $800,000, with a sliding scale up to $1,000,000. Less stamp duty means more of your savings available as deposit.',
-  VIC: 'First home buyers in VIC pay zero stamp duty on homes up to $600,000, with a sliding scale up to $750,000.',
-  QLD: 'First home buyers in QLD pay zero stamp duty on homes up to $500,000, with a sliding scale up to $550,000.',
-  WA:  'First home buyers in WA pay zero stamp duty on homes up to $430,000, with a sliding scale up to $530,000.',
-  TAS: 'First home buyers in Tasmania get a 50% discount on stamp duty for established homes under $600,000.',
-  NT:  'First home buyers in the NT can get up to $18,601 off stamp duty on homes valued under $650,000.',
-};
+
+const STATE_NAMES = { NSW:'NSW', VIC:'VIC', QLD:'QLD', WA:'WA', SA:'SA', TAS:'Tasmania', NT:'the NT', ACT:'the ACT' };
+
+function describeFHBBenefit(state) {
+  const c = fhbConcessions[state];
+  if (!c) return null;
+  const fmt = v => '$' + Number(v).toLocaleString('en-AU');
+  const name = STATE_NAMES[state] || state;
+
+  if (state === 'TAS') {
+    const pct = c.fhb_discount_pct ? Math.round(Number(c.fhb_discount_pct)) : 50;
+    const cap = c.fhb_price_cap ? ` on established homes under ${fmt(c.fhb_price_cap)}` : '';
+    return `First home buyers in ${name} get a ${pct}% discount on stamp duty${cap}. Less stamp duty means more of your savings available as deposit.`;
+  }
+  if (state === 'NT') {
+    const max = c.fhb_max_discount ? fmt(c.fhb_max_discount) : '$18,601';
+    const cap = c.fhb_price_cap ? ` on homes valued under ${fmt(c.fhb_price_cap)}` : '';
+    return `First home buyers in ${name} can get up to ${max} off stamp duty${cap}. Less stamp duty means more of your savings available as deposit.`;
+  }
+  // Standard exempt + taper pattern (NSW, VIC, QLD, WA)
+  if (c.fhb_exempt_threshold) {
+    let text = `First home buyers in ${name} pay zero stamp duty on homes up to ${fmt(c.fhb_exempt_threshold)}`;
+    if (c.fhb_taper_top) text += `, with a sliding scale up to ${fmt(c.fhb_taper_top)}`;
+    text += '. Less stamp duty means more of your savings available as deposit.';
+    return text;
+  }
+  return null;
+}
+
+let fhbDetailOpen = false;
+
+function toggleFHBDetail() {
+  fhbDetailOpen = !fhbDetailOpen;
+  document.getElementById('fhb-detail').style.display = fhbDetailOpen ? 'block' : 'none';
+  document.getElementById('fhb-toggle-arrow').textContent = fhbDetailOpen ? '↑' : '↓';
+}
 
 function selectState(s) {
   d.state = s;
@@ -1227,7 +1297,21 @@ function selectState(s) {
   } else if (s === 'ACT') {
     goTo('hbcs');
   } else {
-    document.getElementById('fhb-sub').textContent = FHB_SUBS[s] || '';
+    // Reset toggle state
+    fhbDetailOpen = false;
+    document.getElementById('fhb-detail').style.display = 'none';
+    document.getElementById('fhb-toggle-arrow').textContent = '↓';
+    // Populate toggle if we have concession data for this state
+    const desc = describeFHBBenefit(s);
+    const toggleBtn = document.getElementById('fhb-toggle');
+    const detailEl  = document.getElementById('fhb-detail');
+    document.getElementById('fhb-toggle-state').textContent = STATE_NAMES[s] || s;
+    if (desc) {
+      detailEl.textContent = desc;
+      toggleBtn.style.display = 'inline';
+    } else {
+      toggleBtn.style.display = 'none';
+    }
     goTo('fhb');
   }
 }
