@@ -474,11 +474,11 @@
     <div class="q-sub">Victoria charges a lower stamp duty rate for owner-occupiers on homes up to $550,000. This answer also determines your maximum LVR — lenders cap investor borrowing lower than owner-occupier.</div>
   </div>
 
-  <!-- ── Screen 3b: New vs established (TAS FHB only) ──────────────────── -->
+  <!-- ── Screen 3b: New vs established (all states) ───────────────────── -->
   <div class="screen" id="screen-newbuild">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-      <span class="step-label">Step 4 of 5</span>
+      <span class="step-label">New build</span>
     </div>
     <div class="q-label">New build or established home?</div>
     <div class="choices">
@@ -489,7 +489,7 @@
         New build / off the plan
       </button>
     </div>
-    <div class="q-sub">In Tasmania, the 50% first home buyer stamp duty discount applies to established homes only. New builds pay standard rates.</div>
+    <div class="q-sub">Stamp duty concessions for new builds differ significantly from established homes in several states. Answer yes for a new home, off-the-plan apartment, or vacant land you intend to build on.</div>
   </div>
 
   <!-- ── Screen 3c: Purpose (everyone except VIC non-FHB and ACT HBCS=true) ── -->
@@ -1077,8 +1077,9 @@ const SB_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
 let lmiRates        = [];
 let lmiSdRates      = {};  // state → decimal rate (e.g. 0.10 for 10%)
 let regFees         = {};  // state → total fee amount
-let benchmarkRates  = {};  // purpose ('oo'|'investor') → { rate_pct, reference_month }
-let hemData         = [];  // all rows from hem_benchmarks
+let benchmarkRates      = {};  // purpose ('oo'|'investor') → { rate_pct, reference_month }
+let hemData             = [];  // all rows from hem_benchmarks
+let newbuildConcessions = [];  // rows from newbuild_concessions, filtered to currently active
 let dataLoaded      = false;
 let dataError       = false;
 let lastC1Result    = null; // cached C1 solve result for Ceiling 2
@@ -1089,21 +1090,25 @@ async function loadData() {
       'apikey': SB_KEY,
       'Authorization': `Bearer ${SB_KEY}`,
     };
-    const [lmiRes, sdRes, regRes, rateRes, hemRes] = await Promise.all([
+    const today = new Date().toISOString().split('T')[0];
+    const [lmiRes, sdRes, regRes, rateRes, hemRes, nbRes] = await Promise.all([
       fetch(`${SB_URL}/rest/v1/lmi_rates?select=*&order=lvr_min,loan_max`, { headers }),
       fetch(`${SB_URL}/rest/v1/lmi_stamp_duty_rates?select=*`, { headers }),
       fetch(`${SB_URL}/rest/v1/registration_fees?select=*`, { headers }),
       // OO and investor P&I new loan rates — aggregate (rate_type null = all rate types combined)
       fetch(`${SB_URL}/rest/v1/benchmark_rates?select=purpose,rate_pct,reference_month&repayment_type=eq.pi&loan_status=eq.new&rate_type=is.null&lvr_band=is.null&loan_size_band=is.null&order=reference_month.desc&limit=4`, { headers }),
       fetch(`${SB_URL}/rest/v1/hem_benchmarks?select=*`, { headers }),
+      // New build concessions — filter to currently active rows only
+      fetch(`${SB_URL}/rest/v1/newbuild_concessions?select=*&or=(effective_until.is.null,effective_until.gte.${today})`, { headers }),
     ]);
-    if (!lmiRes.ok || !sdRes.ok || !regRes.ok || !rateRes.ok || !hemRes.ok) throw new Error('HTTP error');
+    if (!lmiRes.ok || !sdRes.ok || !regRes.ok || !rateRes.ok || !hemRes.ok || !nbRes.ok) throw new Error('HTTP error');
 
     lmiRates = await lmiRes.json();
     const sdRows   = await sdRes.json();
     const regRows  = await regRes.json();
     const rateRows = await rateRes.json();
-    hemData        = await hemRes.json();
+    hemData             = await hemRes.json();
+    newbuildConcessions = await nbRes.json();
 
     // RLS guard: if any critical table returns empty, Supabase likely blocked the read
     if (!lmiRates.length || !sdRows.length || !regRows.length || !rateRows.length) {
@@ -1223,29 +1228,27 @@ function selectFHB(isFHB) {
   if (d.state === 'VIC' && !isFHB) {
     // VIC non-FHB: screen-oo covers both stamp duty PPR concession AND LVR purpose
     goTo('oo');
-  } else if (d.state === 'TAS' && isFHB) {
-    goTo('newbuild');
   } else {
     goTo('purpose');
   }
 }
 
 function selectOO(isOO) {
-  // VIC non-FHB path: covers stamp duty + LVR ceiling
+  // VIC non-FHB path: covers stamp duty + LVR ceiling — then ask new build
   d.isOO = isOO;
-  goTo('proptype');
+  goTo('newbuild');
 }
 
 function selectNewBuild(isNew) {
   d.isNewBuild = isNew;
-  goTo('purpose');
+  goTo('proptype');
 }
 
 function selectHBCS(isHBCS) {
   d.isHBCS = isHBCS;
   if (isHBCS) {
     d.isOO = true;  // HBCS requires principal place of residence
-    goTo('proptype');
+    goTo('newbuild');
   } else {
     goTo('purpose');
   }
@@ -1253,7 +1256,7 @@ function selectHBCS(isHBCS) {
 
 function selectPurpose(isOO) {
   d.isOO = isOO;
-  goTo('proptype');
+  goTo('newbuild');
 }
 
 function selectPropType(type) {
@@ -1349,22 +1352,38 @@ function renderReviewScreen() {
     purposeScreen = (d.state === 'VIC' && !d.isFHB) ? 'oo' : 'purpose';
   }
 
-  // Stamp duty note
+  // Stamp duty note — reflects new build concession where applicable
   const sdNote = (() => {
+    const nb = d.isNewBuild;
     switch (d.state) {
-      case 'NSW': return d.isFHB ? 'Progressive. FHB: no duty ≤ $800k, tapered ≤ $1M.' : 'NSW progressive rates.';
+      case 'NSW': return d.isFHB ? 'Progressive. FHB: no duty ≤ $800k, tapered ≤ $1M (new and established).' : 'NSW progressive rates.';
       case 'VIC': {
         if (d.isFHB) return 'Progressive. FHB: waived ≤ $600k, tapered $600k–$750k.';
+        if (nb) return 'Progressive — investor rate. Off-the-plan strata: construction cost deduction available (speak to solicitor).';
         return d.isOO ? 'Progressive — OO rate (PPR discount ≤ $550k).' : 'Progressive — investor rate.';
       }
-      case 'QLD': return d.isFHB ? 'Progressive. FHB: no duty ≤ $500k, tapered ≤ $550k.' : 'QLD progressive rates.';
-      case 'WA':  return d.isFHB ? 'Progressive. FHB: no duty ≤ $430k, tapered ≤ $530k.' : 'WA progressive rates.';
-      case 'SA':  return 'SA progressive rates. No FHB stamp duty concession.';
+      case 'QLD': {
+        if (d.isFHB && nb) return 'Progressive. FHB new build: full exemption — no price cap.';
+        return d.isFHB ? 'Progressive. FHB established: no duty ≤ $500k, tapered ≤ $550k.' : 'QLD progressive rates.';
+      }
+      case 'WA': {
+        if (nb && d.isOO) return 'Progressive. Off-the-plan: no duty ≤ $800k, taper ≤ $900k.';
+        return d.isFHB ? 'Progressive. FHB: no duty ≤ $600k, tapered ≤ $800k (from 7 May 2026).' : 'WA progressive rates.';
+      }
+      case 'SA': {
+        if (d.isFHB && nb) return 'Progressive. FHB new build: full exemption — no price cap.';
+        return 'SA progressive rates. No FHB concession on established homes.';
+      }
       case 'TAS': {
-        if (d.isFHB) return d.isNewBuild ? 'Progressive. (50% FHB discount: established only — new build excluded.)' : 'Progressive. FHB: 50% off ≤ $600k (established homes).';
+        if (d.isFHB) return nb ? 'Progressive. (50% FHB discount: established only — new build excluded.)' : 'Progressive. FHB: 50% off ≤ $600k (established homes).';
         return 'TAS progressive rates.';
       }
-      case 'ACT': return d.isHBCS ? 'HBCS: full duty exemption (income-tested).' : 'ACT progressive marginal rates.';
+      case 'ACT': {
+        if (d.isFHB) return 'Full exemption — all FHB, no income or price cap (from 1 Jul 2026).';
+        if (d.isHBCS) return 'HBCS: full duty exemption (pensioners, NDIS, non-owners within 5 years).';
+        if (nb && d.isOO && d.propType !== 'house') return 'Progressive. Missing Middle: new strata OO — full exemption (from 1 Jul 2026).';
+        return 'ACT progressive marginal rates.';
+      }
       case 'NT':  return d.isFHB ? 'Formula-based. FHB discount up to $18,601 (homes ≤ $650k).' : 'NT formula-based rates.';
       default:    return 'Progressive rates.';
     }
@@ -1390,9 +1409,7 @@ function renderReviewScreen() {
   if (d.state === 'ACT') {
     html += rvRow('ACT HBCS', d.isHBCS == null ? '—' : (d.isHBCS ? 'Yes' : 'No'), 'hbcs');
   }
-  if (d.state === 'TAS' && d.isFHB) {
-    html += rvRow('New build', d.isNewBuild == null ? '—' : (d.isNewBuild ? 'Yes' : 'No'), 'newbuild');
-  }
+  html += rvRow('New build', d.isNewBuild == null ? '—' : (d.isNewBuild ? 'Yes — new build / off-the-plan' : 'No — established home'), 'newbuild');
   html += rvRow('Purpose', d.isOO == null ? '—' : (d.isOO ? 'Owner-occupier' : 'Investment'), purposeScreen);
   html += rvRow('Property type', d.propType ? (d.propType.charAt(0).toUpperCase() + d.propType.slice(1)) : '—', 'proptype');
   html += `</div>`;
@@ -1532,7 +1549,52 @@ function ntDuty(p) {
   return p * 0.0495;
 }
 
+// ─── New build concession helpers ────────────────────────────────────────────
+function getNewBuildConcession() {
+  if (!d.isNewBuild || !newbuildConcessions.length) return null;
+  return newbuildConcessions.find(row => {
+    if (row.state !== d.state) return false;
+    if (row.buyer_type === 'fhb'      && !d.isFHB) return false;
+    if (row.buyer_type === 'all_oo'   && !d.isOO)  return false;
+    if (row.buyer_type === 'downsizer') return false; // phase 2 — requires age verification
+    if (row.property_types === 'strata' && d.propType === 'house') return false;
+    if (row.concession_type === 'off_plan_deduction') return false; // phase 2
+    return true;
+  }) || null;
+}
+
+function applyNewBuildConcession(price, rawDuty) {
+  const row = getNewBuildConcession();
+  if (!row) return rawDuty;
+  switch (row.concession_type) {
+    case 'full_exemption': {
+      if (row.exempt_threshold === null) return 0;            // no price cap
+      if (price <= row.exempt_threshold) return 0;
+      if (row.taper_top && price < row.taper_top) {
+        return Math.round(rawDuty * (price - row.exempt_threshold) / (row.taper_top - row.exempt_threshold));
+      }
+      return rawDuty;                                         // above taper top — no concession
+    }
+    case 'taper': {
+      if (price <= row.exempt_threshold) return 0;
+      if (row.taper_top && price <= row.taper_top) {
+        return Math.round(rawDuty * (price - row.exempt_threshold) / (row.taper_top - row.exempt_threshold));
+      }
+      return rawDuty;                                         // above taper (e.g. WA > $900k — advisory shown)
+    }
+    case 'discount_pct':
+      return Math.round(rawDuty * (1 - row.discount_pct));
+    default:
+      return rawDuty;
+  }
+}
+
+// calcDutyForPrice wraps calcRawDutyForPrice and applies any new build concession on top
 function calcDutyForPrice(p) {
+  return applyNewBuildConcession(p, calcRawDutyForPrice(p));
+}
+
+function calcRawDutyForPrice(p) {
   const { state, isFHB, isOO, isNewBuild, isHBCS } = d;
   switch (state) {
     case 'NSW': {
@@ -1564,8 +1626,9 @@ function calcDutyForPrice(p) {
     case 'WA': {
       const full = waDuty(p);
       if (isFHB) {
-        if (p <= 430000) return 0;
-        if (p <= 530000) return Math.round(full * (p - 430000) / 100000);
+        // Thresholds updated 7 May 2026 (WA 2026-27 budget)
+        if (p <= 600000) return 0;
+        if (p <= 800000) return Math.round(full * (p - 600000) / 200000);
       }
       return Math.round(full);
     }
@@ -1576,6 +1639,9 @@ function calcDutyForPrice(p) {
       return Math.round(full);
     }
     case 'ACT': {
+      // From 1 July 2026: all FHB get full exemption — no income or price cap
+      if (isFHB) return 0;
+      // HBCS still applies for eligible non-FHB (pensioners, NDIS, non-property-owners within 5 years)
       if (isHBCS) return 0;
       return Math.round(actDuty(p));
     }
