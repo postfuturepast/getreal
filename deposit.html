@@ -510,6 +510,7 @@
       <span class="step-label">New build</span>
     </div>
     <div class="q-label">New build or established home?</div>
+    <div class="q-sub">New builds can attract different stamp duty concessions to established homes.</div>
     <div class="choices">
       <button class="choice-btn" onclick="selectNewBuild(false)">
         Established home
@@ -518,7 +519,10 @@
         New build / off the plan
       </button>
     </div>
-    <div class="q-sub">Stamp duty concessions for new builds differ significantly from established homes in several states. Answer yes for a new home, off-the-plan apartment, or vacant land you intend to build on.</div>
+    <button class="fhb-toggle" id="newbuild-toggle" onclick="toggleDetail('newbuild-detail', 'newbuild-arrow')" style="display:none">
+      <span id="newbuild-arrow">↓</span> What concessions apply in <span id="newbuild-toggle-state"></span>?
+    </button>
+    <div class="fhb-detail" id="newbuild-detail" style="display:none"></div>
   </div>
 
   <!-- ── Screen 3c: Purpose (everyone except VIC non-FHB and ACT HBCS=true) ── -->
@@ -1333,10 +1337,67 @@ function selectFHB(isFHB) {
   }
 }
 
+function describeNewBuildBenefit(state) {
+  const rows = newbuildConcessions.filter(r =>
+    r.state === state && r.concession_type !== 'off_plan_deduction'
+  );
+  if (!rows.length) return null;
+  const fmt   = v => v != null ? '$' + Number(v).toLocaleString('en-AU') : null;
+  const parts = [];
+  rows.forEach(row => {
+    const who  = row.buyer_type === 'fhb'    ? 'First home buyers' :
+                 row.buyer_type === 'all_oo'  ? 'Owner-occupiers'   : 'Buyers';
+    const what = row.property_types === 'strata' ? ' on apartments' : '';
+    switch (row.concession_type) {
+      case 'full_exemption': {
+        if (row.exempt_threshold === null) {
+          parts.push(`${who} pay zero stamp duty on new builds${what} — no price cap.`);
+        } else {
+          let s = `${who} pay zero stamp duty on new builds${what} up to ${fmt(row.exempt_threshold)}`;
+          if (row.taper_top) s += `, with a sliding scale up to ${fmt(row.taper_top)}`;
+          parts.push(s + '.');
+        }
+        break;
+      }
+      case 'taper': {
+        let s = `${who} pay zero stamp duty on new builds${what} up to ${fmt(row.exempt_threshold)}`;
+        if (row.taper_top) s += `, with a sliding scale up to ${fmt(row.taper_top)}`;
+        parts.push(s + '.');
+        break;
+      }
+      case 'discount_pct': {
+        const pct = Math.round(row.discount_pct * 100);
+        const cap = row.exempt_threshold ? ` under ${fmt(row.exempt_threshold)}` : '';
+        parts.push(`${who} get a ${pct}% stamp duty discount on new builds${what}${cap}.`);
+        break;
+      }
+    }
+  });
+  if (!parts.length) return null;
+  return parts.join(' ') + ' Less stamp duty means more of your savings available as deposit.';
+}
+
+function goToNewBuild() {
+  // Reset toggle
+  document.getElementById('newbuild-detail').style.display = 'none';
+  document.getElementById('newbuild-arrow').textContent = '↓';
+  const desc       = describeNewBuildBenefit(d.state);
+  const toggleBtn  = document.getElementById('newbuild-toggle');
+  const detailEl   = document.getElementById('newbuild-detail');
+  document.getElementById('newbuild-toggle-state').textContent = STATE_NAMES[d.state] || d.state;
+  if (desc) {
+    detailEl.textContent   = desc;
+    toggleBtn.style.display = 'inline';
+  } else {
+    toggleBtn.style.display = 'none';
+  }
+  goTo('newbuild');
+}
+
 function selectOO(isOO) {
   // VIC non-FHB path: covers stamp duty + LVR ceiling — then ask new build
   d.isOO = isOO;
-  goTo('newbuild');
+  goToNewBuild();
 }
 
 function selectNewBuild(isNew) {
@@ -1348,7 +1409,7 @@ function selectHBCS(isHBCS) {
   d.isHBCS = isHBCS;
   if (isHBCS) {
     d.isOO = true;  // HBCS requires principal place of residence
-    goTo('newbuild');
+    goToNewBuild();
   } else {
     goTo('purpose');
   }
@@ -1356,7 +1417,7 @@ function selectHBCS(isHBCS) {
 
 function selectPurpose(isOO) {
   d.isOO = isOO;
-  goTo('newbuild');
+  goToNewBuild();
 }
 
 function selectPropType(type) {
