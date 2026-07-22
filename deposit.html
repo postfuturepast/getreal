@@ -929,6 +929,18 @@
     </div>
     <div class="q-label" style="margin-bottom: 0.65rem;">Check your numbers.</div>
     <div id="c2-review-body"></div>
+    <button class="btn" onclick="goToC2Apply()" style="width: 100%; text-align: center; margin-top: 0.25rem;">
+      Calculate Ceiling 2 →
+    </button>
+  </div>
+
+  <!-- C2 Apply ─────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-apply">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label" style="margin-bottom: 0.65rem;">Here's what we'll apply.</div>
+    <div id="c2-apply-body"></div>
     <button class="btn" onclick="calculateC2AndShow()" style="width: 100%; text-align: center; margin-top: 0.25rem;">
       Calculate Ceiling 2 →
     </button>
@@ -1118,6 +1130,30 @@
         Continue →
       </button>
     </div>
+  </div>
+
+  <!-- C3 Review ─────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-review">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label" style="margin-bottom: 0.65rem;">Here's what you told us.</div>
+    <div id="c3-review-body"></div>
+    <button class="btn" onclick="goToC3Apply()" style="width: 100%; text-align: center; margin-top: 0.25rem;">
+      Next →
+    </button>
+  </div>
+
+  <!-- C3 Apply ─────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-apply">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label" style="margin-bottom: 0.65rem;">Here's what we'll apply.</div>
+    <div id="c3-apply-body"></div>
+    <button class="btn" onclick="renderOutcome(); goTo('outcome');" style="width: 100%; text-align: center; margin-top: 0.25rem;">
+      Calculate Ceiling 3 →
+    </button>
   </div>
 
   <!-- Outcome ─────────────────────────────────────────────────────────────── -->
@@ -1636,8 +1672,10 @@ function renderReviewApply() {
     const arrowId = `apply-arrow-${applyIdx}`;
     applyIdx++;
     return `<div class="apply-item">
-      <div class="apply-heading">${heading}</div>
-      <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
+      <div style="display:flex;flex-wrap:wrap;align-items:baseline;column-gap:0.6rem;row-gap:0.15rem;">
+        <div class="apply-heading">${heading}</div>
+        <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
+      </div>
       <div id="${id}" class="fhb-detail" style="display:none;margin-top:0.5rem;">${body}</div>
     </div>`;
   };
@@ -1743,21 +1781,10 @@ function renderReviewApply() {
       sdBody = `We calculate the exact amount at each price we test.`;
   }
 
-  // ── Interest + stress rate (combined) ──
-  const rateRow   = benchmarkRates[d.isOO ? 'oo' : 'investor'];
-  const ratePct   = rateRow ? rateRow.rate_pct.toFixed(2) : null;
-  const stressPct = rateRow ? (rateRow.rate_pct + 3).toFixed(2) : null;
-  const rateMonth = rateRow ? rateRow.reference_month : null;
-  const rateHeading = ratePct ? `We're using a ${ratePct}% interest rate — tested at ${stressPct}%.` : `Interest rate: loading…`;
-  const rateBody    = ratePct
-    ? `${ratePct}% is the current RBA average for ${purposeLabel} P&I loans (${rateMonth}). APRA also requires lenders to check you can still afford repayments if rates rise 3 percentage points — so we test serviceability at ${stressPct}%. That's often what sets your borrowing limit in Ceiling 3.`
-    : `Rate data unavailable.`;
-
   el.innerHTML =
     item(lvrHeading, lvrBody) +
     lmiItem +
-    item(sdHeading, sdBody) +
-    item(rateHeading, rateBody);
+    item(sdHeading, sdBody);
 }
 
 function goToReviewApply() {
@@ -2550,6 +2577,37 @@ function renderC2Review() {
   el.innerHTML = html;
 }
 
+function renderC2Apply() {
+  const el = document.getElementById('c2-apply-body');
+  if (!el) return;
+  let idx = 0;
+  const item = (heading, body) => {
+    const id = `c2-apply-detail-${idx}`;
+    const arrowId = `c2-apply-arrow-${idx}`;
+    idx++;
+    return `<div class="apply-item">
+      <div style="display:flex;flex-wrap:wrap;align-items:baseline;column-gap:0.6rem;row-gap:0.15rem;">
+        <div class="apply-heading">${heading}</div>
+        <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
+      </div>
+      <div id="${id}" class="fhb-detail" style="display:none;margin-top:0.5rem;">${body}</div>
+    </div>`;
+  };
+
+  const dtiHeading = `We cap borrowing at 6× your gross income.`;
+  const dtiBody = `APRA limits lenders from writing more than 20% of new mortgages above a 6× debt-to-income ratio. That's the portfolio threshold — not an absolute ban — but most lenders treat it as a hard ceiling in practice. Your total debt (existing + new mortgage) divided by your gross income can't exceed 6.`;
+
+  const cardHeading = `Credit card limits count as fully drawn debt.`;
+  const cardBody = `Regardless of your current balance, every dollar of approved credit card limit is treated as debt in the DTI calculation. A $20,000 limit you never touch still adds $20,000 to your debt load. This is standard across all lenders and is why reducing or closing cards before applying can meaningfully increase your borrowing limit.`;
+
+  el.innerHTML = item(dtiHeading, dtiBody) + item(cardHeading, cardBody);
+}
+
+function goToC2Apply() {
+  renderC2Apply();
+  goTo('c2-apply');
+}
+
 // ─── DTI calculation ─────────────────────────────────────────────────────────
 function computeDTI() {
   const newPropRental   = d.isOO ? 0 : d.c2RentalIncome * 52 * 0.80;
@@ -2987,8 +3045,7 @@ function c3UseHEM() {
   const hemAmount = lookupHEM();
   if (!hemAmount) return;
   d.c3HemAmount = hemAmount;
-  renderOutcome();
-  goTo('outcome');
+  goToC3Review();
 }
 
 function c3ShowHEMOverride() {
@@ -3017,8 +3074,114 @@ function setC3HEMBtn(enabled) {
 
 function submitC3HEM() {
   if (!d.c3HemAmount) return;
-  renderOutcome();
-  goTo('outcome');
+  goToC3Review();
+}
+
+function renderC3Review() {
+  const el = document.getElementById('c3-review-body');
+  if (!el) return;
+  let html = '<div style="border-top:1px solid var(--border);">';
+
+  // Existing mortgage repayments
+  if (d.c3MortgageRepayments.length > 0 && d.c2Mortgages.length > 0) {
+    d.c2Mortgages.forEach((m, i) => {
+      const rep = d.c3MortgageRepayments[i];
+      if (rep != null) {
+        html += rvRow(
+          `Mortgage ${i + 1} repayment (${m.isInvestment ? 'investment' : 'OO'})`,
+          fmt(rep) + '/mo',
+          'c3-mortgage-repayments'
+        );
+      }
+    });
+  }
+
+  // Other loan repayments
+  if (d.c3LoanRepayments.length > 0 && d.c2OtherLoans.length > 0) {
+    d.c2OtherLoans.forEach((l, i) => {
+      const rep = d.c3LoanRepayments[i];
+      if (rep != null) {
+        html += rvRow(
+          `${l.type ? l.type + ' loan' : 'Loan'} ${d.c2OtherLoans.length > 1 ? i + 1 : ''} repayment`.trim(),
+          fmt(rep) + '/mo',
+          'c3-loan-repayments'
+        );
+      }
+    });
+  }
+
+  // Household type
+  html += rvRow(
+    'Household',
+    d.household === 'couple' ? 'Couple' : 'Single',
+    'c3-household'
+  );
+
+  // Dependants
+  html += rvRow(
+    'Dependants',
+    d.numDependants === 0 ? 'None'
+      : d.numDependants === 3 ? '3 or more'
+      : String(d.numDependants),
+    'c3-dependants'
+  );
+
+  // Location
+  const locDisplay = d.suburbName
+    ? d.suburbName
+    : d.locationType === 'metro' ? 'Metropolitan' : 'Regional';
+  html += rvRow('Location', locDisplay, 'c3-location');
+
+  // Monthly living costs
+  html += rvRow(
+    'Monthly living expenses',
+    d.c3HemAmount != null ? fmt(d.c3HemAmount) + '/mo' : '—',
+    'c3-hem'
+  );
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderC3Apply() {
+  const el = document.getElementById('c3-apply-body');
+  if (!el) return;
+  let idx = 0;
+  const item = (heading, body) => {
+    const id = `c3-apply-detail-${idx}`;
+    const arrowId = `c3-apply-arrow-${idx}`;
+    idx++;
+    return `<div class="apply-item">
+      <div style="display:flex;flex-wrap:wrap;align-items:baseline;column-gap:0.6rem;row-gap:0.15rem;">
+        <div class="apply-heading">${heading}</div>
+        <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
+      </div>
+      <div id="${id}" class="fhb-detail" style="display:none;margin-top:0.5rem;">${body}</div>
+    </div>`;
+  };
+
+  const purpose = d.isOO ? 'oo' : 'investor';
+  const rateRow = benchmarkRates[purpose];
+  const ratePct = rateRow ? rateRow.rate_pct.toFixed(2) : '—';
+  const stressPct = rateRow ? (rateRow.rate_pct + 3).toFixed(2) : '—';
+
+  const rateHeading = `We're using a ${ratePct}% interest rate — tested at ${stressPct}%.`;
+  const rateBody = `APRA requires all lenders to assess your ability to repay at least 3% above the actual loan rate. This stress buffer is applied to find the maximum loan your income can service. The stress-tested rate (${stressPct}%) — not the actual rate — is what sets your Ceiling 3 limit. If your income can service repayments at ${stressPct}%, you pass; if not, this ceiling is lower than Ceilings 1 and 2.`;
+
+  const hemHeading = `We're using ${d.c3HemAmount != null ? fmt(d.c3HemAmount) : '—'}/month as the minimum living cost floor.`;
+  const hemBody = `Regardless of what actual expenses you enter, lenders apply the Household Expenditure Measure (HEM) as a minimum floor — they assume you spend at least this amount to live. We use whichever is higher: your declared expenses or HEM. This means your declared expenses can only ever increase your ceiling, never reduce it below the HEM floor.`;
+
+  el.innerHTML = item(rateHeading, rateBody) + item(hemHeading, hemBody);
+}
+
+function goToC3Review() {
+  renderC3Review();
+  goTo('c3-review');
+}
+
+function goToC3Apply() {
+  renderC3Apply();
+  goTo('c3-apply');
 }
 
 // ─── Serviceability calculation ───────────────────────────────────────────────
