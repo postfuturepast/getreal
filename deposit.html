@@ -1116,8 +1116,8 @@ async function loadData() {
     const sdRows   = await sdRes.json();
     const regRows  = await regRes.json();
     const rateRows = await rateRes.json();
-    hemData             = await hemRes.json();
-    newbuildConcessions = await nbRes.json();
+    hemData        = await hemRes.json();
+    // Note: newbuildConcessions is already set in the inner try/catch above — do not re-fetch nbRes here
 
     // RLS guard: if any critical table returns empty, Supabase likely blocked the read
     if (!lmiRates.length || !sdRows.length || !regRows.length || !rateRows.length) {
