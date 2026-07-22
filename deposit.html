@@ -1616,8 +1616,17 @@ function renderReviewApply() {
       : `Investment loans are capped lower than owner-occupier loans — lenders see them as higher risk. This percentage is called your LVR (Loan to Value Ratio).`;
   }
 
-  const item = (heading, body) =>
-    `<div class="apply-item"><div class="apply-heading">${heading}</div><div class="apply-body">${body}</div></div>`;
+  let applyIdx = 0;
+  const item = (heading, body) => {
+    const id = `apply-detail-${applyIdx}`;
+    const arrowId = `apply-arrow-${applyIdx}`;
+    applyIdx++;
+    return `<div class="apply-item">
+      <div class="apply-heading">${heading}</div>
+      <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
+      <div id="${id}" class="fhb-detail" style="display:none;margin-top:0.5rem;">${body}</div>
+    </div>`;
+  };
 
   // ── LMI sentence — only show if LVR cap is above 80% (otherwise LMI can't apply) ──
   const lvrNum = parseFloat(lvrCap);
