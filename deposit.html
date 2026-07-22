@@ -1626,13 +1626,17 @@ function computeAtPrice(price, savings, maxLVR, regFee, lmiSdRate) {
     lmiPremium    = baseLoan * rate;
     effectiveLoan = baseLoan + lmiPremium;
     effectiveLVR  = effectiveLoan / price;
-
-    if (effectiveLVR > maxLVR) return null;
+    // Note: effectiveLVR often exceeds maxLVR because LMI is capitalised into the loan.
+    // Lenders allow this — "95% LVR" means 5% deposit required, not a cap on the LMI-inclusive total.
+    // The binding constraint is baseLVR > maxLVR (line above), which is already enforced.
 
     lmiSd = lmiPremium * lmiSdRate;
   }
 
-  return { price, stampDuty, regFee, lmiSd, availDeposit, baseLoan, baseLVR, lmiPremium, effectiveLoan, effectiveLVR };
+  // Snap to the exact LVR product tier (80 / 90 / 95) — used in C2 and C3 price conversions
+  const lvrTier = baseLVR <= 0.80 ? 0.80 : (baseLVR <= 0.90 ? 0.90 : 0.95);
+
+  return { price, stampDuty, regFee, lmiSd, availDeposit, baseLoan, baseLVR, lmiPremium, effectiveLoan, effectiveLVR, lvrTier };
 }
 
 function findMaxPrice(savings) {
@@ -2065,12 +2069,12 @@ function computeDTI() {
   const maxTotalDebt    = totalIncome * 6;
   const maxNewMortgage  = Math.max(0, maxTotalDebt - existingDebt);
 
-  const effectiveLVR = lastC1Result && lastC1Result.effectiveLVR > 0
-    ? lastC1Result.effectiveLVR
-    : getMaxLVR();
-  const dtiCeilingPrice = effectiveLVR > 0 ? Math.floor(maxNewMortgage / effectiveLVR) : 0;
+  // Use the snapped LVR tier (80/90/95) from C1 — effectiveLVR is an artefact of LMI
+  // capitalisation, not a real lending product. If no C1 result yet, fall back to maxLVR.
+  const lvrTier = lastC1Result?.lvrTier || getMaxLVR();
+  const dtiCeilingPrice = lvrTier > 0 ? Math.floor(maxNewMortgage / lvrTier) : 0;
 
-  return { newPropRental, existInvRental, totalIncome, newMortgage, mortgageBalances, loanBalances, existingDebt, totalDebt, currentDTI, maxTotalDebt, maxNewMortgage, dtiCeilingPrice };
+  return { newPropRental, existInvRental, totalIncome, newMortgage, mortgageBalances, loanBalances, existingDebt, totalDebt, currentDTI, maxTotalDebt, maxNewMortgage, dtiCeilingPrice, lvrTier };
 }
 
 // ─── C2 result render ────────────────────────────────────────────────────────
@@ -2544,13 +2548,12 @@ function computeServiceability() {
     ? maxMonthlyRepayment * (Math.pow(1+r, n) - 1) / (r * Math.pow(1+r, n))
     : maxMonthlyRepayment * n;
 
-  const effectiveLVR = lastC1Result && lastC1Result.effectiveLVR > 0
-    ? lastC1Result.effectiveLVR : getMaxLVR();
-  const c3CeilingPrice = effectiveLVR > 0 ? Math.floor(maxLoan / effectiveLVR) : 0;
+  const lvrTier = lastC1Result?.lvrTier || getMaxLVR();
+  const c3CeilingPrice = lvrTier > 0 ? Math.floor(maxLoan / lvrTier) : 0;
 
   return { c3CeilingPrice, maxMonthlyRepayment, netMonthly, hemMonthly,
            mortgageMonthly, loanMonthly, cardMonthly, existingMonthly,
-           maxLoan, stressRateAnnual, newPropRental, existInvRental };
+           maxLoan, stressRateAnnual, newPropRental, existInvRental, lvrTier };
 }
 
 // ─── Final outcome screen ────────────────────────────────────────────────────
@@ -2567,11 +2570,11 @@ function renderOutcome() {
   const prices  = [c1Price, c2Price, c3Price].filter(p => p > 0);
   const maximum = prices.length ? Math.min(...prices) : 0;
 
-  // Which ceiling binds?
+  // Which ceiling binds? Tie-break priority: deposit > dti > serviceability.
+  // Use strict < so that deposit wins when equal to dti or svc, and dti wins over svc when equal.
   let bindingCeiling = 'deposit';
-  if (maximum === c2Price && c2Price > 0 && c2Price <= c1Price && c2Price <= c3Price) bindingCeiling = 'dti';
-  if (maximum === c3Price && c3Price > 0 && c3Price <= c1Price && c3Price <= c2Price) bindingCeiling = 'serviceability';
-  // Tie-break: if equal prefer the more binding label (deposit > dti > serviceability)
+  if (maximum === c2Price && c2Price > 0 && c2Price < c1Price && c2Price <= c3Price) bindingCeiling = 'dti';
+  if (maximum === c3Price && c3Price > 0 && c3Price < c1Price && c3Price < c2Price) bindingCeiling = 'serviceability';
 
   const bindingLabel = { deposit: 'Ceiling 1 — Deposit', dti: 'Ceiling 2 — Debt-to-income', serviceability: 'Ceiling 3 — Serviceability' };
 
