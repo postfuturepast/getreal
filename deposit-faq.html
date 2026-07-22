@@ -209,9 +209,9 @@
     <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem;">Plain-English summary — what this tool actually does</div>
     <div style="font-size: 0.88rem; color: var(--muted); line-height: 1.75; display: flex; flex-direction: column; gap: 0.65rem;">
       <p style="margin:0;"><strong style="color: var(--text);">You enter your savings.</strong> The tool works backwards to find the highest property price those savings can reach — after stamp duty, LMI, and registration fees are taken out of your pocket before a dollar goes toward deposit.</p>
-      <p style="margin:0;"><strong style="color: var(--text);">It can't use a simple formula.</strong> Stamp duty depends on the price, and LMI depends on how much deposit is left after stamp duty — circular. So the tool tests thousands of candidate prices and finds the highest one that works. (Technical name: binary search.)</p>
-      <p style="margin:0;"><strong style="color: var(--text);">This is one of three limits.</strong> Your deposit ceiling is Ceiling 1. Banks also cap how much you can borrow relative to your income (Ceiling 2 — DTI), and require you to prove you can meet repayments after living costs (Ceiling 3 — serviceability). The deposit ceiling tells you the maximum you could buy with your savings. Whether a bank actually lends you that is a different question.</p>
-      <p style="margin:0;"><strong style="color: var(--text);">If you added household details</strong>, the tool also shows the HEM living expense benchmark — the floor the bank starts from when assessing your living costs. This is part of Ceiling 3 (serviceability).</p>
+      <p style="margin:0;"><strong style="color: var(--text);">It can't use a simple formula.</strong> Stamp duty depends on the price, and LMI depends on how much deposit is left after stamp duty — circular. So the tool uses a binary search to find the highest viable price. This same technique is used for all three ceilings.</p>
+      <p style="margin:0;"><strong style="color: var(--text);">There are three limits, and the lowest wins.</strong> Ceiling 1 is your deposit ceiling — how far your savings can stretch. Ceiling 2 is your debt-to-income ceiling — how much a lender will let you borrow given your income. Ceiling 3 is your serviceability ceiling — whether you can actually meet the monthly repayments after living costs. The tool calculates all three and your real maximum is whichever is lowest.</p>
+      <p style="margin:0;"><strong style="color: var(--text);">Ceilings 2 and 3 still use your savings.</strong> When income or serviceability is the binding limit, your savings don't disappear — they're applied as deposit on top of whatever the loan cap allows. This gives a higher (and more accurate) answer than simply dividing the loan cap by your LVR.</p>
     </div>
   </div>
 
@@ -232,14 +232,15 @@
   <div class="faq-section">
     <div class="faq-section-title">
       <span class="faq-section-num">02</span>
-      Three ceilings — this tool covers one
+      Three ceilings — how they interact
     </div>
     <div class="faq-body">
-      <p>Every mortgage application is subject to three independent limits. This tool calculates only the first:</p>
-      <p><strong>Ceiling 1 — Deposit / LVR.</strong> How much can your savings buy after stamp duty, registration fees, and LMI? This is what this tool calculates.</p>
-      <p><strong>Ceiling 2 — Debt-to-Income (DTI).</strong> APRA requires lenders to consider total debt against gross income. Practical cap is roughly 6× annual gross income across all debts. This is coming in Stage 2.</p>
-      <p><strong>Ceiling 3 — Serviceability.</strong> Lenders must verify you can meet monthly repayments after living costs (HEM benchmarks) with a 3% interest rate buffer above the actual rate. This is coming in Stage 3.</p>
-      <p>Your maximum purchase price is the lowest of the three ceilings — whichever one bites first. For buyers with modest savings relative to income, the deposit ceiling is usually the binding constraint. For buyers with large savings but lower incomes, DTI or serviceability often binds first.</p>
+      <p>Every mortgage application is subject to three independent limits. This tool calculates all three and shows whichever is lowest as your actual maximum.</p>
+      <p><strong>Ceiling 1 — Deposit / LVR.</strong> How much can your savings buy after stamp duty, registration fees, and LMI? This produces both a maximum purchase price and a specific maximum loan amount.</p>
+      <p><strong>Ceiling 2 — Debt-to-Income (DTI).</strong> APRA requires lenders to consider total debt against gross income. The practical cap at mainstream lenders is roughly 6× annual gross income across all debts. This produces a maximum new mortgage amount.</p>
+      <p><strong>Ceiling 3 — Serviceability.</strong> Lenders must verify you can meet monthly repayments after living costs (HEM benchmarks) with a 3% interest rate buffer above the actual rate. This produces a maximum loan amount based on repayment capacity.</p>
+      <p><strong>The key insight: savings apply at every ceiling.</strong> When Ceiling 1 is the binding limit, the calculation is straightforward — your savings determine everything. But when Ceiling 2 or 3 binds, your savings don't become irrelevant. The loan amount is capped, but your savings can still contribute deposit on top of that loan, pushing the achievable price higher. The tool runs the same binary search for all three ceilings: find the highest price where savings cover upfront costs plus the deposit component (price minus the loan cap).</p>
+      <p>Your maximum purchase price is the lowest of the three ceiling prices. For buyers with modest savings relative to income, Ceiling 1 is usually binding. For buyers with large savings but lower incomes, Ceiling 2 or 3 often binds — but the achievable price will still be higher than the loan cap alone suggests.</p>
     </div>
   </div>
 
@@ -399,7 +400,7 @@
           <tr>
             <td>WA</td>
             <td>Marginal brackets</td>
-            <td>Nil ≤ $430k; tapered to $530k</td>
+            <td>Nil ≤ $600k; tapered to $800k (from 7 May 2026)</td>
             <td>None</td>
           </tr>
           <tr>
@@ -417,8 +418,8 @@
           <tr>
             <td>ACT</td>
             <td>Marginal brackets</td>
-            <td>None (HBCS covers all eligible buyers)</td>
-            <td>None (HBCS = full exemption)</td>
+            <td>Full exemption — all FHB from 1 July 2026 (no income or price cap)</td>
+            <td>None (HBCS = full exemption for eligible non-FHB)</td>
           </tr>
           <tr>
             <td>NT</td>
@@ -665,19 +666,36 @@ Macquarie    8× hard cap (published broker guidelines v14, Jul 2026)
       Ceiling 2 — Debt-to-income: how it's calculated
     </div>
     <div class="faq-body">
-      <p>Ceiling 2 answers: given your income and existing debts, what's the largest loan the APRA DTI threshold allows?</p>
+      <p>Ceiling 2 answers: given your income and existing debts, what's the highest property price you can reach when the APRA DTI threshold caps your loan?</p>
 
       <p><strong>What the tool collects.</strong> Your existing debts (credit card limits in full, personal and car loan balances, other mortgage balances) and your gross annual income. If the purchase is an investment, the tool also asks for expected weekly rent and applies 80% of that as additional assessable income — the standard lender shading for rental income.</p>
 
-      <p><strong>The calculation.</strong></p>
-      <div class="code-block">assessedIncome   = grossSalary + (weeklyRent × 52 × 0.80)  // investment only
-maxTotalDebt     = assessedIncome × 6
-maxNewMortgage   = maxTotalDebt − creditCardLimits − personalLoans − otherMortgages
-dtiCeilingPrice  = maxNewMortgage ÷ effectiveLVR            // LVR from Ceiling 1 solve</div>
+      <p><strong>Step 1 — find the loan cap.</strong></p>
+      <div class="code-block">assessedIncome  = grossSalary + (weeklyRent × 52 × 0.80)  <span class="cm">// investment only</span>
+maxTotalDebt    = assessedIncome × 6
+maxNewMortgage  = maxTotalDebt − creditCardLimits − personalLoans − otherMortgages</div>
 
-      <p><strong>Why gross income.</strong> DTI is assessed on gross (pre-tax) income at every Australian lender. Superannuation is excluded — it's not income you can service debt with. Bonuses and overtime require a 2-year history before most lenders count them; base salary is the conservative input.</p>
+      <p><strong>Step 2 — find the max price using your savings.</strong> The loan cap tells you how much you can borrow. But your savings don't disappear — they're available to cover stamp duty, registration fees, LMI stamp duty, and whatever deposit is needed on top of the capped loan. The tool runs the same binary search as Ceiling 1, but instead of checking whether baseLVR exceeds a maximum LVR, it checks whether the loan implied by a given price exceeds the DTI loan cap:</p>
+      <div class="code-block"><span class="kw">repeat</span> 60 times:
+  candidate     = midpoint of search range
+  depositNeeded = candidate − maxNewMortgage  <span class="cm">// how much deposit from savings</span>
+  baseLVR       = maxNewMortgage ÷ candidate
+  stampDuty     = calcStampDuty(candidate)
+  lmiSd         = calcLMIStampDuty(baseLVR, maxNewMortgage)  <span class="cm">// if LVR &gt; 80%</span>
+  savingsNeeded = depositNeeded + stampDuty + regFee + lmiSd
 
-      <p><strong>What "binding" means.</strong> The tool shows both Ceiling 1 (deposit) and Ceiling 2 (DTI) and flags whichever is lower as the current binding ceiling. If your deposit ceiling is $900k but your DTI ceiling is $750k, you can't borrow to $900k regardless of your savings — income is the constraint. See <a href="#dti-methodology">Section 13</a> for why 6× is the threshold used.</p>
+  <span class="kw">if</span> savingsNeeded ≤ savings <span class="kw">and</span> baseLVR ≤ maxLVR:
+    best = candidate; search higher
+  <span class="kw">else</span>:
+    search lower
+
+<span class="kw">return</span> best  <span class="cm">// highest price where savings + loan cap work together</span></div>
+
+      <p>This always gives a <strong>higher result than maxNewMortgage ÷ lvrTier</strong> — because that naive formula assumes the minimum possible deposit, ignoring any surplus savings the buyer has. The correct answer uses all available savings.</p>
+
+      <p><strong>Why gross income.</strong> DTI is assessed on gross (pre-tax) income at every Australian lender. Superannuation is excluded. Bonuses and overtime require a 2-year history before most lenders count them; base salary is the conservative input.</p>
+
+      <p><strong>What "binding" means.</strong> If your Ceiling 2 price is lower than Ceiling 1, income is the constraint — more savings wouldn't help you here. See <a href="#dti-methodology">Section 13</a> for why 6× is the threshold used.</p>
     </div>
   </div>
 
@@ -688,23 +706,23 @@ dtiCeilingPrice  = maxNewMortgage ÷ effectiveLVR            // LVR from Ceiling
       Ceiling 3 — Serviceability: how it's calculated
     </div>
     <div class="faq-body">
-      <p>Ceiling 3 answers: given your income and living costs, can you actually afford the monthly repayments — and if so, up to what property price?</p>
+      <p>Ceiling 3 answers: given your income and living costs, what's the highest property price you can reach when serviceability caps your loan?</p>
 
-      <p><strong>The stress rate.</strong> APRA requires all lenders to assess serviceability at the actual loan rate plus a 3% buffer. The tool uses the RBA average new loan rate for your loan type (owner-occupier or investor P&amp;I), sourced from the same <code>benchmark_rates</code> table as the repayment block in Ceiling 1. Stress rate = that rate + 3%.</p>
+      <p><strong>The stress rate.</strong> APRA requires all lenders to assess serviceability at the actual loan rate plus a 3% buffer. The tool uses the RBA average new loan rate for your loan type (owner-occupier or investor P&amp;I), sourced from the <code>benchmark_rates</code> Supabase table. Stress rate = that rate + 3%.</p>
 
       <p><strong>HEM — the living cost floor.</strong> Banks are required by APRA to assume minimum living costs equal to the Household Expenditure Measure (HEM) for your household type, regardless of what expenses you declare. The tool looks up HEM from the <code>hem_benchmarks</code> table using three inputs: household type (single or couple), number of dependants, and metro vs regional location. See <a href="#section-12">Section 12</a> for the HEM source and methodology.</p>
 
-      <p>You can enter your actual expenses if they're higher than HEM. The tool won't allow a figure below HEM — that's the bank's floor and it can't be overridden.</p>
+      <p>You can enter your actual expenses if they're higher than HEM. The tool won't accept a figure below HEM — that's the bank's floor and it can't be overridden.</p>
 
-      <p><strong>The calculation.</strong></p>
-      <div class="code-block">monthlyIncome         = assessedIncome ÷ 12
-maxMonthlyRepayment   = monthlyIncome − hemMonthly
+      <p><strong>Step 1 — find the loan cap.</strong></p>
+      <div class="code-block">netMonthly            = (grossIncome − tax) ÷ 12  <span class="cm">// rental shaded at 80% added before tax</span>
+maxMonthlyRepayment   = netMonthly − hemMonthly − existingDebtRepayments
 maxLoan               = P&amp;I inverse formula at stress rate over 30 years
-c3CeilingPrice        = maxLoan ÷ effectiveLVR</div>
+                        L = M × ((1+r)^n − 1) / (r × (1+r)^n)</div>
 
-      <p>The inverse P&amp;I formula derives the loan amount from a given monthly repayment: <code>L = M × ((1+r)^n − 1) / (r × (1+r)^n)</code>, where r is the monthly stress rate and n = 360 months.</p>
+      <p><strong>Step 2 — find the max price using your savings.</strong> Exactly the same binary search as Ceiling 2, but substituting the serviceability loan cap (maxLoan) for the DTI loan cap. The highest price where savings cover upfront costs plus the deposit on top of the loan cap is the Ceiling 3 price.</p>
 
-      <p><strong>What the outcome screen shows.</strong> All three ceilings side by side, with the lowest one flagged as binding. The serviceability breakdown shows: monthly income, minus HEM, equals maximum monthly repayment, converted to a maximum loan at the stress rate, converted to a maximum property price. The outcome also shows which ceiling is limiting your search — deposit, income, or repayment capacity — so you know what to change if the number isn't where you need it.</p>
+      <p><strong>What the outcome screen shows.</strong> All three ceiling prices side by side, with the lowest flagged as binding. The serviceability breakdown shows the full path: income → tax → net monthly → minus HEM and existing commitments → max monthly repayment → max loan at stress rate → savings applied on top → max price. Each ceiling also shows how your savings would be split between loan, deposit, stamp duty, and fees at that ceiling price.</p>
 
       <p><strong>What this is not.</strong> A formal pre-approval. These ceilings are calculated from published benchmarks and the inputs you provided. Lenders apply additional factors — income shading, credit history, property-specific risk, internal policy buffers — that can reduce the approved amount, sometimes materially. Get formal pre-approval from a broker or bank before inspecting properties seriously, and before making any offer.</p>
     </div>
