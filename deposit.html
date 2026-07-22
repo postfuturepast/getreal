@@ -681,9 +681,43 @@
     <div class="inset">
       APRA limits banks to writing more than 20% of new mortgages at debt loads above 6× gross income. This is the portfolio threshold where lender books start tightening — two more ceilings to check.
     </div>
-    <button class="btn" onclick="goTo('c2-mortgages')" style="width: 100%; text-align: center;">
+    <button class="btn" onclick="goTo('c2-applicant')" style="width: 100%; text-align: center;">
       Let's check →
     </button>
+  </div>
+
+  <!-- C2 Applicant ────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-applicant">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+
+    </div>
+    <div class="q-label">Sole or joint application?</div>
+    <div class="q-sub">We need this first so we can remind you to include all borrowers' debts as we go.</div>
+    <div class="choices">
+      <button class="choice-btn" onclick="selectC2Applicant('sole')">
+        Just me — sole applicant
+      </button>
+      <button class="choice-btn" onclick="selectC2Applicant('joint')">
+        Me and a co-borrower — joint application
+      </button>
+      <button class="choice-btn" onclick="selectC2Applicant('multi')">
+        3 or more borrowers — complex application
+      </button>
+    </div>
+    <button class="fhb-toggle" onclick="toggleDetail('c2-applicant-detail','c2-applicant-arrow')"><span id="c2-applicant-arrow">↓</span> Why does this matter?</button>
+    <div class="fhb-detail" id="c2-applicant-detail" style="display:none">Lenders assess your Debt-to-Income ratio (DTI) using total gross income. A joint application adds both salaries, which lifts your borrowing cap. The debts captured ahead also count for both applicants combined.</div>
+  </div>
+
+  <!-- C2 Three-plus interstitial ─────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-three-plus">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label">Three or more borrowers gets complex.</div>
+    <div class="q-sub">This tool is built for one or two borrowers. Multi-borrower applications involve separate income assessments, combined debt ratios, and lender-specific rules we can't reliably model here.</div>
+    <div class="fhb-detail" style="display:block;margin-bottom:0.75rem;">Your Ceiling 1 result (deposit limit) above is still valid — that calculation doesn't depend on borrower count. For Ceiling 2 and 3, a mortgage broker can run the full multi-borrower scenario properly. This is exactly the situation where a good broker pays for itself.</div>
+    <button class="btn" onclick="goTo('deposit-result')" style="width:100%;text-align:center;">Back to my Ceiling 1 result →</button>
   </div>
 
   <!-- C2 Mortgages ───────────────────────────────────────────────────────── -->
@@ -693,7 +727,7 @@
 
     </div>
     <div class="q-label">Other properties after this purchase?</div>
-    <div class="q-sub">Mortgages you'll still have after this purchase settles — not the one you're selling to fund it.</div>
+    <div class="q-sub" id="c2-mortgages-sub">Mortgages you'll still have after this purchase settles — not the one you're selling to fund it.</div>
     <div class="choices">
       <button class="choice-btn" onclick="c2SelectHasOtherMortgages(true)">
         Yes — I'll still have other mortgaged properties
@@ -753,7 +787,7 @@
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
     <div class="q-label">Do you have credit cards?</div>
-    <div class="q-sub">Lenders count your total approved limit — not your balance. A $20,000 limit you never touch still counts as $20,000 of debt.</div>
+    <div class="q-sub" id="c2-cards-sub">Lenders count your total approved limit — not your balance. A $20,000 limit you never touch still counts as $20,000 of debt.</div>
     <div class="choices">
       <button class="choice-btn" onclick="c2SelectHasCards(true)">Yes — I have credit cards</button>
       <button class="choice-btn" onclick="c2SelectHasCards(false)">No — I don't have credit cards</button>
@@ -814,7 +848,7 @@
 
     </div>
     <div class="q-label">HECS/HELP student debt?</div>
-    <div class="q-sub">Since September 2025, HECS/HELP is excluded from lender debt-to-income calculations.</div>
+    <div class="q-sub" id="c2-hecs-sub">Since September 2025, HECS/HELP is excluded from lender debt-to-income calculations.</div>
     <div class="choices" id="c2-hecs-choices">
       <button class="choice-btn" onclick="c2SelectHECS(true)">Yes — I have HECS/HELP debt</button>
       <button class="choice-btn" onclick="c2SelectHECS(false)">No — I don't have HECS/HELP debt</button>
@@ -835,7 +869,7 @@
 
     </div>
     <div class="q-label">Any other ongoing debt?</div>
-    <div class="q-sub">Car loans, personal loans, buy-now-pay-later. Not including what we've already covered above.</div>
+    <div class="q-sub" id="c2-loans-sub">Car loans, personal loans, buy-now-pay-later. Not including what we've already covered above.</div>
     <div class="choices" id="c2-loans-choices">
       <button class="choice-btn" onclick="c2SelectHasOtherLoans(true)">Yes — I have other loans</button>
       <button class="choice-btn" onclick="c2SelectHasOtherLoans(false)">No — I don't have other loans</button>
@@ -851,26 +885,6 @@
       <div id="c2-loan-rows" style="display:flex;flex-direction:column;gap:1rem;"></div>
       <button class="btn" id="c2-loans-submit" onclick="submitC2OtherLoans()" style="width:100%;text-align:center;display:none;">Continue →</button>
     </div>
-  </div>
-
-  <!-- C2 Applicant ────────────────────────────────────────────────────────── -->
-  <div class="screen" id="screen-c2-applicant">
-    <div class="step-meta">
-      <button class="step-back" onclick="goBack()">← back</button>
-
-    </div>
-    <div class="q-label">Sole or joint application?</div>
-    <div class="q-sub">A joint application combines both incomes — which can increase your borrowing limit.</div>
-    <div class="choices">
-      <button class="choice-btn" onclick="selectC2Applicant('sole')">
-        Just me — sole applicant
-      </button>
-      <button class="choice-btn" onclick="selectC2Applicant('joint')">
-        Me and a co-borrower — joint application
-      </button>
-    </div>
-    <button class="fhb-toggle" onclick="toggleDetail('c2-applicant-detail','c2-applicant-arrow')"><span id="c2-applicant-arrow">↓</span> Why does this matter?</button>
-    <div class="fhb-detail" id="c2-applicant-detail" style="display:none">Lenders assess your Debt-to-Income ratio (DTI) using total gross income. A joint application adds both salaries, which lifts your borrowing cap. The debts captured above also count for both applicants combined.</div>
   </div>
 
   <!-- C2 Income ───────────────────────────────────────────────────────────── -->
@@ -2332,7 +2346,7 @@ function c2SelectHECS(has) {
 function c2SelectHasOtherLoans(has) {
   if (!has) {
     d.c2OtherLoans = [];
-    goTo('c2-applicant');
+    goTo('c2-income');
     return;
   }
   document.getElementById('c2-loans-choices').style.display = 'none';
@@ -2400,13 +2414,29 @@ function checkC2LoansSubmit() {
 function submitC2OtherLoans() {
   // Reset C3 loan repayments since loans changed
   d.c3LoanRepayments = [];
-  goTo('c2-applicant');
+  goTo('c2-income');
 }
 
 // ─── C2 applicant selection ───────────────────────────────────────────────────
 function selectC2Applicant(type) {
+  if (type === 'multi') {
+    goTo('c2-three-plus');
+    return;
+  }
   d.c2Applicants = type;
   const joint = type === 'joint';
+  // Update debt screen sub-texts
+  const jointNote = joint ? ' Include debts for both applicants.' : '';
+  const subs = [
+    ['c2-mortgages-sub', 'Mortgages you\'ll still have after this purchase settles — not the one you\'re selling to fund it.' + jointNote],
+    ['c2-cards-sub', 'Lenders count your total approved limit — not your balance. A $20,000 limit you never touch still counts as $20,000 of debt.' + jointNote],
+    ['c2-hecs-sub', 'Since September 2025, HECS/HELP is excluded from lender debt-to-income calculations.' + jointNote],
+    ['c2-loans-sub', 'Car loans, personal loans, buy-now-pay-later. Not including what we\'ve already covered above.' + jointNote],
+  ];
+  subs.forEach(([id, text]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  });
   // Update income screen copy
   const labelEl    = document.getElementById('c2-income-label');
   const salaryEl   = document.getElementById('c2-salary-label');
@@ -2438,7 +2468,7 @@ function selectC2Applicant(type) {
   if (incEl)  { incEl.value  = d.c2GrossIncome  > 0 ? d.c2GrossIncome.toLocaleString('en-AU')  : ''; }
   if (rentEl) { rentEl.value = d.c2RentalIncome > 0 ? d.c2RentalIncome.toLocaleString('en-AU') : ''; }
   setC2IncomeBtn(d.c2GrossIncome > 0);
-  goTo('c2-income');
+  goTo('c2-mortgages');
 }
 
 // ─── C2 income inputs ────────────────────────────────────────────────────────
