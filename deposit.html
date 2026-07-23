@@ -2145,13 +2145,21 @@ function requiredSavingsForPrice(price, lvrTier) {
   return { requiredSavings, depositComponent, stampDuty, regFee, lmiPremium, lmiSd, lvrTier };
 }
 
-// ─── Binary search: max price for a given loan cap ───────────────────────────
+/// ─── Binary search: max price for a given loan cap ───────────────────────────
 // C2 (DTI) and C3 (serviceability) each produce a maximum loan amount, not a
 // maximum price. The actual max price is found by binary search: given the loan
 // cap and the user's savings, find the highest price where savings cover the
 // upfront costs (stamp duty, reg fee, LMI stamp duty) plus the deposit component
 // (price − loanCap). This always gives a higher (and correct) answer than
 // loanCap ÷ lvrTier, because surplus savings push the price up beyond minimum deposit.
+//
+// Direction rules — CRITICAL, easy to get wrong:
+//   depositNeeded < 0  → price < loanCap, loan alone covers it → go HIGHER (lo = mid + 1)
+//   baseLVR > maxLVR   → price too low relative to loan cap    → go HIGHER (lo = mid + 1)
+//   savingsNeeded > savings → savings insufficient at this price → go LOWER  (hi = mid - 1)
+//   savingsNeeded <= savings → valid, record best               → go HIGHER (lo = mid + 1)
+// Both of the first two cases need lo = mid + 1. Using hi = mid - 1 for the LVR
+// case was the bug — it collapses the search before reaching the valid price range.
 function findMaxPriceForLoanCap(loanCap) {
   if (loanCap <= 0 || d.savings <= 0) return null;
   const maxLVR    = getMaxLVR();
@@ -2170,7 +2178,7 @@ function findMaxPriceForLoanCap(loanCap) {
     if (depositNeeded < 0) { lo = mid + 1; continue; }  // loan alone covers price — search higher
 
     const baseLVR = loanCap / mid;
-    if (baseLVR > maxLVR) { hi = mid - 1; continue; }   // lender won't approve this LVR
+    if (baseLVR > maxLVR) { lo = mid + 1; continue; }   // price too low vs loan cap — need higher price to reduce LVR
 
     const stampDuty = calcDutyForPrice(mid);
 
