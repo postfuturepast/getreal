@@ -1701,10 +1701,8 @@ function renderReviewApply() {
     const arrowId = `apply-arrow-${applyIdx}`;
     applyIdx++;
     return `<div class="apply-item">
-      <div style="display:flex;flex-wrap:wrap;align-items:baseline;column-gap:0.6rem;row-gap:0.15rem;">
-        <div class="apply-heading">${heading}</div>
-        <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
-      </div>
+      <div class="apply-heading">${heading}</div>
+      <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
       <div id="${id}" class="fhb-detail" style="display:none;margin-top:0.5rem;">${body}</div>
     </div>`;
   };
@@ -2615,10 +2613,8 @@ function renderC2Apply() {
     const arrowId = `c2-apply-arrow-${idx}`;
     idx++;
     return `<div class="apply-item">
-      <div style="display:flex;flex-wrap:wrap;align-items:baseline;column-gap:0.6rem;row-gap:0.15rem;">
-        <div class="apply-heading">${heading}</div>
-        <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
-      </div>
+      <div class="apply-heading">${heading}</div>
+      <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
       <div id="${id}" class="fhb-detail" style="display:none;margin-top:0.5rem;">${body}</div>
     </div>`;
   };
@@ -3181,10 +3177,8 @@ function renderC3Apply() {
     const arrowId = `c3-apply-arrow-${idx}`;
     idx++;
     return `<div class="apply-item">
-      <div style="display:flex;flex-wrap:wrap;align-items:baseline;column-gap:0.6rem;row-gap:0.15rem;">
-        <div class="apply-heading">${heading}</div>
-        <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
-      </div>
+      <div class="apply-heading">${heading}</div>
+      <button class="fhb-toggle" onclick="toggleDetail('${id}','${arrowId}')">Tell me more <span id="${arrowId}">↓</span></button>
       <div id="${id}" class="fhb-detail" style="display:none;margin-top:0.5rem;">${body}</div>
     </div>`;
   };
