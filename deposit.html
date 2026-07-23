@@ -384,14 +384,10 @@
     .gate-prog-num { font-family: var(--font-mono); font-size: 0.6rem; color: #333; letter-spacing: 0.04em; display: block; }
     .gate-prog-name { font-family: var(--font-mono); font-size: 0.58rem; color: #333; margin-top: 1px; display: block; }
     .gate-prog-step.done .gate-prog-num, .gate-prog-step.done .gate-prog-name { color: #444; }
-    .gate-prog-step.active { background: #0a0a0a; border-bottom: 2px solid var(--blue); }
-    .gate-prog-step.active .gate-prog-num { color: var(--blue); }
-    .gate-prog-step.active .gate-prog-name { color: #5599ff; }
-    /* Grouped header: ghost + tag + headline as one flex child */
-    .gate-header { display: flex; flex-direction: column; gap: 0.2rem; }
-    .gate-ghost { font-size: 3rem; font-weight: 900; color: #222; line-height: 1; letter-spacing: -0.04em; }
-    .gate-tag { font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--blue); }
-    .gate-head { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.2; margin-top: 0.2rem; }
+    .gate-prog-step.active { background: #0a0a0a; border-bottom: 2px solid var(--text); }
+    .gate-prog-step.active .gate-prog-num { color: var(--text); font-weight: 700; }
+    .gate-prog-step.active .gate-prog-name { color: var(--text); }
+    .gate-head { font-size: 1.75rem; font-weight: 800; color: var(--text); line-height: 1.2; }
     .gate-gg { display: flex; flex-direction: column; gap: 0.3rem; }
     .gate-give, .gate-get { border-left: 2px solid; padding: 0.5rem 0.75rem; background: #0a0a0a; display: flex; gap: 0.6rem; align-items: baseline; }
     .gate-give { border-left-color: var(--blue); }
@@ -461,11 +457,7 @@
         <div class="gate-prog-step"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
       </div>
     </div>
-    <div class="gate-header">
-      <div class="gate-ghost">1</div>
-      <div class="gate-tag">Deposit ceiling</div>
-      <div class="gate-head">Your deposit limit.</div>
-    </div>
+    <div class="gate-head">Your deposit limit.</div>
     <div class="gate-gg">
       <div class="gate-give"><span class="gate-lbl">Give</span><span class="gate-val">your savings and a few details</span></div>
       <div class="gate-get"><span class="gate-lbl">Get</span><span class="gate-val">the max price your deposit can reach</span></div>
@@ -712,11 +704,7 @@
         <div class="gate-prog-step"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
       </div>
     </div>
-    <div class="gate-header">
-      <div class="gate-ghost">2</div>
-      <div class="gate-tag">Debt ceiling</div>
-      <div class="gate-head">Your debt limit.</div>
-    </div>
+    <div class="gate-head">Your debt limit.</div>
     <div class="gate-gg">
       <div class="gate-give"><span class="gate-lbl">Give</span><span class="gate-val">your existing debts and gross annual income</span></div>
       <div class="gate-get"><span class="gate-lbl">Get</span><span class="gate-val">the max borrowing your debt-to-income ratio allows</span></div>
@@ -1022,11 +1010,7 @@
         <div class="gate-prog-step active"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
       </div>
     </div>
-    <div class="gate-header">
-      <div class="gate-ghost">3</div>
-      <div class="gate-tag">Serviceability ceiling</div>
-      <div class="gate-head">Can you meet the repayments?</div>
-    </div>
+    <div class="gate-head">Can you meet the repayments?</div>
     <div class="gate-gg">
       <div class="gate-give"><span class="gate-lbl">Give</span><span class="gate-val">your household type and living expenses</span></div>
       <div class="gate-get"><span class="gate-lbl">Get</span><span class="gate-val">the max loan your income can actually service</span></div>
