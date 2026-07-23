@@ -1134,17 +1134,18 @@
       <button class="step-back" onclick="goBack()">← back</button>
 
     </div>
-    <div class="q-label">Your minimum living expenses</div>
-    <div id="c3-hem-statement" class="inset"></div>
+    <div class="q-label">Are your expenses above the bank's minimum?</div>
+    <div class="q-sub">Every bank applies a minimum living cost floor — the HEM. Your declared expenses only count if they're higher.</div>
     <div class="choices" id="c3-hem-choices">
       <button class="choice-btn" id="c3-use-hem-btn" onclick="c3UseHEM()">
         <!-- populated by renderC3HEM() -->
       </button>
       <button class="choice-btn" onclick="c3ShowHEMOverride()">
-        My actual expenses are higher — I'll enter them
-        <span class="choice-sub">You can enter a higher amount. The bank floor stays the same regardless.</span>
+        Yes — I'll enter my actual expenses
       </button>
     </div>
+    <button class="fhb-toggle" onclick="toggleDetail('c3-hem-detail','c3-hem-arrow')" style="margin-top:-0.25rem;">Why does this matter? <span id="c3-hem-arrow">↓</span></button>
+    <div id="c3-hem-detail" class="fhb-detail" style="display:none;"><span id="c3-hem-statement"></span></div>
     <div id="c3-hem-override-wrap" style="display: none; flex-direction: column; gap: 0.75rem;">
       <div class="debt-row">
         <div class="debt-label">My actual monthly expenses</div>
@@ -3054,10 +3055,10 @@ function renderC3HEM() {
   }
 
   if (stEl) {
-    stEl.innerHTML = `The bank minimum for a <strong>${hhLabel}</strong> with <strong>${depLabel}</strong> in a <strong>${locLabel}</strong> area${suburbNote ? ' <span style="color:var(--dim)">(' + d.suburbName + ')</span>' : ''} is <strong>${fmt(hemAmount)}/month</strong>. No matter what expenses you declare on your application, the bank assumes at least this figure.`;
+    stEl.innerHTML = `The bank minimum for a <strong>${hhLabel}</strong> with <strong>${depLabel}</strong> in a <strong>${locLabel}</strong> area${suburbNote ? ' <span style="color:var(--dim)">(' + d.suburbName + ')</span>' : ''} is <strong>${fmt(hemAmount)}/month</strong>. No matter what expenses you declare on your application, the bank assumes at least this figure. This benchmark is called HEM — the Household Expenditure Measure.`;
   }
   if (btnEl) {
-    btnEl.innerHTML = `Use the bank minimum — ${fmt(hemAmount)}/month<span class="choice-sub">My actual spending is around this or lower</span>`;
+    btnEl.innerHTML = `No — use the bank minimum — ${fmt(hemAmount)}/month`;
   }
   if (floorEl) {
     floorEl.textContent = `Must be at least ${fmt(hemAmount)}/month — that's the bank's floor.`;
