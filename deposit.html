@@ -375,7 +375,10 @@
     .ceiling-amount.dimmed { color: var(--dim); }
 
     /* ── Gate screen: ceiling intro ─────────────────────────────────────── */
-    .gate-progress { display: flex; border-bottom: 1px solid #1a1a1a; margin: -1.25rem -1.5rem 0; }
+    /* gate-top: back button + progress strip as ONE flex child of .screen  */
+    .gate-top { display: flex; flex-direction: column; margin: -1.25rem -1.5rem 0; }
+    .gate-top .step-meta { padding: 0.65rem 1.5rem 0.5rem; }
+    .gate-progress { display: flex; border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
     .gate-prog-step { flex: 1; padding: 6px 4px; text-align: center; border-right: 1px solid #1a1a1a; }
     .gate-prog-step:last-child { border-right: none; }
     .gate-prog-num { font-family: var(--font-mono); font-size: 0.6rem; color: #333; letter-spacing: 0.04em; display: block; }
@@ -384,16 +387,15 @@
     .gate-prog-step.active { background: #0a0a0a; border-bottom: 2px solid var(--blue); }
     .gate-prog-step.active .gate-prog-num { color: var(--blue); }
     .gate-prog-step.active .gate-prog-name { color: #5599ff; }
-    /* Grouped header: ghost + tag + headline collapse as one flex child */
-    .gate-header { display: flex; flex-direction: column; gap: 0.25rem; padding-top: 0.5rem; }
-    .gate-ghost { font-size: 4rem; font-weight: 900; color: #1c1c1c; line-height: 1; letter-spacing: -0.06em; }
-    .gate-tag { font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--blue); margin-top: 0.15rem; }
-    .gate-head { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.2; margin-top: 0.1rem; }
+    /* Grouped header: ghost + tag + headline as one flex child */
+    .gate-header { display: flex; flex-direction: column; gap: 0.2rem; }
+    .gate-ghost { font-size: 3rem; font-weight: 900; color: #222; line-height: 1; letter-spacing: -0.04em; }
+    .gate-tag { font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--blue); }
+    .gate-head { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.2; margin-top: 0.2rem; }
     .gate-gg { display: flex; flex-direction: column; gap: 0.3rem; }
     .gate-give, .gate-get { border-left: 2px solid; padding: 0.5rem 0.75rem; background: #0a0a0a; display: flex; gap: 0.6rem; align-items: baseline; }
     .gate-give { border-left-color: var(--blue); }
     .gate-get  { border-left-color: #4ade80; }
-    /* Labels: larger + shape prefix so colour isn't the only differentiator */
     .gate-lbl { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; min-width: 36px; flex-shrink: 0; }
     .gate-give .gate-lbl { color: var(--blue); }
     .gate-get  .gate-lbl { color: #4ade80; }
@@ -449,13 +451,15 @@
 
   <!-- ── Screen 0b: Ceiling 1 Gate ─────────────────────────────────────── -->
   <div class="screen" id="screen-intro2">
-    <div class="step-meta">
-      <button class="step-back" onclick="goBack()">← back</button>
-    </div>
-    <div class="gate-progress">
-      <div class="gate-prog-step active"><span class="gate-prog-num">1</span><span class="gate-prog-name">Deposit</span></div>
-      <div class="gate-prog-step"><span class="gate-prog-num">2</span><span class="gate-prog-name">Debt</span></div>
-      <div class="gate-prog-step"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
+    <div class="gate-top">
+      <div class="step-meta">
+        <button class="step-back" onclick="goBack()">← back</button>
+      </div>
+      <div class="gate-progress">
+        <div class="gate-prog-step active"><span class="gate-prog-num">1</span><span class="gate-prog-name">Deposit</span></div>
+        <div class="gate-prog-step"><span class="gate-prog-num">2</span><span class="gate-prog-name">Debt</span></div>
+        <div class="gate-prog-step"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
+      </div>
     </div>
     <div class="gate-header">
       <div class="gate-ghost">1</div>
@@ -698,13 +702,15 @@
 
   <!-- C2 Gate ────────────────────────────────────────────────────────────── -->
   <div class="screen" id="screen-c2-gate">
-    <div class="step-meta">
-      <button class="step-back" onclick="goBack()">← back</button>
-    </div>
-    <div class="gate-progress">
-      <div class="gate-prog-step done"><span class="gate-prog-num">1 ✓</span><span class="gate-prog-name">Deposit</span></div>
-      <div class="gate-prog-step active"><span class="gate-prog-num">2</span><span class="gate-prog-name">Debt</span></div>
-      <div class="gate-prog-step"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
+    <div class="gate-top">
+      <div class="step-meta">
+        <button class="step-back" onclick="goBack()">← back</button>
+      </div>
+      <div class="gate-progress">
+        <div class="gate-prog-step done"><span class="gate-prog-num">1 ✓</span><span class="gate-prog-name">Deposit</span></div>
+        <div class="gate-prog-step active"><span class="gate-prog-num">2</span><span class="gate-prog-name">Debt</span></div>
+        <div class="gate-prog-step"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
+      </div>
     </div>
     <div class="gate-header">
       <div class="gate-ghost">2</div>
@@ -1006,13 +1012,15 @@
 
   <!-- C3 Gate ────────────────────────────────────────────────────────────── -->
   <div class="screen" id="screen-c3-gate">
-    <div class="step-meta">
-      <button class="step-back" onclick="goBack()">← back</button>
-    </div>
-    <div class="gate-progress">
-      <div class="gate-prog-step done"><span class="gate-prog-num">1 ✓</span><span class="gate-prog-name">Deposit</span></div>
-      <div class="gate-prog-step done"><span class="gate-prog-num">2 ✓</span><span class="gate-prog-name">Debt</span></div>
-      <div class="gate-prog-step active"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
+    <div class="gate-top">
+      <div class="step-meta">
+        <button class="step-back" onclick="goBack()">← back</button>
+      </div>
+      <div class="gate-progress">
+        <div class="gate-prog-step done"><span class="gate-prog-num">1 ✓</span><span class="gate-prog-name">Deposit</span></div>
+        <div class="gate-prog-step done"><span class="gate-prog-num">2 ✓</span><span class="gate-prog-name">Debt</span></div>
+        <div class="gate-prog-step active"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
+      </div>
     </div>
     <div class="gate-header">
       <div class="gate-ghost">3</div>
