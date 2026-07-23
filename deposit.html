@@ -373,6 +373,28 @@
       letter-spacing: -0.02em;
     }
     .ceiling-amount.dimmed { color: var(--dim); }
+
+    /* ── Gate screen: ceiling intro ─────────────────────────────────────── */
+    .gate-progress { display: flex; border-bottom: 1px solid #1a1a1a; margin: -1.25rem -1.5rem 0; }
+    .gate-prog-step { flex: 1; padding: 6px 4px; text-align: center; border-right: 1px solid #1a1a1a; }
+    .gate-prog-step:last-child { border-right: none; }
+    .gate-prog-num { font-family: var(--font-mono); font-size: 0.6rem; color: #333; letter-spacing: 0.04em; display: block; }
+    .gate-prog-name { font-family: var(--font-mono); font-size: 0.58rem; color: #333; margin-top: 1px; display: block; }
+    .gate-prog-step.done .gate-prog-num, .gate-prog-step.done .gate-prog-name { color: #444; }
+    .gate-prog-step.active { background: #0a0a0a; }
+    .gate-prog-step.active .gate-prog-num { color: var(--blue); }
+    .gate-prog-step.active .gate-prog-name { color: #5599ff; }
+    .gate-ghost { font-size: 4rem; font-weight: 900; color: #1c1c1c; line-height: 1; letter-spacing: -0.06em; margin-top: 1rem; }
+    .gate-tag { font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--blue); margin-top: 0.2rem; }
+    .gate-head { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .gate-gg { display: flex; flex-direction: column; gap: 0.3rem; }
+    .gate-give, .gate-get { border-left: 2px solid; padding: 0.5rem 0.75rem; background: #0a0a0a; display: flex; gap: 0.5rem; align-items: baseline; }
+    .gate-give { border-left-color: var(--blue); }
+    .gate-get  { border-left-color: #4ade80; }
+    .gate-lbl { font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; min-width: 28px; flex-shrink: 0; }
+    .gate-give .gate-lbl { color: var(--blue); }
+    .gate-get  .gate-lbl { color: #4ade80; }
+    .gate-val { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -422,18 +444,19 @@
     </button>
   </div>
 
-  <!-- ── Screen 0b: Intro 2 ────────────────────────────────────────────── -->
+  <!-- ── Screen 0b: Ceiling 1 Gate ─────────────────────────────────────── -->
   <div class="screen" id="screen-intro2">
-    <div style="padding-top: 0.35rem;">
-      <div class="eyebrow" style="margin-bottom: 0.75rem;">Deposit ceiling calculator</div>
-      <div class="q-label" style="margin-bottom: 0.65rem;">Here's the deal.</div>
+    <div class="gate-progress">
+      <div class="gate-prog-step active"><span class="gate-prog-num">1 →</span><span class="gate-prog-name">Deposit</span></div>
+      <div class="gate-prog-step"><span class="gate-prog-num">2</span><span class="gate-prog-name">Debt</span></div>
+      <div class="gate-prog-step"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
     </div>
-    <div class="note-box blue" style="color: var(--muted);">
-      <strong>You give:</strong> your deposit and a few details.<br>
-      <strong>You get:</strong> the maximum price your deposit can reach.
-    </div>
-    <div class="note-box blue" style="color: var(--muted);">
-      <strong>Next up:</strong> <span style="color: var(--text);">Your limit from debt and repayments.</span> Once you have your deposit ceiling, check which of the three limits is actually binding for you.
+    <div class="gate-ghost">1</div>
+    <div class="gate-tag">Deposit ceiling</div>
+    <div class="gate-head">Your deposit limit.</div>
+    <div class="gate-gg">
+      <div class="gate-give"><span class="gate-lbl">Give</span><span class="gate-val">your savings and a few details</span></div>
+      <div class="gate-get"><span class="gate-lbl">Get</span><span class="gate-val">the max price your deposit can reach</span></div>
     </div>
     <button class="btn" onclick="goTo('savings')" style="width: 100%; text-align: center;">
       Work it out →
@@ -665,21 +688,22 @@
   <!-- ── CEILING 2: Debt-to-Income ───────────────────────────────────────── -->
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
 
-  <!-- C2 Gate: You give, you get ─────────────────────────────────────────── -->
+  <!-- C2 Gate ────────────────────────────────────────────────────────────── -->
   <div class="screen" id="screen-c2-gate">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
-    <div style="padding-top: 0.25rem;">
-      <div class="eyebrow" style="margin-bottom: 0.75rem;">Ceiling 2 of 3 — Debt-to-income</div>
-      <div class="q-label" style="margin-bottom: 0.65rem;">Now for your debt limit.</div>
+    <div class="gate-progress">
+      <div class="gate-prog-step done"><span class="gate-prog-num">1 ✓</span><span class="gate-prog-name">Deposit</span></div>
+      <div class="gate-prog-step active"><span class="gate-prog-num">2 →</span><span class="gate-prog-name">Debt</span></div>
+      <div class="gate-prog-step"><span class="gate-prog-num">3</span><span class="gate-prog-name">Income</span></div>
     </div>
-    <div class="note-box blue" style="color: var(--muted);">
-      <strong>You give:</strong> your existing debts and gross annual income.<br>
-      <strong>You get:</strong> the maximum borrowing your debt-to-income ratio allows — and whether it sits above or below your deposit ceiling.
-    </div>
-    <div class="inset">
-      APRA limits banks to writing more than 20% of new mortgages at debt loads above 6× gross income. This is the portfolio threshold where lender books start tightening — two more ceilings to check.
+    <div class="gate-ghost">2</div>
+    <div class="gate-tag">Debt ceiling</div>
+    <div class="gate-head">Your debt limit.</div>
+    <div class="gate-gg">
+      <div class="gate-give"><span class="gate-lbl">Give</span><span class="gate-val">your existing debts and gross annual income</span></div>
+      <div class="gate-get"><span class="gate-lbl">Get</span><span class="gate-val">the max borrowing your debt-to-income ratio allows</span></div>
     </div>
     <button class="btn" onclick="goTo('c2-applicant')" style="width: 100%; text-align: center;">
       Let's check →
@@ -975,19 +999,20 @@
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
-    <div style="padding-top: 0.25rem;">
-      <div class="eyebrow" style="margin-bottom: 0.75rem;">Ceiling 3 of 3 — Serviceability</div>
-      <div class="q-label" style="margin-bottom: 0.65rem;">Last check: can you meet the repayments?</div>
+    <div class="gate-progress">
+      <div class="gate-prog-step done"><span class="gate-prog-num">1 ✓</span><span class="gate-prog-name">Deposit</span></div>
+      <div class="gate-prog-step done"><span class="gate-prog-num">2 ✓</span><span class="gate-prog-name">Debt</span></div>
+      <div class="gate-prog-step active"><span class="gate-prog-num">3 →</span><span class="gate-prog-name">Income</span></div>
     </div>
-    <div class="note-box blue" style="color: var(--muted);">
-      <strong>You give:</strong> your household type and living expenses.<br>
-      <strong>You get:</strong> the maximum loan your income can actually service, accounting for a 3% interest rate buffer and a minimum living cost floor that every bank uses — whether you declare it or not.
-    </div>
-    <div class="inset">
-      Banks assess every mortgage application against a minimum benchmark called HEM — the Household Expenditure Measure. Even if your actual expenses are lower, the bank assumes at least HEM. This screen shows what that means for your ceiling.
+    <div class="gate-ghost">3</div>
+    <div class="gate-tag">Serviceability ceiling</div>
+    <div class="gate-head">Can you meet the repayments?</div>
+    <div class="gate-gg">
+      <div class="gate-give"><span class="gate-lbl">Give</span><span class="gate-val">your household type and living expenses</span></div>
+      <div class="gate-get"><span class="gate-lbl">Get</span><span class="gate-val">the max loan your income can actually service</span></div>
     </div>
     <button class="btn" onclick="startC3()" style="width: 100%; text-align: center;">
-      Let's check →
+      Last check →
     </button>
   </div>
 

@@ -98,6 +98,36 @@ Bold headings only, visible by default. Each heading states the rule plainly (e.
 
 ---
 
+## Ceiling gate screens
+
+Each of the three ceiling flows starts with a gate screen — a compact, structured screen that orients the user before any data entry begins.
+
+**Layout (top to bottom):**
+1. ← back button (top-left, same step-meta pattern as all other screens)
+2. Progress strip — bleeds to the edge of the screen card (negative margin). Three equal columns, one per ceiling. Done ceilings show a dim `✓`, active ceiling is highlighted in blue, upcoming are dim. No text beyond the ceiling number and a one-word name.
+3. Ghost number — the ceiling number (1, 2, 3) in very large (~4rem), very dark text. Anchors the user's place in the journey at a glance.
+4. Ceiling tag — small monospace all-caps label in blue (e.g. "Deposit ceiling"). Sits directly under the ghost number.
+5. Headline — bold, short, plain English. Max one sentence.
+6. Give / Get block — two distinct rows separated by a small gap. **Never join them into a single container.** Give row has a blue left border and blue label. Get row has a green (#4ade80) left border and green label. Both rows have muted monospace body text.
+7. Primary CTA button — full-width, same `.btn` style as all screens.
+
+**Give / Get rules:**
+- Give = what the user inputs into this ceiling's flow
+- Get = the specific output they receive
+- Keep both to one short clause — no em dashes, no subordinate clauses
+- Never combine into a single block with a shared border or background
+
+**CSS classes:** `.gate-progress`, `.gate-prog-step` (`.done` / `.active`), `.gate-ghost`, `.gate-tag`, `.gate-head`, `.gate-gg`, `.gate-give`, `.gate-get`, `.gate-lbl`, `.gate-val`
+
+**CTA copy conventions:**
+- Ceiling 1: "Work it out →"
+- Ceiling 2: "Let's check →"
+- Ceiling 3: "Last check →"
+
+**Do not** reuse the old pattern (`.note-box.blue` with bold give/get inside, plus a separate `.inset` context block). That pattern was replaced because it was too text-heavy and looked too similar to the tool's landing screen.
+
+---
+
 ## What not to do
 
 - No information inside button labels (old anti-pattern)
