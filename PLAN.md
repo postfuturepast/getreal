@@ -1,6 +1,6 @@
 # GetReal — Product Backlog
 *Pick the next chunk, work through it, add new chunks as ideas arrive.*
-*Last updated: 2026-07-09*
+*Last updated: 2026-07-15*
 
 ---
 
@@ -49,6 +49,179 @@ The current VIC data has three significant problems that need to be fixed before
 
 ---
 
+## TOOL 03 — Deposit Floor Checker
+
+### Architecture decisions (agreed 15 July 2026)
+
+**Data layer: Supabase, not frontend hardcoding.**
+All lookup tables used by the deposit checker must live in Supabase with public read RLS — not baked into the HTML/JS. This means:
+- The pipeline can write updated rates directly without a code deploy
+- The frontend is thin and always reflects the latest data
+- Single source of truth across any future pages or tools that need the same data
+
+**Three tables to create before building the full deposit checker:**
+
+| Table | Contents | Why Supabase |
+|---|---|---|
+| `stamp_duty_brackets` | State, buyer type, bracket data, effective date | Pipeline writes updates directly — no deploy needed |
+| `lmi_rates` | LVR band × loan size band → premium rate, insurer, effective date | Updated when Helia/QBE change their tables |
+| `hem_benchmarks` | Household type, dependants, location → monthly HEM figure, source, date | Updated when Melbourne Institute publishes new figures |
+
+All three: public read, service_role write. Schema to be designed before creation.
+
+**Pipeline scope (expanded):**
+The GitHub Actions rate-monitor pipeline (see `PIPELINE-NOTES.md`) should cover all three tables — not just stamp duty. When it detects a change in any of them, it writes the new values directly to Supabase and raises a GitHub issue for Tristan to review.
+
+**Stamp duty in deposit.html:**
+Currently hardcoded in JavaScript. Once `stamp_duty_brackets` is in Supabase, the frontend should fetch from there on load. For now the hardcoded version is acceptable while we validate the tool — migration is a defined next step.
+
+---
+
+### Tool 03 — Task list
+
+- [x] **[C]** Write TOOL-03-SPEC.md with full technical spec
+- [x] **[C]** Write TOOL-03-METHODOLOGY.md (plain-English methodology for expert review)
+- [x] **[C]** Research and confirm stamp duty brackets — all 8 states (June 2026)
+- [x] **[C]** Build stamp duty wizard (`deposit.html`) — one-at-a-time UI, all 8 states, FHB concessions, methodology disclosure
+- [x] **[T]** Deploy deposit.html to get-real.co — linked from Tool 03 card on homepage
+- [x] **[C]** Save pipeline plan to PIPELINE-NOTES.md
+- [x] **[C]** Research LMI premium tables (Home Loan Experts, May 2026) — documented in TOOL-03-SPEC.md
+- [x] **[C]** Research HEM indicative figures (JMD Mortgages, March 2026) — documented in TOOL-03-SPEC.md
+- [x] **[T+C]** UX pass 2 — result screen polish (equal row spacing, blue badge, Move to Tool 2 link)
+- [x] **[C]** Create Supabase tables: `lmi_rates` (75 rows), `lmi_stamp_duty_rates` (8 rows), `hem_benchmarks` (14 rows)
+- [x] **[C]** Create Supabase table: `postcode_locations` (2,644 rows, ABS ASGS Ed. 3, GCCSA-based metro/regional)
+- [ ] **[C]** Build deposit calculator — Stage 1: inputs + iterative LVR solve ← **NEXT** (spec below)
+- [ ] **[C]** Build deposit calculator — Stage 2: income floor pointer (DTI + serviceability)
+- [ ] **[C]** Build FAQ page for Tool 01 (deposit.html methodology, data sources, LMI, HEM)
+- [ ] **[C]** Cross-check LMI rates against AusTax.tools as secondary source
+- [ ] **[C]** Build GitHub Actions pipeline: monitor stamp duty rates, write to Supabase on change
+- [ ] **[C]** Migrate stamp duty brackets from hardcoded JS → Supabase fetch (after calculator validated)
+- [ ] **[T]** Test and deploy full deposit checker
+
+---
+
+### Stage 1 build spec — deposit calculator
+
+#### What it does
+User enters their savings. Tool finds the highest purchase price they can afford after stamp duty, LMI (if applicable), and registration fees — subject to LVR limits.
+
+#### New user flow (two paths from intro)
+
+**Path A — Deposit calculator (new):**
+Intro → State → FHB? → [state-specific screens: VIC OO, TAS new build, ACT HBCS] → OO vs investor (universal) → Property type → Savings amount → **Max price result**
+
+**Path B — Stamp duty only (existing, unchanged):**
+Intro → State → FHB? → [state-specific screens] → Price → **Stamp duty result**
+
+Notes on the OO/investor screen in Path A:
+- VIC non-FHB: already asks OO vs investor for stamp duty purposes, so skip the new universal screen
+- ACT HBCS = true: implies owner-occupier (PPR required), so set isOO = true and skip screen
+- SA: no FHB question → goes straight to OO/investor screen (no stamp duty FHB concession in SA)
+
+#### New screens
+
+**screen-purpose** — "Will you live in it or rent it out?"
+- "Live in it — my home" → OO, LVR ceiling 95% (house/townhouse) or 90% (apartment)
+- "Rent it out — investment" → investor, LVR ceiling 90% (house/townhouse) or 80% (apartment)
+
+**screen-proptype** — "What type of property?"
+- House / Townhouse / Apartment (unit)
+- Subtext: "Property type affects maximum LVR. Many lenders cap apartments lower."
+
+**screen-savings** — "How much have you saved?"
+- Same input styling as existing price input
+- "Find my ceiling →" button (disabled until > 0)
+- Small loading note if LMI rates haven't loaded yet (Supabase fetch may still be in flight)
+
+**screen-deposit-result** — Result
+- Big number: "Deposit ceiling — $X" (maximum purchase price)
+- Breakdown card (rows):
+  - Savings: $X
+  - — divider —
+  - Stamp duty (estimated): −$X
+  - Reg. & transfer fees (estimated): ~−$X
+  - — divider —
+  - Available deposit: $X
+  - — divider —
+  - Base loan required: $X
+  - Base LVR: X.X%
+  - LMI premium: $X (or "None required")
+  - Effective LVR (incl. LMI): X.X% (only if LMI applies)
+- Blue badge: "That's a X.X% deposit on a $X purchase"
+- Advisory box (if LMI): "LMI adds $X to your loan (capitalised). Stamp duty on the LMI premium (~$X) may also be payable at settlement."
+- Note box: "Ceiling 2 of 3 — Debt-to-Income: banks cap total debt at 6× gross income (APRA, Feb 2026). Coming in Stage 2."
+
+#### The LVR solve
+
+Binary search (50 iterations, converges within $1):
+
+```
+for each candidate price P:
+  1. duty = calcDuty(P)          // existing stamp duty engine, price parametric
+  2. upfront = duty + reg_fee    // reg_fee = flat estimate per state (see below)
+  3. deposit_for_purchase = savings - upfront
+  4. if deposit_for_purchase ≤ 0: not viable
+  5. base_loan = P - deposit_for_purchase
+  6. base_LVR = base_loan / P
+  7. if base_LVR > maxLVR: not viable
+  8. if base_LVR ≤ 80%: viable (no LMI)
+  9. lmi_premium = lookup_lmi(base_LVR × 100, base_loan)   // from Supabase lmi_rates
+ 10. effective_loan = base_loan + lmi_premium               // LMI capitalised into loan
+ 11. effective_LVR = effective_loan / P
+ 12. viable if effective_LVR ≤ maxLVR
+```
+
+**LVR ceilings by property type and purpose:**
+| | OO | Investor |
+|---|---|---|
+| House / Townhouse | 95% | 90% |
+| Apartment | 90% | 80% |
+
+**LMI lookup:** `lmi_rates` Supabase table (75 rows, fetched on page load). Row match: `lvr_min < lvrPct ≤ lvr_max AND loan_amount ≤ loan_max (or loan_max IS NULL)`. LMI premium = `loan_amount × rate_pct / 100`.
+
+**LMI is capitalised** into the loan (standard practice). LMI stamp duty is NOT included in the upfront costs for the solve (small amount, creates circular dependency). It IS disclosed in the advisory.
+
+#### Registration fee estimates (flat per state, clearly labelled approximate)
+
+| State | Estimate | Notes |
+|---|---|---|
+| NSW | $330 | Transfer reg ~$165 + mortgage reg ~$165 |
+| VIC | $300 | Transfer + mortgage registration |
+| QLD | $600 | Transfer + mortgage registration |
+| WA | $400 | Transfer duty registration |
+| SA | $250 | Transfer + mortgage registration |
+| TAS | $250 | Transfer + mortgage registration |
+| ACT | $400 | Conveyance duty registration |
+| NT | $250 | Transfer + mortgage registration |
+
+These are small relative to purchase prices and clearly labelled "~" (approximate). Exact fee schedules are complex and state-specific — a later task can make these precise.
+
+#### Supabase data fetched on page load
+
+```javascript
+// lmi_rates → lmiRates[] array
+// lmi_stamp_duty_rates → lmiSdRates{} object keyed by state
+// Both fetched in parallel with Promise.all
+// publishable key only (safe for frontend)
+```
+
+If fetch fails, the savings submit button shows an error and prevents calculation (rather than silently using wrong rates).
+
+#### Intro screen change
+
+Replace single "Let's go →" button with two choice buttons:
+1. "What's the most I can buy?" → deposit flow
+2. "What will stamp duty cost me?" → stamp duty flow (existing)
+
+Remove the "Right now: stamp duty only — calculator coming" note box (it's no longer true).
+Update footer note to: "Stamp duty brackets from state revenue offices, last checked June 2026. LMI rates indicative only — actual premiums vary by lender."
+
+#### Existing stamp duty result screen change
+
+Remove the blue "Coming next: Enter your deposit..." note box. It's been superseded. No other changes to the result screen.
+
+---
+
 ## BACKLOG
 
 Chunks are roughly prioritised but reorder freely.
@@ -56,8 +229,8 @@ Tasks labelled **[T]** (Tristan), **[C]** (Claude), or **[T+C]** (back and forth
 
 ---
 
-### 🔜 PDF v2 — combined improvement list
-*Agreed changes from analysis session (July 2026). Implement together in one pass.*
+### ✅ PDF v2 — combined improvement list
+*Completed July 2026.*
 
 **Layout / structure (Tristan)**
 - [ ] Text is too small everywhere except tables — body copy and labels need to be bigger
@@ -340,9 +513,12 @@ Each: find free data source → pipeline → scoring → what-ifs → comparable
 
 ### Other ideas
 *(add here as they come up)*
+- **Task #54 — Homepage Tool 01 card: better explanation and sell** [T+C]
+  The current card gives a functional description but doesn't land the emotional hook or explain why this tool is different. It should do three things: (1) make the reader feel seen ("you don't know which of three things is actually limiting you"), (2) explain what they get (one number — their real ceiling), and (3) differentiate from a basic mortgage calculator. Consider a short before/after framing or a one-liner that captures the insight ("most people optimise for the wrong limit"). The card should sell the curiosity, not describe the mechanics.
 - Mobile responsiveness audit
 - Analytics — how many searches, which suburbs, conversion to PDF
 - FAQs improvements
+- **Task #45 — C3 "Here's what we'll apply" screen**: Add a pre-result review screen at the end of Ceiling 3 inputs (before the C3 result) showing the rate being applied — e.g. "We're using a 6.20% interest rate, tested at 9.20%." with a Tell me more toggle explaining the APRA stress buffer. Mirrors the pattern from the C1 review-apply screen. Rate row was removed from the C1 screen (July 2026) on the basis that it fits better here, closer to where serviceability is actually calculated.
 
 ---
 
