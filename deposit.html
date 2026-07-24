@@ -1134,21 +1134,25 @@
       <button class="step-back" onclick="goBack()">← back</button>
 
     </div>
-    <div class="q-label">Are your expenses above the bank's minimum?</div>
-    <div class="q-sub">Every bank applies a minimum living cost floor — the HEM. Your declared expenses only count if they're higher.</div>
+    <div class="q-label">What are your living expenses?</div>
+    <div class="q-sub">APRA requires all lenders to apply a minimum living cost benchmark — the Household Expenditure Measure (HEM), published quarterly by the Melbourne Institute. It covers food, utilities, transport, and everyday spending. Whatever you declare, the bank must assume at least this figure.</div>
+    <div id="c3-hem-context" style="border-left: 2px solid #2a2a2a; padding: 0.5rem 0.75rem; background: #0a0a0a; font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); line-height: 1.6;">
+      <!-- populated by renderC3HEM() -->
+    </div>
     <div class="choices" id="c3-hem-choices">
       <button class="choice-btn" id="c3-use-hem-btn" onclick="c3UseHEM()">
         <!-- populated by renderC3HEM() -->
       </button>
-      <button class="choice-btn" onclick="c3ShowHEMOverride()">
-        Yes — I'll enter my actual expenses
+      <button class="choice-btn" id="c3-use-hem-buffer-btn" onclick="c3UseHEMBuffer()">
+        <!-- populated by renderC3HEM() -->
       </button>
+      <button class="choice-btn" onclick="c3ShowHEMOverride()">Enter my own figure</button>
     </div>
     <button class="fhb-toggle" onclick="toggleDetail('c3-hem-detail','c3-hem-arrow')" style="margin-top:-0.25rem;">Why does this matter? <span id="c3-hem-arrow">↓</span></button>
     <div id="c3-hem-detail" class="fhb-detail" style="display:none;"><span id="c3-hem-statement"></span></div>
     <div id="c3-hem-override-wrap" style="display: none; flex-direction: column; gap: 0.75rem;">
       <div class="debt-row">
-        <div class="debt-label">My actual monthly expenses</div>
+        <div class="debt-label">My monthly living expenses (food, utilities, transport, entertainment)</div>
         <div class="price-input-wrap">
           <span class="price-prefix">$</span>
           <input class="price-input" type="text" id="c3-hem-override-input" inputmode="numeric" placeholder="0"
@@ -3127,31 +3131,42 @@ function renderC3HEM() {
     : `${d.numDependants}+ dependants`;
   const hhLabel   = d.household === 'couple' ? 'couple' : 'single';
   const locLabel  = d.locationType === 'metro' ? 'metropolitan' : 'regional';
-  const suburbNote = d.suburbName ? ` (${d.suburbName})` : '';
+  const locationPhrase = d.suburbName ? d.suburbName : `a ${locLabel} area`;
 
-  const stEl  = document.getElementById('c3-hem-statement');
-  const btnEl = document.getElementById('c3-use-hem-btn');
-  const floorEl = document.getElementById('c3-hem-floor-note');
+  const stEl      = document.getElementById('c3-hem-statement');
+  const ctxEl     = document.getElementById('c3-hem-context');
+  const btnEl     = document.getElementById('c3-use-hem-btn');
+  const bufBtnEl  = document.getElementById('c3-use-hem-buffer-btn');
+  const floorEl   = document.getElementById('c3-hem-floor-note');
 
   if (!hemAmount) {
     if (stEl) stEl.innerHTML = '<span style="color:#fca5a5;">Could not look up HEM — household data missing.</span>';
+    if (ctxEl) ctxEl.innerHTML = '<span style="color:#fca5a5;">HEM could not be calculated — check household and location inputs.</span>';
     return;
   }
 
+  const hemBuffer = Math.round(hemAmount * 1.25);
+
+  if (ctxEl) {
+    ctxEl.innerHTML = `For a <strong style="color:var(--text);">${hhLabel}</strong> with <strong style="color:var(--text);">${depLabel}</strong> in <strong style="color:var(--text);">${locationPhrase}</strong> — the bank minimum is <strong style="color:var(--text);">${fmt(hemAmount)}/month</strong>.`;
+  }
   if (stEl) {
-    stEl.innerHTML = `The bank minimum for a <strong>${hhLabel}</strong> with <strong>${depLabel}</strong> in a <strong>${locLabel}</strong> area${suburbNote ? ' <span style="color:var(--dim)">(' + d.suburbName + ')</span>' : ''} is <strong>${fmt(hemAmount)}/month</strong>. No matter what expenses you declare on your application, the bank assumes at least this figure. This benchmark is called HEM — the Household Expenditure Measure.`;
+    stEl.innerHTML = `No matter what expenses you declare, the bank must assume at least ${fmt(hemAmount)}/month. This figure comes from the HEM — the Household Expenditure Measure — a quarterly benchmark published by the Melbourne Institute. The 25% buffer option (${fmt(hemBuffer)}/month) is a common stress-testing approach that accounts for cost-of-living variability and gives a more conservative estimate of your borrowing capacity.`;
   }
   if (btnEl) {
-    btnEl.innerHTML = `No — use the bank minimum — ${fmt(hemAmount)}/month`;
+    btnEl.innerHTML = `Accept the minimum — ${fmt(hemAmount)}/month`;
+  }
+  if (bufBtnEl) {
+    bufBtnEl.innerHTML = `Add a 25% buffer — ${fmt(hemBuffer)}/month`;
   }
   if (floorEl) {
     floorEl.textContent = `Must be at least ${fmt(hemAmount)}/month — that's the bank's floor.`;
   }
   // Reset override state
-  const overrideWrap = document.getElementById('c3-hem-override-wrap');
-  const choicesEl    = document.getElementById('c3-hem-choices');
+  const overrideWrap  = document.getElementById('c3-hem-override-wrap');
+  const choicesEl     = document.getElementById('c3-hem-choices');
   const overrideInput = document.getElementById('c3-hem-override-input');
-  const overrideBtn  = document.getElementById('c3-hem-override-submit');
+  const overrideBtn   = document.getElementById('c3-hem-override-submit');
   if (overrideWrap)  overrideWrap.style.display  = 'none';
   if (choicesEl)     choicesEl.style.display      = 'flex';
   if (overrideInput) overrideInput.value           = '';
@@ -3163,6 +3178,13 @@ function c3UseHEM() {
   const hemAmount = lookupHEM();
   if (!hemAmount) return;
   d.c3HemAmount = hemAmount;
+  goToC3Rent();
+}
+
+function c3UseHEMBuffer() {
+  const hemAmount = lookupHEM();
+  if (!hemAmount) return;
+  d.c3HemAmount = Math.round(hemAmount * 1.25);
   goToC3Rent();
 }
 
