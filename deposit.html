@@ -3492,11 +3492,12 @@ function renderOutcome() {
   const prices  = [c1Price, c2Price, c3Price].filter(p => p > 0);
   const maximum = prices.length ? Math.min(...prices) : 0;
 
-  // Which ceiling binds? Tie-break priority: deposit > dti > serviceability.
-  // Use strict < so that deposit wins when equal to dti or svc, and dti wins over svc when equal.
+  // Which ceiling binds? The minimum valid price wins.
+  // Tie-break priority: deposit > dti > serviceability.
+  // c2Price=0 means DTI is non-binding (DTI allows more than savings can support) — not an error.
   let bindingCeiling = 'deposit';
-  if (maximum === c2Price && c2Price > 0 && c2Price < c1Price && c2Price <= c3Price) bindingCeiling = 'dti';
-  if (maximum === c3Price && c3Price > 0 && c3Price < c1Price && c3Price < c2Price) bindingCeiling = 'serviceability';
+  if (c2Price > 0 && c2Price === maximum && c2Price < c1Price) bindingCeiling = 'dti';
+  if (c3Price > 0 && c3Price === maximum && c3Price < c1Price && (c2Price === 0 || c3Price <= c2Price)) bindingCeiling = 'serviceability';
 
   const bindingLabel = { deposit: 'Ceiling 1 — Deposit', dti: 'Ceiling 2 — Debt-to-income', serviceability: 'Ceiling 3 — Serviceability' };
 
@@ -3513,6 +3514,15 @@ function renderOutcome() {
     html += `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);margin-bottom:0.75rem;">Binding: ${bindingLabel[bindingCeiling]}</div>`;
   }
 
+  // c2Price=0 can mean two things — distinguish for the UI:
+  // (a) dti.maxNewMortgage <= 0: existing debts exceed 6× income — real problem
+  // (b) dti.maxNewMortgage > 0 but findMaxPriceForLoanCap returned null:
+  //     DTI allows more than savings can support, so DTI isn't the binding limit
+  const c2ErrorMsg = dti.maxNewMortgage <= 0
+    ? 'Existing debts already exceed 6× income. Reduce debt or increase income to unlock this ceiling.'
+    : 'Your DTI limit sits above what your deposit can reach — so it\'s not constraining you. Savings and serviceability are the real limits.';
+  const c2ZeroColor = dti.maxNewMortgage <= 0 ? '#fca5a5' : 'var(--muted)';
+
   // ── Three ceiling cards ──
   const cards = [
     { key: 'deposit',       label: 'Ceiling 1 — Deposit',          price: c1Price, note: 'Maximum price your savings can reach after stamp duty and LMI.' },
@@ -3527,8 +3537,10 @@ function renderOutcome() {
     html += `<div class="ceiling-card${isBinding ? ' binding' : ''}">`;
     html += `<div class="result-card-head">${card.label}${isBinding ? ' ← binding' : ''}</div>`;
     if (card.price <= 0) {
+      const msg  = card.key === 'dti' ? c2ErrorMsg : 'Ceiling not met — check your inputs.';
+      const col  = card.key === 'dti' ? c2ZeroColor : '#fca5a5';
       html += `<div class="ceiling-amount dimmed">—</div>`;
-      html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:#fca5a5;">Ceiling not met — income or savings insufficient at current inputs.</div>`;
+      html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:${col};">${msg}</div>`;
     } else {
       html += `<div class="ceiling-amount${isDimmed ? ' dimmed' : ''}">${fmt(card.price)}</div>`;
       html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--dim);">${card.note}</div>`;
