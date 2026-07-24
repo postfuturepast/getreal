@@ -2173,9 +2173,10 @@ function computeAtPrice(price, savings, maxLVR, regFee, lmiSdRate) {
     lmiPremium    = baseLoan * rate;
     effectiveLoan = baseLoan + lmiPremium;
     effectiveLVR  = effectiveLoan / price;
-    // Note: effectiveLVR often exceeds maxLVR because LMI is capitalised into the loan.
-    // Lenders allow this — "95% LVR" means 5% deposit required, not a cap on the LMI-inclusive total.
-    // The binding constraint is baseLVR > maxLVR (line above), which is already enforced.
+    // Major Australian lenders (e.g. Westpac: "Max LVR is 95%… inclusive of LMI") apply
+    // the LVR cap to the total loan including capitalised LMI — not the base loan only.
+    // If capitalising LMI pushes effectiveLVR above the cap, the combination isn't viable.
+    if (effectiveLVR > maxLVR) return null;
 
     lmiSd = lmiPremium * lmiSdRate;
   }
@@ -3716,7 +3717,8 @@ function renderDepositResult() {
   html += rrow('Base LVR', fmtPct(r.baseLVR), true);
   if (hasLMI) {
     html += rrow('LMI premium (added to loan)', fmt(r.lmiPremium));
-    html += rrow('Effective LVR (incl. LMI)', fmtPct(r.effectiveLVR));
+    html += rrow('Total loan (base + LMI)', fmt(r.effectiveLoan));
+    html += rrow('Effective LVR (incl. LMI)', fmtPct(r.effectiveLVR), true);
   } else {
     html += rrow('LMI premium', 'None — LVR ≤ 80%', true);
   }
@@ -3736,7 +3738,7 @@ function renderDepositResult() {
     } else {
       lmiSdNote = ` ${d.state} charges no stamp duty on LMI premiums.`;
     }
-    advisories.push(`<div class="advisory"><strong>LMI adds ${fmt(r.lmiPremium)} to your loan.</strong> Lenders Mortgage Insurance protects the lender (not you) when LVR is above 80%. It's capitalised into the loan — you don't pay it upfront, but it increases what you owe.${lmiSdNote}</div>`);
+    advisories.push(`<div class="advisory"><strong>LMI adds ${fmt(r.lmiPremium)} to your loan.</strong> Lenders Mortgage Insurance protects the lender (not you) when LVR is above 80%. It's capitalised into the loan — you don't pay it upfront, but it increases what you owe.${lmiSdNote} This result enforces the LVR cap on your total loan (base + LMI), consistent with how most major lenders apply it. Some specialist lenders may apply the cap to the base loan only — a broker may be able to unlock a higher ceiling.</div>`);
   }
 
   if (d.state === 'NT') {
