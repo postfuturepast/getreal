@@ -1162,6 +1162,86 @@
     </div>
   </div>
 
+  <!-- C3 Rent ─────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-rent">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label">Do you currently pay rent?</div>
+    <div class="q-sub">Banks count rent as a committed cost — it comes out of your income before they calculate what you can repay.</div>
+    <div class="choices" id="c3-rent-choices">
+      <button class="choice-btn" onclick="c3SelectRent(false)">No — I don't pay rent</button>
+      <button class="choice-btn" onclick="c3SelectRent(true)">Yes — I pay rent</button>
+    </div>
+    <div id="c3-rent-input-wrap" style="display:none;flex-direction:column;gap:0.75rem;">
+      <div class="debt-row">
+        <div class="debt-label">Weekly rent</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="price-input" type="text" id="c3-rent-input" inputmode="numeric" placeholder="0"
+            autocomplete="off" oninput="onC3RentInput(this)">
+        </div>
+        <div class="debt-note">We'll convert this to monthly (× 52 ÷ 12).</div>
+      </div>
+      <button class="btn" id="c3-rent-submit" onclick="submitC3Rent()" style="width:100%;text-align:center;opacity:0.35;" disabled>
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- C3 School fees ──────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-school">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label">Do you pay private school fees?</div>
+    <div class="q-sub">School fees are treated as a committed expense — banks add them on top of your living costs.</div>
+    <div class="choices" id="c3-school-choices">
+      <button class="choice-btn" onclick="c3SelectSchool(false)">No — I don't pay school fees</button>
+      <button class="choice-btn" onclick="c3SelectSchool(true)">Yes — I do</button>
+    </div>
+    <div id="c3-school-input-wrap" style="display:none;flex-direction:column;gap:0.75rem;">
+      <div class="debt-row">
+        <div class="debt-label">Total annual fees (all children combined)</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="price-input" type="text" id="c3-school-input" inputmode="numeric" placeholder="0"
+            autocomplete="off" oninput="onC3SchoolInput(this)">
+        </div>
+        <div class="debt-note">We'll spread this across 12 months.</div>
+      </div>
+      <button class="btn" id="c3-school-submit" onclick="submitC3School()" style="width:100%;text-align:center;opacity:0.35;" disabled>
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- C3 Health insurance ─────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c3-health">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label">Do you have private health insurance?</div>
+    <div class="q-sub">HEM doesn't include health insurance. Banks typically treat it as a committed cost if you have it.</div>
+    <div class="choices" id="c3-health-choices">
+      <button class="choice-btn" onclick="c3SelectHealth(false)">No — I don't have private health insurance</button>
+      <button class="choice-btn" onclick="c3SelectHealth(true)">Yes — I do</button>
+    </div>
+    <div id="c3-health-input-wrap" style="display:none;flex-direction:column;gap:0.75rem;">
+      <div class="debt-row">
+        <div class="debt-label">Monthly premium</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="price-input" type="text" id="c3-health-input" inputmode="numeric" placeholder="0"
+            autocomplete="off" oninput="onC3HealthInput(this)">
+        </div>
+      </div>
+      <button class="btn" id="c3-health-submit" onclick="submitC3Health()" style="width:100%;text-align:center;opacity:0.35;" disabled>
+        Continue →
+      </button>
+    </div>
+  </div>
+
   <!-- C3 Review ─────────────────────────────────────────────────────────────── -->
   <div class="screen" id="screen-c3-review">
     <div class="step-meta">
@@ -1321,6 +1401,9 @@ const d = {
   c3MortgageRepayments:  [],    // monthly repayment per c2Mortgage (entered or estimated)
   c3LoanRepayments:      [],    // monthly repayment per c2OtherLoan
   c3HemAmount:           null,  // chosen monthly living expenses (HEM or user override)
+  c3Rent:                0,     // monthly rent (weekly × 52 / 12)
+  c3SchoolFees:          0,     // monthly school fees (annual / 12)
+  c3HealthInsurance:     0,     // monthly private health insurance premium
 };
 
 const navHistory = ['intro'];
@@ -1351,6 +1434,7 @@ function restart() {
     c2Applicants: null, c2GrossIncome: 0, c2RentalIncome: 0,
     c2CreditCards: 0, c2HasHECS: false, c2Mortgages: [], c2OtherLoans: [],
     c3MortgageRepayments: [], c3LoanRepayments: [], c3HemAmount: null,
+    c3Rent: 0, c3SchoolFees: 0, c3HealthInsurance: 0,
   });
   lastC1Result = null;
   navHistory.length = 0;
@@ -3079,7 +3163,7 @@ function c3UseHEM() {
   const hemAmount = lookupHEM();
   if (!hemAmount) return;
   d.c3HemAmount = hemAmount;
-  goToC3Review();
+  goToC3Rent();
 }
 
 function c3ShowHEMOverride() {
@@ -3108,8 +3192,112 @@ function setC3HEMBtn(enabled) {
 
 function submitC3HEM() {
   if (!d.c3HemAmount) return;
-  goToC3Review();
+  goToC3Rent();
 }
+
+// ─── C3 Committed costs screens ───────────────────────────────────────────────
+
+function goToC3Rent() {
+  document.getElementById('c3-rent-choices').style.display = 'flex';
+  document.getElementById('c3-rent-input-wrap').style.display = 'none';
+  const inp = document.getElementById('c3-rent-input');
+  if (inp) inp.value = '';
+  const btn = document.getElementById('c3-rent-submit');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.35'; }
+  d.c3Rent = 0;
+  goTo('c3-rent');
+}
+
+function c3SelectRent(hasRent) {
+  if (!hasRent) {
+    d.c3Rent = 0;
+    goToC3School();
+  } else {
+    document.getElementById('c3-rent-choices').style.display = 'none';
+    document.getElementById('c3-rent-input-wrap').style.display = 'flex';
+    document.getElementById('c3-rent-input').focus();
+  }
+}
+
+function onC3RentInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c3Rent = 0; const b = document.getElementById('c3-rent-submit'); if (b) { b.disabled = true; b.style.opacity = '0.35'; } return; }
+  const num = parseInt(raw, 10);
+  el.value = num.toLocaleString('en-AU');
+  d.c3Rent = Math.round(num * 52 / 12);
+  const b = document.getElementById('c3-rent-submit');
+  if (b) { b.disabled = num <= 0; b.style.opacity = num > 0 ? '1' : '0.35'; }
+}
+
+function submitC3Rent() { goToC3School(); }
+
+function goToC3School() {
+  document.getElementById('c3-school-choices').style.display = 'flex';
+  document.getElementById('c3-school-input-wrap').style.display = 'none';
+  const inp = document.getElementById('c3-school-input');
+  if (inp) inp.value = '';
+  const btn = document.getElementById('c3-school-submit');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.35'; }
+  d.c3SchoolFees = 0;
+  goTo('c3-school');
+}
+
+function c3SelectSchool(hasFees) {
+  if (!hasFees) {
+    d.c3SchoolFees = 0;
+    goToC3Health();
+  } else {
+    document.getElementById('c3-school-choices').style.display = 'none';
+    document.getElementById('c3-school-input-wrap').style.display = 'flex';
+    document.getElementById('c3-school-input').focus();
+  }
+}
+
+function onC3SchoolInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c3SchoolFees = 0; const b = document.getElementById('c3-school-submit'); if (b) { b.disabled = true; b.style.opacity = '0.35'; } return; }
+  const num = parseInt(raw, 10);
+  el.value = num.toLocaleString('en-AU');
+  d.c3SchoolFees = Math.round(num / 12);
+  const b = document.getElementById('c3-school-submit');
+  if (b) { b.disabled = num <= 0; b.style.opacity = num > 0 ? '1' : '0.35'; }
+}
+
+function submitC3School() { goToC3Health(); }
+
+function goToC3Health() {
+  document.getElementById('c3-health-choices').style.display = 'flex';
+  document.getElementById('c3-health-input-wrap').style.display = 'none';
+  const inp = document.getElementById('c3-health-input');
+  if (inp) inp.value = '';
+  const btn = document.getElementById('c3-health-submit');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.35'; }
+  d.c3HealthInsurance = 0;
+  goTo('c3-health');
+}
+
+function c3SelectHealth(hasHealth) {
+  if (!hasHealth) {
+    d.c3HealthInsurance = 0;
+    goToC3Review();
+  } else {
+    document.getElementById('c3-health-choices').style.display = 'none';
+    document.getElementById('c3-health-input-wrap').style.display = 'flex';
+    document.getElementById('c3-health-input').focus();
+  }
+}
+
+function onC3HealthInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c3HealthInsurance = 0; const b = document.getElementById('c3-health-submit'); if (b) { b.disabled = true; b.style.opacity = '0.35'; } return; }
+  const num = parseInt(raw, 10);
+  el.value = num.toLocaleString('en-AU');
+  d.c3HealthInsurance = num;
+  const b = document.getElementById('c3-health-submit');
+  if (b) { b.disabled = num <= 0; b.style.opacity = num > 0 ? '1' : '0.35'; }
+}
+
+function submitC3Health() { goToC3Review(); }
 
 function renderC3Review() {
   const el = document.getElementById('c3-review-body');
@@ -3173,6 +3361,17 @@ function renderC3Review() {
     'c3-hem'
   );
 
+  // Committed costs (only show if non-zero)
+  if (d.c3Rent > 0) {
+    html += rvRow('Rent (monthly)', fmt(d.c3Rent) + '/mo', 'c3-rent');
+  }
+  if (d.c3SchoolFees > 0) {
+    html += rvRow('School fees (monthly)', fmt(d.c3SchoolFees) + '/mo', 'c3-school');
+  }
+  if (d.c3HealthInsurance > 0) {
+    html += rvRow('Health insurance (monthly)', fmt(d.c3HealthInsurance) + '/mo', 'c3-health');
+  }
+
   html += '</div>';
   el.innerHTML = html;
 }
@@ -3200,8 +3399,17 @@ function renderC3Apply() {
   const rateHeading = `We're using a ${ratePct}% interest rate — tested at ${stressPct}%.`;
   const rateBody = `APRA requires all lenders to assess your ability to repay at least 3% above the actual loan rate. This stress buffer is applied to find the maximum loan your income can service. The stress-tested rate (${stressPct}%) — not the actual rate — is what sets your Ceiling 3 limit. If your income can service repayments at ${stressPct}%, you pass; if not, this ceiling is lower than Ceilings 1 and 2.`;
 
-  const hemHeading = `We're using ${d.c3HemAmount != null ? fmt(d.c3HemAmount) : '—'}/month as the minimum living cost floor.`;
-  const hemBody = `Regardless of what actual expenses you enter, lenders apply the Household Expenditure Measure (HEM) as a minimum floor — they assume you spend at least this amount to live. We use whichever is higher: your declared expenses or HEM. This means your declared expenses can only ever increase your ceiling, never reduce it below the HEM floor.`;
+  const committedMonthly = (d.c3Rent || 0) + (d.c3SchoolFees || 0) + (d.c3HealthInsurance || 0);
+  const committedParts = [];
+  if (d.c3Rent > 0) committedParts.push(`rent ${fmt(d.c3Rent)}/mo`);
+  if (d.c3SchoolFees > 0) committedParts.push(`school fees ${fmt(d.c3SchoolFees)}/mo`);
+  if (d.c3HealthInsurance > 0) committedParts.push(`health insurance ${fmt(d.c3HealthInsurance)}/mo`);
+  const committedNote = committedParts.length > 0
+    ? ` Plus committed costs: ${committedParts.join(', ')}.`
+    : '';
+
+  const hemHeading = `We're using ${d.c3HemAmount != null ? fmt(d.c3HemAmount) : '—'}/month as the minimum living cost floor.${committedNote}`;
+  const hemBody = `Regardless of what actual expenses you enter, lenders apply the Household Expenditure Measure (HEM) as a minimum floor — they assume you spend at least this amount to live. We use whichever is higher: your declared expenses or HEM. This means your declared expenses can only ever increase your ceiling, never reduce it below the HEM floor.${committedMonthly > 0 ? ` On top of this, any committed costs you declared (rent, school fees, health insurance) are added separately — these are expenses banks treat as fixed and non-negotiable.` : ''}`;
 
   el.innerHTML = item(rateHeading, rateBody) + item(hemHeading, hemBody);
 }
@@ -3231,6 +3439,7 @@ function computeServiceability() {
   const netMonthly     = netIncome / 12;
 
   const hemMonthly     = d.c3HemAmount || 0;
+  const committedMonthly = (d.c3Rent || 0) + (d.c3SchoolFees || 0) + (d.c3HealthInsurance || 0);
 
   // ── Existing monthly debt commitments ──
   const mortgageMonthly = d.c3MortgageRepayments
@@ -3241,9 +3450,9 @@ function computeServiceability() {
   const existingMonthly = mortgageMonthly + loanMonthly + cardMonthly;
 
   // ── Maximum new repayment available ──
-  const maxMonthlyRepayment = netMonthly - hemMonthly - existingMonthly;
+  const maxMonthlyRepayment = netMonthly - hemMonthly - committedMonthly - existingMonthly;
   if (maxMonthlyRepayment <= 0) {
-    return { c3CeilingPrice: 0, maxMonthlyRepayment, netMonthly, hemMonthly,
+    return { c3CeilingPrice: 0, maxMonthlyRepayment, netMonthly, hemMonthly, committedMonthly,
              mortgageMonthly, loanMonthly, cardMonthly, existingMonthly, maxLoan: 0 };
   }
 
@@ -3260,7 +3469,7 @@ function computeServiceability() {
 
   // Ceiling price is now computed in rendering via findMaxPriceForLoanCap(maxLoan)
   // — this correctly applies savings on top of the loan cap to find the true max price.
-  return { maxMonthlyRepayment, netMonthly, hemMonthly,
+  return { maxMonthlyRepayment, netMonthly, hemMonthly, committedMonthly,
            mortgageMonthly, loanMonthly, cardMonthly, existingMonthly,
            maxLoan, stressRateAnnual, newPropRental, existInvRental };
 }
@@ -3336,6 +3545,7 @@ function renderOutcome() {
     if (svc.newPropRental > 0) html += rrow('Incl. new property rental (80%)', '+' + fmt(svc.newPropRental / 12) + '/mo', true);
     if (svc.existInvRental > 0) html += rrow('Incl. existing inv. rents (80%)', '+' + fmt(svc.existInvRental / 12) + '/mo', true);
     html += rrow('Less: HEM living expenses', '−' + fmt(svc.hemMonthly) + '/mo', true);
+    if (svc.committedMonthly > 0) html += rrow('Less: committed costs (rent/fees/insurance)', '−' + fmt(svc.committedMonthly) + '/mo', true);
     if (svc.mortgageMonthly > 0) html += rrow('Less: other mortgage repayments', '−' + fmt(svc.mortgageMonthly) + '/mo', true);
     if (svc.loanMonthly > 0) html += rrow('Less: other loan repayments', '−' + fmt(svc.loanMonthly) + '/mo', true);
     if (svc.cardMonthly > 0) html += rrow('Less: credit card minimums (3% of limit)', '−' + fmt(svc.cardMonthly) + '/mo', true);
