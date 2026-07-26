@@ -3546,6 +3546,15 @@ function renderOutcome() {
     : 'Your DTI limit sits above what your deposit can reach — so it\'s not constraining you. Savings and serviceability are the real limits.';
   const c2ZeroColor = dti.maxNewMortgage <= 0 ? '#fca5a5' : 'var(--muted)';
 
+  // c3Price=0 can mean two things — same pattern as C2:
+  // (a) svc.maxLoan <= 0: income minus expenses leaves no repayment capacity — real problem
+  // (b) svc.maxLoan > 0 but findMaxPriceForLoanCap returned null:
+  //     serviceability allows more than savings can reach, so C3 isn't the binding limit
+  const c3ErrorMsg = svc.maxLoan <= 0
+    ? 'Income and expenses leave no capacity for a mortgage at the stress rate. Reduce expenses or increase income.'
+    : 'Your serviceability limit sits above what your deposit can reach — so it\'s not constraining you. Savings are the real limit.';
+  const c3ZeroColor = svc.maxLoan <= 0 ? '#fca5a5' : 'var(--muted)';
+
   // ── Three ceiling cards ──
   const cards = [
     { key: 'deposit',       label: 'Ceiling 1 — Deposit',          price: c1Price, note: 'Maximum price your savings can reach after stamp duty and LMI.' },
@@ -3560,8 +3569,8 @@ function renderOutcome() {
     html += `<div class="ceiling-card${isBinding ? ' binding' : ''}">`;
     html += `<div class="result-card-head">${card.label}${isBinding ? ' ← binding' : ''}</div>`;
     if (card.price <= 0) {
-      const msg  = card.key === 'dti' ? c2ErrorMsg : 'Ceiling not met — check your inputs.';
-      const col  = card.key === 'dti' ? c2ZeroColor : '#fca5a5';
+      const msg  = card.key === 'dti' ? c2ErrorMsg : card.key === 'serviceability' ? c3ErrorMsg : 'Ceiling not met — check your inputs.';
+      const col  = card.key === 'dti' ? c2ZeroColor : card.key === 'serviceability' ? c3ZeroColor : '#fca5a5';
       html += `<div class="ceiling-amount dimmed">—</div>`;
       html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:${col};">${msg}</div>`;
     } else {
