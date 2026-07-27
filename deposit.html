@@ -685,7 +685,7 @@
     </div>
 
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
-      <button class="btn" onclick="restart()">Start again</button>
+      <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
       <button onclick="goToReview()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
     </div>
   </div>
@@ -3679,23 +3679,27 @@ function rrow(label, value, dim) {
 
 // C1 result helpers
 // ceilCard state: 'binding' = blue border + bright price, 'pending' = dim + no price, 'done' = grey border + muted price
-function ceilCard(label, price, note, state) {
+function ceilCard(label, price, headline, note, state) {
   const borderStyle = state === 'binding' ? 'border-color:var(--blue);'
                     : state === 'done'    ? 'border-color:#333;'
                     :                       '';
-  const badge = state === 'binding' ? `<span style="color:var(--blue);font-size:0.58rem;">← binding</span>`
+  const badge = state === 'binding' ? `<span style="color:var(--blue);font-size:0.58rem;">← your limit</span>`
               : state === 'done'    ? `<span style="color:#555;font-size:0.58rem;">✓ done</span>`
               :                       '';
   const priceHtml = price && state !== 'pending'
     ? `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;${state === 'done' ? 'color:#555;' : ''}">${price}</div>`
     : '';
-  const noteColor = state === 'pending' ? '#555' : '#444';
+  const headlineHtml = headline
+    ? `<div style="font-family:var(--font-mono);font-size:0.68rem;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:0.15rem;">${headline}</div>`
+    : '';
+  const noteHtml = note
+    ? `<div style="font-family:var(--font-mono);font-size:0.62rem;color:#555;line-height:1.4;">${note}</div>`
+    : '';
   return `<div style="background:var(--card);border:1px solid #222;${borderStyle}border-radius:4px;padding:0.65rem 0.75rem;">
-    <div style="font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.2rem;display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-family:var(--font-mono);font-size:0.65rem;font-weight:700;letter-spacing:0.08em;color:var(--text);text-transform:uppercase;margin-bottom:0.3rem;display:flex;justify-content:space-between;align-items:center;">
       <span>${label}</span>${badge}
     </div>
-    ${priceHtml}
-    <div style="font-family:var(--font-mono);font-size:0.62rem;color:${noteColor};line-height:1.4;">${note}</div>
+    ${priceHtml}${headlineHtml}${noteHtml}
   </div>`;
 }
 
@@ -3712,7 +3716,7 @@ function conceptBox(num, title, rowsHtml, blueBarText, toggleLabel, expandText) 
   const prefix = ['①','②','③'][num - 1];
   return `<div style="background:var(--card);border:1px solid #222;border-radius:4px;margin-bottom:0.6rem;overflow:hidden;">
     <div style="padding:0.85rem 0.85rem 0.65rem;">
-      <div style="font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;color:#888;text-transform:uppercase;margin-bottom:0.6rem;">${prefix} ${title}</div>
+      <div style="font-family:var(--font-mono);font-size:0.65rem;font-weight:700;letter-spacing:0.1em;color:var(--text);text-transform:uppercase;margin-bottom:0.55rem;padding-bottom:0.35rem;border-bottom:1px solid #1a1a1a;">${prefix} ${title}</div>
       ${rowsHtml}
     </div>
     <div style="background:var(--blue);color:#fff;text-align:center;font-family:var(--font-mono);font-size:0.65rem;padding:0.4rem 0.85rem;letter-spacing:0.05em;text-transform:uppercase;font-weight:700;white-space:nowrap;">${blueBarText}</div>
@@ -3750,7 +3754,7 @@ function renderDepositResult() {
   }
 
   if (c2Btn) c2Btn.style.display = '';
-  if (bridgeEl) bridgeEl.style.display = '';
+  if (bridgeEl) bridgeEl.style.display = 'none';
 
   const hasLMI    = r.lmiPremium > 0;
   const lmiSdRate = lmiSdRates[d.state] || 0;
@@ -3769,20 +3773,22 @@ function renderDepositResult() {
 
   // ── Headline + three ceiling cards ──
   mainEl.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.2rem;">
-      <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;">Current ceiling</span>
-      <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.08em;color:var(--blue);text-transform:uppercase;">Ceiling 1 of 3 complete</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+      <span style="font-family:var(--font-mono);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;color:var(--text);text-transform:uppercase;">Current ceiling</span>
+      <span style="font-family:var(--font-mono);font-size:0.58rem;font-weight:700;letter-spacing:0.07em;color:#fff;text-transform:uppercase;background:var(--blue);padding:0.2rem 0.5rem;border-radius:2px;">Ceiling 1 of 3</span>
     </div>
     <div class="result-amount" style="margin-bottom:1rem;">${fmt(r.price)}</div>
     <div style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;">
-      ${ceilCard('Ceiling 1 — Deposit', fmt(r.price), 'Maximum price your savings can reach after stamp duty and LMI.', 'binding')}
+      ${ceilCard('Ceiling 1 — Deposit', fmt(r.price), null, 'Maximum price your savings can reach after stamp duty and LMI.', 'binding')}
       ${ceilCard('Ceiling 2 — Debt-to-income', null,
-        `With no other debts, you'd need at least ${fmt(c2MinIncome)}/yr before tax for your income ceiling to sit above this.`,
+        `Earn at least ${fmt(c2MinIncome)}/yr or the ceiling lowers`,
+        `If you have no other debt and earn above that, debt-to-income isn't your limitation.`,
         'pending')}
       ${ceilCard('Ceiling 3 — Serviceability', null,
         c3RepayStr
-          ? `To service this loan at the stress rate, you'd need ${c3RepayStr}/mo free after living expenses.`
-          : `We'll check serviceability against your income in step 3.`,
+          ? `Need ${c3RepayStr}/mo free after expenses at the stress rate`
+          : `We'll check serviceability in step 3.`,
+        c3RepayStr ? `If your income covers that, serviceability isn't your ceiling.` : null,
         'pending')}
     </div>`;
 
