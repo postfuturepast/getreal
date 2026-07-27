@@ -3588,22 +3588,22 @@ function renderOutcome() {
       'was-cleared');
   }
 
-  // C3: always blue
+  // C3: all done on final screen — show checked for all three
   if (svc.maxLoan <= 0) {
     html += ceilCard('Ceiling 3 — Serviceability', null,
       'Income and expenses leave no repayment capacity.',
       'Reduce expenses or increase income.',
-      'binding');
+      'done');
   } else if (c3Lowers) {
     html += ceilCard('Ceiling 3 — Serviceability', fmt(maximum),
-      `Repayments lower your ceiling by ${fmt(prevCeil - maximum)}.`,
-      `At ${fmt(prevCeil)} the stress-rate repayment exceeds your available monthly surplus.`,
-      'binding');
+      `Repayment capacity lowers your ceiling by ${fmt(prevCeil - maximum)}.`,
+      `At ${fmt(prevCeil)} your assessed capacity to service the loan at the stress rate falls short.`,
+      'done-active');
   } else {
     html += ceilCard('Ceiling 3 — Serviceability', fmt(maximum),
-      repayAtCurrent ? `Monthly repayment at the stress rate is ${repayAtCurrent}/mo — within your surplus.` : 'Serviceability checked and cleared.',
+      repayAtCurrent ? `Assessed at the stress rate — repayment capacity is sufficient.` : 'Serviceability checked and cleared.',
       `Serviceability cleared. ${c2Lowered ? 'Income (DTI)' : 'Deposit'} is the binding ceiling.`,
-      'cleared');
+      'done-active');
   }
 
   html += `</div>`;
