@@ -3598,33 +3598,31 @@ function renderOutcome() {
     html += conceptBox(3, 'Loan to value ratio', c1box3Rows, c1box3Bar, 'Tell me more about LVR', c1box3Expand, 'c1box');
   }
 
-  // ── C2 boxes (D, E) ──
-  const c2boxARows =
+  // ── C2 box (D — combined DTI) ──
+  const c2TotalDebts = dti.mortgageBalances + dti.loanBalances + (d.c2CreditCards || 0);
+  const c2dtiRows =
     drow('Gross income', fmt(dti.totalIncome) + '/yr') +
     (dti.newPropRental  > 0 ? drow('Incl. rental income (80%)', '+' + fmt(dti.newPropRental) + '/yr') : '') +
     (dti.existInvRental > 0 ? drow('Incl. investment rents (80%)', '+' + fmt(dti.existInvRental) + '/yr') : '') +
     drow('DTI cap', '× 6') +
-    drow('Max total debt', fmt(dti.maxTotalDebt), true);
+    drow('Max total debt', fmt(dti.maxTotalDebt)) +
+    (dti.mortgageBalances > 0 ? drow('Less: other mortgages', '−' + fmt(dti.mortgageBalances), false, true) : '') +
+    (dti.loanBalances     > 0 ? drow('Less: other loans',     '−' + fmt(dti.loanBalances),     false, true) : '') +
+    (d.c2CreditCards      > 0 ? drow('Less: credit card limits', '−' + fmt(d.c2CreditCards),   false, true) : '') +
+    drow('Max new loan', fmt(Math.max(0, dti.maxNewMortgage)), true);
 
-  const c2TotalDebts = dti.mortgageBalances + dti.loanBalances + (d.c2CreditCards || 0);
-  let c2boxBRows = '';
-  if (dti.mortgageBalances > 0) c2boxBRows += drow('Other mortgages', '−' + fmt(dti.mortgageBalances), false, true);
-  if (dti.loanBalances     > 0) c2boxBRows += drow('Other loans',     '−' + fmt(dti.loanBalances),     false, true);
-  if (d.c2CreditCards      > 0) c2boxBRows += drow('Credit card limits', '−' + fmt(d.c2CreditCards),   false, true);
-  if (c2TotalDebts === 0) c2boxBRows += drow('No existing debts', '—');
-  c2boxBRows += drow('Max new loan', fmt(Math.max(0, dti.maxNewMortgage)), true);
+  const c2dtiBar    = c2TotalDebts > 0
+    ? `Existing debts reduce your borrowing capacity by ${fmt(c2TotalDebts)}`
+    : `No existing debts — your full 6× income capacity is available`;
+  const c2dtiExpand = `Lenders calculate debt-to-income as total debts ÷ gross income. Most mainstream lenders cap at 6×. That means your gross income × 6 is the maximum debt load they'll approve — new mortgage plus all existing debts combined. Car loans, personal loans, and credit card limits (in full — not just balances) all count against this capacity.`;
 
-  const c2boxBBar    = c2TotalDebts > 0 ? `Debts reduce your loan cap by ${fmt(c2TotalDebts)}` : 'No debts — full income capacity available';
-  const c2boxBExpand = c2TotalDebts > 0
-    ? `Car loans, personal loans, HECS-HELP, and credit card limits (in full — not just balances) all count against your DTI capacity. Reducing or eliminating these directly raises your mortgage ceiling.`
-    : `With no existing debts, your full 6× income capacity is available for the new mortgage — the strongest position for DTI.`;
+  html += conceptBox(4, 'Debt-to-income', c2dtiRows, c2dtiBar, 'Tell me more about DTI', c2dtiExpand, 'c2box');
 
-  html += conceptBox(4, 'Income limit', c2boxARows, `Income supports ${fmt(dti.maxTotalDebt)} in total debt`, 'Tell me more about DTI',
-    `Lenders calculate debt-to-income as total debts ÷ gross income. Most mainstream lenders cap at 6×. That means your gross income × 6 is the maximum debt load they'll approve — new mortgage plus all existing debts combined.`, 'c2box');
-  html += conceptBox(5, 'Existing debts', c2boxBRows, c2boxBBar, 'Tell me more about how debts count', c2boxBExpand, 'c2box');
-
-  // ── C3 boxes (F, G) ──
-  const c3boxARows =
+  // ── C3 box (E — combined serviceability) ──
+  const repayPct = svc.netMonthly > 0
+    ? Math.round((svc.maxMonthlyRepayment / svc.netMonthly) * 100)
+    : 0;
+  const c3svcRows =
     drow('Net monthly income', fmt(svc.netMonthly) + '/mo') +
     (svc.newPropRental  > 0 ? drow('Incl. rental income (80%)', '+' + fmt(Math.round(svc.newPropRental / 12)) + '/mo') : '') +
     (svc.existInvRental > 0 ? drow('Incl. investment rents (80%)', '+' + fmt(Math.round(svc.existInvRental / 12)) + '/mo') : '') +
@@ -3633,19 +3631,14 @@ function renderOutcome() {
     (svc.mortgageMonthly  > 0 ? drow('Less: other mortgage repayments', '−' + fmt(svc.mortgageMonthly) + '/mo', false, true) : '') +
     (svc.loanMonthly      > 0 ? drow('Less: other loan repayments', '−' + fmt(svc.loanMonthly) + '/mo', false, true) : '') +
     (svc.cardMonthly      > 0 ? drow('Less: credit card minimums', '−' + fmt(svc.cardMonthly) + '/mo', false, true) : '') +
-    drow('Available for mortgage', fmt(svc.maxMonthlyRepayment) + '/mo', true);
-
-  const c3boxBRows =
-    drow('Max monthly repayment', fmt(svc.maxMonthlyRepayment) + '/mo') +
+    drow('Available for mortgage', fmt(svc.maxMonthlyRepayment) + '/mo') +
     (svc.stressRateAnnual ? drow('Stress rate (current + 3%)', svc.stressRateAnnual.toFixed(2) + '%') : '') +
     drow('Max loan at stress rate', fmt(svc.maxLoan), true);
 
-  html += conceptBox(6, 'Monthly surplus', c3boxARows, `${fmt(svc.maxMonthlyRepayment)}/mo available at the stress rate`, 'Tell me more about expenses',
-    `HEM (Household Expenditure Measure) is the minimum living cost benchmark used by lenders, set by household size and location. Committed costs include rent, insurance, school fees, and similar fixed obligations. All are subtracted before a lender assesses what you can afford to repay each month.`, 'c3box');
-  html += conceptBox(7, 'Stress test', c3boxBRows,
-    c3Lowers ? `Serviceability supports a ${fmt(svc.maxLoan)} loan` : `Serviceability clears — surplus covers repayments`,
-    'Tell me more about the stress test',
-    `APRA requires lenders to assess your ability to repay at 3% above the current rate — the stress rate. This protects against future rate rises. Your maximum loan is back-calculated from your available monthly surplus at that higher rate.`, 'c3box');
+  const c3svcBar    = `At the stress rate, repayments use ${repayPct}% of your net monthly income`;
+  const c3svcExpand = `HEM (Household Expenditure Measure) is the minimum living cost benchmark used by lenders, set by household size and location. Committed costs include rent, insurance, school fees, and similar fixed obligations. APRA requires lenders to assess your ability to repay at 3% above the current rate — the stress rate. This protects against future rate rises. Your maximum loan is back-calculated from your available monthly surplus at that higher rate.`;
+
+  html += conceptBox(5, 'Serviceability', c3svcRows, c3svcBar, 'Tell me more about serviceability', c3svcExpand, 'c3box');
 
   // ── Not-an-approval advisory ──
   html += `<div class="advisory" style="margin-top:0.45rem;">
