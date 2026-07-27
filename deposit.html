@@ -673,6 +673,9 @@
       <strong>Ceiling 1 of 3 — done.</strong> Your deposit limit is above. Now check whether your income and existing debt load change this number.
     </div>
 
+    <div id="c2-cta-bridge" style="display:none;font-family:var(--font-mono);font-size:0.65rem;color:var(--dim);line-height:1.5;margin-bottom:0.5rem;">
+      Ceiling 1 is your savings floor. Now check if income changes it.
+    </div>
     <button class="btn" id="c2-cta-btn" onclick="goToC2Gate()" style="width: 100%; text-align: center; display: none;">
       Check Ceiling 2 — Debt-to-income →
     </button>
@@ -3675,18 +3678,24 @@ function rrow(label, value, dim) {
 }
 
 // C1 result helpers
-function ceilCard(label, price, note, isBinding, badgeText) {
-  const border = isBinding ? 'border-color:var(--blue);' : '';
-  const priceHtml = price
-    ? `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;">${price}</div>`
-    : `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;color:#222;">—</div>`;
-  const badge = badgeText ? `<span style="color:var(--blue);font-size:0.58rem;">${badgeText}</span>` : '';
-  return `<div style="background:var(--card);border:1px solid #222;${border}border-radius:4px;padding:0.65rem 0.75rem;">
-    <div style="font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;color:#444;text-transform:uppercase;margin-bottom:0.2rem;display:flex;justify-content:space-between;align-items:center;">
+// ceilCard state: 'binding' = blue border + bright price, 'pending' = dim + no price, 'done' = grey border + muted price
+function ceilCard(label, price, note, state) {
+  const borderStyle = state === 'binding' ? 'border-color:var(--blue);'
+                    : state === 'done'    ? 'border-color:#333;'
+                    :                       '';
+  const badge = state === 'binding' ? `<span style="color:var(--blue);font-size:0.58rem;">← binding</span>`
+              : state === 'done'    ? `<span style="color:#555;font-size:0.58rem;">✓ done</span>`
+              :                       '';
+  const priceHtml = price && state !== 'pending'
+    ? `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;${state === 'done' ? 'color:#555;' : ''}">${price}</div>`
+    : '';
+  const noteColor = state === 'pending' ? '#555' : '#444';
+  return `<div style="background:var(--card);border:1px solid #222;${borderStyle}border-radius:4px;padding:0.65rem 0.75rem;">
+    <div style="font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.2rem;display:flex;justify-content:space-between;align-items:center;">
       <span>${label}</span>${badge}
     </div>
     ${priceHtml}
-    <div style="font-family:var(--font-mono);font-size:0.62rem;color:#444;line-height:1.4;">${note}</div>
+    <div style="font-family:var(--font-mono);font-size:0.62rem;color:${noteColor};line-height:1.4;">${note}</div>
   </div>`;
 }
 
@@ -3703,11 +3712,11 @@ function conceptBox(num, title, rowsHtml, blueBarText, toggleLabel, expandText) 
   const prefix = ['①','②','③'][num - 1];
   return `<div style="background:var(--card);border:1px solid #222;border-radius:4px;margin-bottom:0.6rem;overflow:hidden;">
     <div style="padding:0.85rem 0.85rem 0.65rem;">
-      <div style="font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;color:#444;text-transform:uppercase;margin-bottom:0.6rem;">${prefix} ${title}</div>
+      <div style="font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;color:#888;text-transform:uppercase;margin-bottom:0.6rem;">${prefix} ${title}</div>
       ${rowsHtml}
     </div>
     <div style="background:var(--blue);color:#fff;text-align:center;font-family:var(--font-mono);font-size:0.65rem;padding:0.4rem 0.85rem;letter-spacing:0.05em;text-transform:uppercase;font-weight:700;white-space:nowrap;">${blueBarText}</div>
-    <div onclick="var e=document.getElementById('${id}');var open=e.style.display==='block';e.style.display=open?'none':'block';this.querySelector('.c1arr').textContent=open?'▲':'▼';" style="font-family:var(--font-mono);font-size:0.6rem;color:#2a2a2a;cursor:pointer;padding:0.5rem 0.85rem;display:flex;align-items:center;gap:0.3rem;letter-spacing:0.05em;text-transform:uppercase;border-top:1px solid #1a1a1a;">
+    <div onclick="var e=document.getElementById('${id}');var open=e.style.display==='block';e.style.display=open?'none':'block';this.querySelector('.c1arr').textContent=open?'▲':'▼';" style="font-family:var(--font-mono);font-size:0.6rem;color:#444;cursor:pointer;padding:0.5rem 0.85rem;display:flex;align-items:center;gap:0.3rem;letter-spacing:0.05em;text-transform:uppercase;border-top:1px solid #1a1a1a;">
       <span class="c1arr">▼</span> ${toggleLabel}
     </div>
     <div id="${id}" style="display:none;font-family:var(--font-mono);font-size:0.65rem;color:#555;line-height:1.55;padding:0.5rem 0.85rem 0.75rem;border-top:1px solid #1a1a1a;">${expandText}</div>
@@ -3718,12 +3727,13 @@ function renderDepositResult() {
   const r = findMaxPrice(d.savings);
   lastC1Result = r;
 
-  const mainEl   = document.getElementById('deposit-result-main');
-  const breakEl  = document.getElementById('deposit-result-breakdown');
-  const repayEl  = document.getElementById('deposit-repayment');
-  const advEl    = document.getElementById('deposit-advisories');
-  const stage2El = document.getElementById('deposit-stage2-note');
-  const c2Btn    = document.getElementById('c2-cta-btn');
+  const mainEl    = document.getElementById('deposit-result-main');
+  const breakEl   = document.getElementById('deposit-result-breakdown');
+  const repayEl   = document.getElementById('deposit-repayment');
+  const advEl     = document.getElementById('deposit-advisories');
+  const stage2El  = document.getElementById('deposit-stage2-note');
+  const c2Btn     = document.getElementById('c2-cta-btn');
+  const bridgeEl  = document.getElementById('c2-cta-bridge');
 
   if (repayEl) repayEl.innerHTML = '';
   if (stage2El) stage2El.style.display = 'none';
@@ -3735,10 +3745,12 @@ function renderDepositResult() {
     breakEl.innerHTML = `<div class="error-box">Your savings don't cover the upfront costs (stamp duty + registration fees) for a viable loan at the LVR limits for a ${d.isOO ? 'owner-occupier' : 'investor'} ${d.propType} in ${d.state}. Try increasing your savings or checking the stamp duty calculator for your state.</div>`;
     if (advEl) { advEl.innerHTML = ''; advEl.style.display = 'none'; }
     if (c2Btn) c2Btn.style.display = 'none';
+    if (bridgeEl) bridgeEl.style.display = 'none';
     return;
   }
 
   if (c2Btn) c2Btn.style.display = '';
+  if (bridgeEl) bridgeEl.style.display = '';
 
   const hasLMI    = r.lmiPremium > 0;
   const lmiSdRate = lmiSdRates[d.state] || 0;
@@ -3763,15 +3775,15 @@ function renderDepositResult() {
     </div>
     <div class="result-amount" style="margin-bottom:1rem;">${fmt(r.price)}</div>
     <div style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;">
-      ${ceilCard('Ceiling 1 — Deposit', fmt(r.price), 'Maximum price your savings can reach after stamp duty and LMI.', true, '← done')}
+      ${ceilCard('Ceiling 1 — Deposit', fmt(r.price), 'Maximum price your savings can reach after stamp duty and LMI.', 'binding')}
       ${ceilCard('Ceiling 2 — Debt-to-income', null,
         `With no other debts, you'd need at least ${fmt(c2MinIncome)}/yr before tax for your income ceiling to sit above this.`,
-        false, null)}
+        'pending')}
       ${ceilCard('Ceiling 3 — Serviceability', null,
         c3RepayStr
           ? `To service this loan at the stress rate, you'd need ${c3RepayStr}/mo free after living expenses.`
           : `We'll check serviceability against your income in step 3.`,
-        false, null)}
+        'pending')}
     </div>`;
 
   // ── Three concept boxes ──
@@ -3784,7 +3796,7 @@ function renderDepositResult() {
 
   const box1Rows =
     drow('Your savings', fmt(d.savings)) +
-    drow('Stamp duty', '−' + fmt(r.stampDuty)) +
+    drow('Stamp duty', '−' + fmt(r.stampDuty), false, true) +
     drow('Reg. &amp; transfer fees (~)', '−' + fmt(r.regFee)) +
     (hasLMI && r.lmiSd > 0 ? drow('LMI stamp duty (~)', '−' + fmt(r.lmiSd)) : '') +
     drow('Remaining deposit', fmt(r.availDeposit), true);
@@ -3807,7 +3819,8 @@ function renderDepositResult() {
     drow('Purchase price', fmt(r.price)) +
     drow('Effective LVR', fmtPct(r.effectiveLVR), true);
 
-  const box3Bar    = hasLMI ? `${lvrPct}% LVR — at the lender cap` : `${lvrPct}% LVR — below 80%, no LMI required`;
+  const depositPct  = fmtPct(r.availDeposit / r.price);
+  const box3Bar    = hasLMI ? `${depositPct} deposit after costs — ${lvrPct}% LVR` : `${depositPct} deposit — ${lvrPct}% LVR, no LMI required`;
   const box3Expand = `LVR is your total loan as a percentage of the property value. Most lenders cap at ${fmtPct(r.lvrTier)} — inclusive of any capitalised LMI. Your ${fmt(d.savings)} in savings becomes a ${fmtPct(r.availDeposit / r.price)} deposit once stamp duty and costs are removed. People often overestimate their deposit by forgetting what upfront costs eat first.`;
 
   breakEl.innerHTML =
