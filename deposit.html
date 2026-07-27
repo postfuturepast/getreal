@@ -681,7 +681,7 @@
     </button>
 
     <div class="footer-note" style="padding: 0; font-size: 0.62rem;">
-      Stamp duty from state revenue offices (June 2026). LMI rates indicative. Registration fees approximate. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology →</a>
+      Estimates only. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology and disclaimers →</a>
     </div>
 
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
@@ -987,6 +987,9 @@
     <button class="btn" onclick="goToC3Gate()" style="width: 100%; text-align: center;">
       Check Ceiling 3 — Serviceability →
     </button>
+    <div class="footer-note" style="padding: 0; font-size: 0.62rem;">
+      Estimates only. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology and disclaimers →</a>
+    </div>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
       <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
       <button onclick="goTo('c2-income')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
@@ -1280,6 +1283,9 @@
     <a href="search-intro.html" class="btn" style="text-decoration: none; text-align: center; width: 100%; display: block; box-sizing: border-box; margin-top: 0.25rem;">
       Check a suburb at this budget →
     </a>
+    <div class="footer-note" style="padding: 0; font-size: 0.62rem;">
+      Estimates only. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology and disclaimers →</a>
+    </div>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
       <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
       <button onclick="goTo('c3-gate')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
@@ -3779,9 +3785,21 @@ function renderOutcome() {
     drow('Max loan (DTI cap)', fmt(Math.max(0, dti.maxNewMortgage))) +
     drow('Max purchase price', fmt(c2Price), true);
 
-  const c2dtiBar    = c2TotalDebts > 0
-    ? `Existing debts reduce your borrowing capacity by ${fmt(c2TotalDebts)}`
-    : `No existing debts — your full 6× income capacity is available`;
+  let c2dtiBar;
+  if (c2TotalDebts === 0) {
+    c2dtiBar = `No existing debts — your full 6× income ceiling applies`;
+  } else {
+    const noDebtC2Result = findMaxPriceForLoanCap(dti.maxTotalDebt);
+    const noDebtC2Price  = noDebtC2Result ? noDebtC2Result.price : 0;
+    const debtPriceImpact = Math.max(0, noDebtC2Price - c2Price);
+    if (!c2Lowered) {
+      c2dtiBar = `Your existing debts don't affect your final ceiling — another constraint is lower`;
+    } else if (c3Lowers) {
+      c2dtiBar = `Your debts lower the DTI ceiling, but serviceability is a tighter constraint`;
+    } else {
+      c2dtiBar = `Clearing your debts could raise your ceiling by ~${fmt(debtPriceImpact)}`;
+    }
+  }
   const c2dtiExpand = `Lenders calculate debt-to-income as total debts ÷ gross income. Most mainstream lenders cap at 6×. That means your gross income × 6 is the maximum debt load they'll approve — new mortgage plus all existing debts combined. Car loans, personal loans, and credit card limits (in full — not just balances) all count against this capacity.`;
 
   html += conceptBox(4, 'Debt-to-income', c2dtiRows, c2dtiBar, 'Tell me more about DTI', c2dtiExpand, 'c2box');
@@ -3880,7 +3898,7 @@ function ceilCard(label, price, headline, note, state) {
               : state === 'was-cleared' ? `<span style="color:#22c55e;font-size:0.58rem;">✓ cleared</span>`
               : state === 'done'        ? `<span style="color:#22c55e;font-size:0.58rem;">✓ checked</span>`
               : state === 'done-active' ? `<span style="color:#22c55e;font-size:0.58rem;">✓ checked</span>`
-              : state === 'pending'     ? `<span style="color:#444;font-size:0.58rem;">not yet checked</span>`
+              : state === 'pending'     ? `<span style="color:#ef4444;font-size:0.58rem;">not yet checked</span>`
               :                           '';
   const priceHtml = price && state !== 'pending'
     ? `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;${(state === 'done' || state === 'was-cleared') ? 'color:#555;' : ''}">${price}</div>`
