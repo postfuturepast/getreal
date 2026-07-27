@@ -1282,7 +1282,7 @@
     </a>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
       <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
-      <button onclick="goTo('c2-income')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
+      <button onclick="goTo('c3-gate')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
     </div>
   </div>
 
@@ -1422,10 +1422,69 @@ function goTo(id) {
   show(id);
 }
 
+const SCREEN_PREV = {
+  // C1 inputs
+  'intro2':                   'intro',
+  'state':                    'intro2',
+  'fhb':                      'state',
+  'hbcs':                     'fhb',
+  'oo':                       () => d.isFHB ? 'hbcs' : 'fhb',
+  'newbuild':                 'oo',
+  'purpose':                  'newbuild',
+  'proptype':                 () => d.isOO ? 'oo' : 'purpose',
+  'savings':                  'proptype',
+  'review':                   'savings',
+  'review-apply':             'review',
+  'deposit-result':           'review-apply',
+  // C2 inputs
+  'c2-gate':                  'deposit-result',
+  'c2-applicant':             'c2-gate',
+  'c2-mortgages':             'c2-applicant',
+  'c2-mortgage-count':        'c2-mortgages',
+  'c2-mortgage-details':      'c2-mortgage-count',
+  'c2-cards':                 () => (d.c2Mortgages && d.c2Mortgages.length > 0) ? 'c2-mortgage-details' : 'c2-mortgages',
+  'c2-card-limit':            'c2-cards',
+  'c2-card-intent':           'c2-card-limit',
+  'c2-hecs':                  () => d.c2CreditCards > 0 ? 'c2-card-intent' : 'c2-cards',
+  'c2-otherloans':            'c2-hecs',
+  'c2-income':                'c2-otherloans',
+  'c2-review':                'c2-income',
+  'c2-apply':                 'c2-review',
+  'c2-result':                'c2-apply',
+  // C3 inputs
+  'c3-gate':                  'c2-result',
+  'c3-mortgage-repayments':   'c3-gate',
+  'c3-loan-repayments':       () => (d.c2Mortgages && d.c2Mortgages.length > 0) ? 'c3-mortgage-repayments' : 'c3-gate',
+  'c3-household':             () => {
+    if (d.c2OtherLoans && d.c2OtherLoans.length > 0) return 'c3-loan-repayments';
+    if (d.c2Mortgages  && d.c2Mortgages.length  > 0) return 'c3-mortgage-repayments';
+    return 'c3-gate';
+  },
+  'c3-dependants':            'c3-household',
+  'c3-location':              'c3-dependants',
+  'c3-hem':                   'c3-location',
+  'c3-rent':                  'c3-hem',
+  'c3-school':                'c3-rent',
+  'c3-health':                'c3-school',
+  'c3-review':                () => {
+    if (d.c3HealthInsurance > 0) return 'c3-health';
+    if (d.c3SchoolFees      > 0) return 'c3-school';
+    if (d.c3Rent            > 0) return 'c3-rent';
+    return 'c3-hem';
+  },
+  'c3-apply':                 'c3-review',
+  'outcome':                  'c3-apply',
+};
+
 function goBack() {
-  if (navHistory.length <= 1) return;
+  const current = navHistory.length > 0 ? navHistory[navHistory.length - 1] : null;
+  if (!current) return;
+  const entry = SCREEN_PREV[current];
+  if (!entry) return;
+  const target = typeof entry === 'function' ? entry() : entry;
   navHistory.pop();
-  show(navHistory[navHistory.length - 1]);
+  navHistory.push(target);
+  show(target);
 }
 
 function restart() {
@@ -3549,12 +3608,31 @@ function renderOutcome() {
 
   html += `</div>`;
 
-  // ── All concept boxes (A–G, no ceiling sub-labels) ──
+  // ── All concept boxes (A–E, no ceiling sub-labels) ──
   html += `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.5rem;margin-top:0.25rem;">Calculations</div>`;
 
-  // ── C1 boxes (A, B, C) ──
-  if (lastC1Result) {
-    const r           = lastC1Result;
+  // Build deposit scenario at the FINAL ceiling price, not the C1 ceiling
+  const _normalise = (src) => ({
+    price:         src.price,
+    stampDuty:     src.stampDuty,
+    regFee:        src.regFee,
+    lmiPremium:    src.lmiPremium,
+    lmiSd:         src.lmiSd,
+    baseLoan:      src.loanCap  !== undefined ? src.loanCap  : src.baseLoan,
+    effectiveLoan: src.loanCap  !== undefined ? src.loanCap  + src.lmiPremium : src.effectiveLoan,
+    availDeposit:  src.depositNeeded !== undefined ? src.depositNeeded : src.availDeposit,
+    effectiveLVR:  src.loanCap  !== undefined ? (src.loanCap + src.lmiPremium) / src.price : src.effectiveLVR,
+    lvrTier:       src.lvrTier,
+  });
+
+  const finalDepResult = c3Lowers && c3Result   ? _normalise(c3Result)
+                       : c2Lowered && c2Result   ? _normalise(c2Result)
+                       : lastC1Result            ? _normalise(lastC1Result)
+                       : null;
+
+  // ── C1 boxes (A, B, C) — calculated at the final ceiling price ──
+  if (finalDepResult) {
+    const r           = finalDepResult;
     const hasLMI      = r.lmiPremium > 0;
     const lmiSdRate   = lmiSdRates[d.state] || 0;
     const stampPct    = ((r.stampDuty / d.savings) * 100).toFixed(1);
@@ -3609,7 +3687,8 @@ function renderOutcome() {
     (dti.mortgageBalances > 0 ? drow('Less: other mortgages', '−' + fmt(dti.mortgageBalances), false, true) : '') +
     (dti.loanBalances     > 0 ? drow('Less: other loans',     '−' + fmt(dti.loanBalances),     false, true) : '') +
     (d.c2CreditCards      > 0 ? drow('Less: credit card limits', '−' + fmt(d.c2CreditCards),   false, true) : '') +
-    drow('Max new loan', fmt(Math.max(0, dti.maxNewMortgage)), true);
+    drow('Max loan (DTI cap)', fmt(Math.max(0, dti.maxNewMortgage))) +
+    drow('Max purchase price', fmt(c2Price), true);
 
   const c2dtiBar    = c2TotalDebts > 0
     ? `Existing debts reduce your borrowing capacity by ${fmt(c2TotalDebts)}`
@@ -3633,7 +3712,8 @@ function renderOutcome() {
     (svc.cardMonthly      > 0 ? drow('Less: credit card minimums', '−' + fmt(svc.cardMonthly) + '/mo', false, true) : '') +
     drow('Available for mortgage', fmt(svc.maxMonthlyRepayment) + '/mo') +
     (svc.stressRateAnnual ? drow('Stress rate (current + 3%)', svc.stressRateAnnual.toFixed(2) + '%') : '') +
-    drow('Max loan at stress rate', fmt(svc.maxLoan), true);
+    drow('Max loan at stress rate', fmt(svc.maxLoan)) +
+    drow('Max purchase price', fmt(maximum), true);
 
   const c3svcBar    = `At the stress rate, repayments use ${repayPct}% of your net monthly income`;
   const c3svcExpand = `HEM (Household Expenditure Measure) is the minimum living cost benchmark used by lenders, set by household size and location. Committed costs include rent, insurance, school fees, and similar fixed obligations. APRA requires lenders to assess your ability to repay at 3% above the current rate — the stress rate. This protects against future rate rises. Your maximum loan is back-calculated from your available monthly surplus at that higher rate.`;
