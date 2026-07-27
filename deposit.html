@@ -3674,90 +3674,158 @@ function rrow(label, value, dim) {
   return `<div class="rrow"><span class="rl">${label}</span><span class="rv${dim ? ' dim' : ''}">${value}</span></div>`;
 }
 
+// C1 result helpers
+function ceilCard(label, price, note, isBinding, badgeText) {
+  const border = isBinding ? 'border-color:var(--blue);' : '';
+  const priceHtml = price
+    ? `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;">${price}</div>`
+    : `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;color:#222;">—</div>`;
+  const badge = badgeText ? `<span style="color:var(--blue);font-size:0.58rem;">${badgeText}</span>` : '';
+  return `<div style="background:var(--card);border:1px solid #222;${border}border-radius:4px;padding:0.65rem 0.75rem;">
+    <div style="font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;color:#444;text-transform:uppercase;margin-bottom:0.2rem;display:flex;justify-content:space-between;align-items:center;">
+      <span>${label}</span>${badge}
+    </div>
+    ${priceHtml}
+    <div style="font-family:var(--font-mono);font-size:0.62rem;color:#444;line-height:1.4;">${note}</div>
+  </div>`;
+}
+
+function drow(label, value, isResult, isRed) {
+  const v = isResult ? 'color:var(--text);font-weight:700;font-size:0.78rem;'
+          : isRed    ? 'color:#f87171;font-size:0.78rem;'
+          :            'color:#444;font-size:0.78rem;';
+  const l = isResult ? 'color:var(--muted);font-weight:700;' : 'color:#444;';
+  return `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:0.2rem 0;font-family:var(--font-mono);font-size:0.72rem;"><span style="${l}">${label}</span><span style="${v}">${value}</span></div>`;
+}
+
+function conceptBox(num, title, rowsHtml, blueBarText, toggleLabel, expandText) {
+  const id = `c1box${num}`;
+  const prefix = ['①','②','③'][num - 1];
+  return `<div style="background:var(--card);border:1px solid #222;border-radius:4px;margin-bottom:0.6rem;overflow:hidden;">
+    <div style="padding:0.85rem 0.85rem 0.65rem;">
+      <div style="font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.1em;color:#444;text-transform:uppercase;margin-bottom:0.6rem;">${prefix} ${title}</div>
+      ${rowsHtml}
+    </div>
+    <div style="background:var(--blue);color:#fff;text-align:center;font-family:var(--font-mono);font-size:0.65rem;padding:0.4rem 0.85rem;letter-spacing:0.05em;text-transform:uppercase;font-weight:700;white-space:nowrap;">${blueBarText}</div>
+    <div onclick="var e=document.getElementById('${id}');var open=e.style.display==='block';e.style.display=open?'none':'block';this.querySelector('.c1arr').textContent=open?'▲':'▼';" style="font-family:var(--font-mono);font-size:0.6rem;color:#2a2a2a;cursor:pointer;padding:0.5rem 0.85rem;display:flex;align-items:center;gap:0.3rem;letter-spacing:0.05em;text-transform:uppercase;border-top:1px solid #1a1a1a;">
+      <span class="c1arr">▼</span> ${toggleLabel}
+    </div>
+    <div id="${id}" style="display:none;font-family:var(--font-mono);font-size:0.65rem;color:#555;line-height:1.55;padding:0.5rem 0.85rem 0.75rem;border-top:1px solid #1a1a1a;">${expandText}</div>
+  </div>`;
+}
+
 function renderDepositResult() {
   const r = findMaxPrice(d.savings);
-  lastC1Result = r; // cache for Ceiling 2
+  lastC1Result = r;
 
-  const mainEl  = document.getElementById('deposit-result-main');
-  const breakEl = document.getElementById('deposit-result-breakdown');
-  const advEl   = document.getElementById('deposit-advisories');
+  const mainEl   = document.getElementById('deposit-result-main');
+  const breakEl  = document.getElementById('deposit-result-breakdown');
+  const repayEl  = document.getElementById('deposit-repayment');
+  const advEl    = document.getElementById('deposit-advisories');
   const stage2El = document.getElementById('deposit-stage2-note');
-  const c2Btn   = document.getElementById('c2-cta-btn');
+  const c2Btn    = document.getElementById('c2-cta-btn');
+
+  if (repayEl) repayEl.innerHTML = '';
+  if (stage2El) stage2El.style.display = 'none';
 
   if (!r) {
     mainEl.innerHTML = `
-      <div class="result-label-sm">Deposit ceiling</div>
-      <div class="result-amount" style="font-size: 1.8rem; color: #fca5a5;">No result</div>
-    `;
+      <div style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;">Current ceiling</div>
+      <div class="result-amount" style="font-size:1.8rem;color:#fca5a5;">No result</div>`;
     breakEl.innerHTML = `<div class="error-box">Your savings don't cover the upfront costs (stamp duty + registration fees) for a viable loan at the LVR limits for a ${d.isOO ? 'owner-occupier' : 'investor'} ${d.propType} in ${d.state}. Try increasing your savings or checking the stamp duty calculator for your state.</div>`;
-    document.getElementById('deposit-repayment').innerHTML = '';
-    document.getElementById('deposit-hem').innerHTML = '';
-    advEl.innerHTML = '';
-    stage2El.style.display = 'none';
+    if (advEl) { advEl.innerHTML = ''; advEl.style.display = 'none'; }
     if (c2Btn) c2Btn.style.display = 'none';
     return;
   }
 
-  stage2El.style.display = '';
   if (c2Btn) c2Btn.style.display = '';
 
-  // Headline
-  mainEl.innerHTML = `
-    <div class="result-label-sm">Deposit ceiling</div>
-    <div class="result-amount">${fmt(r.price)}</div>
-  `;
-
-  // Breakdown card
-  const hasLMI = r.lmiPremium > 0;
+  const hasLMI    = r.lmiPremium > 0;
   const lmiSdRate = lmiSdRates[d.state] || 0;
 
-  let html = `<div class="result-card">`;
-  html += rrow('Your savings', fmt(d.savings));
-  html += `<hr class="rdivider">`;
-  html += rrow('Stamp duty', `−${fmt(r.stampDuty)}`, r.stampDuty === 0);
-  html += rrow('Reg. &amp; transfer fees (~)', `−${fmt(r.regFee)}`, true);
-  if (hasLMI && r.lmiSd > 0) {
-    html += rrow('LMI stamp duty (~)', `−${fmt(r.lmiSd)}`, true);
-  }
-  html += `<hr class="rdivider">`;
-  html += rrow('Available deposit', fmt(r.availDeposit));
-  html += `<hr class="rdivider">`;
-  html += rrow('Base loan required', fmt(r.baseLoan));
-  html += rrow('Base LVR', fmtPct(r.baseLVR), true);
-  if (hasLMI) {
-    html += rrow('LMI premium (added to loan)', fmt(r.lmiPremium));
-    html += rrow('Total loan (base + LMI)', fmt(r.effectiveLoan));
-    html += rrow('Effective LVR (incl. LMI)', fmtPct(r.effectiveLVR), true);
-  } else {
-    html += rrow('LMI premium', 'None — LVR ≤ 80%', true);
-  }
-  // Blue badge
-  const depositPct = fmtPct(r.availDeposit / r.price);
-  html += `<div class="rrow-pct">That's a ${depositPct} deposit on a ${fmt(r.price)} purchase</div>`;
-  html += `</div>`;
-  breakEl.innerHTML = html;
+  // C2 preview: minimum gross income needed assuming no other debts (DTI 6×)
+  const c2MinIncome = Math.round(r.effectiveLoan / 6);
 
-  // Advisories
-  const advisories = [];
+  // C3 preview: stress-rate monthly repayment
+  const purpose = d.isOO ? 'oo' : 'investor';
+  const rateRow = benchmarkRates[purpose];
+  let c3RepayStr = null;
+  if (rateRow) {
+    const stressRate = rateRow.rate_pct + 3.0;
+    c3RepayStr = fmt(Math.round(calcMonthlyRepayment(r.effectiveLoan, stressRate)));
+  }
 
-  if (hasLMI) {
-    let lmiSdNote = '';
-    if (lmiSdRate > 0) {
-      lmiSdNote = ` In ${d.state}, ${(lmiSdRate * 100).toFixed(0)}% stamp duty applies to the LMI premium (~${fmt(r.lmiSd)} included in the solve above).`;
+  // ── Headline + three ceiling cards ──
+  mainEl.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.2rem;">
+      <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;">Current ceiling</span>
+      <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.08em;color:var(--blue);text-transform:uppercase;">Ceiling 1 of 3 complete</span>
+    </div>
+    <div class="result-amount" style="margin-bottom:1rem;">${fmt(r.price)}</div>
+    <div style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;">
+      ${ceilCard('Ceiling 1 — Deposit', fmt(r.price), 'Maximum price your savings can reach after stamp duty and LMI.', true, '← done')}
+      ${ceilCard('Ceiling 2 — Debt-to-income', null,
+        `With no other debts, you'd need at least ${fmt(c2MinIncome)}/yr before tax for your income ceiling to sit above this.`,
+        false, null)}
+      ${ceilCard('Ceiling 3 — Serviceability', null,
+        c3RepayStr
+          ? `To service this loan at the stress rate, you'd need ${c3RepayStr}/mo free after living expenses.`
+          : `We'll check serviceability against your income in step 3.`,
+        false, null)}
+    </div>`;
+
+  // ── Three concept boxes ──
+  const stampPct = ((r.stampDuty / d.savings) * 100).toFixed(1);
+  const lvrPct   = (r.effectiveLVR * 100).toFixed(1);
+
+  const lmiSdNote = hasLMI && lmiSdRate > 0
+    ? ` ${d.state} charges ${(lmiSdRate * 100).toFixed(0)}% stamp duty on LMI premiums (~${fmt(r.lmiSd)} included above).`
+    : hasLMI ? ` ${d.state} charges no stamp duty on LMI premiums.` : '';
+
+  const box1Rows =
+    drow('Your savings', fmt(d.savings)) +
+    drow('Stamp duty', '−' + fmt(r.stampDuty)) +
+    drow('Reg. &amp; transfer fees (~)', '−' + fmt(r.regFee)) +
+    (hasLMI && r.lmiSd > 0 ? drow('LMI stamp duty (~)', '−' + fmt(r.lmiSd)) : '') +
+    drow('Remaining deposit', fmt(r.availDeposit), true);
+
+  const box2Rows = hasLMI
+    ? drow('Base loan', fmt(r.baseLoan)) +
+      drow('LMI added to loan', '+' + fmt(r.lmiPremium), false, true) +
+      drow('Total loan', fmt(r.effectiveLoan), true)
+    : drow('Base loan', fmt(r.baseLoan)) +
+      drow('LMI', 'None — LVR ≤ 80%') +
+      drow('Total loan', fmt(r.baseLoan), true);
+
+  const box2Bar    = hasLMI ? `LMI adds ${fmt(r.lmiPremium)} to your loan` : 'No LMI — LVR is at or below 80%';
+  const box2Expand = hasLMI
+    ? `LMI protects the lender — not you — if you default. It applies when your LVR is above 80%. It's capitalised into your loan so you don't pay it at settlement, but you pay interest on it over 30 years.${lmiSdNote} Major lenders apply the LVR cap to your total loan including LMI — so we've solved backwards to find the highest price where your effective LVR stays within the cap. Some specialist lenders may apply the cap to the base loan only — a broker may unlock a slightly higher ceiling.`
+    : `LMI applies when your LVR is above 80%. With a larger deposit you've stayed within that threshold — so no insurance cost is added to your loan.`;
+
+  const box3Rows =
+    drow('Total loan', fmt(r.effectiveLoan)) +
+    drow('Purchase price', fmt(r.price)) +
+    drow('Effective LVR', fmtPct(r.effectiveLVR), true);
+
+  const box3Bar    = hasLMI ? `${lvrPct}% LVR — at the lender cap` : `${lvrPct}% LVR — below 80%, no LMI required`;
+  const box3Expand = `LVR is your total loan as a percentage of the property value. Most lenders cap at ${fmtPct(r.lvrTier)} — inclusive of any capitalised LMI. Your ${fmt(d.savings)} in savings becomes a ${fmtPct(r.availDeposit / r.price)} deposit once stamp duty and costs are removed. People often overestimate their deposit by forgetting what upfront costs eat first.`;
+
+  breakEl.innerHTML =
+    conceptBox(1, 'Upfront costs', box1Rows, `${stampPct}% of your savings goes to stamp duty`, 'Tell me more about stamp duty',
+      `Stamp duty is a state tax on property transfers, calculated on the purchase price. In ${d.state} it uses a bracket formula — the higher the price, the higher the effective rate. It's paid at settlement and cannot be added to your loan. Registration and transfer fees cover the land titles office recording the change of ownership.`) +
+    conceptBox(2, 'Lenders mortgage insurance', box2Rows, box2Bar, 'Tell me more about LMI', box2Expand) +
+    conceptBox(3, 'Loan to value ratio', box3Rows, box3Bar, 'Tell me more about LVR', box3Expand);
+
+  // NT advisory
+  if (advEl) {
+    if (d.state === 'NT') {
+      advEl.style.display = 'flex';
+      advEl.innerHTML = `<div class="advisory"><strong>NT stamp duty:</strong> The FHOD phaseout formula is not publicly documented. We've modelled a linear phaseout between $500k–$650k — actual figure may differ.</div>`;
     } else {
-      lmiSdNote = ` ${d.state} charges no stamp duty on LMI premiums.`;
+      advEl.innerHTML = '';
+      advEl.style.display = 'none';
     }
-    advisories.push(`<div class="advisory"><strong>LMI adds ${fmt(r.lmiPremium)} to your loan.</strong> Lenders Mortgage Insurance protects the lender (not you) when LVR is above 80%. It's capitalised into the loan — you don't pay it upfront, but it increases what you owe.${lmiSdNote} This result enforces the LVR cap on your total loan (base + LMI), consistent with how most major lenders apply it. Some specialist lenders may apply the cap to the base loan only — a broker may be able to unlock a higher ceiling.</div>`);
   }
-
-  if (d.state === 'NT') {
-    advisories.push(`<div class="advisory"><strong>NT stamp duty:</strong> The FHOD phaseout formula is not publicly documented. We've modelled a linear phaseout between $500k–$650k — actual figure may differ.</div>`);
-  }
-
-  renderRepaymentBlock(r.effectiveLoan);
-
-  advEl.style.display = advisories.length ? 'flex' : 'none';
-  advEl.innerHTML = advisories.join('');
 }
 </script>
 
