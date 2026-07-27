@@ -2825,38 +2825,6 @@ function renderC2Result() {
 
   html += `</div>`;
 
-  // ── Concept boxes ──
-  const boxARows =
-    drow('Gross income', fmt(dti.totalIncome) + '/yr') +
-    (dti.newPropRental  > 0 ? drow('Incl. rental income (80%)', '+' + fmt(dti.newPropRental) + '/yr') : '') +
-    (dti.existInvRental > 0 ? drow('Incl. investment rents (80%)', '+' + fmt(dti.existInvRental) + '/yr') : '') +
-    drow('DTI cap', '× 6') +
-    drow('Max total debt', fmt(dti.maxTotalDebt), true);
-
-  const totalDebts = dti.mortgageBalances + dti.loanBalances + (d.c2CreditCards || 0);
-  let boxBRows = '';
-  if (dti.mortgageBalances > 0) boxBRows += drow('Other mortgages', '−' + fmt(dti.mortgageBalances), false, true);
-  if (dti.loanBalances     > 0) boxBRows += drow('Other loans',     '−' + fmt(dti.loanBalances),     false, true);
-  if (d.c2CreditCards      > 0) boxBRows += drow('Credit card limits', '−' + fmt(d.c2CreditCards),   false, true);
-  if (totalDebts === 0) boxBRows += drow('No existing debts', '—');
-  boxBRows += drow('Max new loan', fmt(Math.max(0, dti.maxNewMortgage)), true);
-
-  const boxBBar    = totalDebts > 0 ? `Debts reduce your loan cap by ${fmt(totalDebts)}` : 'No debts — full income capacity available';
-  const boxBExpand = totalDebts > 0
-    ? `Car loans, personal loans, HECS-HELP, and credit card limits (in full — not just balances) all count against your DTI capacity. Reducing or eliminating these directly raises your mortgage ceiling.`
-    : `With no existing debts, your full 6× income capacity is available for the new mortgage — the strongest position for DTI.`;
-
-  html += `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.65rem;margin-top:0.25rem;">Current calculations</div>`;
-  html += conceptBox(1, 'Income limit', boxARows,
-    `Income supports ${fmt(dti.maxTotalDebt)} in total debt`,
-    'Tell me more about DTI',
-    `Lenders calculate debt-to-income as total debts ÷ gross income. Most mainstream lenders cap at 6×. That means your gross income × 6 is the maximum debt load they'll approve — new mortgage plus all existing debts combined.`,
-    'c2box');
-  html += conceptBox(2, 'Existing debts', boxBRows, boxBBar,
-    'Tell me more about how debts count',
-    boxBExpand,
-    'c2box');
-
   el.innerHTML = html;
 }
 
@@ -3566,8 +3534,86 @@ function renderOutcome() {
 
   html += `</div>`;
 
-  // ── Concept boxes ──
-  const boxARows =
+  // ── All concept boxes ──
+  const subLabel = (text) => `<div style="font-family:var(--font-mono);font-size:0.58rem;font-weight:700;letter-spacing:0.1em;color:#444;text-transform:uppercase;margin:0.9rem 0 0.5rem;padding-top:0.65rem;border-top:1px solid #1a1a1a;">${text}</div>`;
+
+  html += `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.5rem;margin-top:0.25rem;">Calculations</div>`;
+
+  // ── C1 boxes ──
+  if (lastC1Result) {
+    const r           = lastC1Result;
+    const hasLMI      = r.lmiPremium > 0;
+    const lmiSdRate   = lmiSdRates[d.state] || 0;
+    const stampPct    = ((r.stampDuty / d.savings) * 100).toFixed(1);
+    const lvrPct      = (r.effectiveLVR * 100).toFixed(1);
+    const depositPct  = fmtPct(r.availDeposit / r.price);
+    const lmiSdNote   = hasLMI && lmiSdRate > 0
+      ? ` ${d.state} charges ${(lmiSdRate * 100).toFixed(0)}% stamp duty on LMI premiums (~${fmt(r.lmiSd)} included above).`
+      : hasLMI ? ` ${d.state} charges no stamp duty on LMI premiums.` : '';
+
+    const c1box1Rows =
+      drow('Your savings', fmt(d.savings)) +
+      drow('Stamp duty', '−' + fmt(r.stampDuty), false, true) +
+      drow('Reg. &amp; transfer fees (~)', '−' + fmt(r.regFee)) +
+      (hasLMI && r.lmiSd > 0 ? drow('LMI stamp duty (~)', '−' + fmt(r.lmiSd)) : '') +
+      drow('Remaining deposit', fmt(r.availDeposit), true);
+
+    const c1box2Rows = hasLMI
+      ? drow('Base loan', fmt(r.baseLoan)) +
+        drow('LMI added to loan', '+' + fmt(r.lmiPremium), false, true) +
+        drow('Total loan', fmt(r.effectiveLoan), true)
+      : drow('Base loan', fmt(r.baseLoan)) +
+        drow('LMI', 'None — LVR ≤ 80%') +
+        drow('Total loan', fmt(r.baseLoan), true);
+
+    const c1box2Bar    = hasLMI ? `${fmt(r.lmiPremium)} added to the loan from LMI` : 'No LMI — LVR is at or below 80%';
+    const c1box2Expand = hasLMI
+      ? `LMI protects the lender — not you — if you default. It applies when your LVR is above 80%. It's capitalised into your loan so you don't pay it at settlement, but you pay interest on it over 30 years.${lmiSdNote} Major lenders apply the LVR cap to your total loan including LMI — so we've solved backwards to find the highest price where your effective LVR stays within the cap.`
+      : `LMI applies when your LVR is above 80%. With a larger deposit you've stayed within that threshold — so no insurance cost is added to your loan.`;
+
+    const c1box3Rows =
+      drow('Total loan', fmt(r.effectiveLoan)) +
+      drow('Purchase price', fmt(r.price)) +
+      drow('Effective LVR', fmtPct(r.effectiveLVR), true);
+
+    const c1box3Bar    = hasLMI ? `${depositPct} deposit after costs — ${lvrPct}% LVR` : `${depositPct} deposit — ${lvrPct}% LVR, no LMI required`;
+    const c1box3Expand = `LVR is your total loan as a percentage of the property value. Most lenders cap at ${fmtPct(r.lvrTier)} — inclusive of any capitalised LMI. Your ${fmt(d.savings)} in savings becomes a ${depositPct} deposit once stamp duty and costs are removed.`;
+
+    html += subLabel('Ceiling 1 — Deposit');
+    html += conceptBox(1, 'Upfront costs', c1box1Rows, `${stampPct}% of your savings goes to stamp duty`, 'Tell me more about stamp duty',
+      `Stamp duty is a state tax on property transfers, calculated on the purchase price. In ${d.state} it uses a bracket formula — the higher the price, the higher the effective rate. It's paid at settlement and cannot be added to your loan. Registration and transfer fees cover the land titles office recording the change of ownership.`, 'c1box');
+    html += conceptBox(2, 'Lenders mortgage insurance', c1box2Rows, c1box2Bar, 'Tell me more about LMI', c1box2Expand, 'c1box');
+    html += conceptBox(3, 'Loan to value ratio', c1box3Rows, c1box3Bar, 'Tell me more about LVR', c1box3Expand, 'c1box');
+  }
+
+  // ── C2 boxes ──
+  const c2boxARows =
+    drow('Gross income', fmt(dti.totalIncome) + '/yr') +
+    (dti.newPropRental  > 0 ? drow('Incl. rental income (80%)', '+' + fmt(dti.newPropRental) + '/yr') : '') +
+    (dti.existInvRental > 0 ? drow('Incl. investment rents (80%)', '+' + fmt(dti.existInvRental) + '/yr') : '') +
+    drow('DTI cap', '× 6') +
+    drow('Max total debt', fmt(dti.maxTotalDebt), true);
+
+  const c2TotalDebts = dti.mortgageBalances + dti.loanBalances + (d.c2CreditCards || 0);
+  let c2boxBRows = '';
+  if (dti.mortgageBalances > 0) c2boxBRows += drow('Other mortgages', '−' + fmt(dti.mortgageBalances), false, true);
+  if (dti.loanBalances     > 0) c2boxBRows += drow('Other loans',     '−' + fmt(dti.loanBalances),     false, true);
+  if (d.c2CreditCards      > 0) c2boxBRows += drow('Credit card limits', '−' + fmt(d.c2CreditCards),   false, true);
+  if (c2TotalDebts === 0) c2boxBRows += drow('No existing debts', '—');
+  c2boxBRows += drow('Max new loan', fmt(Math.max(0, dti.maxNewMortgage)), true);
+
+  const c2boxBBar    = c2TotalDebts > 0 ? `Debts reduce your loan cap by ${fmt(c2TotalDebts)}` : 'No debts — full income capacity available';
+  const c2boxBExpand = c2TotalDebts > 0
+    ? `Car loans, personal loans, HECS-HELP, and credit card limits (in full — not just balances) all count against your DTI capacity. Reducing or eliminating these directly raises your mortgage ceiling.`
+    : `With no existing debts, your full 6× income capacity is available for the new mortgage — the strongest position for DTI.`;
+
+  html += subLabel('Ceiling 2 — Debt-to-income');
+  html += conceptBox(1, 'Income limit', c2boxARows, `Income supports ${fmt(dti.maxTotalDebt)} in total debt`, 'Tell me more about DTI',
+    `Lenders calculate debt-to-income as total debts ÷ gross income. Most mainstream lenders cap at 6×. That means your gross income × 6 is the maximum debt load they'll approve — new mortgage plus all existing debts combined.`, 'c2box');
+  html += conceptBox(2, 'Existing debts', c2boxBRows, c2boxBBar, 'Tell me more about how debts count', c2boxBExpand, 'c2box');
+
+  // ── C3 boxes ──
+  const c3boxARows =
     drow('Net monthly income', fmt(svc.netMonthly) + '/mo') +
     (svc.newPropRental  > 0 ? drow('Incl. rental income (80%)', '+' + fmt(Math.round(svc.newPropRental / 12)) + '/mo') : '') +
     (svc.existInvRental > 0 ? drow('Incl. investment rents (80%)', '+' + fmt(Math.round(svc.existInvRental / 12)) + '/mo') : '') +
@@ -3578,22 +3624,18 @@ function renderOutcome() {
     (svc.cardMonthly      > 0 ? drow('Less: credit card minimums', '−' + fmt(svc.cardMonthly) + '/mo', false, true) : '') +
     drow('Available for mortgage', fmt(svc.maxMonthlyRepayment) + '/mo', true);
 
-  const boxABar    = `${fmt(svc.maxMonthlyRepayment)}/mo available at the stress rate`;
-  const boxAExpand = `HEM (Household Expenditure Measure) is the minimum living cost benchmark used by lenders, set by household size and location. Committed costs include rent, insurance, school fees, and similar fixed obligations. All are subtracted before a lender assesses what you can afford to repay each month.`;
-
-  const boxBRows =
+  const c3boxBRows =
     drow('Max monthly repayment', fmt(svc.maxMonthlyRepayment) + '/mo') +
     (svc.stressRateAnnual ? drow('Stress rate (current + 3%)', svc.stressRateAnnual.toFixed(2) + '%') : '') +
     drow('Max loan at stress rate', fmt(svc.maxLoan), true);
 
-  const boxBBar    = c3Lowers
-    ? `Serviceability supports a ${fmt(svc.maxLoan)} loan`
-    : `Serviceability clears — surplus covers repayments`;
-  const boxBExpand = `APRA requires lenders to assess your ability to repay at 3% above the current rate — the stress rate. This protects against future rate rises. Your maximum loan is back-calculated from your available monthly surplus at that higher rate.`;
-
-  html += `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.65rem;margin-top:0.25rem;">Current calculations</div>`;
-  html += conceptBox(1, 'Monthly surplus', boxARows, boxABar, 'Tell me more about expenses', boxAExpand, 'c3box');
-  html += conceptBox(2, 'Stress test', boxBRows, boxBBar, 'Tell me more about the stress test', boxBExpand, 'c3box');
+  html += subLabel('Ceiling 3 — Serviceability');
+  html += conceptBox(1, 'Monthly surplus', c3boxARows, `${fmt(svc.maxMonthlyRepayment)}/mo available at the stress rate`, 'Tell me more about expenses',
+    `HEM (Household Expenditure Measure) is the minimum living cost benchmark used by lenders, set by household size and location. Committed costs include rent, insurance, school fees, and similar fixed obligations. All are subtracted before a lender assesses what you can afford to repay each month.`, 'c3box');
+  html += conceptBox(2, 'Stress test', c3boxBRows,
+    c3Lowers ? `Serviceability supports a ${fmt(svc.maxLoan)} loan` : `Serviceability clears — surplus covers repayments`,
+    'Tell me more about the stress test',
+    `APRA requires lenders to assess your ability to repay at 3% above the current rate — the stress rate. This protects against future rate rises. Your maximum loan is back-calculated from your available monthly surplus at that higher rate.`, 'c3box');
 
   // ── Not-an-approval advisory ──
   html += `<div class="advisory" style="margin-top:0.45rem;">
@@ -3772,49 +3814,7 @@ function renderDepositResult() {
         'pending')}
     </div>`;
 
-  // ── Three concept boxes ──
-  const stampPct = ((r.stampDuty / d.savings) * 100).toFixed(1);
-  const lvrPct   = (r.effectiveLVR * 100).toFixed(1);
-
-  const lmiSdNote = hasLMI && lmiSdRate > 0
-    ? ` ${d.state} charges ${(lmiSdRate * 100).toFixed(0)}% stamp duty on LMI premiums (~${fmt(r.lmiSd)} included above).`
-    : hasLMI ? ` ${d.state} charges no stamp duty on LMI premiums.` : '';
-
-  const box1Rows =
-    drow('Your savings', fmt(d.savings)) +
-    drow('Stamp duty', '−' + fmt(r.stampDuty), false, true) +
-    drow('Reg. &amp; transfer fees (~)', '−' + fmt(r.regFee)) +
-    (hasLMI && r.lmiSd > 0 ? drow('LMI stamp duty (~)', '−' + fmt(r.lmiSd)) : '') +
-    drow('Remaining deposit', fmt(r.availDeposit), true);
-
-  const box2Rows = hasLMI
-    ? drow('Base loan', fmt(r.baseLoan)) +
-      drow('LMI added to loan', '+' + fmt(r.lmiPremium), false, true) +
-      drow('Total loan', fmt(r.effectiveLoan), true)
-    : drow('Base loan', fmt(r.baseLoan)) +
-      drow('LMI', 'None — LVR ≤ 80%') +
-      drow('Total loan', fmt(r.baseLoan), true);
-
-  const box2Bar    = hasLMI ? `${fmt(r.lmiPremium)} added to the loan from LMI` : 'No LMI — LVR is at or below 80%';
-  const box2Expand = hasLMI
-    ? `LMI protects the lender — not you — if you default. It applies when your LVR is above 80%. It's capitalised into your loan so you don't pay it at settlement, but you pay interest on it over 30 years.${lmiSdNote} Major lenders apply the LVR cap to your total loan including LMI — so we've solved backwards to find the highest price where your effective LVR stays within the cap. Some specialist lenders may apply the cap to the base loan only — a broker may unlock a slightly higher ceiling.`
-    : `LMI applies when your LVR is above 80%. With a larger deposit you've stayed within that threshold — so no insurance cost is added to your loan.`;
-
-  const box3Rows =
-    drow('Total loan', fmt(r.effectiveLoan)) +
-    drow('Purchase price', fmt(r.price)) +
-    drow('Effective LVR', fmtPct(r.effectiveLVR), true);
-
-  const depositPct  = fmtPct(r.availDeposit / r.price);
-  const box3Bar    = hasLMI ? `${depositPct} deposit after costs — ${lvrPct}% LVR` : `${depositPct} deposit — ${lvrPct}% LVR, no LMI required`;
-  const box3Expand = `LVR is your total loan as a percentage of the property value. Most lenders cap at ${fmtPct(r.lvrTier)} — inclusive of any capitalised LMI. Your ${fmt(d.savings)} in savings becomes a ${fmtPct(r.availDeposit / r.price)} deposit once stamp duty and costs are removed. People often overestimate their deposit by forgetting what upfront costs eat first.`;
-
-  breakEl.innerHTML =
-    `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.65rem;margin-top:0.25rem;">Current calculations</div>` +
-    conceptBox(1, 'Upfront costs', box1Rows, `${stampPct}% of your savings goes to stamp duty`, 'Tell me more about stamp duty',
-      `Stamp duty is a state tax on property transfers, calculated on the purchase price. In ${d.state} it uses a bracket formula — the higher the price, the higher the effective rate. It's paid at settlement and cannot be added to your loan. Registration and transfer fees cover the land titles office recording the change of ownership.`) +
-    conceptBox(2, 'Lenders mortgage insurance', box2Rows, box2Bar, 'Tell me more about LMI', box2Expand) +
-    conceptBox(3, 'Loan to value ratio', box3Rows, box3Bar, 'Tell me more about LVR', box3Expand);
+  if (breakEl) breakEl.innerHTML = '';
 
   // NT advisory
   if (advEl) {
