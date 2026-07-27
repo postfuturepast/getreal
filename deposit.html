@@ -1282,7 +1282,7 @@
     </a>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
       <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
-      <button onclick="goTo('c2-result')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Ceiling 2</button>
+      <button onclick="goTo('c2-income')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
     </div>
   </div>
 
@@ -3549,12 +3549,10 @@ function renderOutcome() {
 
   html += `</div>`;
 
-  // ── All concept boxes ──
-  const subLabel = (text) => `<div style="font-family:var(--font-mono);font-size:0.58rem;font-weight:700;letter-spacing:0.1em;color:#444;text-transform:uppercase;margin:0.9rem 0 0.5rem;padding-top:0.65rem;border-top:1px solid #1a1a1a;">${text}</div>`;
-
+  // ── All concept boxes (A–G, no ceiling sub-labels) ──
   html += `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.5rem;margin-top:0.25rem;">Calculations</div>`;
 
-  // ── C1 boxes ──
+  // ── C1 boxes (A, B, C) ──
   if (lastC1Result) {
     const r           = lastC1Result;
     const hasLMI      = r.lmiPremium > 0;
@@ -3594,14 +3592,13 @@ function renderOutcome() {
     const c1box3Bar    = hasLMI ? `${depositPct} deposit after costs — ${lvrPct}% LVR` : `${depositPct} deposit — ${lvrPct}% LVR, no LMI required`;
     const c1box3Expand = `LVR is your total loan as a percentage of the property value. Most lenders cap at ${fmtPct(r.lvrTier)} — inclusive of any capitalised LMI. Your ${fmt(d.savings)} in savings becomes a ${depositPct} deposit once stamp duty and costs are removed.`;
 
-    html += subLabel('Ceiling 1 — Deposit');
     html += conceptBox(1, 'Upfront costs', c1box1Rows, `${stampPct}% of your savings goes to stamp duty`, 'Tell me more about stamp duty',
       `Stamp duty is a state tax on property transfers, calculated on the purchase price. In ${d.state} it uses a bracket formula — the higher the price, the higher the effective rate. It's paid at settlement and cannot be added to your loan. Registration and transfer fees cover the land titles office recording the change of ownership.`, 'c1box');
     html += conceptBox(2, 'Lenders mortgage insurance', c1box2Rows, c1box2Bar, 'Tell me more about LMI', c1box2Expand, 'c1box');
     html += conceptBox(3, 'Loan to value ratio', c1box3Rows, c1box3Bar, 'Tell me more about LVR', c1box3Expand, 'c1box');
   }
 
-  // ── C2 boxes ──
+  // ── C2 boxes (D, E) ──
   const c2boxARows =
     drow('Gross income', fmt(dti.totalIncome) + '/yr') +
     (dti.newPropRental  > 0 ? drow('Incl. rental income (80%)', '+' + fmt(dti.newPropRental) + '/yr') : '') +
@@ -3622,12 +3619,11 @@ function renderOutcome() {
     ? `Car loans, personal loans, HECS-HELP, and credit card limits (in full — not just balances) all count against your DTI capacity. Reducing or eliminating these directly raises your mortgage ceiling.`
     : `With no existing debts, your full 6× income capacity is available for the new mortgage — the strongest position for DTI.`;
 
-  html += subLabel('Ceiling 2 — Debt-to-income');
-  html += conceptBox(1, 'Income limit', c2boxARows, `Income supports ${fmt(dti.maxTotalDebt)} in total debt`, 'Tell me more about DTI',
+  html += conceptBox(4, 'Income limit', c2boxARows, `Income supports ${fmt(dti.maxTotalDebt)} in total debt`, 'Tell me more about DTI',
     `Lenders calculate debt-to-income as total debts ÷ gross income. Most mainstream lenders cap at 6×. That means your gross income × 6 is the maximum debt load they'll approve — new mortgage plus all existing debts combined.`, 'c2box');
-  html += conceptBox(2, 'Existing debts', c2boxBRows, c2boxBBar, 'Tell me more about how debts count', c2boxBExpand, 'c2box');
+  html += conceptBox(5, 'Existing debts', c2boxBRows, c2boxBBar, 'Tell me more about how debts count', c2boxBExpand, 'c2box');
 
-  // ── C3 boxes ──
+  // ── C3 boxes (F, G) ──
   const c3boxARows =
     drow('Net monthly income', fmt(svc.netMonthly) + '/mo') +
     (svc.newPropRental  > 0 ? drow('Incl. rental income (80%)', '+' + fmt(Math.round(svc.newPropRental / 12)) + '/mo') : '') +
@@ -3644,10 +3640,9 @@ function renderOutcome() {
     (svc.stressRateAnnual ? drow('Stress rate (current + 3%)', svc.stressRateAnnual.toFixed(2) + '%') : '') +
     drow('Max loan at stress rate', fmt(svc.maxLoan), true);
 
-  html += subLabel('Ceiling 3 — Serviceability');
-  html += conceptBox(1, 'Monthly surplus', c3boxARows, `${fmt(svc.maxMonthlyRepayment)}/mo available at the stress rate`, 'Tell me more about expenses',
+  html += conceptBox(6, 'Monthly surplus', c3boxARows, `${fmt(svc.maxMonthlyRepayment)}/mo available at the stress rate`, 'Tell me more about expenses',
     `HEM (Household Expenditure Measure) is the minimum living cost benchmark used by lenders, set by household size and location. Committed costs include rent, insurance, school fees, and similar fixed obligations. All are subtracted before a lender assesses what you can afford to repay each month.`, 'c3box');
-  html += conceptBox(2, 'Stress test', c3boxBRows,
+  html += conceptBox(7, 'Stress test', c3boxBRows,
     c3Lowers ? `Serviceability supports a ${fmt(svc.maxLoan)} loan` : `Serviceability clears — surplus covers repayments`,
     'Tell me more about the stress test',
     `APRA requires lenders to assess your ability to repay at 3% above the current rate — the stress rate. This protects against future rate rises. Your maximum loan is back-calculated from your available monthly surplus at that higher rate.`, 'c3box');
@@ -3752,7 +3747,7 @@ function drow(label, value, isResult, isRed) {
 
 function conceptBox(num, title, rowsHtml, blueBarText, toggleLabel, expandText, idPrefix = 'c1box') {
   const id = `${idPrefix}${num}`;
-  const prefix = ['A —','B —','C —'][num - 1];
+  const prefix = ['A —','B —','C —','D —','E —','F —','G —'][num - 1];
   return `<div style="background:var(--card);border:1px solid #222;border-radius:4px;margin-bottom:0.6rem;overflow:hidden;">
     <div style="padding:0.85rem 0.85rem 0.65rem;">
       <div style="font-family:var(--font-mono);font-size:0.65rem;font-weight:700;letter-spacing:0.1em;color:var(--text);text-transform:uppercase;margin-bottom:0.55rem;padding-bottom:0.35rem;border-bottom:1px solid #1a1a1a;">${prefix} ${title}</div>
