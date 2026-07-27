@@ -2196,6 +2196,88 @@ function calcRawDutyForPrice(p) {
   }
 }
 
+// Returns { full, payable, concession, label } for stamp duty at price p.
+// full    = duty at standard rate (no FHB/HBCS/PPR concession)
+// payable = duty actually paid after concession
+// concession = full − payable (0 if no concession)
+// label   = short description e.g. "FHB exemption", "FHB taper discount"
+function calcDutyBreakdown(p) {
+  const { state, isFHB, isOO, isNewBuild, isHBCS } = d;
+  let full = 0, payable = 0, label = '';
+
+  switch (state) {
+    case 'NSW':
+      full = Math.round(nswDuty(p));
+      if (isFHB) {
+        if (p <= 800000)  { payable = 0; label = 'FHB exemption'; }
+        else if (p <= 1000000) { payable = Math.round(full * (p - 800000) / 200000); label = 'FHB taper discount'; }
+        else payable = full;
+      } else payable = full;
+      break;
+    case 'VIC':
+      full = Math.round(vicGeneral(p));
+      if (isFHB) {
+        if (p <= 600000)  { payable = 0; label = 'FHB exemption'; }
+        else if (p <= 750000) { payable = Math.round(full * (p - 600000) / 150000); label = 'FHB taper discount'; }
+        else payable = full;
+      } else if (isOO && p <= 550000) {
+        payable = Math.round(vicPPR(p));
+        label = 'Owner-occupier PPR rate';
+      } else payable = full;
+      break;
+    case 'QLD':
+      full = Math.round(qldDuty(p));
+      if (isFHB) {
+        if (p <= 500000)  { payable = 0; label = 'FHB exemption'; }
+        else if (p <= 550000) { payable = Math.round(full * (p - 500000) / 50000); label = 'FHB taper discount'; }
+        else payable = full;
+      } else payable = full;
+      break;
+    case 'WA':
+      full = Math.round(waDuty(p));
+      if (isFHB) {
+        if (p <= 600000)  { payable = 0; label = 'FHB exemption'; }
+        else if (p <= 800000) { payable = Math.round(full * (p - 600000) / 200000); label = 'FHB taper discount'; }
+        else payable = full;
+      } else payable = full;
+      break;
+    case 'SA':
+      full = payable = Math.round(saDuty(p));
+      break;
+    case 'TAS':
+      full = Math.round(tasDuty(p));
+      if (isFHB && !isNewBuild && p < 600000) { payable = Math.round(full * 0.5); label = 'FHB 50% discount'; }
+      else payable = full;
+      break;
+    case 'ACT':
+      full = Math.round(actDuty(p));
+      if (isFHB)   { payable = 0; label = 'FHB exemption'; }
+      else if (isHBCS) { payable = 0; label = 'HBCS exemption'; }
+      else payable = full;
+      break;
+    case 'NT': {
+      full = Math.round(ntDuty(p));
+      if (isFHB && p < 650000) {
+        const factor = p <= 500000 ? 1 : (650000 - p) / 150000;
+        const discount = Math.min(full, 18601 * factor);
+        payable = Math.max(0, Math.round(full - discount));
+        label = 'FHB discount';
+      } else payable = full;
+      break;
+    }
+    default:
+      full = payable = 0;
+  }
+
+  // Apply new-build concession on top (modifies payable only)
+  const payableAfterNB = applyNewBuildConcession(p, payable);
+  if (payableAfterNB < payable && !label) label = 'New build concession';
+  else if (payableAfterNB < payable) label += ' + new build concession';
+  payable = payableAfterNB;
+
+  return { full, payable, concession: full - payable, label };
+}
+
 // ─── Binary search + LMI solve ───────────────────────────────────────────────
 function computeAtPrice(price, savings, maxLVR, regFee, lmiSdRate) {
   const stampDuty = calcDutyForPrice(price);
@@ -3642,9 +3724,16 @@ function renderOutcome() {
       ? ` ${d.state} charges ${(lmiSdRate * 100).toFixed(0)}% stamp duty on LMI premiums (~${fmt(r.lmiSd)} included above).`
       : hasLMI ? ` ${d.state} charges no stamp duty on LMI premiums.` : '';
 
+    const dutyBD = calcDutyBreakdown(r.price);
+    const stampDutyRows = dutyBD.concession > 0
+      ? drow('Stamp duty (full rate)', fmt(dutyBD.full), false, true) +
+        drow(dutyBD.label, '−' + fmt(dutyBD.concession)) +
+        drow('Stamp duty payable', '−' + fmt(dutyBD.payable), false, true)
+      : drow('Stamp duty', '−' + fmt(r.stampDuty), false, true);
+
     const c1box1Rows =
       drow('Your savings', fmt(d.savings)) +
-      drow('Stamp duty', '−' + fmt(r.stampDuty), false, true) +
+      stampDutyRows +
       drow('Reg. &amp; transfer fees (~)', '−' + fmt(r.regFee)) +
       (hasLMI && r.lmiSd > 0 ? drow('LMI stamp duty (~)', '−' + fmt(r.lmiSd)) : '') +
       drow('Remaining deposit', fmt(r.availDeposit), true);
