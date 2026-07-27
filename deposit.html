@@ -984,15 +984,12 @@
 
     </div>
     <div id="c2-result-main"></div>
-    <div class="note-box blue" style="margin-top: 0.25rem;">
-      <strong>Ceiling 2 done.</strong> One more check — can you actually service these repayments every month after living costs?
-    </div>
     <button class="btn" onclick="goToC3Gate()" style="width: 100%; text-align: center;">
       Check Ceiling 3 — Serviceability →
     </button>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
-      <button class="btn" onclick="restart()">Start again</button>
-      <button onclick="goTo('deposit-result')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Ceiling 1</button>
+      <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
+      <button onclick="goTo('deposit-result')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
     </div>
   </div>
 
@@ -2773,107 +2770,94 @@ function renderC2Result() {
 
   const c1Price  = lastC1Result.price;
   const dti      = computeDTI();
-  // Correct C2 price: binary search with full savings + DTI loan cap
   const c2Result = dti.maxNewMortgage > 0 ? findMaxPriceForLoanCap(dti.maxNewMortgage) : null;
   const c2Price  = c2Result ? c2Result.price : 0;
-  const binding  = (c2Price > 0 && c2Price < c1Price) ? 'dti' : 'deposit';
-  const bindingPrice = binding === 'dti' ? c2Price : c1Price;
-
-  let html = '';
-
-  // ── Binding ceiling headline ──
-  if (dti.maxNewMortgage <= 0) {
-    html += `<div class="result-label-sm">Your ceiling right now</div>`;
-    html += `<div class="result-amount" style="font-size: 1.8rem; color: #fca5a5;">Over the limit</div>`;
-    html += `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);margin-bottom:0.75rem;">Existing debts exceed 6× income before adding this mortgage.</div>`;
-  } else {
-    html += `<div class="result-label-sm">Your ceiling right now</div>`;
-    html += `<div class="result-amount">${fmt(bindingPrice)}</div>`;
-    html += `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);margin-bottom:0.75rem;">Binding ceiling: ${binding === 'dti' ? 'Debt-to-income (Ceiling 2)' : 'Deposit (Ceiling 1)'}</div>`;
-  }
-
-  // ── Two ceiling cards ──
-  html += '<div style="display:flex;flex-direction:column;gap:0.45rem;">';
-
-  // C1 card
-  html += `<div class="ceiling-card${binding === 'deposit' ? ' binding' : ''}">`;
-  html += `<div class="result-card-head">Ceiling 1 — Deposit${binding === 'deposit' ? ' ← binding' : ''}</div>`;
-  html += `<div class="ceiling-amount${binding !== 'deposit' ? ' dimmed' : ''}">${fmt(c1Price)}</div>`;
-  html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--dim);">Maximum price your savings can reach after stamp duty and LMI.</div>`;
-  html += '</div>';
-
-  // C2 card
-  html += `<div class="ceiling-card${binding === 'dti' ? ' binding' : ''}">`;
-  html += `<div class="result-card-head">Ceiling 2 — Debt-to-income${binding === 'dti' ? ' ← binding' : ''}</div>`;
-  if (dti.maxNewMortgage <= 0) {
-    html += `<div class="ceiling-amount dimmed">—</div>`;
-    html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:#fca5a5;">Your existing debts alone exceed 6× income. A mainstream lender will not approve this loan until debt is reduced or income increases.</div>`;
-  } else {
-    html += `<div class="ceiling-amount${binding !== 'dti' ? ' dimmed' : ''}">${fmt(c2Price)}</div>`;
-    html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--dim);">Maximum price with your savings applied on top of the 6× income loan cap.</div>`;
-  }
-  html += '</div>';
-  html += '</div>';
-
-  // ── DTI breakdown card ──
+  const lowers   = c2Price > 0 && c2Price < c1Price;
+  const currentPrice = lowers ? c2Price : c1Price;
   const dtiStr   = isFinite(dti.currentDTI) ? dti.currentDTI.toFixed(1) + '×' : 'N/A';
-  const dtiColor = dti.currentDTI > 7 ? '#fca5a5' : dti.currentDTI > 6 ? '#fbbf24' : 'var(--text)';
 
-  html += '<div class="result-card" style="margin-top:0.45rem;">';
-  html += '<div class="result-card-head">Debt-to-income breakdown</div>';
-  html += rrow('Gross income', fmt(dti.totalIncome) + '/yr');
-  if (dti.newPropRental > 0) {
-    html += rrow('Incl. new property rental (80%)', fmt(dti.newPropRental) + '/yr', true);
-  }
-  if (dti.existInvRental > 0) {
-    html += rrow('Incl. existing investment rents (80%)', fmt(dti.existInvRental) + '/yr', true);
-  }
-  html += rrow('6× income = max total debt', fmt(dti.maxTotalDebt));
-  html += '<hr class="rdivider">';
-  if (dti.mortgageBalances > 0) {
-    html += rrow('Less: other mortgage balances', '−' + fmt(dti.mortgageBalances), true);
-  }
-  if (dti.loanBalances > 0) {
-    html += rrow('Less: other loan balances', '−' + fmt(dti.loanBalances), true);
-  }
-  if (d.c2CreditCards > 0) {
-    html += rrow('Less: credit card limits', '−' + fmt(d.c2CreditCards), true);
-  }
-  html += '<hr class="rdivider">';
-  html += rrow('Max new mortgage (6× DTI loan cap)', fmt(Math.max(0, dti.maxNewMortgage)));
-  html += '<hr class="rdivider">';
-  html += `<div class="rrow"><span class="rl">Your DTI at Ceiling 1 mortgage</span><span class="rv" style="color:${dtiColor};">${dtiStr} income</span></div>`;
-  html += '</div>';
-
-  // ── Savings usage at C2 ceiling ──
-  if (c2Result) {
-    html += '<div class="result-card" style="margin-top:0.45rem;">';
-    html += '<div class="result-card-head">How your savings are used at Ceiling 2</div>';
-    html += rrow('Max loan (DTI cap)', fmt(c2Result.loanCap), true);
-    html += rrow('Property deposit (' + fmtPct(1 - c2Result.lvrTier) + ' at ' + fmtPct(c2Result.lvrTier) + ' LVR)', fmt(c2Result.depositNeeded), true);
-    html += rrow('Stamp duty', fmt(c2Result.stampDuty), true);
-    html += rrow('Registration fee', fmt(c2Result.regFee), true);
-    if (c2Result.lmiSd > 0) html += rrow('LMI stamp duty', fmt(c2Result.lmiSd), true);
-    html += '<hr class="rdivider">';
-    html += rrow('Total savings used', fmt(c2Result.savingsNeeded));
-    html += rrow('Your savings', fmt(d.savings));
-    html += rrow('Surplus (unused savings)', fmt(d.savings - c2Result.savingsNeeded), true);
-    html += '</div>';
+  // C3 preview at current ceiling loan
+  const effectiveLoanNow = lowers && c2Result ? c2Result.effectiveLoan : lastC1Result.effectiveLoan;
+  const purpose  = d.isOO ? 'oo' : 'investor';
+  const rateRow  = benchmarkRates[purpose];
+  let c3RepayStr = null;
+  if (rateRow && effectiveLoanNow > 0) {
+    c3RepayStr = fmt(Math.round(calcMonthlyRepayment(effectiveLoanNow, rateRow.rate_pct + 3.0)));
   }
 
-  // ── Context advisory ──
-  if (dti.maxNewMortgage <= 0 || dti.currentDTI > 6) {
-    const level = dti.currentDTI > 7 ? 'high' : 'moderate';
-    html += `<div class="advisory" style="margin-top:0.45rem;">`;
-    if (level === 'moderate') {
-      html += `<strong>Above 6× — but individual lender caps are higher.</strong> Most mainstream lenders hard-cap at 7–8× (CBA/NAB/Westpac ~7×, ANZ 7.5×, Macquarie 8×). At ${dtiStr} you may still find approval — but your application consumes the lender's high-DTI quota, which can fill early in the quarter.`;
-    } else {
-      html += `<strong>At ${dtiStr} income, options narrow significantly.</strong> Most mainstream lenders hard-cap at 7–7.5×. Macquarie caps at 8× but restricts LVR to 80% above 6×. At this level a specialist broker and/or non-bank lender is likely needed — typically at higher rates.`;
-    }
-    html += ` <a href="deposit-faq.html#dti-methodology" style="color:var(--dim);text-decoration:underline;">Why we use 6× →</a></div>`;
+  // ── Header ──
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+      <span style="font-family:var(--font-mono);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;color:var(--text);text-transform:uppercase;">Current ceiling</span>
+      <span style="font-family:var(--font-mono);font-size:0.58rem;font-weight:700;letter-spacing:0.07em;color:#fff;text-transform:uppercase;background:var(--blue);padding:0.2rem 0.5rem;border-radius:2px;">2 of 3 ceilings checked</span>
+    </div>
+    <div class="result-amount" style="margin-bottom:1rem;">${dti.maxNewMortgage <= 0 ? '<span style="color:#fca5a5;">Over limit</span>' : fmt(currentPrice)}</div>`;
+
+  // ── Three ceiling cards ──
+  html += `<div style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;">`;
+
+  // C1: done — price grey if C2 lowered it, white if deposit is still active ceiling
+  html += ceilCard('Ceiling 1 — Deposit', fmt(c1Price), null,
+    lowers ? 'Your savings reach this. Income is the tighter limit.' : 'Still the binding ceiling after income check.',
+    lowers ? 'done' : 'done-active');
+
+  // C2: always blue border
+  if (dti.maxNewMortgage <= 0) {
+    html += ceilCard('Ceiling 2 — Debt-to-income', null,
+      'Existing debts already exceed 6× income.',
+      'Reduce debt or increase income — a mainstream lender won\'t approve this loan as-is.',
+      'binding');
+  } else if (lowers) {
+    html += ceilCard('Ceiling 2 — Debt-to-income', fmt(c2Price),
+      `Income lowers your ceiling by ${fmt(c1Price - c2Price)}.`,
+      `At ${fmt(c1Price)} your DTI would be ${dtiStr} — above the 6× cap.`,
+      'binding');
   } else {
-    html += `<div class="note-box" style="margin-top:0.45rem;"><strong>Deposit is your binding ceiling.</strong> Your DTI is ${dtiStr} — below 6×, so income isn't the constraint. Your savings are the limit.</div>`;
+    html += ceilCard('Ceiling 2 — Debt-to-income', fmt(c1Price),
+      `Your DTI at this price is ${dtiStr} — below the 6× cap.`,
+      'Income doesn\'t lower your ceiling. Deposit still sets the limit.',
+      'cleared');
   }
+
+  // C3: pending
+  html += ceilCard('Ceiling 3 — Serviceability', null,
+    c3RepayStr ? `Need ${c3RepayStr}/mo free after expenses at the stress rate` : `We'll check serviceability in step 3.`,
+    c3RepayStr ? `If your income covers that, serviceability isn't your ceiling.` : null,
+    'pending');
+
+  html += `</div>`;
+
+  // ── Concept boxes ──
+  const boxARows =
+    drow('Gross income', fmt(dti.totalIncome) + '/yr') +
+    (dti.newPropRental  > 0 ? drow('Incl. rental income (80%)', '+' + fmt(dti.newPropRental) + '/yr') : '') +
+    (dti.existInvRental > 0 ? drow('Incl. investment rents (80%)', '+' + fmt(dti.existInvRental) + '/yr') : '') +
+    drow('DTI cap', '× 6') +
+    drow('Max total debt', fmt(dti.maxTotalDebt), true);
+
+  const totalDebts = dti.mortgageBalances + dti.loanBalances + (d.c2CreditCards || 0);
+  let boxBRows = '';
+  if (dti.mortgageBalances > 0) boxBRows += drow('Other mortgages', '−' + fmt(dti.mortgageBalances), false, true);
+  if (dti.loanBalances     > 0) boxBRows += drow('Other loans',     '−' + fmt(dti.loanBalances),     false, true);
+  if (d.c2CreditCards      > 0) boxBRows += drow('Credit card limits', '−' + fmt(d.c2CreditCards),   false, true);
+  if (totalDebts === 0) boxBRows += drow('No existing debts', '—');
+  boxBRows += drow('Max new loan', fmt(Math.max(0, dti.maxNewMortgage)), true);
+
+  const boxBBar    = totalDebts > 0 ? `Debts reduce your loan cap by ${fmt(totalDebts)}` : 'No debts — full income capacity available';
+  const boxBExpand = totalDebts > 0
+    ? `Car loans, personal loans, HECS-HELP, and credit card limits (in full — not just balances) all count against your DTI capacity. Reducing or eliminating these directly raises your mortgage ceiling.`
+    : `With no existing debts, your full 6× income capacity is available for the new mortgage — the strongest position for DTI.`;
+
+  html += `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.65rem;margin-top:0.25rem;">Current calculations</div>`;
+  html += conceptBox(1, 'Income limit', boxARows,
+    `Income supports ${fmt(dti.maxTotalDebt)} in total debt`,
+    'Tell me more about DTI',
+    `Lenders calculate debt-to-income as total debts ÷ gross income. Most mainstream lenders cap at 6×. That means your gross income × 6 is the maximum debt load they'll approve — new mortgage plus all existing debts combined.`,
+    'c2box');
+  html += conceptBox(2, 'Existing debts', boxBRows, boxBBar,
+    'Tell me more about how debts count',
+    boxBExpand,
+    'c2box');
 
   el.innerHTML = html;
 }
@@ -3680,13 +3664,15 @@ function rrow(label, value, dim) {
 // C1 result helpers
 // ceilCard state: 'binding' = blue border + bright price, 'pending' = dim + no price, 'done' = grey border + muted price
 function ceilCard(label, price, headline, note, state) {
-  const borderStyle = state === 'binding' ? 'border-color:var(--blue);'
-                    : state === 'done'    ? 'border-color:#333;'
-                    :                       '';
-  const badge = state === 'binding' ? `<span style="color:var(--blue);font-size:0.58rem;">← your limit</span>`
-              : state === 'done'    ? `<span style="color:#555;font-size:0.58rem;">✓ done</span>`
-              : state === 'pending' ? `<span style="color:#444;font-size:0.58rem;">not yet checked</span>`
-              :                       '';
+  const borderStyle = (state === 'binding' || state === 'cleared') ? 'border-color:var(--blue);'
+                    : (state === 'done' || state === 'done-active') ? 'border-color:#333;'
+                    :                                                  '';
+  const badge = state === 'binding'     ? `<span style="color:var(--blue);font-size:0.58rem;">← current limit</span>`
+              : state === 'cleared'     ? `<span style="color:#555;font-size:0.58rem;">✓ cleared</span>`
+              : state === 'done'        ? `<span style="color:#555;font-size:0.58rem;">✓ checked</span>`
+              : state === 'done-active' ? `<span style="color:#555;font-size:0.58rem;">✓ checked</span>`
+              : state === 'pending'     ? `<span style="color:#444;font-size:0.58rem;">not yet checked</span>`
+              :                           '';
   const priceHtml = price && state !== 'pending'
     ? `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;${state === 'done' ? 'color:#555;' : ''}">${price}</div>`
     : '';
@@ -3712,8 +3698,8 @@ function drow(label, value, isResult, isRed) {
   return `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:0.2rem 0;font-family:var(--font-mono);font-size:0.72rem;"><span style="${l}">${label}</span><span style="${v}">${value}</span></div>`;
 }
 
-function conceptBox(num, title, rowsHtml, blueBarText, toggleLabel, expandText) {
-  const id = `c1box${num}`;
+function conceptBox(num, title, rowsHtml, blueBarText, toggleLabel, expandText, idPrefix = 'c1box') {
+  const id = `${idPrefix}${num}`;
   const prefix = ['A —','B —','C —'][num - 1];
   return `<div style="background:var(--card);border:1px solid #222;border-radius:4px;margin-bottom:0.6rem;overflow:hidden;">
     <div style="padding:0.85rem 0.85rem 0.65rem;">
