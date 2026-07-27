@@ -3831,6 +3831,7 @@ function renderDepositResult() {
   const box3Expand = `LVR is your total loan as a percentage of the property value. Most lenders cap at ${fmtPct(r.lvrTier)} — inclusive of any capitalised LMI. Your ${fmt(d.savings)} in savings becomes a ${fmtPct(r.availDeposit / r.price)} deposit once stamp duty and costs are removed. People often overestimate their deposit by forgetting what upfront costs eat first.`;
 
   breakEl.innerHTML =
+    `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.65rem;margin-top:0.25rem;">Current calculations</div>` +
     conceptBox(1, 'Upfront costs', box1Rows, `${stampPct}% of your savings goes to stamp duty`, 'Tell me more about stamp duty',
       `Stamp duty is a state tax on property transfers, calculated on the purchase price. In ${d.state} it uses a bracket formula — the higher the price, the higher the effective rate. It's paid at settlement and cannot be added to your loan. Registration and transfer fees cover the land titles office recording the change of ownership.`) +
     conceptBox(2, 'Lenders mortgage insurance', box2Rows, box2Bar, 'Tell me more about LMI', box2Expand) +
