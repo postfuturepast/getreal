@@ -1277,13 +1277,11 @@
 
     </div>
     <div id="outcome-main"></div>
-    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem;">
-      <a href="search-intro.html" class="btn" style="text-decoration: none; text-align: center; flex: 1;">
-        Check a suburb at this budget →
-      </a>
-    </div>
+    <a href="search-intro.html" class="btn" style="text-decoration: none; text-align: center; width: 100%; display: block; box-sizing: border-box; margin-top: 0.25rem;">
+      Check a suburb at this budget →
+    </a>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
-      <button class="btn" onclick="restart()">Start again</button>
+      <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
       <button onclick="goTo('c2-result')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Ceiling 2</button>
     </div>
   </div>
@@ -3492,120 +3490,114 @@ function renderOutcome() {
   const c1Price  = lastC1Result ? lastC1Result.price : 0;
   const dti      = computeDTI();
   const svc      = computeServiceability();
-  // Correct ceiling prices: binary search with full savings applied on top of each loan cap.
-  // This always gives a higher (and correct) result than loanCap ÷ lvrTier.
   const c2Result = dti.maxNewMortgage > 0 ? findMaxPriceForLoanCap(dti.maxNewMortgage) : null;
   const c3Result = svc.maxLoan > 0        ? findMaxPriceForLoanCap(svc.maxLoan)        : null;
   const c2Price  = c2Result ? c2Result.price : 0;
   const c3Price  = c3Result ? c3Result.price : 0;
 
-  const prices  = [c1Price, c2Price, c3Price].filter(p => p > 0);
-  const maximum = prices.length ? Math.min(...prices) : 0;
+  const prices   = [c1Price, c2Price, c3Price].filter(p => p > 0);
+  const maximum  = prices.length ? Math.min(...prices) : 0;
 
-  // Which ceiling binds? The minimum valid price wins.
-  // Tie-break priority: deposit > dti > serviceability.
-  // c2Price=0 means DTI is non-binding (DTI allows more than savings can support) — not an error.
-  let bindingCeiling = 'deposit';
-  if (c2Price > 0 && c2Price === maximum && c2Price < c1Price) bindingCeiling = 'dti';
-  if (c3Price > 0 && c3Price === maximum && c3Price < c1Price && (c2Price === 0 || c3Price <= c2Price)) bindingCeiling = 'serviceability';
+  // What did each ceiling do?
+  const c2Lowered = c2Price > 0 && c2Price < c1Price;
+  const c2Cleared = dti.maxNewMortgage > 0 && !c2Lowered;
+  const prevCeil  = c2Lowered ? c2Price : c1Price;  // ceiling coming into C3
+  const c3Lowers  = c3Price > 0 && c3Price < prevCeil;
+  const c3Cleared = svc.maxLoan > 0 && !c3Lowers;
 
-  const bindingLabel = { deposit: 'Ceiling 1 — Deposit', dti: 'Ceiling 2 — Debt-to-income', serviceability: 'Ceiling 3 — Serviceability' };
+  // Loan used to compute repayment at the current binding ceiling
+  const bindingLoan = c3Lowers && c3Result ? c3Result.effectiveLoan
+                    : c2Lowered && c2Result ? c2Result.effectiveLoan
+                    : lastC1Result          ? lastC1Result.effectiveLoan
+                    : 0;
+  const repayAtCurrent = svc.stressRateAnnual && bindingLoan > 0
+    ? fmt(Math.round(calcMonthlyRepayment(bindingLoan, svc.stressRateAnnual)))
+    : null;
 
-  let html = '';
-
-  // ── Headline ──
-  if (maximum <= 0) {
-    html += `<div class="result-label-sm">Calculated maximum</div>`;
-    html += `<div class="result-amount" style="font-size: 1.8rem; color: #fca5a5;">Check your inputs</div>`;
-    html += `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);margin-bottom:0.75rem;">One or more ceilings returned zero — review your figures.</div>`;
-  } else {
-    html += `<div class="result-label-sm">Your calculated maximum</div>`;
-    html += `<div class="result-amount">${fmt(maximum)}</div>`;
-    html += `<div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--dim);margin-bottom:0.75rem;">Binding: ${bindingLabel[bindingCeiling]}</div>`;
-  }
-
-  // c2Price=0 can mean two things — distinguish for the UI:
-  // (a) dti.maxNewMortgage <= 0: existing debts exceed 6× income — real problem
-  // (b) dti.maxNewMortgage > 0 but findMaxPriceForLoanCap returned null:
-  //     DTI allows more than savings can support, so DTI isn't the binding limit
-  const c2ErrorMsg = dti.maxNewMortgage <= 0
-    ? 'Existing debts already exceed 6× income. Reduce debt or increase income to unlock this ceiling.'
-    : 'Your DTI limit sits above what your deposit can reach — so it\'s not constraining you. Savings and serviceability are the real limits.';
-  const c2ZeroColor = dti.maxNewMortgage <= 0 ? '#fca5a5' : 'var(--muted)';
-
-  // c3Price=0 can mean two things — same pattern as C2:
-  // (a) svc.maxLoan <= 0: income minus expenses leaves no repayment capacity — real problem
-  // (b) svc.maxLoan > 0 but findMaxPriceForLoanCap returned null:
-  //     serviceability allows more than savings can reach, so C3 isn't the binding limit
-  const c3ErrorMsg = svc.maxLoan <= 0
-    ? 'Income and expenses leave no capacity for a mortgage at the stress rate. Reduce expenses or increase income.'
-    : 'Your serviceability limit sits above what your deposit can reach — so it\'s not constraining you. Savings are the real limit.';
-  const c3ZeroColor = svc.maxLoan <= 0 ? '#fca5a5' : 'var(--muted)';
+  // ── Header ──
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+      <span style="font-family:var(--font-mono);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;color:var(--text);text-transform:uppercase;">Current ceiling</span>
+      <span style="font-family:var(--font-mono);font-size:0.58rem;font-weight:700;letter-spacing:0.07em;color:#fff;text-transform:uppercase;background:var(--blue);padding:0.2rem 0.5rem;border-radius:2px;">3 of 3 ceilings checked</span>
+    </div>
+    <div class="result-amount" style="margin-bottom:1rem;">${maximum > 0 ? fmt(maximum) : '<span style="color:#fca5a5;">Check inputs</span>'}</div>`;
 
   // ── Three ceiling cards ──
-  const cards = [
-    { key: 'deposit',       label: 'Ceiling 1 — Deposit',          price: c1Price, note: 'Maximum price your savings can reach after stamp duty and LMI.' },
-    { key: 'dti',           label: 'Ceiling 2 — Debt-to-income',   price: c2Price, note: 'Maximum price at 6× gross income, after existing debts.' },
-    { key: 'serviceability',label: 'Ceiling 3 — Serviceability',   price: c3Price, note: `Maximum price with your savings applied on top of the serviceability loan cap (stress rate: ${svc.stressRateAnnual ? svc.stressRateAnnual.toFixed(2) : '—'}%).` },
-  ];
+  html += `<div style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;">`;
 
-  html += '<div style="display:flex;flex-direction:column;gap:0.45rem;">';
-  for (const card of cards) {
-    const isBinding = card.key === bindingCeiling && maximum > 0;
-    const isDimmed  = !isBinding && card.price > 0;
-    html += `<div class="ceiling-card${isBinding ? ' binding' : ''}">`;
-    html += `<div class="result-card-head">${card.label}${isBinding ? ' ← binding' : ''}</div>`;
-    if (card.price <= 0) {
-      const msg  = card.key === 'dti' ? c2ErrorMsg : card.key === 'serviceability' ? c3ErrorMsg : 'Ceiling not met — check your inputs.';
-      const col  = card.key === 'dti' ? c2ZeroColor : card.key === 'serviceability' ? c3ZeroColor : '#fca5a5';
-      html += `<div class="ceiling-amount dimmed">—</div>`;
-      html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:${col};">${msg}</div>`;
-    } else {
-      html += `<div class="ceiling-amount${isDimmed ? ' dimmed' : ''}">${fmt(card.price)}</div>`;
-      html += `<div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--dim);">${card.note}</div>`;
-    }
-    html += '</div>';
-  }
-  html += '</div>';
+  // C1: active if nothing lowered it, otherwise done/grey
+  html += ceilCard('Ceiling 1 — Deposit', fmt(c1Price), null,
+    maximum < c1Price ? 'Savings ceiling — lowered by a later ceiling.' : 'Savings ceiling — the binding limit across all three checks.',
+    maximum < c1Price ? 'done' : 'done-active');
 
-  // ── Serviceability breakdown ──
-  if (svc.maxMonthlyRepayment > 0) {
-    html += '<div class="result-card" style="margin-top:0.45rem;">';
-    html += '<div class="result-card-head">Serviceability breakdown</div>';
-    html += rrow('Net monthly income (after tax)', fmt(svc.netMonthly) + '/mo');
-    if (svc.newPropRental > 0) html += rrow('Incl. new property rental (80%)', '+' + fmt(svc.newPropRental / 12) + '/mo', true);
-    if (svc.existInvRental > 0) html += rrow('Incl. existing inv. rents (80%)', '+' + fmt(svc.existInvRental / 12) + '/mo', true);
-    html += rrow('Less: HEM living expenses', '−' + fmt(svc.hemMonthly) + '/mo', true);
-    if (svc.committedMonthly > 0) html += rrow('Less: committed costs (rent/fees/insurance)', '−' + fmt(svc.committedMonthly) + '/mo', true);
-    if (svc.mortgageMonthly > 0) html += rrow('Less: other mortgage repayments', '−' + fmt(svc.mortgageMonthly) + '/mo', true);
-    if (svc.loanMonthly > 0) html += rrow('Less: other loan repayments', '−' + fmt(svc.loanMonthly) + '/mo', true);
-    if (svc.cardMonthly > 0) html += rrow('Less: credit card minimums (3% of limit)', '−' + fmt(svc.cardMonthly) + '/mo', true);
-    html += '<hr class="rdivider">';
-    html += rrow('Max monthly repayment', fmt(svc.maxMonthlyRepayment) + '/mo');
-    if (svc.stressRateAnnual) {
-      html += rrow('Stress rate applied', svc.stressRateAnnual.toFixed(2) + '% (current + 3%)', true);
-    }
-    html += '<hr class="rdivider">';
-    html += rrow('Max loan at stress rate', fmt(svc.maxLoan));
-    if (c3Result) {
-      html += '<hr class="rdivider">';
-      html += '<div class="result-card-head" style="margin-top:0.5rem;">How your savings are used at Ceiling 3</div>';
-      html += rrow('Max loan (serviceability cap)', fmt(c3Result.loanCap), true);
-      html += rrow('Property deposit (' + fmtPct(1 - c3Result.lvrTier) + ' at ' + fmtPct(c3Result.lvrTier) + ' LVR)', fmt(c3Result.depositNeeded), true);
-      html += rrow('Stamp duty', fmt(c3Result.stampDuty), true);
-      html += rrow('Registration fee', fmt(c3Result.regFee), true);
-      if (c3Result.lmiSd > 0) html += rrow('LMI stamp duty', fmt(c3Result.lmiSd), true);
-      html += '<hr class="rdivider">';
-      html += rrow('Total savings used', fmt(c3Result.savingsNeeded));
-      html += rrow('Your savings', fmt(d.savings));
-      html += rrow('Surplus (unused savings)', fmt(d.savings - c3Result.savingsNeeded), true);
-    }
-    html += '</div>';
+  // C2: was-cleared if it cleared, done if it lowered (or error)
+  if (dti.maxNewMortgage <= 0) {
+    html += ceilCard('Ceiling 2 — Debt-to-income', null,
+      'Existing debts exceed 6× income.',
+      'A mainstream lender won\'t approve this loan as-is.',
+      'done');
+  } else if (c2Lowered) {
+    html += ceilCard('Ceiling 2 — Debt-to-income', fmt(c2Price), null,
+      c3Lowers ? 'Income ceiling — lowered further by serviceability.' : 'Income ceiling — the binding limit.',
+      'done');
+  } else {
+    html += ceilCard('Ceiling 2 — Debt-to-income', fmt(c2Price > 0 ? c2Price : c1Price), null,
+      'DTI checked and cleared.',
+      'was-cleared');
   }
 
-  // ── What this is (and isn't) ──
+  // C3: always blue
+  if (svc.maxLoan <= 0) {
+    html += ceilCard('Ceiling 3 — Serviceability', null,
+      'Income and expenses leave no repayment capacity.',
+      'Reduce expenses or increase income.',
+      'binding');
+  } else if (c3Lowers) {
+    html += ceilCard('Ceiling 3 — Serviceability', fmt(maximum),
+      `Repayments lower your ceiling by ${fmt(prevCeil - maximum)}.`,
+      `At ${fmt(prevCeil)} the stress-rate repayment exceeds your available monthly surplus.`,
+      'binding');
+  } else {
+    html += ceilCard('Ceiling 3 — Serviceability', fmt(maximum),
+      repayAtCurrent ? `Monthly repayment at the stress rate is ${repayAtCurrent}/mo — within your surplus.` : 'Serviceability checked and cleared.',
+      `Serviceability cleared. ${c2Lowered ? 'Income (DTI)' : 'Deposit'} is the binding ceiling.`,
+      'cleared');
+  }
+
+  html += `</div>`;
+
+  // ── Concept boxes ──
+  const boxARows =
+    drow('Net monthly income', fmt(svc.netMonthly) + '/mo') +
+    (svc.newPropRental  > 0 ? drow('Incl. rental income (80%)', '+' + fmt(Math.round(svc.newPropRental / 12)) + '/mo') : '') +
+    (svc.existInvRental > 0 ? drow('Incl. investment rents (80%)', '+' + fmt(Math.round(svc.existInvRental / 12)) + '/mo') : '') +
+    drow('Less: HEM living expenses', '−' + fmt(svc.hemMonthly) + '/mo', false, true) +
+    (svc.committedMonthly > 0 ? drow('Less: committed costs', '−' + fmt(svc.committedMonthly) + '/mo', false, true) : '') +
+    (svc.mortgageMonthly  > 0 ? drow('Less: other mortgage repayments', '−' + fmt(svc.mortgageMonthly) + '/mo', false, true) : '') +
+    (svc.loanMonthly      > 0 ? drow('Less: other loan repayments', '−' + fmt(svc.loanMonthly) + '/mo', false, true) : '') +
+    (svc.cardMonthly      > 0 ? drow('Less: credit card minimums', '−' + fmt(svc.cardMonthly) + '/mo', false, true) : '') +
+    drow('Available for mortgage', fmt(svc.maxMonthlyRepayment) + '/mo', true);
+
+  const boxABar    = `${fmt(svc.maxMonthlyRepayment)}/mo available at the stress rate`;
+  const boxAExpand = `HEM (Household Expenditure Measure) is the minimum living cost benchmark used by lenders, set by household size and location. Committed costs include rent, insurance, school fees, and similar fixed obligations. All are subtracted before a lender assesses what you can afford to repay each month.`;
+
+  const boxBRows =
+    drow('Max monthly repayment', fmt(svc.maxMonthlyRepayment) + '/mo') +
+    (svc.stressRateAnnual ? drow('Stress rate (current + 3%)', svc.stressRateAnnual.toFixed(2) + '%') : '') +
+    drow('Max loan at stress rate', fmt(svc.maxLoan), true);
+
+  const boxBBar    = c3Lowers
+    ? `Serviceability supports a ${fmt(svc.maxLoan)} loan`
+    : `Serviceability clears — surplus covers repayments`;
+  const boxBExpand = `APRA requires lenders to assess your ability to repay at 3% above the current rate — the stress rate. This protects against future rate rises. Your maximum loan is back-calculated from your available monthly surplus at that higher rate.`;
+
+  html += `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.65rem;margin-top:0.25rem;">Current calculations</div>`;
+  html += conceptBox(1, 'Monthly surplus', boxARows, boxABar, 'Tell me more about expenses', boxAExpand, 'c3box');
+  html += conceptBox(2, 'Stress test', boxBRows, boxBBar, 'Tell me more about the stress test', boxBExpand, 'c3box');
+
+  // ── Not-an-approval advisory ──
   html += `<div class="advisory" style="margin-top:0.45rem;">
-    <strong>This is a ceiling, not an approval.</strong> These are calculated maximums based on the inputs you gave and published benchmark data. Real bank approvals account for income shading, property-specific risk, your full credit history, and internal policies that vary by lender and change without notice. The actual approved amount is often lower — sometimes materially so. <strong>Get a formal pre-approval from a broker or bank before inspecting properties seriously, and certainly before bidding.</strong>
+    <strong>This is a ceiling, not an approval.</strong> These are calculated maximums based on your inputs and published benchmark data. Real bank approvals account for income shading, property-specific risk, your full credit history, and internal policies that vary by lender and change without notice. The actual approved amount is often lower — sometimes materially so. <strong>Get a formal pre-approval from a broker or bank before inspecting properties seriously, and certainly before bidding.</strong>
   </div>`;
 
   el.innerHTML = html;
@@ -3665,16 +3657,17 @@ function rrow(label, value, dim) {
 // ceilCard state: 'binding' = blue border + bright price, 'pending' = dim + no price, 'done' = grey border + muted price
 function ceilCard(label, price, headline, note, state) {
   const borderStyle = (state === 'binding' || state === 'cleared') ? 'border-color:var(--blue);'
-                    : (state === 'done' || state === 'done-active') ? 'border-color:#333;'
+                    : (state === 'done' || state === 'done-active' || state === 'was-cleared') ? 'border-color:#333;'
                     :                                                  '';
   const badge = state === 'binding'     ? `<span style="color:var(--blue);font-size:0.58rem;">← current limit</span>`
               : state === 'cleared'     ? `<span style="color:#555;font-size:0.58rem;">✓ cleared</span>`
+              : state === 'was-cleared' ? `<span style="color:#555;font-size:0.58rem;">✓ cleared</span>`
               : state === 'done'        ? `<span style="color:#555;font-size:0.58rem;">✓ checked</span>`
               : state === 'done-active' ? `<span style="color:#555;font-size:0.58rem;">✓ checked</span>`
               : state === 'pending'     ? `<span style="color:#444;font-size:0.58rem;">not yet checked</span>`
               :                           '';
   const priceHtml = price && state !== 'pending'
-    ? `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;${state === 'done' ? 'color:#555;' : ''}">${price}</div>`
+    ? `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;${(state === 'done' || state === 'was-cleared') ? 'color:#555;' : ''}">${price}</div>`
     : '';
   const headlineHtml = headline
     ? `<div style="font-family:var(--font-mono);font-size:0.68rem;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:0.15rem;">${headline}</div>`
