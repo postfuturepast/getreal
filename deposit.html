@@ -3685,6 +3685,7 @@ function ceilCard(label, price, headline, note, state) {
                     :                       '';
   const badge = state === 'binding' ? `<span style="color:var(--blue);font-size:0.58rem;">← your limit</span>`
               : state === 'done'    ? `<span style="color:#555;font-size:0.58rem;">✓ done</span>`
+              : state === 'pending' ? `<span style="color:#444;font-size:0.58rem;">not yet checked</span>`
               :                       '';
   const priceHtml = price && state !== 'pending'
     ? `<div style="font-size:1.35rem;font-weight:700;margin-bottom:0.2rem;${state === 'done' ? 'color:#555;' : ''}">${price}</div>`
@@ -3713,7 +3714,7 @@ function drow(label, value, isResult, isRed) {
 
 function conceptBox(num, title, rowsHtml, blueBarText, toggleLabel, expandText) {
   const id = `c1box${num}`;
-  const prefix = ['①','②','③'][num - 1];
+  const prefix = ['A —','B —','C —'][num - 1];
   return `<div style="background:var(--card);border:1px solid #222;border-radius:4px;margin-bottom:0.6rem;overflow:hidden;">
     <div style="padding:0.85rem 0.85rem 0.65rem;">
       <div style="font-family:var(--font-mono);font-size:0.65rem;font-weight:700;letter-spacing:0.1em;color:var(--text);text-transform:uppercase;margin-bottom:0.55rem;padding-bottom:0.35rem;border-bottom:1px solid #1a1a1a;">${prefix} ${title}</div>
@@ -3775,7 +3776,7 @@ function renderDepositResult() {
   mainEl.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
       <span style="font-family:var(--font-mono);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;color:var(--text);text-transform:uppercase;">Current ceiling</span>
-      <span style="font-family:var(--font-mono);font-size:0.58rem;font-weight:700;letter-spacing:0.07em;color:#fff;text-transform:uppercase;background:var(--blue);padding:0.2rem 0.5rem;border-radius:2px;">Ceiling 1 of 3</span>
+      <span style="font-family:var(--font-mono);font-size:0.58rem;font-weight:700;letter-spacing:0.07em;color:#fff;text-transform:uppercase;background:var(--blue);padding:0.2rem 0.5rem;border-radius:2px;">1 of 3 ceilings checked</span>
     </div>
     <div class="result-amount" style="margin-bottom:1rem;">${fmt(r.price)}</div>
     <div style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;">
@@ -3815,7 +3816,7 @@ function renderDepositResult() {
       drow('LMI', 'None — LVR ≤ 80%') +
       drow('Total loan', fmt(r.baseLoan), true);
 
-  const box2Bar    = hasLMI ? `LMI adds ${fmt(r.lmiPremium)} to your loan` : 'No LMI — LVR is at or below 80%';
+  const box2Bar    = hasLMI ? `${fmt(r.lmiPremium)} added to the loan from LMI` : 'No LMI — LVR is at or below 80%';
   const box2Expand = hasLMI
     ? `LMI protects the lender — not you — if you default. It applies when your LVR is above 80%. It's capitalised into your loan so you don't pay it at settlement, but you pay interest on it over 30 years.${lmiSdNote} Major lenders apply the LVR cap to your total loan including LMI — so we've solved backwards to find the highest price where your effective LVR stays within the cap. Some specialist lenders may apply the cap to the base loan only — a broker may unlock a slightly higher ceiling.`
     : `LMI applies when your LVR is above 80%. With a larger deposit you've stayed within that threshold — so no insurance cost is added to your loan.`;
