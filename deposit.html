@@ -721,23 +721,20 @@
   <div class="screen" id="screen-c2-applicant">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-
     </div>
-    <div class="q-label">Sole or joint application?</div>
-    <div class="q-sub">We need this first so we can remind you to include all borrowers' debts as we go.</div>
+    <div class="q-label">How many people are contributing income to this mortgage?</div>
+    <div class="q-sub">We'll collect income for each person separately — that's the only way to get the numbers right.</div>
     <div class="choices">
       <button class="choice-btn" onclick="selectC2Applicant('sole')">
-        Just me — sole applicant
+        Just me
       </button>
       <button class="choice-btn" onclick="selectC2Applicant('joint')">
-        Me and a co-borrower — joint application
+        Me and one other person
       </button>
       <button class="choice-btn" onclick="selectC2Applicant('multi')">
-        3 or more borrowers — complex application
+        Three or more people
       </button>
     </div>
-    <button class="fhb-toggle" onclick="toggleDetail('c2-applicant-detail','c2-applicant-arrow')"><span id="c2-applicant-arrow">↓</span> Why does this matter?</button>
-    <div class="fhb-detail" id="c2-applicant-detail" style="display:none">Lenders assess your Debt-to-Income ratio (DTI) using total gross income. A joint application adds both salaries, which lifts your borrowing cap. The debts captured ahead also count for both applicants combined.</div>
   </div>
 
   <!-- C2 Three-plus interstitial ─────────────────────────────────────────── -->
@@ -918,37 +915,105 @@
     </div>
   </div>
 
-  <!-- C2 Income ───────────────────────────────────────────────────────────── -->
-  <div class="screen" id="screen-c2-income">
+  <!-- C2 Income — Person 1 ─────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-income-p1">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
-
     </div>
-    <div class="q-label" id="c2-income-label">What's your gross annual income?</div>
-    <div class="q-sub" id="c2-income-sub">Before tax. Base salary is the safest figure — bonuses and overtime need a 2-year history before most lenders will count them. Superannuation is not included.</div>
+    <div class="q-label" id="c2-income-p1-label">Your income</div>
+    <div class="q-sub">Base salary is the safest figure — bonuses and overtime need a 2-year history before most lenders will count them. Exclude super.</div>
 
-    <div class="debt-row">
-      <div class="debt-label" id="c2-salary-label">Gross annual salary (before tax)</div>
-      <div class="price-input-wrap">
-        <span class="price-prefix">$</span>
-        <input class="price-input" type="text" id="c2-income-input" inputmode="numeric" placeholder="0"
-          autocomplete="off" oninput="onC2IncomeInput(this)" onkeydown="onC2IncomeKey(event)">
+    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+      <div>
+        <div class="debt-label" style="margin-bottom:0.45rem;">Gross annual salary (before tax)</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="price-input" type="text" id="c2-gross1-input" inputmode="numeric" placeholder="0"
+            autocomplete="off" oninput="onC2Gross1Input(this)" onkeydown="if(event.key==='Enter')c2IncomeP1Validate()">
+        </div>
+        <div class="debt-note" style="margin-top:0.35rem;">Used for the debt-to-income ceiling (6× gross).</div>
+      </div>
+
+      <div>
+        <div class="debt-label" style="margin-bottom:0.45rem;">Take-home pay</div>
+        <div style="display:flex;gap:0.5rem;">
+          <div style="position:relative;flex:1;">
+            <span style="position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:var(--dim);font-family:var(--font-mono);font-size:0.85rem;pointer-events:none;">$</span>
+            <input type="number" id="c2-takehome1-input" inputmode="numeric" min="0" placeholder="0"
+              oninput="c2IncomeP1Validate()"
+              style="width:100%;box-sizing:border-box;padding:0.75rem 0.75rem 0.75rem 1.6rem;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.92rem;outline:none;">
+          </div>
+          <select id="c2-takehome1-freq" onchange="c2IncomeP1Validate()"
+            style="background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.78rem;padding:0 0.65rem;cursor:pointer;outline:none;min-width:7.5rem;">
+            <option value="fortnightly">Fortnightly</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        <div class="debt-note" style="margin-top:0.35rem;">What actually hits your account after tax. Used for the serviceability ceiling.</div>
+      </div>
+
+      <!-- Rental income — investor path only -->
+      <div id="c2-rental-wrap" style="display:none;flex-direction:column;gap:0.35rem;">
+        <div class="debt-label">Expected weekly rent on this property</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="price-input" type="text" id="c2-rental-input" inputmode="numeric" placeholder="0"
+            autocomplete="off" oninput="onC2RentalInput(this)">
+        </div>
+        <div class="debt-note">Gross weekly rent received. We apply 80% lender shading automatically — this is standard practice and covers vacancy and costs. If rental income makes up a large share of your total income, our serviceability estimate will be less precise (the tax treatment is complex and borrower-specific).</div>
+      </div>
+      <div id="c2-existing-rentals-note" style="display:none;flex-direction:column;"></div>
+    </div>
+
+    <button class="btn" id="c2-income-p1-submit" onclick="submitC2IncomeP1()"
+      style="width:100%;text-align:center;opacity:0.35;" disabled>
+      Continue →
+    </button>
+  </div>
+
+  <!-- C2 Income — Person 2 ─────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c2-income-p2">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label">Their income</div>
+    <div class="q-sub">Same deal — base salary before tax, plus what actually hits their account.</div>
+
+    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+      <div>
+        <div class="debt-label" style="margin-bottom:0.45rem;">Gross annual salary (before tax)</div>
+        <div class="price-input-wrap">
+          <span class="price-prefix">$</span>
+          <input class="price-input" type="text" id="c2-gross2-input" inputmode="numeric" placeholder="0"
+            autocomplete="off" oninput="onC2Gross2Input(this)">
+        </div>
+        <div class="debt-note" style="margin-top:0.35rem;">Used for the debt-to-income ceiling.</div>
+      </div>
+
+      <div>
+        <div class="debt-label" style="margin-bottom:0.45rem;">Take-home pay</div>
+        <div style="display:flex;gap:0.5rem;">
+          <div style="position:relative;flex:1;">
+            <span style="position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:var(--dim);font-family:var(--font-mono);font-size:0.85rem;pointer-events:none;">$</span>
+            <input type="number" id="c2-takehome2-input" inputmode="numeric" min="0" placeholder="0"
+              oninput="c2IncomeP2Validate()"
+              style="width:100%;box-sizing:border-box;padding:0.75rem 0.75rem 0.75rem 1.6rem;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.92rem;outline:none;">
+          </div>
+          <select id="c2-takehome2-freq" onchange="c2IncomeP2Validate()"
+            style="background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:0.78rem;padding:0 0.65rem;cursor:pointer;outline:none;min-width:7.5rem;">
+            <option value="fortnightly">Fortnightly</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        <div class="debt-note" style="margin-top:0.35rem;">What actually hits their account after tax.</div>
       </div>
     </div>
 
-    <div id="c2-rental-wrap" style="display: none; flex-direction: column; gap: 0.35rem;">
-      <div class="debt-label">Expected weekly rent on this property</div>
-      <div class="price-input-wrap">
-        <span class="price-prefix">$</span>
-        <input class="price-input" type="text" id="c2-rental-input" inputmode="numeric" placeholder="0"
-          autocomplete="off" oninput="onC2RentalInput(this)">
-      </div>
-      <div class="debt-note">The rent you expect to receive on this investment. Lenders count 80% of gross rent as assessable income — we apply that shading automatically.</div>
-    </div>
-    <div id="c2-existing-rentals-note" style="display:none;flex-direction:column;"></div>
-
-    <button class="btn" id="c2-income-submit" onclick="submitC2Income()" style="width: 100%; text-align: center; opacity: 0.35;" disabled>
-      Review →
+    <button class="btn" id="c2-income-p2-submit" onclick="submitC2IncomeP2()"
+      style="width:100%;text-align:center;opacity:0.35;" disabled>
+      Continue →
     </button>
   </div>
 
@@ -992,7 +1057,7 @@
     </div>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
       <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
-      <button onclick="goTo('c2-income')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
+      <button onclick="renderC2IncomeP1();goTo('c2-income-p1');" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
     </div>
   </div>
 
@@ -1458,9 +1523,14 @@ const d = {
   numDependants: null,   // 0 | 1 | 2 | 3 (3 = "3 or more")
   locationType:  null,   // 'metro' | 'regional'
   suburbName:    null,   // display name from suburb_postcodes lookup (C3)
-  // Ceiling 2 — Debt-to-income
+  // Ceiling 2 — Debt-to-income + income collection
   c2Applicants:          null,  // 'sole' | 'joint'
-  c2GrossIncome:         0,
+  c2GrossIncome1:        0,     // person 1 gross annual (before tax) — DTI ceiling
+  c2GrossIncome2:        0,     // person 2 gross annual (joint only) — DTI ceiling
+  c2TakeHome1:           0,     // person 1 take-home amount — serviceability ceiling
+  c2TakeHome1Freq:       'fortnightly',
+  c2TakeHome2:           0,     // person 2 take-home amount (joint only)
+  c2TakeHome2Freq:       'fortnightly',
   c2RentalIncome:        0,     // weekly rent on NEW purchase (investment path)
   c2CreditCards:         0,     // final combined card limit after close/reduce decision
   c2HasHECS:             false,
@@ -1469,10 +1539,6 @@ const d = {
   // Ceiling 3 — Serviceability
   c3MortgageRepayments:  [],    // monthly repayment per c2Mortgage (entered or estimated)
   c3LoanRepayments:      [],    // monthly repayment per c2OtherLoan
-  c3Income1:             0,     // borrower 1 take-home amount
-  c3Income1Freq:         'fortnightly', // 'weekly' | 'fortnightly' | 'monthly'
-  c3Income2:             0,     // borrower 2 take-home amount (0 = not entered)
-  c3Income2Freq:         'fortnightly',
   c3HemAmount:           null,  // chosen monthly living expenses (HEM or user override)
   c3Rent:                0,     // monthly rent (weekly × 52 / 12)
   c3SchoolFees:          0,     // monthly school fees (annual / 12)
@@ -1510,7 +1576,9 @@ const SCREEN_PREV = {
   // C2 inputs
   'c2-gate':                  'deposit-result',
   'c2-applicant':             'c2-gate',
-  'c2-mortgages':             'c2-applicant',
+  'c2-income-p1':             'c2-applicant',
+  'c2-income-p2':             'c2-income-p1',
+  'c2-mortgages':             () => d.c2Applicants === 'joint' ? 'c2-income-p2' : 'c2-income-p1',
   'c2-mortgage-count':        'c2-mortgages',
   'c2-mortgage-details':      'c2-mortgage-count',
   'c2-cards':                 () => (d.c2Mortgages && d.c2Mortgages.length > 0) ? 'c2-mortgage-details' : 'c2-mortgages',
@@ -1518,20 +1586,18 @@ const SCREEN_PREV = {
   'c2-card-intent':           'c2-card-limit',
   'c2-hecs':                  () => d.c2CreditCards > 0 ? 'c2-card-intent' : 'c2-cards',
   'c2-otherloans':            'c2-hecs',
-  'c2-income':                'c2-otherloans',
-  'c2-review':                'c2-income',
+  'c2-review':                'c2-otherloans',
   'c2-apply':                 'c2-review',
   'c2-result':                'c2-apply',
   // C3 inputs
   'c3-gate':                  'c2-result',
   'c3-mortgage-repayments':   'c3-gate',
   'c3-loan-repayments':       () => (d.c2Mortgages && d.c2Mortgages.length > 0) ? 'c3-mortgage-repayments' : 'c3-gate',
-  'c3-income':                () => {
+  'c3-household':             () => {
     if (d.c2OtherLoans && d.c2OtherLoans.length > 0) return 'c3-loan-repayments';
     if (d.c2Mortgages  && d.c2Mortgages.length  > 0) return 'c3-mortgage-repayments';
     return 'c3-gate';
   },
-  'c3-household':             'c3-income',
   'c3-dependants':            'c3-household',
   'c3-location':              'c3-dependants',
   'c3-hem':                   'c3-location',
@@ -1564,10 +1630,12 @@ function restart() {
     state: null, isFHB: null, isOO: null, isNewBuild: null, isHBCS: null,
     propType: null, savings: 0,
     household: null, numDependants: null, locationType: null, suburbName: null,
-    c2Applicants: null, c2GrossIncome: 0, c2RentalIncome: 0,
+    c2Applicants: null,
+    c2GrossIncome1: 0, c2GrossIncome2: 0,
+    c2TakeHome1: 0, c2TakeHome1Freq: 'fortnightly', c2TakeHome2: 0, c2TakeHome2Freq: 'fortnightly',
+    c2RentalIncome: 0,
     c2CreditCards: 0, c2HasHECS: false, c2Mortgages: [], c2OtherLoans: [],
     c3MortgageRepayments: [], c3LoanRepayments: [],
-    c3Income1: 0, c3Income1Freq: 'fortnightly', c3Income2: 0, c3Income2Freq: 'fortnightly',
     c3HemAmount: null, c3Rent: 0, c3SchoolFees: 0, c3HealthInsurance: 0,
   });
   lastC1Result = null;
@@ -2723,7 +2791,8 @@ function c2LoansBack() {
 function c2SelectHasOtherLoans(has) {
   if (!has) {
     d.c2OtherLoans = [];
-    goTo('c2-income');
+    renderC2Review();
+    goTo('c2-review');
     return;
   }
   document.getElementById('c2-loans-choices').style.display = 'none';
@@ -2791,7 +2860,8 @@ function checkC2LoansSubmit() {
 function submitC2OtherLoans() {
   // Reset C3 loan repayments since loans changed
   d.c3LoanRepayments = [];
-  goTo('c2-income');
+  renderC2Review();
+  goTo('c2-review');
 }
 
 // ─── C2 applicant selection ───────────────────────────────────────────────────
@@ -2814,16 +2884,13 @@ function selectC2Applicant(type) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
   });
-  // Update income screen copy
-  const labelEl    = document.getElementById('c2-income-label');
-  const salaryEl   = document.getElementById('c2-salary-label');
-  const subEl      = document.getElementById('c2-income-sub');
-  if (labelEl) labelEl.textContent = joint ? "What's your combined gross income?" : "What's your gross annual income?";
-  if (salaryEl) salaryEl.textContent = joint ? 'Combined gross annual salary (before tax)' : 'Gross annual salary (before tax)';
-  if (subEl) subEl.textContent = joint
-    ? 'Combined, before tax. Add both applicants\' base salaries. Bonuses and overtime need a 2-year history before most lenders count them. Superannuation is not included.'
-    : 'Before tax. Base salary is the safest figure — bonuses and overtime need a 2-year history before most lenders will count them. Superannuation is not included.';
-  // Show/hide new-property rental field
+  renderC2IncomeP1();
+  goTo('c2-income-p1');
+}
+
+// ─── C2 income — person 1 ────────────────────────────────────────────────────
+function renderC2IncomeP1() {
+  // Show/hide rental field (investor path only)
   const rentalWrap = document.getElementById('c2-rental-wrap');
   if (rentalWrap) rentalWrap.style.display = d.isOO ? 'none' : 'flex';
   // Show existing investment property rents note
@@ -2834,32 +2901,28 @@ function selectC2Applicant(type) {
       const totalWeekly = existingInvProps.reduce((s, m) => s + m.weeklyRent, 0);
       const totalAssessed = Math.round(totalWeekly * 52 * 0.80);
       noteEl.style.display = 'flex';
-      noteEl.innerHTML = `<div class="debt-note">We're also counting rental income from your ${existingInvProps.length} existing investment propert${existingInvProps.length > 1 ? 'ies' : 'y'}: <strong>${fmt(totalWeekly)}/wk combined</strong>. Assessed at 80%: <strong>${fmt(totalAssessed)}/yr</strong>.</div>`;
+      noteEl.innerHTML = `<div class="debt-note">We're also counting rental from your ${existingInvProps.length} existing investment propert${existingInvProps.length > 1 ? 'ies' : 'y'}: <strong>${fmt(totalWeekly)}/wk combined</strong>. Assessed at 80%: <strong>${fmt(totalAssessed)}/yr</strong>.</div>`;
     } else {
       noteEl.style.display = 'none';
     }
   }
-  // Reset income inputs
-  const incEl    = document.getElementById('c2-income-input');
-  const rentEl   = document.getElementById('c2-rental-input');
-  if (incEl)  { incEl.value  = d.c2GrossIncome  > 0 ? d.c2GrossIncome.toLocaleString('en-AU')  : ''; }
-  if (rentEl) { rentEl.value = d.c2RentalIncome > 0 ? d.c2RentalIncome.toLocaleString('en-AU') : ''; }
-  setC2IncomeBtn(d.c2GrossIncome > 0);
-  goTo('c2-mortgages');
+  // Restore existing values
+  const g1 = document.getElementById('c2-gross1-input');
+  const t1 = document.getElementById('c2-takehome1-input');
+  const f1 = document.getElementById('c2-takehome1-freq');
+  const r1 = document.getElementById('c2-rental-input');
+  if (g1) g1.value = d.c2GrossIncome1 > 0 ? d.c2GrossIncome1.toLocaleString('en-AU') : '';
+  if (t1) t1.value = d.c2TakeHome1 > 0 ? d.c2TakeHome1 : '';
+  if (f1 && d.c2TakeHome1Freq) f1.value = d.c2TakeHome1Freq;
+  if (r1) r1.value = d.c2RentalIncome > 0 ? d.c2RentalIncome.toLocaleString('en-AU') : '';
+  c2IncomeP1Validate();
 }
 
-// ─── C2 income inputs ────────────────────────────────────────────────────────
-function onC2IncomeInput(el) {
+function onC2Gross1Input(el) {
   const raw = el.value.replace(/[^0-9]/g, '');
-  if (!raw) { el.value = ''; d.c2GrossIncome = 0; setC2IncomeBtn(false); return; }
-  const num = parseInt(raw, 10);
-  d.c2GrossIncome = num;
-  el.value = num.toLocaleString('en-AU');
-  setC2IncomeBtn(num > 0);
-}
-
-function onC2IncomeKey(e) {
-  if (e.key === 'Enter' && d.c2GrossIncome > 0) submitC2Income();
+  if (!raw) { el.value = ''; d.c2GrossIncome1 = 0; }
+  else { const n = parseInt(raw, 10); d.c2GrossIncome1 = n; el.value = n.toLocaleString('en-AU'); }
+  c2IncomeP1Validate();
 }
 
 function onC2RentalInput(el) {
@@ -2870,17 +2933,65 @@ function onC2RentalInput(el) {
   el.value = num.toLocaleString('en-AU');
 }
 
-function setC2IncomeBtn(enabled) {
-  const btn = document.getElementById('c2-income-submit');
-  if (!btn) return;
-  btn.disabled = !enabled;
-  btn.style.opacity = enabled ? '1' : '0.35';
+function c2IncomeP1Validate() {
+  const grossOk = d.c2GrossIncome1 > 0;
+  const thVal = parseFloat(document.getElementById('c2-takehome1-input')?.value || 0) || 0;
+  const thFreq = document.getElementById('c2-takehome1-freq')?.value || 'fortnightly';
+  if (thVal > 0) { d.c2TakeHome1 = thVal; d.c2TakeHome1Freq = thFreq; }
+  const btn = document.getElementById('c2-income-p1-submit');
+  const ok = grossOk && thVal > 0;
+  if (btn) { btn.disabled = !ok; btn.style.opacity = ok ? '1' : '0.35'; }
 }
 
-function submitC2Income() {
-  if (!d.c2GrossIncome) return;
-  renderC2Review();
-  goTo('c2-review');
+function submitC2IncomeP1() {
+  const thVal = parseFloat(document.getElementById('c2-takehome1-input')?.value || 0) || 0;
+  const thFreq = document.getElementById('c2-takehome1-freq')?.value || 'fortnightly';
+  if (!d.c2GrossIncome1 || !thVal) return;
+  d.c2TakeHome1 = thVal;
+  d.c2TakeHome1Freq = thFreq;
+  if (d.c2Applicants === 'joint') {
+    renderC2IncomeP2();
+    goTo('c2-income-p2');
+  } else {
+    goTo('c2-mortgages');
+  }
+}
+
+// ─── C2 income — person 2 ────────────────────────────────────────────────────
+function renderC2IncomeP2() {
+  const g2 = document.getElementById('c2-gross2-input');
+  const t2 = document.getElementById('c2-takehome2-input');
+  const f2 = document.getElementById('c2-takehome2-freq');
+  if (g2) g2.value = d.c2GrossIncome2 > 0 ? d.c2GrossIncome2.toLocaleString('en-AU') : '';
+  if (t2) t2.value = d.c2TakeHome2 > 0 ? d.c2TakeHome2 : '';
+  if (f2 && d.c2TakeHome2Freq) f2.value = d.c2TakeHome2Freq;
+  c2IncomeP2Validate();
+}
+
+function onC2Gross2Input(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c2GrossIncome2 = 0; }
+  else { const n = parseInt(raw, 10); d.c2GrossIncome2 = n; el.value = n.toLocaleString('en-AU'); }
+  c2IncomeP2Validate();
+}
+
+function c2IncomeP2Validate() {
+  const grossOk = d.c2GrossIncome2 > 0;
+  const thVal = parseFloat(document.getElementById('c2-takehome2-input')?.value || 0) || 0;
+  const thFreq = document.getElementById('c2-takehome2-freq')?.value || 'fortnightly';
+  if (thVal > 0) { d.c2TakeHome2 = thVal; d.c2TakeHome2Freq = thFreq; }
+  const btn = document.getElementById('c2-income-p2-submit');
+  const ok = grossOk && thVal > 0;
+  if (btn) { btn.disabled = !ok; btn.style.opacity = ok ? '1' : '0.35'; }
+}
+
+function submitC2IncomeP2() {
+  const thVal = parseFloat(document.getElementById('c2-takehome2-input')?.value || 0) || 0;
+  const thFreq = document.getElementById('c2-takehome2-freq')?.value || 'fortnightly';
+  if (!d.c2GrossIncome2 || !thVal) return;
+  d.c2TakeHome2 = thVal;
+  d.c2TakeHome2Freq = thFreq;
+  goTo('c2-mortgages');
 }
 
 // ─── C2 review ───────────────────────────────────────────────────────────────
@@ -2914,9 +3025,15 @@ function renderC2Review() {
   html += rvSection('Income');
   html += '<div style="border-top:1px solid var(--border);">';
   html += rvRow('Application', d.c2Applicants === 'joint' ? 'Joint' : 'Sole', 'c2-applicant');
-  html += rvRow('Gross annual income', fmt(d.c2GrossIncome), 'c2-income');
+  const freqL = f => f === 'weekly' ? '/wk' : f === 'fortnightly' ? '/fn' : '/mo';
+  html += rvRow(d.c2Applicants === 'joint' ? 'P1 gross annual' : 'Gross annual income', fmt(d.c2GrossIncome1), 'c2-income-p1');
+  html += rvRow(d.c2Applicants === 'joint' ? 'P1 take-home' : 'Take-home pay', fmt(d.c2TakeHome1) + freqL(d.c2TakeHome1Freq), 'c2-income-p1');
+  if (d.c2Applicants === 'joint') {
+    html += rvRow('P2 gross annual', fmt(d.c2GrossIncome2), 'c2-income-p2');
+    html += rvRow('P2 take-home', fmt(d.c2TakeHome2) + freqL(d.c2TakeHome2Freq), 'c2-income-p2');
+  }
   if (!d.isOO && d.c2RentalIncome > 0) {
-    html += rvRow('New property rent (weekly)', fmt(d.c2RentalIncome) + '/wk', 'c2-income');
+    html += rvRow('New property rent (weekly)', fmt(d.c2RentalIncome) + '/wk', 'c2-income-p1');
     html += rvRow('→ Assessed at 80%', fmt(newPropRental) + '/yr', null, true);
   }
   if (existInvRental > 0) {
@@ -2962,7 +3079,7 @@ function computeDTI() {
   const existInvRental  = d.c2Mortgages
     .filter(m => m.isInvestment && m.weeklyRent > 0)
     .reduce((s, m) => s + m.weeklyRent * 52 * 0.80, 0);
-  const totalIncome     = d.c2GrossIncome + newPropRental + existInvRental;
+  const totalIncome     = (d.c2GrossIncome1 + d.c2GrossIncome2) + newPropRental + existInvRental;
 
   const newMortgage     = lastC1Result ? lastC1Result.effectiveLoan : 0;
   const mortgageBalances = d.c2Mortgages.reduce((s, m) => s + m.balance, 0);
@@ -3079,9 +3196,8 @@ function startC3() {
     goTo('c3-loan-repayments');
     return;
   }
-  // Step 3: take-home income
-  renderC3Income();
-  goTo('c3-income');
+  // Income already collected in C2 — go straight to household/HEM
+  c3GoToHouseholdOrHEM();
 }
 
 function c3GoToHouseholdOrHEM() {
@@ -3169,11 +3285,10 @@ function checkC3MortgageRepSubmit() {
 
 function submitC3MortgageRepayments() {
   if (d.c2OtherLoans.length > 0) {
-    renderC3LoanRepayments();
-    goTo('c3-loan-repayments');
+    renderC3LoanRepayments();    goTo('c3-loan-repayments');
   } else {
-    renderC3Income();
-    goTo('c3-income');
+    // Income already collected in C2 — go straight to household/HEM
+    c3GoToHouseholdOrHEM();
   }
 }
 
@@ -3213,8 +3328,8 @@ function checkC3LoanRepSubmit() {
 }
 
 function submitC3LoanRepayments() {
-  renderC3Income();
-  goTo('c3-income');
+  // Income already collected in C2 — go straight to household/HEM
+  c3GoToHouseholdOrHEM();
 }
 
 // ─── C3 Income screen ─────────────────────────────────────────────────────────
@@ -3590,13 +3705,13 @@ function renderC3Review() {
     });
   }
 
-  // Take-home income
+  // Take-home income (collected in C2)
   const freqLabel = f => f === 'weekly' ? '/wk' : f === 'fortnightly' ? '/fn' : '/mo';
-  if (d.c3Income1 > 0) {
-    html += rvRow('Borrower 1 take-home', fmt(d.c3Income1) + freqLabel(d.c3Income1Freq || 'fortnightly'), 'c3-income');
+  if (d.c2TakeHome1 > 0) {
+    html += rvRow(d.c2Applicants === 'joint' ? 'P1 take-home' : 'Take-home pay', fmt(d.c2TakeHome1) + freqLabel(d.c2TakeHome1Freq || 'fortnightly'), 'c2-income-p1');
   }
-  if (d.c3Income2 > 0) {
-    html += rvRow('Borrower 2 take-home', fmt(d.c3Income2) + freqLabel(d.c3Income2Freq || 'fortnightly'), 'c3-income');
+  if (d.c2TakeHome2 > 0) {
+    html += rvRow('P2 take-home', fmt(d.c2TakeHome2) + freqLabel(d.c2TakeHome2Freq || 'fortnightly'), 'c2-income-p2');
   }
 
   // Household type
@@ -3706,8 +3821,8 @@ function computeServiceability() {
     if (freq === 'fortnightly') return amt * 26 / 12;
     return amt; // monthly
   };
-  const income1Monthly = toMonthly(d.c3Income1 || 0, d.c3Income1Freq || 'monthly');
-  const income2Monthly = d.c3Income2 > 0 ? toMonthly(d.c3Income2, d.c3Income2Freq || 'monthly') : 0;
+  const income1Monthly = toMonthly(d.c2TakeHome1 || 0, d.c2TakeHome1Freq || 'fortnightly');
+  const income2Monthly = d.c2TakeHome2 > 0 ? toMonthly(d.c2TakeHome2, d.c2TakeHome2Freq || 'fortnightly') : 0;
   const netMonthly     = income1Monthly + income2Monthly + totalRental / 12;
 
   const hemMonthly     = d.c3HemAmount || 0;
@@ -3947,11 +4062,11 @@ function renderOutcome() {
     if (freq === 'fortnightly') return Math.round(amt * 26 / 12);
     return Math.round(amt);
   };
-  const income1Mo = d.c3Income1 > 0 ? toMonthlyDisp(d.c3Income1, d.c3Income1Freq) : 0;
-  const income2Mo = d.c3Income2 > 0 ? toMonthlyDisp(d.c3Income2, d.c3Income2Freq) : 0;
+  const income1Mo = d.c2TakeHome1 > 0 ? toMonthlyDisp(d.c2TakeHome1, d.c2TakeHome1Freq) : 0;
+  const income2Mo = d.c2TakeHome2 > 0 ? toMonthlyDisp(d.c2TakeHome2, d.c2TakeHome2Freq) : 0;
   const c3svcRows =
-    drow('Borrower 1 take-home', fmt(income1Mo) + '/mo') +
-    (income2Mo > 0 ? drow('Borrower 2 take-home', '+' + fmt(income2Mo) + '/mo') : '') +
+    drow(d.c2Applicants === 'joint' ? 'P1 take-home' : 'Take-home pay', fmt(income1Mo) + '/mo') +
+    (income2Mo > 0 ? drow('P2 take-home', '+' + fmt(income2Mo) + '/mo') : '') +
     (svc.newPropRental  > 0 ? drow('Rental income (80%)', '+' + fmt(Math.round(svc.newPropRental / 12)) + '/mo') : '') +
     (svc.existInvRental > 0 ? drow('Investment rent (80%)', '+' + fmt(Math.round(svc.existInvRental / 12)) + '/mo') : '') +
     drow('Combined net monthly', fmt(svc.netMonthly) + '/mo') +
