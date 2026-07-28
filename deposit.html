@@ -4463,220 +4463,236 @@ function renderC4Gap(target, calc) {
   const el = document.getElementById('c4-gap-main');
   if (!el) return;
 
-  const { c1Price, c2Price, c3Price, maximum, dti, svc, bindingKey } = calc;
+  const { dti, svc, maximum } = calc;
   const gap = target - maximum;
 
-  const displayC2 = c2Price > 0 ? c2Price : c1Price;
-  const displayC3 = c3Price > 0 ? c3Price : (c2Price > 0 ? c2Price : c1Price);
+  // ── Shared inputs ──
+  const stampAtTarget  = calcDutyForPrice(target);
+  const regFeeAmt      = regFees[d.state]    || 400;
+  const lmiSdRate      = lmiSdRates[d.state] || 0;
+  const maxLVR         = getMaxLVR();
 
-  const ceilRow = (label, price, isBinding) => `
-    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:0.55rem 0;border-bottom:1px solid var(--border);">
-      <span style="font-family:var(--font-mono);font-size:0.72rem;color:${isBinding ? 'var(--text)' : 'var(--dim)'};">${label}</span>
-      <span style="font-family:var(--font-mono);font-size:0.72rem;font-weight:700;color:${isBinding ? 'var(--blue)' : (price >= target ? '#16a34a' : 'var(--dim)')}">${fmt(price)}</span>
-    </div>`;
+  // ── Section 1: minimum deposit at max LVR ──
+  const minDepositAmt  = Math.round(target * (1 - maxLVR));
+  const loanAtMaxLVR   = Math.round(target * maxLVR);
+  const lvrPctForLMI   = (loanAtMaxLVR / target) * 100;
+  const lmiRateAtMax   = lvrPctForLMI > 80 ? lookupLMIRate(lvrPctForLMI, loanAtMaxLVR) : 0;
+  const lmiPremAtMax   = Math.round(loanAtMaxLVR * lmiRateAtMax);
+  const lmiSdAtMax     = Math.round(lmiPremAtMax * lmiSdRate);
+  const minSavingsNeeded = minDepositAmt + stampAtTarget + regFeeAmt + lmiSdAtMax;
+  const depositOK      = d.savings >= minSavingsNeeded;
+  const depositGap     = Math.max(0, minSavingsNeeded - d.savings);
 
-  const bindingLabel = { c1: 'Ceiling 1 — Deposit', c2: 'Ceiling 2 — Debt-to-income', c3: 'Ceiling 3 — Serviceability' }[bindingKey];
+  // ── Loan needed using all savings as deposit ──
+  const netSavingsForDep = Math.max(0, d.savings - stampAtTarget - regFeeAmt);
+  const requiredBaseLoan = Math.max(0, target - netSavingsForDep);
+  const reqLVRpct        = target > 0 ? (requiredBaseLoan / target) * 100 : 0;
+  const reqLMIRate       = reqLVRpct > 80 ? lookupLMIRate(reqLVRpct, requiredBaseLoan) : 0;
+  const reqLMIPrem       = Math.round(requiredBaseLoan * reqLMIRate);
+  const effectiveLoan    = requiredBaseLoan + reqLMIPrem;
 
+  // ── Section 2: DTI gap ──
+  const dtiGap = Math.max(0, requiredBaseLoan - dti.maxNewMortgage);
+
+  // ── Section 3: serviceability gap ──
+  const sr = (svc.stressRateAnnual || 9.0) / 100 / 12;
+  const n  = 360;
+  const reqPayment   = sr > 0
+    ? effectiveLoan * sr * Math.pow(1 + sr, n) / (Math.pow(1 + sr, n) - 1)
+    : effectiveLoan / n;
+  const svcShortfall = Math.max(0, reqPayment - svc.maxMonthlyRepayment);
+
+  // ── Debt levers (used in both sections 2 and 3) ──
+  const levers = c4BuildLevers();
+
+  // ── Render ──
   let html = `
     <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.35rem;">Your target</div>
     <div class="result-amount" style="color:#fca5a5;margin-bottom:0.35rem;">${fmt(target)}</div>
-    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.35rem;">
+    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.5rem;">
       <div style="background:#7f1d1d;color:#fca5a5;font-family:var(--font-mono);font-size:0.63rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:0.22rem 0.55rem;">Beyond ceiling</div>
-      <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);">${fmt(gap)} above your current max</div>
+      <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);">${fmt(gap)} above your current max of ${fmt(maximum)}</div>
     </div>
+    <div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.75rem;">What needs to change — in order</div>`;
 
-    <div style="border-top:1px solid var(--border);margin-bottom:1.25rem;">
-      ${ceilRow('Ceiling 1 — Deposit', c1Price, bindingKey === 'c1')}
-      ${ceilRow('Ceiling 2 — Debt-to-income', displayC2, bindingKey === 'c2')}
-      ${ceilRow('Ceiling 3 — Serviceability', displayC3, bindingKey === 'c3')}
-    </div>
-
-    <div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.6rem;">${bindingLabel} is your main constraint — what can move it</div>`;
-
-  if (bindingKey === 'c1') {
-    html += c4LeversC1(target, dti, svc);
-  } else if (bindingKey === 'c2') {
-    html += c4LeversC2(target, dti);
+  // ── Step 1: Minimum deposit ──
+  html += c4StepHeader('1', 'Minimum deposit', depositOK ? 'ok' : 'gap');
+  if (depositOK) {
+    html += `<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.65;margin-bottom:${lmiPremAtMax > 0 ? '0.5rem' : '1.25rem'};">${fmt(minDepositAmt)} deposit (${((1-maxLVR)*100).toFixed(0)}%) + ${fmt(stampAtTarget)} stamp duty + ${fmt(regFeeAmt)} fees${lmiSdAtMax > 0 ? ' + ' + fmt(lmiSdAtMax) + ' LMI stamp duty' : ''} = <strong style="color:var(--text);">${fmt(minSavingsNeeded)}</strong> minimum. You have <strong style="color:var(--text);">${fmt(d.savings)}</strong>. ✓</div>`;
+    if (lmiPremAtMax > 0) {
+      html += `<div class="advisory" style="margin-bottom:1.25rem;">At ${(maxLVR*100).toFixed(0)}% LVR, LMI of ~${fmt(lmiPremAtMax)} would be added to your loan — increasing it to ~${fmt(loanAtMaxLVR + lmiPremAtMax)}.</div>`;
+    }
   } else {
-    html += c4LeversC3(target, svc);
+    html += `<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.65;margin-bottom:0.45rem;">${fmt(minDepositAmt)} deposit (${((1-maxLVR)*100).toFixed(0)}%) + ${fmt(stampAtTarget)} stamp duty + ${fmt(regFeeAmt)} fees${lmiSdAtMax > 0 ? ' + ' + fmt(lmiSdAtMax) + ' LMI stamp duty' : ''} = <strong style="color:var(--text);">${fmt(minSavingsNeeded)}</strong> minimum. You have <strong style="color:var(--text);">${fmt(d.savings)}</strong>.</div>`;
+    html += `<div style="background:#450a0a;border:1px solid #7f1d1d;padding:0.65rem 0.9rem;font-family:var(--font-mono);font-size:0.72rem;color:#fca5a5;margin-bottom:${d.isFHB ? '0.45rem' : '1.25rem'};">You need <strong>${fmt(depositGap)} more in savings</strong> to get a loan at this price. This is the first problem to solve.</div>`;
+    if (d.isFHB) {
+      html += `<div class="note-box blue" style="margin-bottom:1.25rem;">As a first home buyer, the First Home Guarantee may reduce the required deposit to 5% with no LMI. Price caps vary by state — check at <a href="https://www.nhfic.gov.au/support-to-buy-a-home/first-home-guarantee" target="_blank" style="color:var(--dim);">nhfic.gov.au</a>.</div>`;
+    }
   }
 
-  // Always show: target cheaper
-  html += `<div class="note-box" style="margin-top:0.75rem;"><strong>Or: target ${fmt(maximum)} instead.</strong> That's your current ceiling — the best price you can reach today. Use the suburb search to find what's available at that budget.</div>`;
+  // ── Step 2: DTI ──
+  html += c4StepHeader('2', 'Debt-to-income (DTI)', dtiGap <= 0 ? 'ok' : 'gap');
+  if (dtiGap <= 0) {
+    html += `<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);margin-bottom:1.25rem;">Your income (× 6 DTI cap) covers this loan size. Not the constraint here.</div>`;
+  } else {
+    html += `<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.65;margin-bottom:0.75rem;">Loan needed: <strong style="color:var(--text);">${fmt(requiredBaseLoan)}</strong> — DTI cap currently allows <strong style="color:var(--text);">${fmt(dti.maxNewMortgage)}</strong>. Gap: <strong style="color:#fca5a5;">${fmt(dtiGap)}</strong>.</div>`;
+    html += c4LeverRows(levers, 'dti', dtiGap);
+  }
 
-  // Update search link text
+  // ── Step 3: Serviceability ──
+  html += c4StepHeader('3', 'Serviceability', svcShortfall <= 0 ? 'ok' : 'gap');
+  if (svcShortfall <= 0) {
+    html += `<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);margin-bottom:1.25rem;">Your monthly repayment capacity covers this loan at the stress-tested rate.</div>`;
+  } else {
+    html += `<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.65;margin-bottom:0.75rem;">Stress-tested repayment: <strong style="color:var(--text);">${fmt(Math.round(reqPayment))}/month</strong> — your capacity: <strong style="color:var(--text);">${fmt(Math.round(svc.maxMonthlyRepayment))}/month</strong>. Gap: <strong style="color:#fca5a5;">${fmt(Math.round(svcShortfall))}/month</strong>.</div>`;
+    html += c4LeverRows(levers, 'svc', svcShortfall);
+  }
+
+  // ── Fallback ──
+  html += `<div class="note-box" style="margin-top:0.25rem;"><strong>Or: target ${fmt(maximum)} instead.</strong> That's your ceiling today. Use the suburb search to find what's available.</div>`;
+
   const link = document.getElementById('c4-gap-search-link');
   if (link) link.textContent = `Browse suburbs at ${fmt(maximum)} →`;
 
   el.innerHTML = html;
 }
 
-// ─── Lever helpers ────────────────────────────────────────────────────────────
-function c4Lever(title, body) {
-  return `
-    <div style="border:1px solid var(--border);padding:0.85rem 1rem;margin-bottom:0.45rem;">
-      <div style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:0.3rem;">${title}</div>
-      <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.65;">${body}</div>
+// ─── Step header ──────────────────────────────────────────────────────────────
+function c4StepHeader(num, label, status) {
+  const badge = status === 'ok'
+    ? `<span style="font-family:var(--font-mono);font-size:0.58rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#86efac;border:1px solid #166534;padding:0.15rem 0.4rem;">✓ Covered</span>`
+    : `<span style="font-family:var(--font-mono);font-size:0.58rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#fca5a5;border:1px solid #991b1b;padding:0.15rem 0.4rem;">Gap</span>`;
+  return `<div style="display:flex;align-items:center;gap:0.5rem;border-top:1px solid var(--border);padding-top:0.85rem;margin-bottom:0.55rem;">
+      <span style="font-family:var(--font-mono);font-size:0.7rem;font-weight:700;color:#555;">${num}.</span>
+      <span style="font-family:var(--font-mono);font-size:0.63rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text);">${label}</span>
+      ${badge}
     </div>`;
 }
 
-// ─── C1 levers (deposit) ──────────────────────────────────────────────────────
-function c4LeversC1(target, dti, svc) {
-  const regFeeAmt  = regFees[d.state] || 400;
-  const stampDuty  = calcDutyForPrice(target);
-  const lmiSdRate  = lmiSdRates[d.state] || 0;
+// ─── Build debt levers ────────────────────────────────────────────────────────
+// Returns array of {name, detail, dtiImpact, svcImpact, warning}
+// dtiImpact: how much this frees in DTI headroom (dollars)
+// svcImpact: how much this frees in monthly repayment capacity
+function c4BuildLevers() {
+  const levers = [];
 
-  // 20% deposit path
-  const needed20   = Math.round(target * 0.20) + stampDuty + regFeeAmt;
-  const savingsGap20 = Math.max(0, needed20 - d.savings);
-
-  // 10% deposit path (LMI)
-  const loanAt10   = Math.round(target * 0.90);
-  const lmiRate10  = lookupLMIRate(90, loanAt10);
-  const lmiPrem10  = Math.round(loanAt10 * lmiRate10);
-  const lmiSd10    = Math.round(lmiPrem10 * lmiSdRate);
-  const needed10   = Math.round(target * 0.10) + stampDuty + regFeeAmt + lmiSd10;
-  const savingsGap10 = Math.max(0, needed10 - d.savings);
-
-  let html = '';
-
-  // Lever 1: Save for 20% (no LMI)
-  if (savingsGap20 > 0) {
-    html += c4Lever(
-      `Save ${fmt(savingsGap20)} more (20% deposit, no LMI)`,
-      `At ${fmt(target)}, reaching a 20% deposit takes ${fmt(needed20)} in savings — you have ${fmt(d.savings)}. That covers the deposit, stamp duty (~${fmt(stampDuty)}), and fees.`
-    );
+  // Credit cards — lenders count approved limit, not balance
+  if (d.c2CreditCards > 0) {
+    levers.push({
+      name:      'Close credit card limits',
+      detail:    `${fmt(d.c2CreditCards)} total approved limit — lenders count the limit, not the balance`,
+      dtiImpact: d.c2CreditCards,
+      svcImpact: Math.round(d.c2CreditCards * 0.03),   // 3% of limit/month assumption
+      warning:   null,
+    });
   }
 
-  // Lever 2: LMI (10% deposit)
-  if (savingsGap10 <= 0) {
-    // Can already afford 10% + costs — LMI unlocks the purchase
-    html += c4Lever(
-      `Buy now with LMI — ${fmt(lmiPrem10)} added to your loan`,
-      `You have enough savings for a 10% deposit at ${fmt(target)}. LMI of ~${fmt(lmiPrem10)} would be added to your loan, increasing it from ${fmt(loanAt10)} to ~${fmt(loanAt10 + lmiPrem10)}. That slightly tightens serviceability — worth checking with a lender before committing.`
-    );
-  } else if (savingsGap10 < savingsGap20 * 0.5) {
-    // Close to 10% — show how much more they need
-    html += c4Lever(
-      `Save ${fmt(savingsGap10)} more (10% deposit with LMI)`,
-      `A 10% deposit at ${fmt(target)} needs ${fmt(needed10)} in savings including LMI stamp duty. LMI of ~${fmt(lmiPrem10)} would be added to your loan. This is a faster path than 20% — though LMI adds to your loan cost over time.`
-    );
-  }
+  // Other loans (car, personal, BNPL etc.)
+  d.c2OtherLoans.forEach((loan, i) => {
+    const repayment = d.c3LoanRepayments[i] || 0;
+    levers.push({
+      name:      `Pay off ${loan.type || 'loan'}`,
+      detail:    `${fmt(loan.amount)} balance`,
+      dtiImpact: loan.amount,
+      svcImpact: Math.round(repayment),
+      warning:   null,
+    });
+  });
 
-  // Lever 3: First Home Guarantee (FHBs only)
-  if (d.isFHB) {
-    html += c4Lever(
-      `First Home Guarantee — 5% deposit, no LMI`,
-      `As a first home buyer you may be eligible. Under the FHG you buy with as little as 5% without paying LMI — the government guarantees the gap. Price caps apply and vary by state and property type. Check current caps at <a href="https://www.nhfic.gov.au/support-to-buy-a-home/first-home-guarantee" target="_blank" style="color:var(--dim);text-underline-offset:2px;">nhfic.gov.au</a>.`
-    );
-  }
+  // Mortgages — investment properties lose rental income too
+  d.c2Mortgages.forEach((mort, j) => {
+    const repayment    = d.c3MortgageRepayments[j] || 0;
+    const rentalAnnual = mort.isInvestment && mort.weeklyRent > 0
+      ? Math.round(mort.weeklyRent * 52 * 0.80) : 0;
+    const rentalMonthly = Math.round(rentalAnnual / 12);
+    // Net effect: removing debt frees DTI headroom, but losing rental tightens it
+    const netDTI = mort.balance - rentalAnnual * 6;
+    const netSVC = Math.round(repayment - rentalMonthly);
+    levers.push({
+      name:      mort.isInvestment ? 'Sell investment property' : 'Pay off mortgage',
+      detail:    `${fmt(mort.balance)} balance${rentalAnnual > 0 ? ', ' + fmt(mort.weeklyRent) + '/wk rent (80% shaded)' : ''}`,
+      dtiImpact: netDTI,
+      svcImpact: netSVC,
+      warning:   mort.isInvestment && rentalAnnual > 0 && netDTI < mort.balance
+        ? `Selling removes ${fmt(mort.balance)} debt but loses ${fmt(rentalAnnual)}/yr rental income. Net DTI movement: ${netDTI >= 0 ? '+' : ''}${fmt(netDTI)}.`
+        : null,
+    });
+  });
 
-  return html;
+  return levers;
 }
 
-// ─── C2 levers (DTI / gross income) ──────────────────────────────────────────
-function c4LeversC2(target, dti) {
-  // Estimate required loan at target — approximate at 80% LVR or deposit-limited
-  const stampDuty     = calcDutyForPrice(target);
-  const regFeeAmt     = regFees[d.state] || 400;
-  const netDeposit    = Math.max(0, d.savings - stampDuty - regFeeAmt);
-  const requiredLoan  = Math.max(target * 0.80, target - netDeposit);
+// ─── Lever rows with running total ───────────────────────────────────────────
+function c4LeverRows(levers, mode, startGap) {
+  // Sort by this mode's impact — biggest positive first
+  const sorted   = [...levers].sort((a, b) =>
+    mode === 'dti' ? b.dtiImpact - a.dtiImpact : b.svcImpact - a.svcImpact
+  );
+  const positive = sorted.filter(l => (mode === 'dti' ? l.dtiImpact : l.svcImpact) > 0);
+  const warnings = sorted.filter(l => (mode === 'dti' ? l.dtiImpact : l.svcImpact) <= 0 && l.warning);
+  const unit     = mode === 'svc' ? '/month' : '';
 
-  // Required gross income to meet DTI cap
-  const requiredIncome = (requiredLoan + dti.existingDebt) / 6;
-  const incomeGap      = Math.max(0, requiredIncome - dti.totalIncome);
+  let html      = '';
+  let remaining = startGap;
 
-  // Credit card headroom (lenders count approved limit, not balance)
-  const loanGap       = Math.max(0, requiredLoan - dti.maxNewMortgage);
-  const ccHelp        = Math.min(d.c2CreditCards || 0, loanGap);
+  if (positive.length > 0) {
+    html += `<div style="border-top:1px solid var(--border);margin-bottom:0.6rem;">`;
+    positive.forEach(lever => {
+      const impact = Math.abs(Math.round(mode === 'dti' ? lever.dtiImpact : lever.svcImpact));
+      const prev   = remaining;
+      remaining    = Math.max(0, remaining - impact);
+      const closed = prev > 0 && remaining === 0;
 
-  let html = '';
+      // Cross-ceiling note
+      const cross = mode === 'dti' && lever.svcImpact > 0
+        ? `<div style="font-family:var(--font-mono);font-size:0.63rem;color:#555;margin-top:0.1rem;">↳ Also frees ${fmt(lever.svcImpact)}/month for serviceability (Step 3)</div>`
+        : mode === 'svc' && lever.dtiImpact > 0
+        ? `<div style="font-family:var(--font-mono);font-size:0.63rem;color:#555;margin-top:0.1rem;">↳ Also adds ${fmt(lever.dtiImpact)} to DTI headroom (Step 2)</div>`
+        : '';
 
-  // Lever 1: Income shortfall
-  if (incomeGap > 0) {
-    html += c4Lever(
-      `Need ${fmt(incomeGap)}/yr more gross income`,
-      `DTI is capped at 6× gross income minus existing debts. At ${fmt(target)}, you need ${fmt(requiredIncome)}/yr — you currently have ${fmt(dti.totalIncome)}/yr. This is the hardest lever to pull quickly.`
-    );
+      html += `<div style="padding:0.65rem 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem;margin-bottom:0.2rem;">
+          <span style="font-size:0.85rem;font-weight:700;color:var(--text);">${lever.name}</span>
+          <span style="font-family:var(--font-mono);font-size:0.72rem;color:#86efac;font-weight:700;white-space:nowrap;">+${fmt(impact)}${unit}</span>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:0.67rem;color:var(--dim);margin-bottom:0.2rem;">${lever.detail}</div>
+        ${cross}
+        <div style="font-family:var(--font-mono);font-size:0.67rem;color:${closed ? '#86efac' : 'var(--muted)'};margin-top:0.2rem;">
+          ${closed ? '✓ Gap closed' : `Remaining gap: ${fmt(Math.round(remaining))}${unit}`}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
   }
 
-  // Lever 2: Credit card limits (if closing some would make the difference)
-  if (ccHelp > 0 && d.c2CreditCards > 0) {
-    const enoughAlone = ccHelp >= loanGap;
-    html += c4Lever(
-      `Reduce credit card limits by ${fmt(ccHelp)}`,
-      `Lenders count your total approved credit limit — not your balance — against the DTI cap. ${enoughAlone ? `Reducing limits by ${fmt(ccHelp)} would close the full gap.` : `Reducing all ${fmt(d.c2CreditCards)} in limits helps but won't fully close the gap alone.`} You don't need to pay off the balance — reducing or cancelling the limit is enough.`
-    );
-  }
+  // Warn about investment properties that hurt rather than help
+  warnings.forEach(lever => {
+    html += `<div class="advisory" style="margin-bottom:0.45rem;"><strong>${lever.name}:</strong> ${lever.warning}</div>`;
+  });
 
-  // Lever 3: Pay down other debts
-  const otherDebt = (dti.mortgageBalances || 0) + (dti.loanBalances || 0);
-  if (otherDebt > 0 && loanGap > (ccHelp || 0)) {
-    const paydownNeeded = Math.max(0, loanGap - (ccHelp || 0));
-    html += c4Lever(
-      `Pay down ${fmt(paydownNeeded)} of existing debt`,
-      `After reducing credit card limits, you'd still need to reduce other debt balances by ~${fmt(paydownNeeded)} to reach the DTI headroom for ${fmt(target)}.`
-    );
-  }
-
-  // Lever 4: Add co-borrower (sole buyers only)
-  if (d.c2Applicants === 'sole' && incomeGap > 0) {
-    html += c4Lever(
-      `Add a co-borrower`,
-      `A co-borrower's gross income adds directly to the DTI calculation. You'd need at least ${fmt(incomeGap)}/yr combined additional income. This is a significant commitment — a broker can model the full joint application.`
-    );
-  }
-
-  return html;
-}
-
-// ─── C3 levers (serviceability / take-home) ───────────────────────────────────
-function c4LeversC3(target, svc) {
-  // Estimate required loan at target (~80% LVR)
-  const stampDuty    = calcDutyForPrice(target);
-  const regFeeAmt    = regFees[d.state] || 400;
-  const netDeposit   = Math.max(0, d.savings - stampDuty - regFeeAmt);
-  const requiredLoan = Math.max(target * 0.80, target - netDeposit);
-
-  // Required monthly payment at stress rate
-  const sr = (svc.stressRateAnnual || 9.0) / 100 / 12;
-  const n  = 360;
-  const requiredPayment = sr > 0
-    ? requiredLoan * sr * Math.pow(1+sr, n) / (Math.pow(1+sr, n) - 1)
-    : requiredLoan / n;
-
-  const monthlyShortfall = Math.max(0, requiredPayment - svc.maxMonthlyRepayment);
-  const existingCommit   = (svc.cardMonthly || 0) + (svc.loanMonthly || 0) + (svc.mortgageMonthly || 0);
-
-  let html = '';
-
-  // Lever 1: Monthly surplus shortfall
-  if (monthlyShortfall > 0) {
-    html += c4Lever(
-      `Free up ${fmt(Math.round(monthlyShortfall))}/month`,
-      `Your current repayment capacity (income minus expenses) is ${fmt(Math.round(svc.maxMonthlyRepayment))}/month. At ${fmt(target)}, the stress-tested repayment is ${fmt(Math.round(requiredPayment))}/month. You need to free up ${fmt(Math.round(monthlyShortfall))}/month — by increasing income, reducing expenses, or paying off existing debts.`
-    );
-  }
-
-  // Lever 2: Pay off existing debt repayments
-  if (existingCommit > 0) {
-    const breakdown = [
-      svc.mortgageMonthly > 0 ? `mortgage repayments ${fmt(Math.round(svc.mortgageMonthly))}/mo` : null,
-      svc.loanMonthly > 0     ? `loan repayments ${fmt(Math.round(svc.loanMonthly))}/mo` : null,
-      svc.cardMonthly > 0     ? `card minimums ${fmt(Math.round(svc.cardMonthly))}/mo (3% of limit)` : null,
-    ].filter(Boolean).join(', ');
-    html += c4Lever(
-      `Pay off existing debts (frees ${fmt(Math.round(existingCommit))}/month)`,
-      `Your existing debt commitments (${breakdown}) reduce what's available for the new mortgage. Paying these down before applying directly improves your serviceability ceiling.`
-    );
-  }
-
-  // Lever 3: Add co-borrower
-  if (d.c2Applicants === 'sole') {
-    html += c4Lever(
-      `Add a co-borrower`,
-      `A co-borrower's take-home pay adds directly to serviceability income. Combined with shared HEM (lenders use household-level living costs), this is often the most impactful single lever for serviceability — though it's a significant commitment decision.`
-    );
+  // Residual — what's left after all debt levers
+  if (remaining > 0) {
+    html += `<div style="background:var(--card);border:1px solid var(--border);padding:0.75rem 0.9rem;font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.65;margin-bottom:1.25rem;">`;
+    if (mode === 'dti') {
+      const incomeExtra = Math.round(remaining / 6);
+      html += positive.length > 0
+        ? `Even after clearing all the above, <strong style="color:var(--text);">${fmt(remaining)}</strong> of DTI gap remains. You'd need <strong style="color:var(--text);">${fmt(incomeExtra)}/yr more gross income</strong> to close it.`
+        : `You'd need <strong style="color:var(--text);">${fmt(incomeExtra)}/yr more gross income</strong> to close this gap.`;
+      if (d.c2Applicants === 'sole') {
+        html += ` Adding a co-borrower's income is often the fastest path here.`;
+      }
+    } else {
+      const rem = Math.round(remaining);
+      html += positive.length > 0
+        ? `Even after clearing all the above, <strong style="color:var(--text);">${fmt(rem)}/month</strong> of serviceability gap remains. You'd need <strong style="color:var(--text);">${fmt(rem)}/month more take-home pay</strong> (~${fmt(rem * 12)}/yr) to close it.`
+        : `You'd need <strong style="color:var(--text);">${fmt(rem)}/month more take-home pay</strong> (~${fmt(rem * 12)}/yr) to close this gap.`;
+      if (d.c2Applicants === 'sole') {
+        html += ` Adding a co-borrower's income is often the fastest path here.`;
+      }
+    }
+    html += `</div>`;
+  } else if (positive.length > 0) {
+    html += `<div style="margin-bottom:1.25rem;"></div>`;
   }
 
   return html;
