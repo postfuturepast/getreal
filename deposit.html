@@ -1413,8 +1413,8 @@
     <div class="q-sub">Enter the price you're aiming for — we'll show you how your ceiling stacks up and what levers are available.</div>
     <div class="price-input-wrap">
       <span class="price-prefix">$</span>
-      <input type="number" class="price-input" id="c4-target-input" placeholder="850000"
-        oninput="c4TargetValidate()" />
+      <input type="text" inputmode="numeric" class="price-input" id="c4-target-input" placeholder="850,000"
+        oninput="onC4TargetInput(this)" />
     </div>
     <button class="btn" id="c4-target-submit" onclick="submitC4Target()" disabled style="width:100%;text-align:center;opacity:0.35;">
       Check →
@@ -4361,21 +4361,32 @@ function renderDepositResult() {
 function goToC4() {
   const el = document.getElementById('c4-target-input');
   if (el && d.c4TargetPrice) {
-    el.value = d.c4TargetPrice;
+    el.value = d.c4TargetPrice.toLocaleString('en-AU');
     c4TargetValidate();
   }
   goTo('c4-target');
 }
 
-function c4TargetValidate() {
-  const val = parseFloat(document.getElementById('c4-target-input')?.value || 0) || 0;
+function onC4TargetInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  if (!raw) { el.value = ''; d.c4TargetPrice = 0; c4TargetSetBtn(false); return; }
+  const num = parseInt(raw, 10);
+  d.c4TargetPrice = num;
+  el.value = num.toLocaleString('en-AU');
+  c4TargetSetBtn(num >= 100000);
+}
+
+function c4TargetSetBtn(ok) {
   const btn = document.getElementById('c4-target-submit');
-  const ok  = val >= 100000;
   if (btn) { btn.disabled = !ok; btn.style.opacity = ok ? '1' : '0.35'; }
 }
 
+function c4TargetValidate() {
+  c4TargetSetBtn(d.c4TargetPrice >= 100000);
+}
+
 function submitC4Target() {
-  const val = parseFloat(document.getElementById('c4-target-input')?.value || 0) || 0;
+  const val = d.c4TargetPrice || 0;
   if (val < 100000) return;
   d.c4TargetPrice = val;
 
