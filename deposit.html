@@ -4508,10 +4508,24 @@ function renderC4Gap(target, calc) {
   // ── Section 3: serviceability gap ──
   const sr = (svc.stressRateAnnual || 9.0) / 100 / 12;
   const n  = 360;
-  const reqPayment   = sr > 0
-    ? effectiveLoan * sr * Math.pow(1 + sr, n) / (Math.pow(1 + sr, n) - 1)
-    : effectiveLoan / n;
+  const pmtFactor = sr > 0 ? sr * Math.pow(1 + sr, n) / (Math.pow(1 + sr, n) - 1) : 1 / n;
+  const reqPayment   = effectiveLoan * pmtFactor;
   const svcShortfall = Math.max(0, reqPayment - svc.maxMonthlyRepayment);
+
+  // ── Deposit lever calculations ──
+  // Extra deposit needed to close DTI gap: each $1 of deposit reduces required loan by $1
+  const extraForDTI = dtiGap > 0 ? dtiGap : 0;
+  // Extra deposit needed to close SVC gap: work backwards from monthly shortfall
+  // svcShortfall = extraDeposit × pmtFactor  →  extraDeposit = svcShortfall / pmtFactor
+  const extraForSVC = svcShortfall > 0 ? Math.ceil(svcShortfall / pmtFactor) : 0;
+  // To close both, need the larger (the binding one will always be >= the other)
+  const extraForBoth = Math.max(extraForDTI, extraForSVC);
+  // Check if extra deposit would push LVR below 80% (LMI elimination threshold)
+  const newLoanIfExtra = Math.max(0, requiredBaseLoan - extraForBoth);
+  const newLVRifExtra  = target > 0 ? newLoanIfExtra / target : 0;
+  const crossesLMIThreshold = reqLVRpct > 80 && newLVRifExtra <= 0.80;
+  const lmiSavingIfCrosses  = crossesLMIThreshold ? reqLMIPrem : 0;
+  const showDepositLever = extraForDTI > 0 || extraForSVC > 0;
 
   // ── Debt levers (used in both sections 2 and 3) ──
   const levers = c4BuildLevers();
@@ -4523,8 +4537,36 @@ function renderC4Gap(target, calc) {
     <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.5rem;">
       <div style="background:#7f1d1d;color:#fca5a5;font-family:var(--font-mono);font-size:0.63rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:0.22rem 0.55rem;">Beyond ceiling</div>
       <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);">${fmt(gap)} above your current max of ${fmt(maximum)}</div>
-    </div>
-    <div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.75rem;">What needs to change — in order</div>`;
+    </div>`;
+
+  // ── Deposit lever block (always shown when any gap exists) ──
+  if (showDepositLever) {
+    html += `<div style="border:1px solid #222;padding:0.85rem 1rem;margin-bottom:1.25rem;">
+      <div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#888;margin-bottom:0.6rem;">Option A — Save more deposit</div>`;
+    if (extraForDTI > 0 && extraForSVC > 0) {
+      html += `<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.7;">
+        To fix the DTI gap alone: <strong style="color:var(--text);">${fmt(extraForDTI)} more</strong><br>
+        To fix the serviceability gap alone: <strong style="color:var(--text);">${fmt(extraForSVC)} more</strong><br>
+        To fix both: <strong style="color:var(--text);">${fmt(extraForBoth)} more</strong>
+      </div>`;
+    } else if (extraForDTI > 0) {
+      html += `<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.7;">
+        To close the DTI gap: <strong style="color:var(--text);">${fmt(extraForDTI)} more in savings</strong>
+      </div>`;
+    } else {
+      html += `<div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.7;">
+        To close the serviceability gap: <strong style="color:var(--text);">${fmt(extraForSVC)} more in savings</strong>
+      </div>`;
+    }
+    if (crossesLMIThreshold) {
+      html += `<div style="font-family:var(--font-mono);font-size:0.65rem;color:#888;margin-top:0.55rem;line-height:1.6;">That deposit would also push your LVR below 80% — eliminating ~${fmt(lmiSavingIfCrosses)} in LMI that's currently added to your loan.</div>`;
+    }
+    html += `<div style="font-family:var(--font-mono);font-size:0.65rem;color:#555;margin-top:0.55rem;">Sources: savings, shares, gifted funds, equity in another asset.</div>
+    </div>`;
+    html += `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.75rem;">Option B — Change your financial position</div>`;
+  } else {
+    html += `<div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.75rem;">What needs to change — in order</div>`;
+  }
 
   // ── Step 1: Minimum deposit ──
   html += c4StepHeader('1', 'Minimum deposit', depositOK ? 'ok' : 'gap');
