@@ -1392,13 +1392,63 @@
 
     </div>
     <div id="outcome-main"></div>
-    <a href="search-intro.html" class="btn" style="text-decoration: none; text-align: center; width: 100%; display: block; box-sizing: border-box; margin-top: 0.25rem;">
-      Check a suburb at this budget →
-    </a>
+    <button class="btn" onclick="goToC4()" style="width:100%;text-align:center;margin-top:0.25rem;">
+      Is this ceiling enough? Check a target price →
+    </button>
     <div class="footer-note" style="padding: 0; font-size: 0.62rem;">
       Estimates only. <a href="deposit-faq.html" style="color: var(--dim);">Full methodology and disclaimers →</a>
     </div>
     <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 1rem; flex-wrap: wrap;">
+      <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
+      <button onclick="goTo('c3-gate')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
+    </div>
+  </div>
+
+  <!-- C4 Target ──────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c4-target">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div class="q-label">Do you have a target price?</div>
+    <div class="q-sub">Enter the price you're aiming for — we'll show you how your ceiling stacks up and what levers are available.</div>
+    <div class="price-input-wrap">
+      <span class="price-prefix">$</span>
+      <input type="number" class="price-input" id="c4-target-input" placeholder="850000"
+        oninput="c4TargetValidate()" />
+    </div>
+    <button class="btn" id="c4-target-submit" onclick="submitC4Target()" disabled style="width:100%;text-align:center;opacity:0.35;">
+      Check →
+    </button>
+    <button onclick="window.location.href='search-intro.html'" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;text-align:center;width:100%;">
+      Skip — browse suburbs at my ceiling instead →
+    </button>
+  </div>
+
+  <!-- C4 On Track ─────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c4-on-track">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div id="c4-on-track-main"></div>
+    <a href="search-intro.html" class="btn" style="text-decoration:none;text-align:center;width:100%;display:block;box-sizing:border-box;margin-top:0.25rem;">
+      Check how your budget goes in a suburb →
+    </a>
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:1rem;flex-wrap:wrap;">
+      <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
+      <button onclick="goTo('c3-gate')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
+    </div>
+  </div>
+
+  <!-- C4 Gap ──────────────────────────────────────────────────────────────── -->
+  <div class="screen" id="screen-c4-gap">
+    <div class="step-meta">
+      <button class="step-back" onclick="goBack()">← back</button>
+    </div>
+    <div id="c4-gap-main"></div>
+    <a id="c4-gap-search-link" href="search-intro.html" class="btn" style="text-decoration:none;text-align:center;width:100%;display:block;box-sizing:border-box;margin-top:0.25rem;">
+      Browse suburbs at your current ceiling →
+    </a>
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:1rem;flex-wrap:wrap;">
       <button onclick="restart()" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">← Start again</button>
       <button onclick="goTo('c3-gate')" style="background:none;border:none;font-family:var(--font-mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);text-decoration:underline;cursor:pointer;padding:0;">Change inputs →</button>
     </div>
@@ -1529,6 +1579,8 @@ const d = {
   c3Rent:                0,     // monthly rent (weekly × 52 / 12)
   c3SchoolFees:          0,     // monthly school fees (annual / 12)
   c3HealthInsurance:     0,     // monthly private health insurance premium
+  // C4 — Target price check
+  c4TargetPrice:         0,
 };
 
 const navHistory = ['intro'];
@@ -1599,6 +1651,10 @@ const SCREEN_PREV = {
   },
   'c3-apply':                 'c3-review',
   'outcome':                  'c3-apply',
+  // C4 — Target price check
+  'c4-target':                'outcome',
+  'c4-on-track':              'c4-target',
+  'c4-gap':                   'c4-target',
 };
 
 function goBack() {
@@ -1624,6 +1680,7 @@ function restart() {
     c2CreditCards: 0, c2HasHECS: false, c2Mortgages: [], c2OtherLoans: [],
     c3MortgageRepayments: [], c3LoanRepayments: [],
     c3HemAmount: null, c3Rent: 0, c3SchoolFees: 0, c3HealthInsurance: 0,
+    c4TargetPrice: 0,
   });
   lastC1Result = null;
   navHistory.length = 0;
@@ -4295,6 +4352,334 @@ function renderDepositResult() {
       advEl.style.display = 'none';
     }
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── CEILING 4: Target price check ────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function goToC4() {
+  const el = document.getElementById('c4-target-input');
+  if (el && d.c4TargetPrice) {
+    el.value = d.c4TargetPrice;
+    c4TargetValidate();
+  }
+  goTo('c4-target');
+}
+
+function c4TargetValidate() {
+  const val = parseFloat(document.getElementById('c4-target-input')?.value || 0) || 0;
+  const btn = document.getElementById('c4-target-submit');
+  const ok  = val >= 100000;
+  if (btn) { btn.disabled = !ok; btn.style.opacity = ok ? '1' : '0.35'; }
+}
+
+function submitC4Target() {
+  const val = parseFloat(document.getElementById('c4-target-input')?.value || 0) || 0;
+  if (val < 100000) return;
+  d.c4TargetPrice = val;
+
+  const calc = c4Calc();
+  if (!calc) return;
+
+  if (val <= calc.maximum) {
+    renderC4OnTrack(val, calc);
+    goTo('c4-on-track');
+  } else {
+    renderC4Gap(val, calc);
+    goTo('c4-gap');
+  }
+}
+
+// ─── Shared calc helper ───────────────────────────────────────────────────────
+function c4Calc() {
+  if (!lastC1Result) return null;
+  const c1Price  = lastC1Result.price;
+  const dti      = computeDTI();
+  const svc      = computeServiceability();
+  const c2Result = dti.maxNewMortgage > 0 ? findMaxPriceForLoanCap(dti.maxNewMortgage) : null;
+  const c3Result = svc.maxLoan > 0        ? findMaxPriceForLoanCap(svc.maxLoan)        : null;
+  const c2Price  = c2Result ? c2Result.price : 0;
+  const c3Price  = c3Result ? c3Result.price : 0;
+  const prices   = [c1Price, c2Price, c3Price].filter(p => p > 0);
+  const maximum  = prices.length ? Math.min(...prices) : 0;
+
+  // Which ceiling is binding?
+  const c2Lowered  = c2Price > 0 && c2Price < c1Price;
+  const prevCeil   = c2Lowered ? c2Price : c1Price;
+  const c3Lowers   = c3Price > 0 && c3Price < prevCeil;
+  const bindingKey = c3Lowers ? 'c3' : c2Lowered ? 'c2' : 'c1';
+
+  return { c1Price, c2Price, c3Price, maximum, dti, svc, c2Result, c3Result, c2Lowered, c3Lowers, bindingKey };
+}
+
+// ─── On-track screen ─────────────────────────────────────────────────────────
+function renderC4OnTrack(target, calc) {
+  const el = document.getElementById('c4-on-track-main');
+  if (!el) return;
+
+  const { c1Price, c2Price, c3Price, maximum, bindingKey } = calc;
+  const headroom    = maximum - target;
+  const tightWarning = headroom < target * 0.05;
+
+  // Display prices for the three ceiling rows
+  // C2 and C3 show their ceiling or fall back to the effective max if they cleared
+  const displayC2 = c2Price > 0 ? c2Price : c1Price;
+  const displayC3 = c3Price > 0 ? c3Price : (c2Price > 0 ? c2Price : c1Price);
+
+  const ceilRow = (label, price, isLowest) => `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:0.55rem 0;border-bottom:1px solid var(--border);">
+      <span style="font-family:var(--font-mono);font-size:0.72rem;color:${isLowest ? 'var(--text)' : 'var(--dim)'};">${label}</span>
+      <span style="font-family:var(--font-mono);font-size:0.72rem;font-weight:700;color:${isLowest ? 'var(--text)' : 'var(--dim)'};">${fmt(price)}</span>
+    </div>`;
+
+  let html = `
+    <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.35rem;">Your target</div>
+    <div class="result-amount" style="margin-bottom:0.35rem;">${fmt(target)}</div>
+    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.35rem;">
+      <div style="background:#166534;color:#86efac;font-family:var(--font-mono);font-size:0.63rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:0.22rem 0.55rem;">Within reach</div>
+      <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);">${fmt(headroom)} below your ceiling</div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);margin-bottom:1rem;">
+      ${ceilRow('Ceiling 1 — Deposit', c1Price, bindingKey === 'c1')}
+      ${ceilRow('Ceiling 2 — Debt-to-income', displayC2, bindingKey === 'c2')}
+      ${ceilRow('Ceiling 3 — Serviceability', displayC3, bindingKey === 'c3')}
+    </div>`;
+
+  if (tightWarning) {
+    html += `<div class="advisory"><strong>Close to your limit.</strong> ${fmt(headroom)} headroom leaves little room for negotiation, competing offers, or rate movements. A buffer of at least 5% is worth aiming for before you bid.</div>`;
+  }
+
+  // Tell them which ceiling is closest
+  const bindingName = { c1: 'Deposit (Ceiling 1)', c2: 'Debt-to-income (Ceiling 2)', c3: 'Serviceability (Ceiling 3)' }[bindingKey];
+  html += `<div class="note-box blue" style="margin-top:0.75rem;"><strong>${bindingName}</strong> is your tightest ceiling at ${fmt(maximum)}. That's the one to watch if your target moves up.</div>`;
+
+  el.innerHTML = html;
+}
+
+// ─── Gap screen ──────────────────────────────────────────────────────────────
+function renderC4Gap(target, calc) {
+  const el = document.getElementById('c4-gap-main');
+  if (!el) return;
+
+  const { c1Price, c2Price, c3Price, maximum, dti, svc, bindingKey } = calc;
+  const gap = target - maximum;
+
+  const displayC2 = c2Price > 0 ? c2Price : c1Price;
+  const displayC3 = c3Price > 0 ? c3Price : (c2Price > 0 ? c2Price : c1Price);
+
+  const ceilRow = (label, price, isBinding) => `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:0.55rem 0;border-bottom:1px solid var(--border);">
+      <span style="font-family:var(--font-mono);font-size:0.72rem;color:${isBinding ? 'var(--text)' : 'var(--dim)'};">${label}</span>
+      <span style="font-family:var(--font-mono);font-size:0.72rem;font-weight:700;color:${isBinding ? 'var(--blue)' : (price >= target ? '#16a34a' : 'var(--dim)')}">${fmt(price)}</span>
+    </div>`;
+
+  const bindingLabel = { c1: 'Ceiling 1 — Deposit', c2: 'Ceiling 2 — Debt-to-income', c3: 'Ceiling 3 — Serviceability' }[bindingKey];
+
+  let html = `
+    <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.35rem;">Your target</div>
+    <div class="result-amount" style="color:#fca5a5;margin-bottom:0.35rem;">${fmt(target)}</div>
+    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.35rem;">
+      <div style="background:#7f1d1d;color:#fca5a5;font-family:var(--font-mono);font-size:0.63rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:0.22rem 0.55rem;">Beyond ceiling</div>
+      <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);">${fmt(gap)} above your current max</div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);margin-bottom:1.25rem;">
+      ${ceilRow('Ceiling 1 — Deposit', c1Price, bindingKey === 'c1')}
+      ${ceilRow('Ceiling 2 — Debt-to-income', displayC2, bindingKey === 'c2')}
+      ${ceilRow('Ceiling 3 — Serviceability', displayC3, bindingKey === 'c3')}
+    </div>
+
+    <div style="font-family:var(--font-mono);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;color:#555;text-transform:uppercase;margin-bottom:0.6rem;">${bindingLabel} is your main constraint — what can move it</div>`;
+
+  if (bindingKey === 'c1') {
+    html += c4LeversC1(target, dti, svc);
+  } else if (bindingKey === 'c2') {
+    html += c4LeversC2(target, dti);
+  } else {
+    html += c4LeversC3(target, svc);
+  }
+
+  // Always show: target cheaper
+  html += `<div class="note-box" style="margin-top:0.75rem;"><strong>Or: target ${fmt(maximum)} instead.</strong> That's your current ceiling — the best price you can reach today. Use the suburb search to find what's available at that budget.</div>`;
+
+  // Update search link text
+  const link = document.getElementById('c4-gap-search-link');
+  if (link) link.textContent = `Browse suburbs at ${fmt(maximum)} →`;
+
+  el.innerHTML = html;
+}
+
+// ─── Lever helpers ────────────────────────────────────────────────────────────
+function c4Lever(title, body) {
+  return `
+    <div style="border:1px solid var(--border);padding:0.85rem 1rem;margin-bottom:0.45rem;">
+      <div style="font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:0.3rem;">${title}</div>
+      <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);line-height:1.65;">${body}</div>
+    </div>`;
+}
+
+// ─── C1 levers (deposit) ──────────────────────────────────────────────────────
+function c4LeversC1(target, dti, svc) {
+  const regFeeAmt  = regFees[d.state] || 400;
+  const stampDuty  = calcDutyForPrice(target);
+  const lmiSdRate  = lmiSdRates[d.state] || 0;
+
+  // 20% deposit path
+  const needed20   = Math.round(target * 0.20) + stampDuty + regFeeAmt;
+  const savingsGap20 = Math.max(0, needed20 - d.savings);
+
+  // 10% deposit path (LMI)
+  const loanAt10   = Math.round(target * 0.90);
+  const lmiRate10  = lookupLMIRate(90, loanAt10);
+  const lmiPrem10  = Math.round(loanAt10 * lmiRate10);
+  const lmiSd10    = Math.round(lmiPrem10 * lmiSdRate);
+  const needed10   = Math.round(target * 0.10) + stampDuty + regFeeAmt + lmiSd10;
+  const savingsGap10 = Math.max(0, needed10 - d.savings);
+
+  let html = '';
+
+  // Lever 1: Save for 20% (no LMI)
+  if (savingsGap20 > 0) {
+    html += c4Lever(
+      `Save ${fmt(savingsGap20)} more (20% deposit, no LMI)`,
+      `At ${fmt(target)}, reaching a 20% deposit takes ${fmt(needed20)} in savings — you have ${fmt(d.savings)}. That covers the deposit, stamp duty (~${fmt(stampDuty)}), and fees.`
+    );
+  }
+
+  // Lever 2: LMI (10% deposit)
+  if (savingsGap10 <= 0) {
+    // Can already afford 10% + costs — LMI unlocks the purchase
+    html += c4Lever(
+      `Buy now with LMI — ${fmt(lmiPrem10)} added to your loan`,
+      `You have enough savings for a 10% deposit at ${fmt(target)}. LMI of ~${fmt(lmiPrem10)} would be added to your loan, increasing it from ${fmt(loanAt10)} to ~${fmt(loanAt10 + lmiPrem10)}. That slightly tightens serviceability — worth checking with a lender before committing.`
+    );
+  } else if (savingsGap10 < savingsGap20 * 0.5) {
+    // Close to 10% — show how much more they need
+    html += c4Lever(
+      `Save ${fmt(savingsGap10)} more (10% deposit with LMI)`,
+      `A 10% deposit at ${fmt(target)} needs ${fmt(needed10)} in savings including LMI stamp duty. LMI of ~${fmt(lmiPrem10)} would be added to your loan. This is a faster path than 20% — though LMI adds to your loan cost over time.`
+    );
+  }
+
+  // Lever 3: First Home Guarantee (FHBs only)
+  if (d.isFHB) {
+    html += c4Lever(
+      `First Home Guarantee — 5% deposit, no LMI`,
+      `As a first home buyer you may be eligible. Under the FHG you buy with as little as 5% without paying LMI — the government guarantees the gap. Price caps apply and vary by state and property type. Check current caps at <a href="https://www.nhfic.gov.au/support-to-buy-a-home/first-home-guarantee" target="_blank" style="color:var(--dim);text-underline-offset:2px;">nhfic.gov.au</a>.`
+    );
+  }
+
+  return html;
+}
+
+// ─── C2 levers (DTI / gross income) ──────────────────────────────────────────
+function c4LeversC2(target, dti) {
+  // Estimate required loan at target — approximate at 80% LVR or deposit-limited
+  const stampDuty     = calcDutyForPrice(target);
+  const regFeeAmt     = regFees[d.state] || 400;
+  const netDeposit    = Math.max(0, d.savings - stampDuty - regFeeAmt);
+  const requiredLoan  = Math.max(target * 0.80, target - netDeposit);
+
+  // Required gross income to meet DTI cap
+  const requiredIncome = (requiredLoan + dti.existingDebt) / 6;
+  const incomeGap      = Math.max(0, requiredIncome - dti.totalIncome);
+
+  // Credit card headroom (lenders count approved limit, not balance)
+  const loanGap       = Math.max(0, requiredLoan - dti.maxNewMortgage);
+  const ccHelp        = Math.min(d.c2CreditCards || 0, loanGap);
+
+  let html = '';
+
+  // Lever 1: Income shortfall
+  if (incomeGap > 0) {
+    html += c4Lever(
+      `Need ${fmt(incomeGap)}/yr more gross income`,
+      `DTI is capped at 6× gross income minus existing debts. At ${fmt(target)}, you need ${fmt(requiredIncome)}/yr — you currently have ${fmt(dti.totalIncome)}/yr. This is the hardest lever to pull quickly.`
+    );
+  }
+
+  // Lever 2: Credit card limits (if closing some would make the difference)
+  if (ccHelp > 0 && d.c2CreditCards > 0) {
+    const enoughAlone = ccHelp >= loanGap;
+    html += c4Lever(
+      `Reduce credit card limits by ${fmt(ccHelp)}`,
+      `Lenders count your total approved credit limit — not your balance — against the DTI cap. ${enoughAlone ? `Reducing limits by ${fmt(ccHelp)} would close the full gap.` : `Reducing all ${fmt(d.c2CreditCards)} in limits helps but won't fully close the gap alone.`} You don't need to pay off the balance — reducing or cancelling the limit is enough.`
+    );
+  }
+
+  // Lever 3: Pay down other debts
+  const otherDebt = (dti.mortgageBalances || 0) + (dti.loanBalances || 0);
+  if (otherDebt > 0 && loanGap > (ccHelp || 0)) {
+    const paydownNeeded = Math.max(0, loanGap - (ccHelp || 0));
+    html += c4Lever(
+      `Pay down ${fmt(paydownNeeded)} of existing debt`,
+      `After reducing credit card limits, you'd still need to reduce other debt balances by ~${fmt(paydownNeeded)} to reach the DTI headroom for ${fmt(target)}.`
+    );
+  }
+
+  // Lever 4: Add co-borrower (sole buyers only)
+  if (d.c2Applicants === 'sole' && incomeGap > 0) {
+    html += c4Lever(
+      `Add a co-borrower`,
+      `A co-borrower's gross income adds directly to the DTI calculation. You'd need at least ${fmt(incomeGap)}/yr combined additional income. This is a significant commitment — a broker can model the full joint application.`
+    );
+  }
+
+  return html;
+}
+
+// ─── C3 levers (serviceability / take-home) ───────────────────────────────────
+function c4LeversC3(target, svc) {
+  // Estimate required loan at target (~80% LVR)
+  const stampDuty    = calcDutyForPrice(target);
+  const regFeeAmt    = regFees[d.state] || 400;
+  const netDeposit   = Math.max(0, d.savings - stampDuty - regFeeAmt);
+  const requiredLoan = Math.max(target * 0.80, target - netDeposit);
+
+  // Required monthly payment at stress rate
+  const sr = (svc.stressRateAnnual || 9.0) / 100 / 12;
+  const n  = 360;
+  const requiredPayment = sr > 0
+    ? requiredLoan * sr * Math.pow(1+sr, n) / (Math.pow(1+sr, n) - 1)
+    : requiredLoan / n;
+
+  const monthlyShortfall = Math.max(0, requiredPayment - svc.maxMonthlyRepayment);
+  const existingCommit   = (svc.cardMonthly || 0) + (svc.loanMonthly || 0) + (svc.mortgageMonthly || 0);
+
+  let html = '';
+
+  // Lever 1: Monthly surplus shortfall
+  if (monthlyShortfall > 0) {
+    html += c4Lever(
+      `Free up ${fmt(Math.round(monthlyShortfall))}/month`,
+      `Your current repayment capacity (income minus expenses) is ${fmt(Math.round(svc.maxMonthlyRepayment))}/month. At ${fmt(target)}, the stress-tested repayment is ${fmt(Math.round(requiredPayment))}/month. You need to free up ${fmt(Math.round(monthlyShortfall))}/month — by increasing income, reducing expenses, or paying off existing debts.`
+    );
+  }
+
+  // Lever 2: Pay off existing debt repayments
+  if (existingCommit > 0) {
+    const breakdown = [
+      svc.mortgageMonthly > 0 ? `mortgage repayments ${fmt(Math.round(svc.mortgageMonthly))}/mo` : null,
+      svc.loanMonthly > 0     ? `loan repayments ${fmt(Math.round(svc.loanMonthly))}/mo` : null,
+      svc.cardMonthly > 0     ? `card minimums ${fmt(Math.round(svc.cardMonthly))}/mo (3% of limit)` : null,
+    ].filter(Boolean).join(', ');
+    html += c4Lever(
+      `Pay off existing debts (frees ${fmt(Math.round(existingCommit))}/month)`,
+      `Your existing debt commitments (${breakdown}) reduce what's available for the new mortgage. Paying these down before applying directly improves your serviceability ceiling.`
+    );
+  }
+
+  // Lever 3: Add co-borrower
+  if (d.c2Applicants === 'sole') {
+    html += c4Lever(
+      `Add a co-borrower`,
+      `A co-borrower's take-home pay adds directly to serviceability income. Combined with shared HEM (lenders use household-level living costs), this is often the most impactful single lever for serviceability — though it's a significant commitment decision.`
+    );
+  }
+
+  return html;
 }
 </script>
 
