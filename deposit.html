@@ -462,7 +462,7 @@
       <div class="gate-give"><span class="gate-lbl">Give</span><span class="gate-val">your savings and a few details</span></div>
       <div class="gate-get"><span class="gate-lbl">Get</span><span class="gate-val">the max price your deposit can reach</span></div>
     </div>
-    <button class="btn" onclick="goTo('savings')" style="width: 100%; text-align: center;">
+    <button class="btn" onclick="goTo('c2-applicant')" style="width: 100%; text-align: center;">
       Work it out →
     </button>
   </div>
@@ -712,28 +712,22 @@
       <div class="gate-give"><span class="gate-lbl">Give</span><span class="gate-val">your existing debts and gross annual income</span></div>
       <div class="gate-get"><span class="gate-lbl">Get</span><span class="gate-val">the max borrowing your debt-to-income ratio allows</span></div>
     </div>
-    <button class="btn" onclick="goTo('c2-applicant')" style="width: 100%; text-align: center;">
+    <button class="btn" onclick="startC2()" style="width: 100%; text-align: center;">
       Let's check →
     </button>
   </div>
 
-  <!-- C2 Applicant ────────────────────────────────────────────────────────── -->
+  <!-- C2 Applicant — asked upfront, before C1 ───────────────────────────── -->
   <div class="screen" id="screen-c2-applicant">
     <div class="step-meta">
       <button class="step-back" onclick="goBack()">← back</button>
     </div>
-    <div class="q-label">How many people are contributing income to this mortgage?</div>
-    <div class="q-sub">We'll collect income for each person separately — that's the only way to get the numbers right.</div>
+    <div class="q-label">Buying solo or with someone else?</div>
+    <div class="q-sub">This shapes every question in the tool — it's the first thing we need to know.</div>
     <div class="choices">
-      <button class="choice-btn" onclick="selectC2Applicant('sole')">
-        Just me
-      </button>
-      <button class="choice-btn" onclick="selectC2Applicant('joint')">
-        Me and one other person
-      </button>
-      <button class="choice-btn" onclick="selectC2Applicant('multi')">
-        Three or more people
-      </button>
+      <button class="choice-btn" onclick="selectC2Applicant('sole')">Just me</button>
+      <button class="choice-btn" onclick="selectC2Applicant('joint')">Me and one other person</button>
+      <button class="choice-btn" onclick="selectC2Applicant('multi')">Three or more people</button>
     </div>
   </div>
 
@@ -1196,7 +1190,7 @@
 
     </div>
     <div class="q-label">How many dependants?</div>
-    <div class="q-sub">Children or others you financially support. Each adds to the HEM minimum the bank assumes for your household.</div>
+    <div class="q-sub">Count everyone you financially support — children, or anyone else who relies on your income. If you share custody or have a blended household, count children who regularly depend on you financially even if they don't live with you full time. Not sure? Go higher — it's the safer assumption.</div>
     <div class="choices">
       <button class="choice-btn" onclick="c3SelectDependants(0)">None</button>
       <button class="choice-btn" onclick="c3SelectDependants(1)">1</button>
@@ -1552,9 +1546,11 @@ function goTo(id) {
 }
 
 const SCREEN_PREV = {
+  // Borrower count asked upfront, before C1
+  'c2-applicant':             'intro2',
   // C1 inputs
   'intro2':                   'intro',
-  'state':                    'intro2',
+  'state':                    'c2-applicant',
   'fhb':                      'state',
   'hbcs':                     'fhb',
   'oo':                       () => d.isFHB ? 'hbcs' : 'fhb',
@@ -1567,8 +1563,8 @@ const SCREEN_PREV = {
   'deposit-result':           'review-apply',
   // C2 inputs
   'c2-gate':                  'deposit-result',
-  'c2-applicant':             'c2-gate',
-  'c2-income-p1':             'c2-applicant',
+  'c2-three-plus':            'c2-gate',
+  'c2-income-p1':             'c2-gate',
   'c2-mortgages':             'c2-income-p1',
   'c2-mortgage-count':        'c2-mortgages',
   'c2-mortgage-details':      'c2-mortgage-count',
@@ -1584,12 +1580,12 @@ const SCREEN_PREV = {
   'c3-gate':                  'c2-result',
   'c3-mortgage-repayments':   'c3-gate',
   'c3-loan-repayments':       () => (d.c2Mortgages && d.c2Mortgages.length > 0) ? 'c3-mortgage-repayments' : 'c3-gate',
-  'c3-household':             () => {
+  // c3-household is removed from the flow — household is derived from borrower count
+  'c3-dependants':            () => {
     if (d.c2OtherLoans && d.c2OtherLoans.length > 0) return 'c3-loan-repayments';
     if (d.c2Mortgages  && d.c2Mortgages.length  > 0) return 'c3-mortgage-repayments';
     return 'c3-gate';
   },
-  'c3-dependants':            'c3-household',
   'c3-location':              'c3-dependants',
   'c3-hem':                   'c3-location',
   'c3-rent':                  'c3-hem',
@@ -2855,18 +2851,18 @@ function submitC2OtherLoans() {
   goTo('c2-review');
 }
 
-// ─── C2 applicant selection ───────────────────────────────────────────────────
+// ─── Borrower count — asked upfront, shapes all subsequent language ──────────
 function selectC2Applicant(type) {
-  if (type === 'multi') {
-    goTo('c2-three-plus');
-    return;
-  }
   d.c2Applicants = type;
+  if (type !== 'multi') {
+    // Derive household type now so C3 doesn't need to ask
+    d.household = type === 'joint' ? 'couple' : 'single';
+  }
   const joint = type === 'joint';
-  // Update debt screen sub-texts
-  const jointNote = joint ? ' Include debts for both applicants.' : '';
+  // Update C2 debt screen sub-texts
+  const jointNote = joint ? ' Include debts for both of you.' : '';
   const subs = [
-    ['c2-mortgages-sub', 'Mortgages you\'ll still have after this purchase settles — not the one you\'re selling to fund it.' + jointNote],
+    ['c2-mortgages-sub', 'Properties you\'ll still hold after this purchase settles — not the one you\'re selling.' + jointNote],
     ['c2-cards-sub', 'Lenders count your total approved limit — not your balance. A $20,000 limit you never touch still counts as $20,000 of debt.' + jointNote],
     ['c2-hecs-sub', 'Since September 2025, HECS/HELP is excluded from lender debt-to-income calculations.' + jointNote],
     ['c2-loans-sub', 'Car loans, personal loans, buy-now-pay-later. Not including what we\'ve already covered above.' + jointNote],
@@ -2875,8 +2871,45 @@ function selectC2Applicant(type) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
   });
+  // Update question language throughout the tool
+  applyBorrowerText();
+  goTo('savings');
+}
+
+function startC2() {
+  if (d.c2Applicants === 'multi') { goTo('c2-three-plus'); return; }
   renderC2IncomeP1();
   goTo('c2-income-p1');
+}
+
+function applyBorrowerText() {
+  const joint = d.c2Applicants === 'joint';
+  // FHB screen
+  const fhbLabel = document.querySelector('#screen-fhb .q-label');
+  if (fhbLabel) fhbLabel.textContent = joint ? 'First home buyers?' : 'First home buyer?';
+  const fhbBtns = document.querySelectorAll('#screen-fhb .choice-btn');
+  if (fhbBtns[0]) fhbBtns[0].textContent = joint ? 'Yes — neither of us has owned property before' : 'Yes — first property I\'ve ever owned';
+  if (fhbBtns[1]) fhbBtns[1].textContent = joint ? 'No — one or both of us has owned property before' : 'No — I\'ve owned property before';
+  // OO screen
+  const ooBtns = document.querySelectorAll('#screen-oo .choice-btn');
+  if (ooBtns[0]) ooBtns[0].textContent = joint ? 'Live in it — our principal residence' : 'Live in it — my principal residence';
+  if (ooBtns[1]) ooBtns[1].textContent = joint ? "We won't live in it — investment" : "I won't live in it — investment";
+  // Purpose screen
+  const purpBtns = document.querySelectorAll('#screen-purpose .choice-btn');
+  if (purpBtns[0]) purpBtns[0].textContent = joint ? 'Yes — our home, we\'ll live there' : 'Yes — my home, I\'ll live there';
+  if (purpBtns[1]) purpBtns[1].textContent = joint ? 'No — investment property' : 'No — investment property';
+  // C3 rent
+  const rentBtns = document.querySelectorAll('#c3-rent-choices .choice-btn');
+  if (rentBtns[0]) rentBtns[0].textContent = joint ? 'No — we don\'t pay rent' : 'No — I don\'t pay rent';
+  if (rentBtns[1]) rentBtns[1].textContent = joint ? 'Yes — we pay rent' : 'Yes — I pay rent';
+  // C3 school
+  const schoolBtns = document.querySelectorAll('#c3-school-choices .choice-btn');
+  if (schoolBtns[0]) schoolBtns[0].textContent = joint ? 'No — we don\'t pay school fees' : 'No — I don\'t pay school fees';
+  if (schoolBtns[1]) schoolBtns[1].textContent = joint ? 'Yes — we do' : 'Yes — I do';
+  // C3 health
+  const healthBtns = document.querySelectorAll('#c3-health-choices .choice-btn');
+  if (healthBtns[0]) healthBtns[0].textContent = joint ? 'No — we don\'t have private health insurance' : 'No — I don\'t have private health insurance';
+  if (healthBtns[1]) healthBtns[1].textContent = joint ? 'Yes — we do' : 'Yes — I do';
 }
 
 // ─── C2 income ───────────────────────────────────────────────────────────────
@@ -3185,11 +3218,12 @@ function startC3() {
 }
 
 function c3GoToHouseholdOrHEM() {
-  if (d.household !== null && d.numDependants !== null && d.locationType) {
+  // d.household is derived from borrower count upfront — skip c3-household screen
+  if (d.numDependants !== null && d.locationType) {
     renderC3HEM();
     goTo('c3-hem');
   } else {
-    goTo('c3-household');
+    goTo('c3-dependants');
   }
 }
 
@@ -3698,11 +3732,11 @@ function renderC3Review() {
     html += rvRow('P2 take-home', fmt(d.c2TakeHome2) + freqLabel(d.c2TakeHome2Freq || 'fortnightly'), 'c2-income-p1');
   }
 
-  // Household type
+  // Household type — derived from borrower count, no change link
   html += rvRow(
     'Household',
     d.household === 'couple' ? 'Couple' : 'Single',
-    'c3-household'
+    'c2-applicant'
   );
 
   // Dependants
