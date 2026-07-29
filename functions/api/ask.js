@@ -367,20 +367,16 @@ export async function onRequestPost(context) {
       tool_config: { function_calling_config: { mode: 'AUTO' } },
     };
 
-    // DEBUG: test Gemini API directly
+    // DEBUG: list available Gemini models
     try {
-      const minBody = { contents: [{ role: 'user', parts: [{ text: 'hi' }] }] };
-      const testRes = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(minBody),
-      });
-      const testText = await testRes.text();
-      return new Response(JSON.stringify({ reply: `DEBUG: Gemini status=${testRes.status} body=${testText.substring(0, 300)}`, toolResult: null }), {
+      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`);
+      const listData = await listRes.json();
+      const names = (listData.models || []).map(m => m.name).join(', ');
+      return new Response(JSON.stringify({ reply: `DEBUG models: ${names}`, toolResult: null }), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     } catch (testErr) {
-      return new Response(JSON.stringify({ reply: `DEBUG: Gemini fetch FAILED: ${testErr.message}`, toolResult: null }), {
+      return new Response(JSON.stringify({ reply: `DEBUG: list FAILED: ${testErr.message}`, toolResult: null }), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
