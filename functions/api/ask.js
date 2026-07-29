@@ -356,7 +356,7 @@ export async function onRequestPost(context) {
       });
     }
 
-    const GEMINI_MODEL = 'gemini-1.5-flash';
+    const GEMINI_MODEL = 'gemini-2.5-flash';
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
     // ── First Gemini call ──
@@ -366,20 +366,6 @@ export async function onRequestPost(context) {
       tools: TOOLS,
       tool_config: { function_calling_config: { mode: 'AUTO' } },
     };
-
-    // DEBUG: list available Gemini models
-    try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`);
-      const listData = await listRes.json();
-      const names = (listData.models || []).map(m => m.name).join(', ');
-      return new Response(JSON.stringify({ reply: `DEBUG models: ${names}`, toolResult: null }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
-    } catch (testErr) {
-      return new Response(JSON.stringify({ reply: `DEBUG: list FAILED: ${testErr.message}`, toolResult: null }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
-    }
 
     const ctrl1 = new AbortController();
     const t1 = setTimeout(() => ctrl1.abort(), 25000);
