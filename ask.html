@@ -437,10 +437,17 @@ async function sendUserMessage(text) {
     });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      const rawText = await res.text().catch(() => '');
+      let errMsg = `HTTP ${res.status}`;
+      try {
+        const err = JSON.parse(rawText);
+        errMsg = err.detail || err.error || errMsg;
+      } catch(e) {
+        if (rawText) errMsg = rawText.substring(0, 300);
+      }
       removeThinking();
       appendMsg('assistant', 'Something went wrong. Please try again.');
-      appendError(err.error || 'Unknown error');
+      appendError(errMsg);
       waiting = false;
       document.getElementById('send-btn').disabled = false;
       return;
