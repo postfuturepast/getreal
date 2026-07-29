@@ -1487,6 +1487,7 @@
 
 </div><!-- /wizard-wrap -->
 
+<script src="/engine.js"></script>
 <script>
 // ─── Supabase config ─────────────────────────────────────────────────────────
 const SB_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
@@ -2205,25 +2206,15 @@ function calculateAndShow() {
   goTo('deposit-result');
 }
 
-// ─── LVR ceiling ─────────────────────────────────────────────────────────────
+// ─── LVR ceiling — delegates to engine ───────────────────────────────────────
 function getMaxLVR() {
-  if (d.propType === 'apartment') {
-    return d.isOO ? 0.90 : 0.80;
-  }
-  return d.isOO ? 0.95 : 0.90;
+  return GetRealEngine.getMaxLVR({ propType: d.propType, isOO: d.isOO });
 }
 
-// ─── LMI rate lookup ─────────────────────────────────────────────────────────
+// ─── LMI rate lookup — delegates to engine ───────────────────────────────────
+// Uses live lmiRates from Supabase when available, falls back to engine defaults.
 function lookupLMIRate(lvrPct, baseLoan) {
-  // lvrPct is the LVR as a percentage, e.g. 85 for 85%
-  // Rows are ordered by lvr_min, loan_max ASC from Supabase
-  const lvrMatch = lmiRates.filter(r => lvrPct > r.lvr_min && lvrPct <= r.lvr_max);
-  if (!lvrMatch.length) return 0;
-  // Find matching loan band (null loan_max = unlimited)
-  const exact = lvrMatch.find(r => r.loan_max === null || baseLoan <= r.loan_max);
-  if (exact) return exact.rate_pct / 100;
-  // Loan exceeds all defined bands — use the highest band's rate
-  return lvrMatch[lvrMatch.length - 1].rate_pct / 100;
+  return GetRealEngine.lookupLMIRate(lvrPct, baseLoan, lmiRates.length ? lmiRates : null);
 }
 
 // ─── Stamp duty engine ───────────────────────────────────────────────────────
@@ -2362,68 +2353,17 @@ function calcDutyForPrice(p) {
   return applyNewBuildConcession(p, calcRawDutyForPrice(p));
 }
 
+// Delegates to engine.js for all FHB/PPR/HBCS concession logic.
+// New-build concessions are applied on top by calcDutyForPrice (uses live Supabase data).
 function calcRawDutyForPrice(p) {
-  const { state, isFHB, isOO, isNewBuild, isHBCS } = d;
-  switch (state) {
-    case 'NSW': {
-      const full = nswDuty(p);
-      if (isFHB) {
-        if (p <= 800000) return 0;
-        if (p <= 1000000) return Math.round(full * (p - 800000) / 200000);
-      }
-      return Math.round(full);
-    }
-    case 'VIC': {
-      if (isFHB) {
-        const full = vicGeneral(p);
-        if (p <= 600000) return 0;
-        if (p <= 750000) return Math.round(full * (p - 600000) / 150000);
-        return Math.round(full);
-      }
-      if (isOO && p <= 550000) return Math.round(vicPPR(p));
-      return Math.round(vicGeneral(p));
-    }
-    case 'QLD': {
-      const full = qldDuty(p);
-      if (isFHB) {
-        if (p <= 500000) return 0;
-        if (p <= 550000) return Math.round(full * (p - 500000) / 50000);
-      }
-      return Math.round(full);
-    }
-    case 'WA': {
-      const full = waDuty(p);
-      if (isFHB) {
-        // Thresholds updated 7 May 2026 (WA 2026-27 budget)
-        if (p <= 600000) return 0;
-        if (p <= 800000) return Math.round(full * (p - 600000) / 200000);
-      }
-      return Math.round(full);
-    }
-    case 'SA':  return Math.round(saDuty(p));
-    case 'TAS': {
-      const full = tasDuty(p);
-      if (isFHB && !isNewBuild && p < 600000) return Math.round(full * 0.5);
-      return Math.round(full);
-    }
-    case 'ACT': {
-      // From 1 July 2026: all FHB get full exemption — no income or price cap
-      if (isFHB) return 0;
-      // HBCS still applies for eligible non-FHB (pensioners, NDIS, non-property-owners within 5 years)
-      if (isHBCS) return 0;
-      return Math.round(actDuty(p));
-    }
-    case 'NT': {
-      const full = ntDuty(p);
-      if (isFHB && p < 650000) {
-        const factor = p <= 500000 ? 1 : (650000 - p) / 150000;
-        const discount = Math.min(full, 18601 * factor);
-        return Math.max(0, Math.round(full - discount));
-      }
-      return Math.round(full);
-    }
-    default: return 0;
-  }
+  return GetRealEngine.calcStampDuty(p, {
+    state:    d.state,
+    isFHB:    d.isFHB,
+    isOO:     d.isOO,
+    isHBCS:   d.isHBCS,
+    isNewBuild: d.isNewBuild,
+    propType: d.propType,
+  });
 }
 
 // Returns { full, payable, concession, label } for stamp duty at price p.
@@ -2583,25 +2523,16 @@ function findMaxPrice(savings) {
   return best;
 }
 
-// ─── Required deposit for a given price and LVR tier ─────────────────────────
-// Returns the minimum savings a buyer needs to purchase at `price` using `lvrTier`
-// (0.80 / 0.90 / 0.95). Includes deposit component, stamp duty, reg fee, and LMI
-// stamp duty (if applicable). Used by C2/C3 to verify deposit sufficiency.
+// ─── Required deposit for a given price and LVR tier — delegates to engine ───
 function requiredSavingsForPrice(price, lvrTier) {
-  if (price <= 0 || lvrTier <= 0) return null;
-  const stampDuty = calcDutyForPrice(price);
-  const regFee    = regFees[d.state]    || 400;
-  const lmiSdRate = lmiSdRates[d.state] || 0;
-  const baseLoan  = Math.round(price * lvrTier);
-  const depositComponent = price - baseLoan;
-  let lmiPremium = 0, lmiSd = 0;
-  if (lvrTier > 0.80) {
-    const rate = lookupLMIRate(lvrTier * 100, baseLoan);
-    lmiPremium = Math.round(baseLoan * rate);
-    lmiSd      = Math.round(lmiPremium * lmiSdRate);
-  }
-  const requiredSavings = depositComponent + stampDuty + regFee + lmiSd;
-  return { requiredSavings, depositComponent, stampDuty, regFee, lmiPremium, lmiSd, lvrTier };
+  return GetRealEngine.requiredSavingsForPrice(price, {
+    state:    d.state, isFHB: d.isFHB, isOO: d.isOO,
+    isHBCS:   d.isHBCS, isNewBuild: d.isNewBuild, propType: d.propType,
+    lvrTier,
+    lmiRates: lmiRates.length ? lmiRates : null,
+    regFees:  Object.keys(regFees).length ? regFees : null,
+    lmiSdRates: Object.keys(lmiSdRates).length ? lmiSdRates : null,
+  });
 }
 
 /// ─── Binary search: max price for a given loan cap ───────────────────────────
@@ -2612,53 +2543,17 @@ function requiredSavingsForPrice(price, lvrTier) {
 // (price − loanCap). This always gives a higher (and correct) answer than
 // loanCap ÷ lvrTier, because surplus savings push the price up beyond minimum deposit.
 //
-// Direction rules — CRITICAL, easy to get wrong:
-//   depositNeeded < 0  → price < loanCap, loan alone covers it → go HIGHER (lo = mid + 1)
-//   baseLVR > maxLVR   → price too low relative to loan cap    → go HIGHER (lo = mid + 1)
-//   savingsNeeded > savings → savings insufficient at this price → go LOWER  (hi = mid - 1)
-//   savingsNeeded <= savings → valid, record best               → go HIGHER (lo = mid + 1)
-// Both of the first two cases need lo = mid + 1. Using hi = mid - 1 for the LVR
-// case was the bug — it collapses the search before reaching the valid price range.
+// findMaxPriceForLoanCap — delegates to engine
+// The engine implements the same binary search with the same direction rules.
 function findMaxPriceForLoanCap(loanCap) {
-  if (loanCap <= 0 || d.savings <= 0) return null;
-  const maxLVR    = getMaxLVR();
-  const regFee    = regFees[d.state]    || 400;
-  const lmiSdRate = lmiSdRates[d.state] || 0;
-
-  let lo   = 0;
-  let hi   = Math.min(loanCap + d.savings, 15000000);
-  let best = null;
-
-  for (let i = 0; i < 60; i++) {
-    const mid = Math.floor((lo + hi) / 2);
-    if (mid <= 0) { hi = mid - 1; continue; }
-
-    const depositNeeded = mid - loanCap;         // how much deposit comes from savings
-    if (depositNeeded < 0) { lo = mid + 1; continue; }  // loan alone covers price — search higher
-
-    const baseLVR = loanCap / mid;
-    if (baseLVR > maxLVR) { lo = mid + 1; continue; }   // price too low vs loan cap — need higher price to reduce LVR
-
-    const stampDuty = calcDutyForPrice(mid);
-
-    let lmiPremium = 0, lmiSd = 0;
-    if (baseLVR > 0.80) {
-      const rate = lookupLMIRate(baseLVR * 100, loanCap);
-      lmiPremium = Math.round(loanCap * rate);
-      lmiSd      = Math.round(lmiPremium * lmiSdRate);
-    }
-
-    const savingsNeeded = depositNeeded + stampDuty + regFee + lmiSd;
-    if (savingsNeeded <= d.savings) {
-      const lvrTier = baseLVR <= 0.80 ? 0.80 : (baseLVR <= 0.90 ? 0.90 : 0.95);
-      best = { price: mid, loanCap, baseLVR, lvrTier, depositNeeded, stampDuty, regFee, lmiPremium, lmiSd, savingsNeeded };
-      lo = mid + 1;
-    } else {
-      hi = mid - 1;
-    }
-  }
-
-  return best;
+  return GetRealEngine.findMaxPriceForLoanCap(loanCap, {
+    savings:  d.savings,
+    state:    d.state, isFHB: d.isFHB, isOO: d.isOO,
+    isHBCS:   d.isHBCS, isNewBuild: d.isNewBuild, propType: d.propType,
+    lmiRates: lmiRates.length ? lmiRates : null,
+    regFees:  Object.keys(regFees).length ? regFees : null,
+    lmiSdRates: Object.keys(lmiSdRates).length ? lmiSdRates : null,
+  });
 }
 
 // ─── HEM lookup ──────────────────────────────────────────────────────────────
@@ -4213,13 +4108,9 @@ function renderOutcome() {
   el.innerHTML = html;
 }
 
-// ─── Repayment calculation ───────────────────────────────────────────────────
+// ─── Repayment calculation — delegates to engine ─────────────────────────────
 function calcMonthlyRepayment(loan, annualRatePct) {
-  // Standard P&I formula: M = L × r(1+r)^n / ((1+r)^n − 1)
-  const r = annualRatePct / 100 / 12;
-  const n = 360; // 30 years
-  if (r === 0) return loan / n;
-  return loan * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+  return GetRealEngine.calcMonthlyRepayment(loan, annualRatePct);
 }
 
 function renderRepaymentBlock(effectiveLoan) {
