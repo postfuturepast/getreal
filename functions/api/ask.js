@@ -280,56 +280,31 @@ function calculateBuyingPosition(inputs) {
   };
 }
 
-// ─── Gemini tool definition ───────────────────────────────────────────────────
-const TOOLS = [{
-  functionDeclarations: [{
-    name: 'calculate_buying_position',
-    description: 'Calculate the maximum property purchase price for an Australian buyer given their savings, income, debts and property preferences. Always call this when you have enough information rather than estimating.',
-    parameters: {
-      type: 'OBJECT',
-      properties: {
-        state:            { type: 'STRING', enum: ['NSW','VIC','QLD','WA','SA','TAS','NT','ACT'], description: 'Australian state' },
-        savings:          { type: 'NUMBER', description: 'Total savings available' },
-        propertyType:     { type: 'STRING', enum: ['house','apartment','townhouse'] },
-        isOwnerOccupier:  { type: 'BOOLEAN' },
-        isFirstHomeBuyer: { type: 'BOOLEAN' },
-        isNewBuild:       { type: 'BOOLEAN' },
-        grossIncome1:     { type: 'NUMBER', description: 'Annual gross income person 1' },
-        grossIncome2:     { type: 'NUMBER', description: 'Annual gross income person 2 (0 if sole buyer)' },
-        takeHome1:        { type: 'NUMBER', description: 'Monthly take-home pay person 1' },
-        takeHome2:        { type: 'NUMBER', description: 'Monthly take-home pay person 2 (0 if sole)' },
-        creditCardLimits: { type: 'NUMBER', description: 'Total credit card approved limits' },
-        otherLoans: {
-          type: 'ARRAY',
-          items: { type: 'OBJECT', properties: { amount: { type: 'NUMBER' }, monthlyRepayment: { type: 'NUMBER' } } },
-        },
-        hemMonthly:       { type: 'NUMBER', description: 'Monthly living expenses (HEM estimate if unknown)' },
-        stressRateAnnual: { type: 'NUMBER', description: 'Stress test rate, default 9.0' },
-      },
-      required: ['state','savings','propertyType','isOwnerOccupier','isFirstHomeBuyer','grossIncome1','takeHome1'],
-    },
-  }],
-}];
+// ─── Workers AI model ─────────────────────────────────────────────────────────
+const AI_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
 const SYSTEM_PROMPT = `You are GetReal's buying coach. You help Australians work out what they can realistically spend on a property.
 
 Your job:
 1. Understand what the user wants to know
 2. Ask only the questions you need — don't ask for information they've already given
-3. When you have enough information, call calculate_buying_position — never estimate financial figures yourself
-4. Explain results in plain English: what their ceiling is, what's limiting them, what it means in practice
+3. When you have enough information, output a JSON calculation block (see format below) — never estimate financial figures yourself
+4. After outputting the JSON block, explain the results clearly: what their ceiling is, what's limiting them, what it means in practice
 
 You only help with Australian property buying. If asked about anything else, redirect politely.
 
-Required before calling the tool: state, savings, property type, owner-occupier or investor, first home buyer status, gross income (at least one person), take-home pay (at least one person).
+Required before calculating: state, savings, property type (house/apartment/townhouse), owner-occupier or investor, first home buyer status, gross annual income (at least one person), monthly take-home pay (at least one person).
 
-For take-home pay: if the user gives gross income but not take-home, estimate take-home as roughly 72% of gross for incomes under $120k, 68% for $120k-$180k, 65% above $180k — but flag that this is an estimate and ask them to confirm if they know the figure.
+For take-home pay: if the user gives gross income but not take-home, estimate as roughly 72% of gross for incomes under $120k, 68% for $120k-$180k, 65% above $180k — flag this is an estimate.
 
 For HEM: if the user hasn't given living expenses, use a default of $3,500/month for singles, $5,000/month for couples, plus $500/month per dependent.
 
-Keep responses concise. When showing a result, explain the most important number first, then what's limiting them, then one clear next step.
+When you have all required information, output EXACTLY this JSON block (fill in real values):
+<CALC>
+{"state":"NSW","savings":150000,"propertyType":"house","isOwnerOccupier":true,"isFirstHomeBuyer":false,"grossIncome1":120000,"takeHome1":7200,"grossIncome2":0,"takeHome2":0,"creditCardLimits":0,"hemMonthly":3500,"stressRateAnnual":9.0}
+</CALC>
 
-Never say "as an AI" or refer to yourself as a language model. You are GetReal.`;
+Keep responses concise. Never say "as an AI" or refer to yourself as a language model. You are GetReal.`;
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 export async function onRequestPost(context) {
@@ -349,121 +324,49 @@ export async function onRequestPost(context) {
       });
     }
 
-    const GEMINI_API_KEY = context.env.GEMINI_API_KEY;
-    if (!GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
+    const AI = context.env.AI;
+    if (!AI) {
+      return new Response(JSON.stringify({ error: 'AI binding not configured' }), {
         status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
 
-    const GEMINI_MODEL = 'gemini-2.5-flash';
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+    // Convert Gemini-format messages → OpenAI format
+    const aiMessages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...messages.map(m => ({
+        role: m.role === 'model' ? 'assistant' : 'user',
+        content: m.parts.map(p => p.text || '').join(''),
+      })),
+    ];
 
-    // ── First Gemini call ──
-    const geminiBody = {
-      system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-      contents: messages,
-      tools: TOOLS,
-      tool_config: { function_calling_config: { mode: 'AUTO' } },
-    };
+    const aiResponse = await AI.run(AI_MODEL, { messages: aiMessages });
+    const replyText = aiResponse.response || '';
 
-    // DEBUG: raw response test
-    const rawRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiBody),
-    });
-    const rawText = await rawRes.text();
-    return new Response(JSON.stringify({ reply: `status=${rawRes.status} body=${rawText.substring(0, 500)}`, toolResult: null }), {
-      headers: { 'Content-Type': 'application/json', ...corsHeaders },
-    });
-
-    const geminiData = await rawRes.json();
-    const candidate  = geminiData.candidates?.[0];
-    const parts      = candidate?.content?.parts || [];
-
-    // ── Check for tool call ──
-    const fnCall = parts.find(p => p.functionCall);
-
-    if (!fnCall) {
-      // Plain text reply
-      const text = parts.map(p => p.text || '').join('');
-      return new Response(JSON.stringify({ reply: text, toolResult: null }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
-    }
-
-    // ── Execute tool ──
-    const { name: fnName, args: fnArgs } = fnCall.functionCall;
+    // ── Extract CALC block if present ──
     let toolResult = null;
-
-    if (fnName === 'calculate_buying_position') {
+    const calcMatch = replyText.match(/<CALC>\s*([\s\S]*?)\s*<\/CALC>/);
+    if (calcMatch) {
       try {
+        const params = JSON.parse(calcMatch[1]);
         toolResult = calculateBuyingPosition({
-          ...fnArgs,
+          ...params,
           takeHome1Freq: 'monthly',
           takeHome2Freq: 'monthly',
-          hemMonthly:    fnArgs.hemMonthly || 3500,
-          stressRateAnnual: fnArgs.stressRateAnnual || 9.0,
-          otherLoans:    fnArgs.otherLoans || [],
-          mortgages:     fnArgs.mortgages  || [],
+          hemMonthly:       params.hemMonthly       || 3500,
+          stressRateAnnual: params.stressRateAnnual || 9.0,
+          otherLoans:       params.otherLoans       || [],
+          mortgages:        params.mortgages        || [],
         });
       } catch (calcErr) {
         toolResult = { error: calcErr.message };
       }
     }
 
-    // ── Second Gemini call with tool result ──
-    const toolResponseContents = [
-      ...messages,
-      { role: 'model', parts },
-      {
-        role: 'user',
-        parts: [{
-          functionResponse: {
-            name: fnName,
-            response: { name: fnName, content: toolResult },
-          },
-        }],
-      },
-    ];
+    // Strip the CALC block from the reply text shown to the user
+    const cleanReply = replyText.replace(/<CALC>[\s\S]*?<\/CALC>/g, '').trim();
 
-    const geminiBody2 = {
-      system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-      contents: toolResponseContents,
-      tools: TOOLS,
-    };
-
-    const ctrl2 = new AbortController();
-    const t2 = setTimeout(() => ctrl2.abort(), 25000);
-    let geminiRes2;
-    try {
-      geminiRes2 = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(geminiBody2),
-        signal: ctrl2.signal,
-      });
-    } catch (fetchErr2) {
-      clearTimeout(t2);
-      return new Response(JSON.stringify({ error: `Gemini fetch 2 failed: ${fetchErr2.message}` }), {
-        status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
-    }
-    clearTimeout(t2);
-
-    if (!geminiRes2.ok) {
-      const errText = await geminiRes2.text();
-      return new Response(JSON.stringify({ error: `Gemini API error (tool response): ${geminiRes2.status}`, detail: errText }), {
-        status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
-    }
-
-    const geminiData2 = await geminiRes2.json();
-    const finalParts  = geminiData2.candidates?.[0]?.content?.parts || [];
-    const finalText   = finalParts.map(p => p.text || '').join('');
-
-    return new Response(JSON.stringify({ reply: finalText, toolResult }), {
+    return new Response(JSON.stringify({ reply: cleanReply, toolResult }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
 
@@ -475,8 +378,8 @@ export async function onRequestPost(context) {
 }
 
 export async function onRequestGet(context) {
-  const key = context.env.GEMINI_API_KEY;
-  return new Response(JSON.stringify({ status: 'ok', keyConfigured: !!key }), {
+  const ai = context.env.AI;
+  return new Response(JSON.stringify({ status: 'ok', aiConfigured: !!ai }), {
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
   });
 }
