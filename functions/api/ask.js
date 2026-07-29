@@ -367,11 +367,23 @@ export async function onRequestPost(context) {
       tool_config: { function_calling_config: { mode: 'AUTO' } },
     };
 
-    const geminiRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiBody),
-    });
+    const ctrl1 = new AbortController();
+    const t1 = setTimeout(() => ctrl1.abort(), 25000);
+    let geminiRes;
+    try {
+      geminiRes = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(geminiBody),
+        signal: ctrl1.signal,
+      });
+    } catch (fetchErr) {
+      clearTimeout(t1);
+      return new Response(JSON.stringify({ error: `Gemini fetch failed: ${fetchErr.message}` }), {
+        status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+    clearTimeout(t1);
 
     if (!geminiRes.ok) {
       const errText = await geminiRes.text();
@@ -436,11 +448,23 @@ export async function onRequestPost(context) {
       tools: TOOLS,
     };
 
-    const geminiRes2 = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiBody2),
-    });
+    const ctrl2 = new AbortController();
+    const t2 = setTimeout(() => ctrl2.abort(), 25000);
+    let geminiRes2;
+    try {
+      geminiRes2 = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(geminiBody2),
+        signal: ctrl2.signal,
+      });
+    } catch (fetchErr2) {
+      clearTimeout(t2);
+      return new Response(JSON.stringify({ error: `Gemini fetch 2 failed: ${fetchErr2.message}` }), {
+        status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+    clearTimeout(t2);
 
     if (!geminiRes2.ok) {
       const errText = await geminiRes2.text();
