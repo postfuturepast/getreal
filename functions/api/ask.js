@@ -367,32 +367,18 @@ export async function onRequestPost(context) {
       tool_config: { function_calling_config: { mode: 'AUTO' } },
     };
 
-    const ctrl1 = new AbortController();
-    const t1 = setTimeout(() => ctrl1.abort(), 25000);
-    let geminiRes;
-    try {
-      geminiRes = await fetch(geminiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(geminiBody),
-        signal: ctrl1.signal,
-      });
-    } catch (fetchErr) {
-      clearTimeout(t1);
-      return new Response(JSON.stringify({ error: `Gemini fetch failed: ${fetchErr.message}` }), {
-        status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
-    }
-    clearTimeout(t1);
+    // DEBUG: raw response test
+    const rawRes = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(geminiBody),
+    });
+    const rawText = await rawRes.text();
+    return new Response(JSON.stringify({ reply: `status=${rawRes.status} body=${rawText.substring(0, 500)}`, toolResult: null }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      return new Response(JSON.stringify({ error: `Gemini API error: ${geminiRes.status}`, detail: errText }), {
-        status: 502, headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
-    }
-
-    const geminiData = await geminiRes.json();
+    const geminiData = await rawRes.json();
     const candidate  = geminiData.candidates?.[0];
     const parts      = candidate?.content?.parts || [];
 
