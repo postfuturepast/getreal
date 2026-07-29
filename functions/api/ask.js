@@ -356,7 +356,8 @@ export async function onRequestPost(context) {
       });
     }
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const GEMINI_MODEL = 'gemini-1.5-flash';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
     // ── First Gemini call ──
     const geminiBody = {
@@ -461,6 +462,13 @@ export async function onRequestPost(context) {
       status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   }
+}
+
+export async function onRequestGet(context) {
+  const key = context.env.GEMINI_API_KEY;
+  return new Response(JSON.stringify({ status: 'ok', keyConfigured: !!key }), {
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+  });
 }
 
 export async function onRequestOptions() {
