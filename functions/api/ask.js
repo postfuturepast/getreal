@@ -356,6 +356,11 @@ export async function onRequestPost(context) {
       });
     }
 
+    // DEBUG — remove after testing
+    return new Response(JSON.stringify({ reply: 'DEBUG: function body reached. key=' + (GEMINI_API_KEY ? 'yes' : 'no') + ' msgs=' + messages.length, toolResult: null }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+
     const GEMINI_MODEL = 'gemini-1.5-flash';
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
