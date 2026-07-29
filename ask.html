@@ -346,49 +346,49 @@ function buildToolResultBlock(result) {
 
   const label = document.createElement('div');
   label.className = 'tool-result-label';
-  label.textContent = 'Calculated ceiling';
+  label.textContent = 'Deposit ceiling';
   block.appendChild(label);
 
-  if (result.maximum > 0) {
+  if (result.error) {
+    const msg = document.createElement('div');
+    msg.style.cssText = 'font-size:0.72rem;color:#fca5a5;margin-top:0.25rem;';
+    msg.textContent = result.error;
+    block.appendChild(msg);
+    return block;
+  }
+
+  if (result.maxPrice > 0) {
     const ceiling = document.createElement('div');
     ceiling.className = 'tool-result-ceiling';
-    ceiling.textContent = fmtMoney(result.maximum);
+    ceiling.textContent = fmtMoney(result.maxPrice);
     block.appendChild(ceiling);
 
     const rows = document.createElement('div');
     rows.className = 'tool-result-rows';
 
-    const ceilingNames = {
-      deposit: 'Ceiling 1 — Deposit',
-      dti: 'Ceiling 2 — Debt-to-income',
-      serviceability: 'Ceiling 3 — Serviceability',
-    };
-
-    const addRow = (label, value, binding = false) => {
+    const addRow = (lbl, value, highlight = false) => {
       const r = document.createElement('div');
-      r.className = 'tool-result-row' + (binding ? ' binding' : '');
-      r.innerHTML = `<span class="tr-label">${label}</span><span class="tr-val">${value}</span>`;
+      r.className = 'tool-result-row' + (highlight ? ' binding' : '');
+      r.innerHTML = `<span class="tr-label">${lbl}</span><span class="tr-val">${value}</span>`;
       rows.appendChild(r);
     };
 
-    if (result.c1Price > 0) addRow('C1 — Deposit ceiling', fmtMoney(result.c1Price), result.bindingCeiling === 'deposit');
-    if (result.c2Price > 0) addRow('C2 — DTI ceiling',     fmtMoney(result.c2Price), result.bindingCeiling === 'dti');
-    if (result.c3Price > 0) addRow('C3 — Serviceability',  fmtMoney(result.c3Price), result.bindingCeiling === 'serviceability');
-
-    const bindLabel = ceilingNames[result.bindingCeiling] || 'Unknown';
-    addRow('Binding ceiling', bindLabel, true);
-
-    if (result.breakdown) {
-      if (result.breakdown.stampDuty > 0) addRow('Stamp duty', fmtMoney(result.breakdown.stampDuty));
-      if (result.breakdown.lmiPremium > 0) addRow('LMI (capitalised)', fmtMoney(result.breakdown.lmiPremium));
-    }
+    addRow('Stamp duty', fmtMoney(result.stampDuty));
+    if (result.lmiPremium > 0) addRow('LMI (capitalised)', fmtMoney(result.lmiPremium));
+    addRow('LVR tier', Math.round(result.lvrTier * 100) + '%');
 
     block.appendChild(rows);
-  } else {
-    const msg = document.createElement('div');
-    msg.style.cssText = 'font-size:0.72rem;color:#fca5a5;margin-top:0.25rem;';
-    msg.textContent = 'Could not calculate — check inputs.';
-    block.appendChild(msg);
+
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:0.65rem;color:#555;margin-top:0.6rem;line-height:1.4;';
+    note.textContent = 'Deposit ceiling only. Income and debts may reduce this further.';
+    block.appendChild(note);
+
+    const link = document.createElement('a');
+    link.href = '/deposit.html';
+    link.style.cssText = 'display:inline-block;margin-top:0.5rem;font-size:0.65rem;color:#3b82f6;text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;';
+    link.textContent = 'Full calculator →';
+    block.appendChild(link);
   }
 
   return block;

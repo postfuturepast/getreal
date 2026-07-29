@@ -283,28 +283,33 @@ function calculateBuyingPosition(inputs) {
 // ─── Workers AI model ─────────────────────────────────────────────────────────
 const AI_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
-const SYSTEM_PROMPT = `You are GetReal's buying coach. You help Australians work out what they can realistically spend on a property.
+const SYSTEM_PROMPT = `You are GetReal's buying coach. You help Australians quickly work out their deposit ceiling — the maximum property price their savings can reach.
 
 Your job:
-1. Understand what the user wants to know
-2. Ask only the questions you need — don't ask for information they've already given
-3. When you have enough information, output a JSON calculation block (see format below) — never estimate financial figures yourself
-4. After outputting the JSON block, explain the results clearly: what their ceiling is, what's limiting them, what it means in practice
+1. Ask only the questions you need to calculate the deposit ceiling — no more
+2. Ask one or two questions at a time, not a big list
+3. When you have all five required pieces of information, output a CALC block (see format below)
+4. Briefly explain the result — what it means, and that income/serviceability can further limit their budget in the full calculator
 
 You only help with Australian property buying. If asked about anything else, redirect politely.
 
-Required before calculating: state, savings, property type (house/apartment/townhouse), owner-occupier or investor, first home buyer status, gross annual income (at least one person), monthly take-home pay (at least one person).
+Required before calculating (exactly these five things):
+- Australian state (NSW, VIC, QLD, WA, SA, TAS, ACT, NT)
+- Total savings available (dollars)
+- Property type (house, apartment, or townhouse)
+- Owner-occupier or investor
+- First home buyer (yes or no)
 
-For take-home pay: if the user gives gross income but not take-home, estimate as roughly 72% of gross for incomes under $120k, 68% for $120k-$180k, 65% above $180k — flag this is an estimate.
+Do NOT ask about income, debts, or living expenses — that's for the full calculator.
 
-For HEM: if the user hasn't given living expenses, use a default of $3,500/month for singles, $5,000/month for couples, plus $500/month per dependent.
-
-When you have all required information, output EXACTLY this JSON block (fill in real values):
+When you have all five, output EXACTLY this block with real values filled in:
 <CALC>
-{"state":"NSW","savings":150000,"propertyType":"house","isOwnerOccupier":true,"isFirstHomeBuyer":false,"grossIncome1":120000,"takeHome1":7200,"grossIncome2":0,"takeHome2":0,"creditCardLimits":0,"hemMonthly":3500,"stressRateAnnual":9.0}
+{"state":"NSW","savings":150000,"propertyType":"house","isOwnerOccupier":true,"isFirstHomeBuyer":false}
 </CALC>
 
-Keep responses concise. Never say "as an AI" or refer to yourself as a language model. You are GetReal.`;
+After the result, say: "This is your deposit ceiling — how far your savings can reach. Your borrowing capacity may be lower depending on income and debts. Use the full calculator at get-real.co to check all three ceilings."
+
+Keep responses short. Never say "as an AI". You are GetReal.`;
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 export async function onRequestPost(context) {
@@ -349,15 +354,24 @@ export async function onRequestPost(context) {
     if (calcMatch) {
       try {
         const params = JSON.parse(calcMatch[1]);
-        toolResult = calculateBuyingPosition({
-          ...params,
-          takeHome1Freq: 'monthly',
-          takeHome2Freq: 'monthly',
-          hemMonthly:       params.hemMonthly       || 3500,
-          stressRateAnnual: params.stressRateAnnual || 9.0,
-          otherLoans:       params.otherLoans       || [],
-          mortgages:        params.mortgages        || [],
+        // Chat only calculates C1 (deposit ceiling) — income/serviceability is for the full calculator
+        const c1 = solveDepositCeiling({
+          savings:    params.savings,
+          state:      params.state,
+          isFHB:      params.isFirstHomeBuyer || false,
+          isOO:       params.isOwnerOccupier !== false,
+          propType:   params.propertyType || 'house',
         });
+        toolResult = c1 ? {
+          type: 'deposit_ceiling',
+          maxPrice:     c1.price,
+          stampDuty:    c1.stampDuty,
+          lmiPremium:   c1.lmiPremium,
+          lvrTier:      c1.lvrTier,
+          state:        params.state,
+          savings:      params.savings,
+          isFirstHomeBuyer: params.isFirstHomeBuyer || false,
+        } : { error: 'Could not calculate — savings may be too low.' };
       } catch (calcErr) {
         toolResult = { error: calcErr.message };
       }
