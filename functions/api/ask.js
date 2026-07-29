@@ -367,15 +367,20 @@ export async function onRequestPost(context) {
       tool_config: { function_calling_config: { mode: 'AUTO' } },
     };
 
-    // DEBUG: test outbound fetch capability
+    // DEBUG: test Gemini API directly
     try {
-      const testRes = await fetch('https://httpbin.org/get');
-      const testStatus = testRes.status;
-      return new Response(JSON.stringify({ reply: `DEBUG: outbound fetch worked, status=${testStatus}`, toolResult: null }), {
+      const minBody = { contents: [{ role: 'user', parts: [{ text: 'hi' }] }] };
+      const testRes = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(minBody),
+      });
+      const testText = await testRes.text();
+      return new Response(JSON.stringify({ reply: `DEBUG: Gemini status=${testRes.status} body=${testText.substring(0, 300)}`, toolResult: null }), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     } catch (testErr) {
-      return new Response(JSON.stringify({ reply: `DEBUG: outbound fetch FAILED: ${testErr.message}`, toolResult: null }), {
+      return new Response(JSON.stringify({ reply: `DEBUG: Gemini fetch FAILED: ${testErr.message}`, toolResult: null }), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
