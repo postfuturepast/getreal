@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ask GetReal — buying coach</title>
-  <meta name="description" content="Chat with GetReal's buying coach. Tell us your situation and find out what you can actually spend on a property.">
+  <title>GetReal — buying coach</title>
+  <meta name="description" content="Tell GetReal where you are in your property journey. Work out your maximum budget, check if a property is realistic, and more.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -48,18 +48,111 @@
       color: #555;
       margin-left: auto;
     }
+    .back-btn {
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #555;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      padding: 0;
+      margin-left: auto;
+      display: none;
+    }
+    .back-btn:hover { color: #e5e5e5; }
+
+    /* ── Journey selection ── */
+    .journey-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+      max-width: 680px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .journey-intro {
+      font-size: 0.78rem;
+      color: #888;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
+      line-height: 1.6;
+    }
+    .journey-intro strong {
+      color: #e5e5e5;
+      font-weight: 700;
+    }
+    .journey-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      width: 100%;
+    }
+    .journey-card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      padding: 1rem 1.1rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      text-decoration: none;
+      color: inherit;
+    }
+    .journey-card:hover { border-color: #3b82f6; background: #0f1823; }
+    .journey-card.coming { cursor: default; opacity: 0.6; }
+    .journey-card.coming:hover { border-color: #1e1e1e; background: #111; }
+    .journey-num {
+      font-size: 0.55rem;
+      letter-spacing: 0.14em;
+      color: #3b82f6;
+      font-weight: 700;
+    }
+    .journey-card.coming .journey-num { color: #555; }
+    .journey-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #e5e5e5;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .journey-desc {
+      font-size: 0.68rem;
+      color: #666;
+      line-height: 1.5;
+      margin-top: 0.15rem;
+    }
+    .journey-badge {
+      display: inline-block;
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #555;
+      border: 1px solid #2a2a2a;
+      padding: 0.15rem 0.4rem;
+      margin-top: 0.25rem;
+      align-self: flex-start;
+    }
 
     /* ── Chat area ── */
-    .chat-wrap {
+    .chat-outer {
       flex: 1;
       overflow-y: auto;
+      display: none;
+    }
+    .chat-wrap {
+      max-width: 680px;
+      width: 100%;
+      margin: 0 auto;
       padding: 1.25rem;
       display: flex;
       flex-direction: column;
       gap: 1.1rem;
-      max-width: 680px;
-      width: 100%;
-      margin: 0 auto;
     }
 
     /* ── Message bubbles ── */
@@ -77,7 +170,6 @@
     }
     .msg.from-getreal .msg-sender { color: #3b82f6; }
     .msg.from-user    .msg-sender { color: #555; }
-
     .msg-body {
       font-size: 0.82rem;
       line-height: 1.7;
@@ -88,72 +180,81 @@
     .msg.from-getreal .msg-body { color: #e5e5e5; }
     .msg.from-user    .msg-body { color: #999; }
 
-    /* ── Opening options ── */
-    .opening-opts {
+    /* ── Quick reply buttons ── */
+    .quick-replies {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       gap: 0.4rem;
-      margin-top: 0.25rem;
+      margin-top: 0.5rem;
     }
-    .opt-btn {
+    .qr-btn {
       background: #141414;
       border: 1px solid #252525;
       color: #d4d4d4;
       font-family: 'Courier New', monospace;
-      font-size: 0.78rem;
-      text-align: left;
-      padding: 0.7rem 0.9rem;
+      font-size: 0.72rem;
+      padding: 0.5rem 0.85rem;
       cursor: pointer;
       transition: border-color 0.1s, background 0.1s;
-      line-height: 1.4;
     }
-    .opt-btn:hover { border-color: #3b82f6; background: #111; color: #fff; }
+    .qr-btn:hover { border-color: #3b82f6; background: #111; color: #fff; }
+    .qr-btn.primary { border-color: #3b82f6; color: #3b82f6; }
+    .qr-btn.primary:hover { background: #3b82f6; color: #fff; }
 
-    /* ── Tool result block ── */
-    .tool-result {
+    /* ── Step reveal cards ── */
+    .step-card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-left: 2px solid #252525;
+      padding: 0.65rem 0.9rem;
+      margin-top: 0.3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+    .step-card-label {
+      font-size: 0.68rem;
+      color: #666;
+    }
+    .step-card-value {
+      font-size: 0.82rem;
+      color: #d4d4d4;
+      font-weight: 600;
+    }
+    .step-card-value.negative { color: #f87171; }
+    .step-card-value.result   { color: #fff; font-size: 1.1rem; }
+
+    /* ── Big reveal card ── */
+    .reveal-card {
       background: #111;
       border: 1px solid #1e1e1e;
       border-left: 3px solid #3b82f6;
-      padding: 0.85rem 1rem;
-      margin-top: 0.5rem;
+      padding: 0.9rem 1rem;
+      margin-top: 0.4rem;
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.3rem;
     }
-    .tool-result-label {
+    .reveal-label {
       font-size: 0.55rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: #3b82f6;
       font-weight: 700;
     }
-    .tool-result-ceiling {
+    .reveal-price {
       font-size: 2rem;
       font-weight: 700;
       color: #fff;
       letter-spacing: -0.01em;
     }
-    .tool-result-rows {
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
+    .reveal-sub {
+      font-size: 0.65rem;
+      color: #555;
       margin-top: 0.25rem;
+      line-height: 1.5;
     }
-    .tool-result-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.7rem;
-      color: #666;
-      border-bottom: 1px solid #1a1a1a;
-      padding: 0.2rem 0;
-    }
-    .tool-result-row.binding {
-      color: #d4d4d4;
-      font-weight: 700;
-    }
-    .tool-result-row.binding .tr-val { color: #fff; }
-    .tr-label { color: inherit; }
-    .tr-val   { font-weight: 600; }
 
     /* ── Typing indicator ── */
     .thinking {
@@ -161,7 +262,7 @@
       flex-direction: column;
       gap: 0.25rem;
     }
-    .thinking .msg-sender { color: #3b82f6; }
+    .thinking .msg-sender { color: #3b82f6; font-size: 0.55rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
     .thinking-dots {
       font-size: 0.75rem;
       color: #3b82f6;
@@ -176,6 +277,7 @@
       padding: 0.9rem 1.25rem;
       position: sticky;
       bottom: 0;
+      display: none;
     }
     .input-inner {
       max-width: 680px;
@@ -230,9 +332,10 @@
     }
 
     @media (max-width: 480px) {
-      .chat-wrap  { padding: 1rem 0.85rem; }
+      .journey-grid { grid-template-columns: 1fr; }
+      .chat-wrap { padding: 1rem 0.85rem; }
       .input-area { padding: 0.75rem 0.85rem; }
-      .tool-result-ceiling { font-size: 1.6rem; }
+      .reveal-price { font-size: 1.6rem; }
     }
   </style>
 </head>
@@ -240,12 +343,53 @@
 
 <div class="ask-header">
   <a class="ask-header-logo" href="/">GetReal</a>
-  <span class="ask-header-tag">Buying coach</span>
+  <button class="back-btn" id="back-btn" onclick="goBack()">← Start over</button>
+  <span class="ask-header-tag" id="header-tag">Buying coach</span>
 </div>
 
-<div class="chat-wrap" id="chat"></div>
+<!-- Phase 1: Journey selection -->
+<div class="journey-wrap" id="journey-wrap">
+  <div class="journey-intro">
+    <strong>Where are you in your property journey?</strong><br>
+    Pick the tool that fits your situation.
+  </div>
+  <div class="journey-grid">
 
-<div class="input-area">
+    <div class="journey-card" onclick="selectJourney('budget')">
+      <span class="journey-num">TOOL 01</span>
+      <span class="journey-title">Max budget</span>
+      <span class="journey-desc">Find the maximum price your deposit can reach — before income even comes into it.</span>
+    </div>
+
+    <a class="journey-card" href="/search.html">
+      <span class="journey-num">TOOL 02</span>
+      <span class="journey-title">Realism check</span>
+      <span class="journey-desc">Got a suburb and price in mind? See what share of that market your budget can access.</span>
+    </a>
+
+    <div class="journey-card coming" onclick="selectJourney('mortgage')">
+      <span class="journey-num">TOOL 03</span>
+      <span class="journey-title">Mortgage tracker</span>
+      <span class="journey-desc">Track your mortgage, offset, and equity over time.</span>
+      <span class="journey-badge">Coming soon</span>
+    </div>
+
+    <div class="journey-card coming" onclick="selectJourney('cgt')">
+      <span class="journey-num">TOOL 04</span>
+      <span class="journey-title">CGT calculator</span>
+      <span class="journey-desc">Work out your capital gains tax liability before you sell.</span>
+      <span class="journey-badge">Coming soon</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- Phase 2: Chat -->
+<div class="chat-outer" id="chat-outer">
+  <div class="chat-wrap" id="chat"></div>
+</div>
+
+<div class="input-area" id="input-area">
   <div class="input-inner">
     <textarea
       id="user-input"
@@ -260,27 +404,116 @@
 </div>
 
 <script>
+// ─── Config ───────────────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
+
 // ─── State ────────────────────────────────────────────────────────────────────
-let conversationHistory = [];  // Gemini-format messages array
-let waiting = false;
-let openingDone = false;
+let phase        = 'journey';   // 'journey' | 'chat'
+let journey      = null;        // 'budget' | 'mortgage' | 'cgt'
+let waiting      = false;
+let conversationHistory = [];
+let postCalcPhase = null;       // null | 'ask-enough' | 'ask-target' | 'ask-power' | 'done'
+let lastCalcResult = null;
+let awaitingEmail = false;
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 function fmtMoney(n) {
-  if (!n || isNaN(n)) return '$0';
+  if (!n && n !== 0) return '—';
   return '$' + Math.round(n).toLocaleString('en-AU');
 }
 
-// ─── DOM helpers ──────────────────────────────────────────────────────────────
-function chatEl() { return document.getElementById('chat'); }
+// ─── DOM ──────────────────────────────────────────────────────────────────────
+function chatEl()  { return document.getElementById('chat'); }
+function scrollToBottom() {
+  const outer = document.getElementById('chat-outer');
+  outer.scrollTop = outer.scrollHeight;
+}
 
-function appendMsg(role, text, opts = {}) {
+function enterChatMode() {
+  document.getElementById('journey-wrap').style.display = 'none';
+  document.getElementById('chat-outer').style.display   = 'block';
+  document.getElementById('input-area').style.display   = 'block';
+  document.getElementById('back-btn').style.display     = 'block';
+  document.getElementById('header-tag').style.display   = 'none';
+  document.getElementById('user-input').focus();
+}
+
+function goBack() {
+  // Reset everything
+  phase = 'journey';
+  journey = null;
+  waiting = false;
+  conversationHistory = [];
+  postCalcPhase = null;
+  lastCalcResult = null;
+  awaitingEmail = false;
+  chatEl().innerHTML = '';
+
+  document.getElementById('journey-wrap').style.display = '';
+  document.getElementById('chat-outer').style.display   = 'none';
+  document.getElementById('input-area').style.display   = 'none';
+  document.getElementById('back-btn').style.display     = 'none';
+  document.getElementById('header-tag').style.display   = '';
+  document.getElementById('user-input').value = '';
+  document.getElementById('user-input').style.height = '';
+  document.getElementById('send-btn').disabled = true;
+}
+
+// ─── Journey selection ────────────────────────────────────────────────────────
+function selectJourney(j) {
+  journey = j;
+  phase = 'chat';
+
+  if (j === 'budget') {
+    enterChatMode();
+    appendGetReal(
+      'Your deposit sets the first ceiling on what you can buy — before income or debts even come into it.\n\nTell me a bit about your situation. Where are you buying, and what are you working with?'
+    );
+    document.getElementById('user-input').placeholder = 'Tell me about your situation…';
+
+  } else if (j === 'mortgage' || j === 'cgt') {
+    const toolName = j === 'mortgage' ? 'Mortgage tracker' : 'CGT calculator';
+    enterChatMode();
+    appendGetReal(
+      `The ${toolName} is still in the works — we're building it now.\n\nIf you want to be the first to know when it's ready to test, drop your email below.`
+    );
+    awaitingEmail = true;
+    document.getElementById('user-input').placeholder = 'Your email address…';
+  }
+}
+
+// ─── Message builders ─────────────────────────────────────────────────────────
+function appendGetReal(text, extras) {
   const wrap = document.createElement('div');
-  wrap.className = 'msg ' + (role === 'assistant' ? 'from-getreal' : 'from-user');
+  wrap.className = 'msg from-getreal';
 
   const sender = document.createElement('div');
   sender.className = 'msg-sender';
-  sender.textContent = role === 'assistant' ? 'GETREAL' : 'YOU';
+  sender.textContent = 'GETREAL';
+  wrap.appendChild(sender);
+
+  if (text) {
+    const body = document.createElement('div');
+    body.className = 'msg-body';
+    body.textContent = text;
+    wrap.appendChild(body);
+  }
+
+  if (extras) extras(wrap);
+
+  chatEl().appendChild(wrap);
+  scrollToBottom();
+  return wrap;
+}
+
+function appendUser(text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg from-user';
+
+  const sender = document.createElement('div');
+  sender.className = 'msg-sender';
+  sender.textContent = 'YOU';
 
   const body = document.createElement('div');
   body.className = 'msg-body';
@@ -288,44 +521,15 @@ function appendMsg(role, text, opts = {}) {
 
   wrap.appendChild(sender);
   wrap.appendChild(body);
-
-  if (opts.options) {
-    const optWrap = document.createElement('div');
-    optWrap.className = 'opening-opts';
-    opts.options.forEach(opt => {
-      const btn = document.createElement('button');
-      btn.className = 'opt-btn';
-      btn.textContent = opt;
-      btn.onclick = () => { optWrap.remove(); sendUserMessage(opt); };
-      optWrap.appendChild(btn);
-    });
-    wrap.appendChild(optWrap);
-  }
-
-  if (opts.toolResult) {
-    wrap.appendChild(buildToolResultBlock(opts.toolResult));
-  }
-
   chatEl().appendChild(wrap);
   scrollToBottom();
-  return wrap;
 }
 
 function appendThinking() {
   const wrap = document.createElement('div');
   wrap.className = 'thinking';
   wrap.id = 'thinking-indicator';
-
-  const sender = document.createElement('div');
-  sender.className = 'msg-sender';
-  sender.textContent = 'GETREAL';
-
-  const dots = document.createElement('div');
-  dots.className = 'thinking-dots';
-  dots.textContent = 'Thinking…';
-
-  wrap.appendChild(sender);
-  wrap.appendChild(dots);
+  wrap.innerHTML = '<div class="msg-sender">GETREAL</div><div class="thinking-dots">Thinking…</div>';
   chatEl().appendChild(wrap);
   scrollToBottom();
 }
@@ -335,66 +539,257 @@ function removeThinking() {
   if (el) el.remove();
 }
 
-function scrollToBottom() {
-  const c = chatEl();
-  c.scrollTop = c.scrollHeight;
+function appendError(msg) {
+  const el = document.createElement('div');
+  el.className = 'error-msg';
+  el.textContent = msg;
+  chatEl().appendChild(el);
+  scrollToBottom();
 }
 
-function buildToolResultBlock(result) {
-  const block = document.createElement('div');
-  block.className = 'tool-result';
+// Append a single step card (for staged reveal)
+function appendStepCard(label, value, type) {
+  const card = document.createElement('div');
+  card.className = 'step-card';
+  const lEl = document.createElement('span');
+  lEl.className = 'step-card-label';
+  lEl.textContent = label;
+  const vEl = document.createElement('span');
+  vEl.className = 'step-card-value' + (type ? ' ' + type : '');
+  vEl.textContent = value;
+  card.appendChild(lEl);
+  card.appendChild(vEl);
+  chatEl().appendChild(card);
+  scrollToBottom();
+}
 
-  const label = document.createElement('div');
-  label.className = 'tool-result-label';
-  label.textContent = 'Deposit ceiling';
-  block.appendChild(label);
+// Append the big reveal card
+function appendRevealCard(result) {
+  const card = document.createElement('div');
+  card.className = 'reveal-card';
+  card.innerHTML = `
+    <div class="reveal-label">Deposit ceiling</div>
+    <div class="reveal-price">${fmtMoney(result.maxPrice)}</div>
+    <div class="reveal-sub">Based purely on your savings. Income and debts can reduce this further — check the full calculator to see all three ceilings.</div>
+  `;
+  chatEl().appendChild(card);
+  scrollToBottom();
+}
 
-  if (result.error) {
-    const msg = document.createElement('div');
-    msg.style.cssText = 'font-size:0.72rem;color:#fca5a5;margin-top:0.25rem;';
-    msg.textContent = result.error;
-    block.appendChild(msg);
-    return block;
-  }
-
-  if (result.maxPrice > 0) {
-    const ceiling = document.createElement('div');
-    ceiling.className = 'tool-result-ceiling';
-    ceiling.textContent = fmtMoney(result.maxPrice);
-    block.appendChild(ceiling);
-
-    const rows = document.createElement('div');
-    rows.className = 'tool-result-rows';
-
-    const addRow = (lbl, value, highlight = false) => {
-      const r = document.createElement('div');
-      r.className = 'tool-result-row' + (highlight ? ' binding' : '');
-      r.innerHTML = `<span class="tr-label">${lbl}</span><span class="tr-val">${value}</span>`;
-      rows.appendChild(r);
+// Quick-reply button row
+function appendQuickReplies(options, container) {
+  const row = document.createElement('div');
+  row.className = 'quick-replies';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'qr-btn' + (opt.primary ? ' primary' : '');
+    btn.textContent = opt.label;
+    btn.onclick = () => {
+      row.remove();
+      opt.action();
     };
-
-    addRow('Stamp duty', fmtMoney(result.stampDuty));
-    if (result.lmiPremium > 0) addRow('LMI (capitalised)', fmtMoney(result.lmiPremium));
-    addRow('LVR tier', Math.round(result.lvrTier * 100) + '%');
-
-    block.appendChild(rows);
-
-    const note = document.createElement('div');
-    note.style.cssText = 'font-size:0.65rem;color:#555;margin-top:0.6rem;line-height:1.4;';
-    note.textContent = 'Deposit ceiling only. Income and debts may reduce this further.';
-    block.appendChild(note);
-
-    const link = document.createElement('a');
-    link.href = '/deposit.html';
-    link.style.cssText = 'display:inline-block;margin-top:0.5rem;font-size:0.65rem;color:#3b82f6;text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;';
-    link.textContent = 'Full calculator →';
-    block.appendChild(link);
-  }
-
-  return block;
+    row.appendChild(btn);
+  });
+  (container || chatEl()).appendChild(row);
+  scrollToBottom();
 }
 
-// ─── Send ─────────────────────────────────────────────────────────────────────
+// ─── Staged reveal ────────────────────────────────────────────────────────────
+function doStagedReveal(result) {
+  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+  async function reveal() {
+    await delay(400);
+    appendGetReal('Here\'s how your savings break down.');
+
+    await delay(700);
+    appendStepCard('Your savings', fmtMoney(result.savings));
+
+    await delay(600);
+    const dutyLabel = result.isFirstHomeBuyer
+      ? 'Stamp duty (FHB rate)'
+      : 'Stamp duty';
+    appendStepCard(dutyLabel, '−' + fmtMoney(result.stampDuty), result.stampDuty === 0 ? '' : 'negative');
+
+    if (result.regFee > 0) {
+      await delay(500);
+      appendStepCard('Registration fees', '−' + fmtMoney(result.regFee), 'negative');
+    }
+
+    if (result.lmiSd > 0) {
+      await delay(500);
+      appendStepCard('LMI stamp duty', '−' + fmtMoney(result.lmiSd), 'negative');
+    }
+
+    await delay(600);
+    appendStepCard('Available as deposit', fmtMoney(result.availDeposit), 'result');
+
+    if (result.lmiPremium > 0) {
+      await delay(600);
+      appendGetReal(`At ${Math.round(result.baseLVR * 100)}% LVR, LMI applies. The premium of ${fmtMoney(result.lmiPremium)} is capitalised into your loan — you don't pay it upfront.`);
+    }
+
+    await delay(700);
+    appendRevealCard(result);
+    lastCalcResult = result;
+
+    await delay(1000);
+    startPostCalcFlow(result);
+  }
+
+  reveal();
+}
+
+// ─── Post-calc Q&A ────────────────────────────────────────────────────────────
+function startPostCalcFlow(result) {
+  postCalcPhase = 'ask-enough';
+  const priceStr = fmtMoney(result.maxPrice);
+
+  const msgWrap = appendGetReal(`Is ${priceStr} enough for what you're looking at?`);
+  appendQuickReplies([
+    { label: 'Yes, that works', action: () => handleEnough(true) },
+    { label: 'No, I need more', action: () => handleEnough(false) },
+  ], msgWrap);
+}
+
+function handleEnough(isEnough) {
+  postCalcPhase = isEnough ? 'ask-power' : 'ask-target';
+
+  if (!isEnough) {
+    appendGetReal('What price are you aiming for?');
+    // Next free-text input will be treated as target price
+  } else {
+    askAboutRepayments();
+  }
+}
+
+function handleTargetPrice(text) {
+  postCalcPhase = 'ask-power';
+  const price = fmtMoney(lastCalcResult ? lastCalcResult.maxPrice : 0);
+  appendGetReal(
+    `Got it. Your deposit ceiling is ${price} — you'd need more savings, a higher LVR lender, or a co-buyer to push beyond that. The full calculator can show you exactly how much more you'd need to save.`
+  );
+  setTimeout(() => askAboutRepayments(), 800);
+}
+
+function askAboutRepayments() {
+  postCalcPhase = 'ask-power';
+  const msgWrap = appendGetReal(
+    'Want to check whether you can actually afford the repayments — not just the deposit?'
+  );
+  appendQuickReplies([
+    { label: 'Yes — check repayments', primary: true, action: () => {
+        appendGetReal('Head to the full calculator — it works through all three ceilings including serviceability.');
+        setTimeout(() => {
+          const el = document.createElement('a');
+          el.href = '/deposit.html';
+          el.style.cssText = 'display:block;font-size:0.7rem;color:#3b82f6;text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;margin-top:0.5rem;';
+          el.textContent = 'Open full calculator →';
+          chatEl().appendChild(el);
+          scrollToBottom();
+          postCalcPhase = 'done';
+        }, 300);
+      }
+    },
+    { label: 'No — check my property search', action: () => {
+        appendGetReal('Head to the realism checker — enter a suburb and price and we\'ll show you what share of that market your budget can reach.');
+        setTimeout(() => {
+          const el = document.createElement('a');
+          el.href = '/search.html';
+          el.style.cssText = 'display:block;font-size:0.7rem;color:#3b82f6;text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;margin-top:0.5rem;';
+          el.textContent = 'Open realism checker →';
+          chatEl().appendChild(el);
+          scrollToBottom();
+          postCalcPhase = 'done';
+        }, 300);
+      }
+    },
+  ], msgWrap);
+}
+
+// ─── Email capture ────────────────────────────────────────────────────────────
+async function saveToWaitlist(email, tool) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({ email, tool }),
+    });
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function isValidEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
+async function handleEmailInput(text) {
+  const email = text.trim();
+  if (!isValidEmail(email)) {
+    appendGetReal('That doesn\'t look like a valid email — try again.');
+    return;
+  }
+  awaitingEmail = false;
+  const ok = await saveToWaitlist(email, journey);
+  if (ok) {
+    appendGetReal(`Done — ${email} is on the list. We'll reach out when it's ready to test.`);
+  } else {
+    appendGetReal('Something went wrong saving your email. You can also follow updates at get-real.co.');
+  }
+}
+
+// ─── AI call ──────────────────────────────────────────────────────────────────
+async function callAI(text) {
+  conversationHistory.push({ role: 'user', parts: [{ text }] });
+  appendThinking();
+
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: conversationHistory }),
+    });
+
+    if (!res.ok) {
+      const rawText = await res.text().catch(() => '');
+      let errMsg = `HTTP ${res.status}`;
+      try { errMsg = JSON.parse(rawText).error || errMsg; } catch(e) {
+        if (rawText) errMsg = rawText.substring(0, 200);
+      }
+      removeThinking();
+      appendGetReal('Something went wrong. Please try again.');
+      appendError(errMsg);
+      return;
+    }
+
+    const data = await res.json();
+    removeThinking();
+
+    const reply = data.reply || '';
+    if (reply) conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
+
+    if (data.toolResult) {
+      if (reply) appendGetReal(reply);
+      doStagedReveal(data.toolResult);
+    } else {
+      appendGetReal(reply);
+    }
+
+  } catch (err) {
+    removeThinking();
+    appendGetReal('Could not reach the server. Check your connection and try again.');
+    appendError(err.message);
+  }
+}
+
+// ─── Input handling ───────────────────────────────────────────────────────────
 function handleKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -415,94 +810,48 @@ function sendMessage() {
   inp.value = '';
   inp.style.height = '';
   document.getElementById('send-btn').disabled = true;
-  sendUserMessage(text);
+  appendUser(text);
+  handleInput(text);
 }
 
-async function sendUserMessage(text) {
-  if (waiting) return;
-  waiting = true;
-
-  appendMsg('user', text);
-
-  // Add to history
-  conversationHistory.push({ role: 'user', parts: [{ text }] });
-
-  appendThinking();
-
-  try {
-    const res = await fetch('/api/ask', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: conversationHistory }),
-    });
-
-    if (!res.ok) {
-      const rawText = await res.text().catch(() => '');
-      let errMsg = `HTTP ${res.status}`;
-      try {
-        const err = JSON.parse(rawText);
-        errMsg = err.detail || err.error || errMsg;
-      } catch(e) {
-        if (rawText) errMsg = rawText.substring(0, 300);
-      }
-      removeThinking();
-      appendMsg('assistant', 'Something went wrong. Please try again.');
-      appendError(errMsg);
-      waiting = false;
-      document.getElementById('send-btn').disabled = false;
-      return;
-    }
-
-    const data = await res.json();
-    removeThinking();
-
-    const reply = data.reply || '';
-    const toolResult = data.toolResult || null;
-
-    // Add model response to history
-    if (reply) {
-      conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
-    }
-
-    appendMsg('assistant', reply, { toolResult });
-
-  } catch (err) {
-    removeThinking();
-    appendMsg('assistant', 'Could not reach the GetReal server. Check your connection and try again.');
-    appendError(err.message);
+async function handleInput(text) {
+  // Email capture mode (Tools 3 & 4)
+  if (awaitingEmail) {
+    await handleEmailInput(text);
+    waiting = false;
+    document.getElementById('send-btn').disabled = false;
+    return;
   }
 
-  waiting = false;
-  const inp = document.getElementById('user-input');
-  document.getElementById('send-btn').disabled = !inp.value.trim();
-}
+  // Post-calc: target price collection
+  if (postCalcPhase === 'ask-target') {
+    handleTargetPrice(text);
+    waiting = false;
+    document.getElementById('send-btn').disabled = false;
+    return;
+  }
 
-function appendError(msg) {
-  const el = document.createElement('div');
-  el.className = 'error-msg';
-  el.textContent = msg;
-  chatEl().appendChild(el);
-  scrollToBottom();
+  // Post-calc done — no more AI needed
+  if (postCalcPhase === 'done') {
+    appendGetReal('Use the links above to continue. Start over any time.');
+    waiting = false;
+    document.getElementById('send-btn').disabled = false;
+    return;
+  }
+
+  // Normal AI chat (Tool 1)
+  if (journey === 'budget') {
+    waiting = true;
+    await callAI(text);
+    waiting = false;
+    document.getElementById('send-btn').disabled = !document.getElementById('user-input').value.trim();
+  }
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
-function boot() {
-  const openingOptions = [
-    'How much can I borrow?',
-    'What\'s my buying ceiling with $120k saved?',
-    'How does the deposit ceiling work?',
-    'I\'m a first home buyer — where do I start?',
-  ];
-
-  appendMsg('assistant', 'What do you want to know?', { options: openingOptions });
-
-  // Enable input after opening
-  document.getElementById('user-input').addEventListener('input', function () {
-    document.getElementById('send-btn').disabled = !this.value.trim() || waiting;
-  });
-}
-
-boot();
+document.getElementById('user-input').addEventListener('input', function () {
+  document.getElementById('send-btn').disabled = !this.value.trim() || waiting;
+});
 </script>
 </body>
 </html>
