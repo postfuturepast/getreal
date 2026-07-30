@@ -64,90 +64,39 @@
     }
     .back-btn:hover { color: #e5e5e5; }
 
-    /* ── Journey selection ── */
-    .journey-wrap {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1.25rem;
-      max-width: 680px;
-      width: 100%;
-      margin: 0 auto;
-    }
-    .journey-intro {
-      font-size: 0.78rem;
-      color: #888;
-      margin-bottom: 1.5rem;
-      letter-spacing: 0.02em;
-      line-height: 1.6;
-    }
-    .journey-intro strong {
-      color: #e5e5e5;
-      font-weight: 700;
-    }
-    .journey-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.6rem;
-      width: 100%;
-    }
-    .journey-card {
-      background: #111;
-      border: 1px solid #1e1e1e;
-      padding: 1rem 1.1rem;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+    /* ── Tool choice quick replies ── */
+    .tool-choices {
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
-      text-decoration: none;
-      color: inherit;
+      margin-top: 0.6rem;
     }
-    .journey-card:hover { border-color: #3b82f6; background: #0f1823; }
-    .journey-card.coming { cursor: default; opacity: 0.6; }
-    .journey-card.coming:hover { border-color: #1e1e1e; background: #111; }
-    .journey-num {
-      font-size: 0.55rem;
-      letter-spacing: 0.14em;
-      color: #3b82f6;
-      font-weight: 700;
+    .tool-choice-btn {
+      background: #141414;
+      border: 1px solid #252525;
+      color: #d4d4d4;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      padding: 0.55rem 0.9rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.1s, background 0.1s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
     }
-    .journey-card.coming .journey-num { color: #555; }
-    .journey-title {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: #e5e5e5;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .journey-desc {
-      font-size: 0.68rem;
-      color: #999;
-      line-height: 1.5;
-      margin-top: 0.15rem;
-    }
-    .journey-badge {
-      display: inline-block;
-      font-size: 0.5rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #555;
-      border: 1px solid #2a2a2a;
-      padding: 0.15rem 0.4rem;
-      margin-top: 0.25rem;
-      align-self: flex-start;
-    }
+    .tool-choice-btn:hover { border-color: #3b82f6; background: #0f1823; color: #fff; }
+    .tool-choice-btn.disabled { opacity: 0.45; cursor: default; }
+    .tool-choice-btn.disabled:hover { border-color: #252525; background: #141414; color: #d4d4d4; }
+    .tool-choice-label { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+    .tool-choice-tag { font-size: 0.58rem; color: #555; letter-spacing: 0.08em; white-space: nowrap; }
 
     /* ── Chat area ── */
     .chat-outer {
       flex: 1;
       min-height: 0;
       overflow-y: auto;
-      display: none;
     }
     .chat-wrap {
       max-width: 680px;
@@ -282,7 +231,6 @@
       padding: 0.9rem 1.25rem;
       position: sticky;
       bottom: 0;
-      display: none;
     }
     .input-inner {
       max-width: 680px;
@@ -348,48 +296,9 @@
 
 <div class="ask-header">
   <a class="ask-header-logo" href="/">GetReal</a>
-  <button class="back-btn" id="back-btn" onclick="goBack()">← Start over</button>
-  <span class="ask-header-tag" id="header-tag">Buying coach</span>
+  <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none">← Start over</button>
 </div>
 
-<!-- Phase 1: Journey selection -->
-<div class="journey-wrap" id="journey-wrap">
-  <div class="journey-intro">
-    <strong>Where are you in your property journey?</strong><br>
-    Pick the tool that fits your situation.
-  </div>
-  <div class="journey-grid">
-
-    <div class="journey-card" onclick="selectJourney('budget')">
-      <span class="journey-num">TOOL 01</span>
-      <span class="journey-title">Max budget</span>
-      <span class="journey-desc">Find the maximum price your deposit can reach — before income even comes into it.</span>
-    </div>
-
-    <a class="journey-card" href="/search.html">
-      <span class="journey-num">TOOL 02</span>
-      <span class="journey-title">Realism check</span>
-      <span class="journey-desc">Got a suburb and price in mind? See what share of that market your budget can access.</span>
-    </a>
-
-    <div class="journey-card coming" onclick="selectJourney('mortgage')">
-      <span class="journey-num">TOOL 03</span>
-      <span class="journey-title">Mortgage tracker</span>
-      <span class="journey-desc">Track your mortgage, offset, and equity over time.</span>
-      <span class="journey-badge">Coming soon</span>
-    </div>
-
-    <div class="journey-card coming" onclick="selectJourney('cgt')">
-      <span class="journey-num">TOOL 04</span>
-      <span class="journey-title">CGT calculator</span>
-      <span class="journey-desc">Work out your capital gains tax liability before you sell.</span>
-      <span class="journey-badge">Coming soon</span>
-    </div>
-
-  </div>
-</div>
-
-<!-- Phase 2: Chat -->
 <div class="chat-outer" id="chat-outer">
   <div class="chat-wrap" id="chat"></div>
 </div>
@@ -399,7 +308,7 @@
     <textarea
       id="user-input"
       class="input-textarea"
-      placeholder="Tell me about your situation…"
+      placeholder="Type a message…"
       rows="1"
       onkeydown="handleKey(event)"
       oninput="autoResize(this)"
@@ -414,8 +323,7 @@ const SUPABASE_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let phase        = 'journey';   // 'journey' | 'chat'
-let journey      = null;        // 'budget' | 'mortgage' | 'cgt'
+let journey      = null;        // 'budget' | 'realism' | 'mortgage' | 'cgt'
 let waiting      = false;
 let conversationHistory = [];
 let postCalcPhase = null;       // null | 'ask-enough' | 'ask-target' | 'ask-power' | 'done'
@@ -440,56 +348,82 @@ function scrollToBottom() {
   outer.scrollTop = outer.scrollHeight;
 }
 
-function enterChatMode() {
-  document.getElementById('journey-wrap').style.display = 'none';
-  document.getElementById('chat-outer').style.display   = 'block';
-  document.getElementById('input-area').style.display   = 'block';
-  document.getElementById('back-btn').style.display     = 'block';
-  document.getElementById('header-tag').style.display   = 'none';
-  document.getElementById('user-input').focus();
-}
-
 function goBack() {
-  // Reset everything
-  phase = 'journey';
   journey = null;
   waiting = false;
   conversationHistory = [];
   postCalcPhase = null;
   lastCalcResult = null;
   awaitingEmail = false;
+  revealResult = null;
+  userDTIResponse = null;
   chatEl().innerHTML = '';
-
-  document.getElementById('journey-wrap').style.display = '';
-  document.getElementById('chat-outer').style.display   = 'none';
-  document.getElementById('input-area').style.display   = 'none';
-  document.getElementById('back-btn').style.display     = 'none';
-  document.getElementById('header-tag').style.display   = '';
   document.getElementById('user-input').value = '';
   document.getElementById('user-input').style.height = '';
+  document.getElementById('user-input').placeholder = 'Type a message…';
   document.getElementById('send-btn').disabled = true;
+  document.getElementById('back-btn').style.display = 'none';
+  boot();
+}
+
+// ─── Boot — show opening message + tool choices ───────────────────────────────
+function boot() {
+  const wrap = appendGetReal('Where are you in your property journey?');
+
+  const choices = document.createElement('div');
+  choices.className = 'tool-choices';
+
+  const tools = [
+    { key: 'budget',   label: 'Max budget',       tag: 'Tool 01',     coming: false },
+    { key: 'realism',  label: 'Realism check',    tag: 'Tool 02',     coming: false },
+    { key: 'mortgage', label: 'Mortgage tracker', tag: 'Coming soon', coming: true  },
+    { key: 'cgt',      label: 'CGT calculator',   tag: 'Coming soon', coming: true  },
+  ];
+
+  tools.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tool-choice-btn' + (t.coming ? ' disabled' : '');
+    btn.innerHTML = `<span class="tool-choice-label">${t.label}</span><span class="tool-choice-tag">${t.tag}</span>`;
+    if (!t.coming) {
+      btn.onclick = () => {
+        choices.remove();
+        selectJourney(t.key);
+      };
+    }
+    choices.appendChild(btn);
+  });
+
+  wrap.appendChild(choices);
+  scrollToBottom();
 }
 
 // ─── Journey selection ────────────────────────────────────────────────────────
 function selectJourney(j) {
   journey = j;
-  phase = 'chat';
+  document.getElementById('back-btn').style.display = 'block';
 
   if (j === 'budget') {
-    enterChatMode();
+    appendUser('Max budget');
     appendGetReal(
       'Your deposit sets the first ceiling on what you can buy — before income or debts even come into it.\n\nTell me a bit about your situation. Where are you buying, and what are you working with?'
     );
     document.getElementById('user-input').placeholder = 'Tell me about your situation…';
+    document.getElementById('user-input').focus();
+
+  } else if (j === 'realism') {
+    appendUser('Realism check');
+    appendGetReal('Enter a suburb and a price in the realism checker and we\'ll show you what share of that market your budget can access.');
+    setTimeout(() => appendCtaLink('/search.html', 'Open realism checker →'), 300);
 
   } else if (j === 'mortgage' || j === 'cgt') {
     const toolName = j === 'mortgage' ? 'Mortgage tracker' : 'CGT calculator';
-    enterChatMode();
+    appendUser(toolName);
     appendGetReal(
       `The ${toolName} is still in the works — we're building it now.\n\nIf you want to be the first to know when it's ready to test, drop your email below.`
     );
     awaitingEmail = true;
     document.getElementById('user-input').placeholder = 'Your email address…';
+    document.getElementById('user-input').focus();
   }
 }
 
@@ -947,6 +881,8 @@ async function handleInput(text) {
 document.getElementById('user-input').addEventListener('input', function () {
   document.getElementById('send-btn').disabled = !this.value.trim() || waiting;
 });
+
+boot();
 </script>
 </body>
 </html>
