@@ -390,7 +390,7 @@ function boot() {
     if (!t.coming) {
       btn.onclick = () => {
         choices.remove();
-        selectJourney(t.key);
+        selectJourney(t.key, t.label);
       };
     }
     choices.appendChild(btn);
@@ -401,26 +401,24 @@ function boot() {
 }
 
 // ─── Journey selection ────────────────────────────────────────────────────────
-function selectJourney(j) {
+function selectJourney(j, label) {
   journey = j;
   document.getElementById('back-btn').style.display = 'block';
+  if (label) appendUser(label);
 
   if (j === 'budget') {
-    appendUser('Max budget');
     appendGetReal(
-      'Your deposit sets the first ceiling on what you can buy — before income or debts even come into it.\n\nTell me a bit about your situation. Where are you buying, and what are you working with?'
+      'A good first step is working out how much your deposit could let you buy. That tells us the loan you\'d need — and from there we can sense-check whether a bank would likely support it based on your income and debts.\n\nLet\'s start with the basics. Where in Australia are you looking, and what are you working with?'
     );
     document.getElementById('user-input').placeholder = 'Tell me about your situation…';
     document.getElementById('user-input').focus();
 
   } else if (j === 'realism') {
-    appendUser('Realism check');
-    appendGetReal('Enter a suburb and a price in the realism checker and we\'ll show you what share of that market your budget can access.');
+    appendGetReal('Head to the realism checker — enter a suburb and price and we\'ll show you what share of that market your budget can access.');
     setTimeout(() => appendCtaLink('/search.html', 'Open realism checker →'), 300);
 
   } else if (j === 'mortgage' || j === 'cgt') {
     const toolName = j === 'mortgage' ? 'Mortgage tracker' : 'CGT calculator';
-    appendUser(toolName);
     appendGetReal(
       `The ${toolName} is still in the works — we're building it now.\n\nIf you want to be the first to know when it's ready to test, drop your email below.`
     );
@@ -565,7 +563,7 @@ function doStagedReveal(result) {
 
 function showRevealStep(step) {
   const result = revealResult;
-  const effectiveLoan    = (result.baseLoan || 0) + (result.lmiPremium || 0);
+  const effectiveLoan    = ((result.maxPrice || 0) - (result.availDeposit || 0)) + (result.lmiPremium || 0);
   const minIncome        = Math.ceil(effectiveLoan / 6 / 1000) * 1000;
   const monthlyRepayment = calcMonthlyRepayment(effectiveLoan, INDICATIVE_RATE);
   const stressRepayment  = calcMonthlyRepayment(effectiveLoan, STRESS_RATE);
@@ -581,6 +579,11 @@ function showRevealStep(step) {
 
   } else if (step === 1) {
     // ── DTI check ──
+    // Guard: if minIncome looks wrong (loan implausibly small), skip to repayments
+    if (effectiveLoan < 50000) {
+      showRevealStep(2);
+      return;
+    }
     appendGetReal(
       "Banks check two things beyond your deposit. The first is debt-to-income.\n\nGovernment rules cap total mortgage debt at 6× your gross annual income. For this ceiling, that means:"
     );
@@ -808,7 +811,7 @@ async function callAI(text) {
     if (reply) conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
 
     if (data.toolResult) {
-      if (reply) appendGetReal(reply);
+      // Don't show the AI's reply — the staged reveal handles all communication from here
       doStagedReveal(data.toolResult);
     } else {
       appendGetReal(reply);
