@@ -369,15 +369,21 @@ export async function onRequestPost(context) {
           const minDTIIncome    = Math.ceil(effectiveLoan / 6 / 1000) * 1000;
           const monthlyRepay    = Math.round(calcMonthlyRepayment(effectiveLoan, 6.25));
           const stressRepay     = Math.round(calcMonthlyRepayment(effectiveLoan, 9.25));
+          // How much did the FHB concession actually save vs standard rate?
+          const standardDuty    = params.isFirstHomeBuyer
+            ? calcStampDuty(c1.price, { state: params.state, isFHB: false, isOO: params.isOwnerOccupier !== false, propType: params.propertyType || 'house' })
+            : c1.stampDuty;
+          const fhbDutySaving   = Math.max(0, standardDuty - c1.stampDuty);
           toolResult = {
             type:             'deposit_ceiling',
             maxPrice:         c1.price,
             stampDuty:        c1.stampDuty,
+            standardDuty,
+            fhbDutySaving,
             regFee:           c1.regFee || 0,
             lmiPremium:       c1.lmiPremium,
             lmiSd:            c1.lmiSd || 0,
             availDeposit:     c1.availDeposit,
-            baseLVR:          c1.baseLVR,
             lvrTier:          c1.lvrTier,
             state:            params.state,
             savings:          params.savings,

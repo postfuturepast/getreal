@@ -635,17 +635,18 @@ function showRevealStep(step) {
 
       let note = '';
       if (result.isFirstHomeBuyer && dutyIsZero) {
-        note = "You're fully exempt from stamp duty as a first home buyer — a significant saving at this price.";
-      } else if (result.isFirstHomeBuyer && !dutyIsZero) {
-        note = "You've had the FHB rate applied, though at this price point the full exemption threshold may not apply.";
+        note = "You're fully exempt from stamp duty as a first home buyer — saving you " + fmtMoney(result.standardDuty) + " vs the standard rate.";
+      } else if (result.isFirstHomeBuyer && result.fhbDutySaving > 0) {
+        note = "The FHB concession reduced your stamp duty by " + fmtMoney(result.fhbDutySaving) + " — you'd have paid " + fmtMoney(result.standardDuty) + " at the standard rate.";
+      } else if (result.isFirstHomeBuyer && !result.fhbDutySaving) {
+        note = "No FHB stamp duty concession applies at this price — the property is above the threshold for your state, so you've paid the standard rate.";
       } else {
         note = "That's what's left to put toward the actual purchase.";
       }
 
       if (result.lmiPremium > 0) {
-        const lvr = result.baseLVR || (result.baseLoan && result.maxPrice ? result.baseLoan / result.maxPrice : null);
-        const lvrStr = lvr ? Math.round(lvr * 100) + '%' : 'above 80%';
-        note += ` At ${lvrStr} LVR, LMI also applies — ${fmtMoney(result.lmiPremium)} capitalised into the loan, not paid upfront.`;
+        const lvrStr = result.lvrTier ? Math.round(result.lvrTier * 100) + '%' : 'above 80%';
+        note += " At " + lvrStr + " LVR, LMI also applies — " + fmtMoney(result.lmiPremium) + " capitalised into the loan, not paid upfront.";
       }
 
       setTimeout(() => {
