@@ -283,33 +283,35 @@ function calculateBuyingPosition(inputs) {
 // ─── Workers AI model ─────────────────────────────────────────────────────────
 const AI_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
-const SYSTEM_PROMPT = `You are GetReal's buying coach. You help Australians quickly work out their deposit ceiling — the maximum property price their savings can reach.
+const SYSTEM_PROMPT = `You are GetReal's buying coach. Your only job in this conversation is to collect five pieces of information, confirm them, then trigger a deposit ceiling calculation.
 
-Your job:
-1. Ask only the questions you need to calculate the deposit ceiling — no more
-2. Ask one or two questions at a time, not a big list
-3. When you have all five required pieces of information, output a CALC block (see format below)
-4. Briefly explain the result — what it means, and that income/serviceability can further limit their budget in the full calculator
+STYLE:
+- Ask ONE question at a time, never a list
+- Be brief and conversational
+- Build on what they have already told you — never re-ask
 
-You only help with Australian property buying. If asked about anything else, redirect politely.
+THE FIVE THINGS YOU NEED:
+1. Australian state (NSW, VIC, QLD, WA, SA, TAS, ACT, NT)
+2. Total savings in dollars — ALWAYS confirm as a full dollar amount. If they say "150k" treat it as $150,000. If they say "half a million" treat it as $500,000. Never put shorthand in the CALC block.
+3. Property type: house, apartment, or townhouse
+4. Owner-occupier or investor
+5. First home buyer: yes or no
 
-Required before calculating (exactly these five things):
-- Australian state (NSW, VIC, QLD, WA, SA, TAS, ACT, NT)
-- Total savings available (dollars)
-- Property type (house, apartment, or townhouse)
-- Owner-occupier or investor
-- First home buyer (yes or no)
+FLOW:
+Step 1 — Read what they said. Extract anything already given. Ask for the next missing piece only.
+Step 2 — Once you have all five, confirm in one sentence with the savings written as a full dollar figure: "Just confirming: [X], buying a [type] in [state] with $[full amount] saved, [FHB or not]. Is that right?"
+Step 3 — After they confirm, respond with exactly: "On it." then the CALC block. Nothing else after.
 
-Do NOT ask about income, debts, or living expenses — that's for the full calculator.
+SAVINGS MUST be a plain integer in dollars in the CALC block. "$150k" → 150000. "$1.2m" → 1200000. "$500,000" → 500000.
 
-When you have all five, output EXACTLY this block with real values filled in:
+CALC FORMAT (fill in real values):
 <CALC>
 {"state":"NSW","savings":150000,"propertyType":"house","isOwnerOccupier":true,"isFirstHomeBuyer":false}
 </CALC>
 
-After the result, say: "This is your deposit ceiling — how far your savings can reach. Your borrowing capacity may be lower depending on income and debts. Use the full calculator at get-real.co to check all three ceilings."
-
-Keep responses short. Never say "as an AI". You are GetReal.`;
+Do NOT ask about income, debts, repayments, or expenses.
+Do NOT explain the result — it appears automatically.
+Never say "as an AI". You are GetReal.`;
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 export async function onRequestPost(context) {
@@ -362,23 +364,43 @@ export async function onRequestPost(context) {
           isOO:       params.isOwnerOccupier !== false,
           propType:   params.propertyType || 'house',
         });
-        toolResult = c1 ? {
-          type: 'deposit_ceiling',
-          maxPrice:     c1.price,
-          stampDuty:    c1.stampDuty,
-          lmiPremium:   c1.lmiPremium,
-          lvrTier:      c1.lvrTier,
-          state:        params.state,
-          savings:      params.savings,
-          isFirstHomeBuyer: params.isFirstHomeBuyer || false,
-        } : { error: 'Could not calculate — savings may be too low.' };
+        if (c1) {
+          const effectiveLoan   = c1.baseLoan + (c1.lmiPremium || 0);
+          const minDTIIncome    = Math.ceil(effectiveLoan / 6 / 1000) * 1000;
+          const monthlyRepay    = Math.round(calcMonthlyRepayment(effectiveLoan, 6.25));
+          const stressRepay     = Math.round(calcMonthlyRepayment(effectiveLoan, 9.25));
+          toolResult = {
+            type:             'deposit_ceiling',
+            maxPrice:         c1.price,
+            stampDuty:        c1.stampDuty,
+            regFee:           c1.regFee || 0,
+            lmiPremium:       c1.lmiPremium,
+            lmiSd:            c1.lmiSd || 0,
+            availDeposit:     c1.availDeposit,
+            baseLVR:          c1.baseLVR,
+            lvrTier:          c1.lvrTier,
+            state:            params.state,
+            savings:          params.savings,
+            isFirstHomeBuyer: params.isFirstHomeBuyer || false,
+            // Pre-computed indicative figures for the reveal flow
+            minDTIIncome,
+            monthlyRepay,
+            stressRepay,
+          };
+        } else {
+          toolResult = { error: 'Could not calculate — savings may be too low.' };
+        }
       } catch (calcErr) {
         toolResult = { error: calcErr.message };
       }
     }
 
-    // Strip the CALC block from the reply text shown to the user
-    const cleanReply = replyText.replace(/<CALC>[\s\S]*?<\/CALC>/g, '').trim();
+    // Only keep text BEFORE the CALC block — anything after is the AI explaining the result,
+    // which we don't want (the frontend reveal flow handles all explanation).
+    const beforeCalc = calcMatch
+      ? replyText.slice(0, replyText.indexOf('<CALC>')).trim()
+      : replyText.trim();
+    const cleanReply = beforeCalc.replace(/<CALC>[\s\S]*?<\/CALC>/g, '').trim();
 
     return new Response(JSON.stringify({ reply: cleanReply, toolResult }), {
       headers: { 'Content-Type': 'application/json', ...corsHeaders },

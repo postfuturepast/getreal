@@ -539,16 +539,7 @@ function appendQuickReplies(options, container) {
   scrollToBottom();
 }
 
-// ─── Mortgage calculation helpers ─────────────────────────────────────────────
-const INDICATIVE_RATE  = 0.0625; // 6.25% — indicative only
-const STRESS_RATE      = 0.0925; // 9.25% — APRA +3% buffer
-const LOAN_TERM_MONTHS = 360;    // 30 years
-
-function calcMonthlyRepayment(principal, annualRate) {
-  if (!principal || principal <= 0) return 0;
-  const r = annualRate / 12;
-  return principal * r * Math.pow(1 + r, LOAN_TERM_MONTHS) / (Math.pow(1 + r, LOAN_TERM_MONTHS) - 1);
-}
+// Repayment figures are pre-computed server-side and passed in the toolResult.
 
 // ─── Staged reveal — gated educational flow ───────────────────────────────────
 let revealResult    = null;
@@ -563,10 +554,10 @@ function doStagedReveal(result) {
 
 function showRevealStep(step) {
   const result = revealResult;
-  const effectiveLoan    = ((result.maxPrice || 0) - (result.availDeposit || 0)) + (result.lmiPremium || 0);
-  const minIncome        = Math.ceil(effectiveLoan / 6 / 1000) * 1000;
-  const monthlyRepayment = calcMonthlyRepayment(effectiveLoan, INDICATIVE_RATE);
-  const stressRepayment  = calcMonthlyRepayment(effectiveLoan, STRESS_RATE);
+  const minIncome        = result.minDTIIncome  || 0;
+  const monthlyRepayment = result.monthlyRepay  || 0;
+  const stressRepayment  = result.stressRepay   || 0;
+  const effectiveLoan    = minIncome * 6; // used only for the <$50k guard
 
   if (step === 0) {
     // ── Teaser ──
