@@ -280,6 +280,46 @@ function calculateBuyingPosition(inputs) {
   };
 }
 
+// ─── DTI ceiling calculation (no AI) ─────────────────────────────────────────
+function calcDTICeiling(body) {
+  const { savings, state, propertyType='house', isOwnerOccupier=true,
+          isFirstHomeBuyer=false, income1=0, income2=0, debts={} } = body;
+
+  const totalIncome   = (income1 || 0) + (income2 || 0);
+  const totalDebt     = Object.values(debts).reduce((s, v) => s + (v || 0), 0);
+  const maxLoan       = Math.max(0, totalIncome * 6 - totalDebt);
+
+  const opts = { savings, state, isFHB: isFirstHomeBuyer, isOO: isOwnerOccupier, propType: propertyType };
+  const c2   = maxLoan > 0 ? findMaxPriceForLoanCap(Math.round(maxLoan), opts) : null;
+
+  if (!c2) return { error: 'Income too low to support any loan at these debt levels.' };
+
+  const effectiveLoan = c2.loanCap + (c2.lmiPremium || 0);
+  const standardDuty  = isFirstHomeBuyer
+    ? calcStampDuty(c2.price, { state, isFHB: false, isOO: isOwnerOccupier, propType: propertyType })
+    : c2.stampDuty;
+  const fhbDutySaving = Math.max(0, standardDuty - c2.stampDuty);
+
+  return {
+    type:          'dti_ceiling',
+    maxPrice:      c2.price,
+    maxLoan:       Math.round(maxLoan),
+    totalIncome,
+    totalDebt,
+    stampDuty:     c2.stampDuty,
+    standardDuty,
+    fhbDutySaving,
+    regFee:        c2.regFee || 0,
+    lmiPremium:    c2.lmiPremium || 0,
+    lmiSd:         c2.lmiSd || 0,
+    lvrTier:       c2.lvrTier,
+    monthlyRepay:  Math.round(calcMonthlyRepayment(effectiveLoan, 6.25)),
+    stressRepay:   Math.round(calcMonthlyRepayment(effectiveLoan, 9.25)),
+    savings,
+    isFirstHomeBuyer,
+  };
+}
+
 // ─── Workers AI model ─────────────────────────────────────────────────────────
 const AI_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
@@ -323,7 +363,16 @@ export async function onRequestPost(context) {
 
   try {
     const body = await context.request.json();
-    const { messages } = body;
+
+    // DTI ceiling — pure calc, no AI
+    if (body.calcType === 'dti') {
+      const result = calcDTICeiling(body);
+      return new Response(JSON.stringify(result), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
+    const { messages, knownFacts } = body;
 
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'messages array required' }), {
@@ -338,9 +387,13 @@ export async function onRequestPost(context) {
       });
     }
 
+    const effectivePrompt = knownFacts
+      ? SYSTEM_PROMPT + '\n\nALREADY CONFIRMED — do NOT ask about these:\n' + knownFacts
+      : SYSTEM_PROMPT;
+
     // Convert Gemini-format messages → OpenAI format
     const aiMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: effectivePrompt },
       ...messages.map(m => ({
         role: m.role === 'model' ? 'assistant' : 'user',
         content: m.parts.map(p => p.text || '').join(''),
@@ -387,6 +440,7 @@ export async function onRequestPost(context) {
             lvrTier:          c1.lvrTier,
             state:            params.state,
             savings:          params.savings,
+            propertyType:     params.propertyType || 'house',
             isFirstHomeBuyer: params.isFirstHomeBuyer || false,
             // Pre-computed indicative figures for the reveal flow
             minDTIIncome,

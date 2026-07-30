@@ -275,6 +275,29 @@
     .send-btn:hover:not(:disabled) { background: #2563eb; }
     .send-btn:disabled { background: #1e2d46; color: #3b82f6; cursor: not-allowed; }
 
+    /* ── Debt type multi-select ── */
+    .debt-toggles {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+    }
+    .debt-toggle {
+      background: #141414;
+      border: 1px solid #252525;
+      color: #d4d4d4;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.85rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.1s, background 0.1s;
+    }
+    .debt-toggle:hover { border-color: #3b82f6; }
+    .debt-toggle.selected { border-color: #3b82f6; background: #0f1823; color: #fff; }
+    .debt-toggle-none { color: #888; border-style: dashed; margin-top: 0.2rem; }
+    .debt-toggle-none:hover { color: #e5e5e5; }
+
     /* ── Error ── */
     .error-msg {
       background: #1a0606;
@@ -324,6 +347,7 @@ const SUPABASE_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let journey      = null;        // 'budget' | 'realism' | 'mortgage' | 'cgt'
+let knownFHB     = false;       // true when journey selection already answered the FHB question
 let waiting      = false;
 let conversationHistory = [];
 let postCalcPhase = null;       // null | 'ask-enough' | 'ask-target' | 'ask-power' | 'done'
@@ -350,6 +374,7 @@ function scrollToBottom() {
 
 function goBack() {
   journey = null;
+  knownFHB = false;
   waiting = false;
   conversationHistory = [];
   postCalcPhase = null;
@@ -357,6 +382,9 @@ function goBack() {
   awaitingEmail = false;
   revealResult = null;
   userDTIResponse = null;
+  dtiPhase = null;
+  dtiSelectedDebts = [];
+  dtiDebtAmounts = {};
   chatEl().innerHTML = '';
   document.getElementById('user-input').value = '';
   document.getElementById('user-input').style.height = '';
@@ -374,8 +402,8 @@ function boot() {
   choices.className = 'tool-choices';
 
   const tools = [
-    { key: 'budget',   label: "Saving a deposit for my first home",              coming: false },
-    { key: 'budget',   label: "Looking to buy soon, unsure what I can afford",   coming: false },
+    { key: 'budget-fhb', label: "Saving a deposit for my first home",            coming: false },
+    { key: 'budget',     label: "Looking to buy soon, unsure what I can afford", coming: false },
     { key: 'budget',   label: "I want to know the maximum I can stretch to",     coming: false },
     { key: 'realism',  label: "I've started looking at properties",              coming: false },
     { key: 'realism',  label: "I have a suburb and price in mind",               coming: false },
@@ -402,6 +430,7 @@ function boot() {
 
 // ─── Journey selection ────────────────────────────────────────────────────────
 function selectJourney(j, label) {
+  if (j === 'budget-fhb') { j = 'budget'; knownFHB = true; }
   journey = j;
   document.getElementById('back-btn').style.display = 'block';
   if (label) appendUser(label);
@@ -545,6 +574,23 @@ function appendQuickReplies(options, container) {
 let revealResult    = null;
 let userDTIResponse = null; // 'comfortable' | 'tight' | 'not-yet'
 
+// ─── DTI collection state ─────────────────────────────────────────────────────
+const DEBT_TYPES = [
+  { key: 'creditCard',   label: 'Credit cards',        hint: 'total limit across all cards' },
+  { key: 'hecs',         label: 'HECS / student loan',  hint: 'current balance' },
+  { key: 'carLoan',      label: 'Car loan',              hint: 'remaining balance' },
+  { key: 'personalLoan', label: 'Personal loan',         hint: 'remaining balance' },
+  { key: 'mortgage',     label: 'Investment mortgage',   hint: 'remaining balance' },
+  { key: 'other',        label: 'Other loan',            hint: 'remaining balance' },
+];
+let dtiPhase        = null; // 'buyers'|'income1'|'income2'|'debts'|'debt-amount'|'calculating'
+let dtiBuyers       = 1;
+let dtiIncome1      = 0;
+let dtiIncome2      = 0;
+let dtiSelectedDebts = [];   // array of DEBT_TYPES keys
+let dtiDebtAmounts  = {};
+let dtiDebtIndex    = 0;     // which selected debt type we're currently asking about
+
 function doStagedReveal(result) {
   revealResult = result;
   userDTIResponse = null;
@@ -588,7 +634,7 @@ function showRevealStep(step) {
       appendQuickReplies([
         { label: 'Yes, comfortably', primary: true, action: () => { appendUser('Yes, comfortably'); userDTIResponse = 'comfortable'; showRevealStep(2); } },
         { label: "It's close",                     action: () => { appendUser("It's close");       userDTIResponse = 'tight';       showRevealStep(2); } },
-        { label: 'No, not yet',                    action: () => { appendUser('No, not yet');      userDTIResponse = 'not-yet';     showRevealStep(2); } },
+        { label: 'No, not yet',                    action: () => { appendUser('No, not yet');      userDTIResponse = 'not-yet';     startDTICollection(); } },
       ], wrap);
     }, 1100);
 
@@ -734,6 +780,191 @@ function askWhatsNext() {
   ], wrap);
 }
 
+// ─── Amount parser ────────────────────────────────────────────────────────────
+function parseAmount(text) {
+  const t = text.toLowerCase().replace(/[$,\s]/g, '');
+  const m = t.match(/^([\d.]+)\s*([km]?)$/);
+  if (!m) return null;
+  const n = parseFloat(m[1]);
+  if (isNaN(n)) return null;
+  if (m[2] === 'k') return Math.round(n * 1000);
+  if (m[2] === 'm') return Math.round(n * 1000000);
+  return Math.round(n);
+}
+
+// ─── DTI collection flow ──────────────────────────────────────────────────────
+function startDTICollection() {
+  dtiPhase = 'buyers';
+  dtiIncome1 = dtiIncome2 = 0;
+  dtiSelectedDebts = [];
+  dtiDebtAmounts = {};
+  dtiDebtIndex = 0;
+  dtiBuyers = 1;
+
+  const wrap = appendGetReal("No problem — let me work out what your income would support instead.\n\nFirst: are you buying on your own, or with someone else?");
+  appendQuickReplies([
+    { label: 'Just me',                   primary: true, action: () => { appendUser('Just me');                   dtiBuyers = 1; dtiPhase = 'income1'; askIncome1(); } },
+    { label: 'Buying with a partner / co-buyer', action: () => { appendUser('Buying with a partner / co-buyer'); dtiBuyers = 2; dtiPhase = 'income1'; askIncome1(); } },
+  ], wrap);
+}
+
+function askIncome1() {
+  appendGetReal("What's your gross annual income? (Before tax — e.g. $85,000 or 85k)");
+  document.getElementById('user-input').placeholder = 'Your annual income…';
+  document.getElementById('user-input').focus();
+}
+
+function askIncome2() {
+  appendGetReal("And your co-buyer's gross annual income?");
+  document.getElementById('user-input').placeholder = "Co-buyer's annual income…";
+  document.getElementById('user-input').focus();
+}
+
+function askDebts() {
+  dtiPhase = 'debts';
+  const wrap = appendGetReal("Do you have any of these existing debts? Select all that apply, then hit Continue.");
+
+  const grid = document.createElement('div');
+  grid.className = 'debt-toggles';
+
+  DEBT_TYPES.forEach(dt => {
+    const btn = document.createElement('button');
+    btn.className = 'debt-toggle';
+    btn.textContent = dt.label;
+    btn.dataset.key = dt.key;
+    btn.onclick = () => btn.classList.toggle('selected');
+    grid.appendChild(btn);
+  });
+
+  // None / Continue row
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:0.4rem;margin-top:0.4rem;';
+
+  const noneBtn = document.createElement('button');
+  noneBtn.className = 'qr-btn debt-toggle-none';
+  noneBtn.textContent = 'None of these';
+  noneBtn.onclick = () => { grid.remove(); row.remove(); dtiSelectedDebts = []; runDTICalc(); };
+
+  const contBtn = document.createElement('button');
+  contBtn.className = 'qr-btn primary';
+  contBtn.textContent = 'Continue →';
+  contBtn.onclick = () => {
+    const selected = [...grid.querySelectorAll('.debt-toggle.selected')].map(b => b.dataset.key);
+    if (!selected.length) { noneBtn.click(); return; }
+    grid.remove(); row.remove();
+    dtiSelectedDebts = selected;
+    dtiDebtIndex = 0;
+    askNextDebt();
+  };
+
+  row.appendChild(noneBtn);
+  row.appendChild(contBtn);
+  wrap.appendChild(grid);
+  wrap.appendChild(row);
+  scrollToBottom();
+}
+
+function askNextDebt() {
+  dtiPhase = 'debt-amount';
+  const dt = DEBT_TYPES.find(d => d.key === dtiSelectedDebts[dtiDebtIndex]);
+  appendGetReal(`What's the ${dt.hint} on your ${dt.label.toLowerCase()}?`);
+  document.getElementById('user-input').placeholder = 'Amount…';
+  document.getElementById('user-input').focus();
+}
+
+async function runDTICalc() {
+  dtiPhase = 'calculating';
+  appendThinking();
+
+  const totalDebt = Object.values(dtiDebtAmounts).reduce((s, v) => s + v, 0);
+  const incomeStr = dtiBuyers === 2
+    ? `${fmtMoney(dtiIncome1)} + ${fmtMoney(dtiIncome2)} = ${fmtMoney(dtiIncome1 + dtiIncome2)} combined`
+    : fmtMoney(dtiIncome1);
+
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        calcType:        'dti',
+        savings:          lastCalcResult.savings,
+        state:            lastCalcResult.state,
+        propertyType:     lastCalcResult.propertyType || 'house',
+        isOwnerOccupier:  true,
+        isFirstHomeBuyer: lastCalcResult.isFirstHomeBuyer,
+        income1:          dtiIncome1,
+        income2:          dtiIncome2,
+        debts:            dtiDebtAmounts,
+      }),
+    });
+
+    removeThinking();
+    const data = await res.json();
+
+    if (data.error) {
+      appendGetReal("Couldn't calculate a ceiling — your income may be too low relative to your debts. The full calculator can show exactly where you stand.");
+      appendCtaLink('/deposit.html', 'Open full calculator →');
+      return;
+    }
+
+    // Show result
+    appendGetReal(`Based on ${incomeStr} income${totalDebt > 0 ? ' and ' + fmtMoney(totalDebt) + ' in existing debts' : ''}, here's your income ceiling:`);
+    appendDTIRevealCard(data);
+
+    setTimeout(() => {
+      const binding = data.maxPrice < lastCalcResult.maxPrice
+        ? "Your income is the binding constraint — this is lower than your deposit ceiling."
+        : "Your deposit is still the binding constraint — your income supports a higher price than your savings can reach.";
+      appendGetReal(binding);
+      postCalcPhase = 'ask-power';
+      setTimeout(() => askWhatsNext(), 700);
+    }, 600);
+
+  } catch (err) {
+    removeThinking();
+    appendError(err.message);
+  }
+}
+
+function appendDTIRevealCard(result) {
+  const card = document.createElement('div');
+  card.className = 'reveal-card';
+  card.innerHTML = `
+    <div class="reveal-label">Income ceiling</div>
+    <div class="reveal-price">${fmtMoney(result.maxPrice)}</div>
+    <div class="reveal-sub">Based on a ${fmtMoney(result.totalIncome)}/yr income at the 6× DTI limit${result.totalDebt > 0 ? ', after ' + fmtMoney(result.totalDebt) + ' in existing debts' : ''}. Income and deposit ceilings together set your real limit.</div>
+  `;
+  chatEl().appendChild(card);
+  scrollToBottom();
+}
+
+function handleDTIInput(text) {
+  const amount = parseAmount(text);
+
+  if (dtiPhase === 'income1') {
+    if (!amount || amount < 1000) { appendGetReal("That doesn't look right — enter a yearly figure, e.g. 85000 or 85k."); return; }
+    dtiIncome1 = amount;
+    if (dtiBuyers === 2) { dtiPhase = 'income2'; askIncome2(); }
+    else { askDebts(); }
+
+  } else if (dtiPhase === 'income2') {
+    if (!amount || amount < 0) { appendGetReal("Enter a yearly figure, e.g. 75000 or 75k. Use 0 if they have no income."); return; }
+    dtiIncome2 = amount;
+    askDebts();
+
+  } else if (dtiPhase === 'debt-amount') {
+    if (amount === null || amount < 0) { appendGetReal("Enter a dollar amount, e.g. 15000 or 15k. Use 0 if it's paid off."); return; }
+    const key = dtiSelectedDebts[dtiDebtIndex];
+    if (amount > 0) dtiDebtAmounts[key] = amount;
+    dtiDebtIndex++;
+    if (dtiDebtIndex < dtiSelectedDebts.length) {
+      askNextDebt();
+    } else {
+      runDTICalc();
+    }
+  }
+}
+
 // ─── Email capture ────────────────────────────────────────────────────────────
 async function saveToWaitlist(email, tool) {
   try {
@@ -781,7 +1012,10 @@ async function callAI(text) {
     const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: conversationHistory }),
+      body: JSON.stringify({
+        messages: conversationHistory,
+        knownFacts: knownFHB ? 'This user is a first home buyer. Do NOT ask whether they are a first home buyer — it is already confirmed. Always include isFirstHomeBuyer: true in the CALC block.' : null,
+      }),
     });
 
     if (!res.ok) {
@@ -842,6 +1076,14 @@ function sendMessage() {
 }
 
 async function handleInput(text) {
+  // DTI collection
+  if (dtiPhase && dtiPhase !== 'calculating') {
+    handleDTIInput(text);
+    waiting = false;
+    document.getElementById('send-btn').disabled = !document.getElementById('user-input').value.trim();
+    return;
+  }
+
   // Email capture mode (Tools 3 & 4)
   if (awaitingEmail) {
     await handleEmailInput(text);
