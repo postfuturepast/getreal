@@ -599,10 +599,9 @@ let userDTIResponse = null; // 'comfortable' | 'tight' | 'not-yet'
 // ─── DTI collection state ─────────────────────────────────────────────────────
 const DEBT_TYPES = [
   { key: 'creditCard',   label: 'Credit cards',        hint: 'total limit across all cards' },
-  { key: 'hecs',         label: 'HECS / student loan',  hint: 'current balance' },
   { key: 'carLoan',      label: 'Car loan',              hint: 'remaining balance' },
   { key: 'personalLoan', label: 'Personal loan',         hint: 'remaining balance' },
-  { key: 'mortgage',     label: 'Investment mortgage',   hint: 'remaining balance' },
+  { key: 'mortgage',     label: 'Mortgage',              hint: 'remaining balance' },
   { key: 'other',        label: 'Other loan',            hint: 'remaining balance' },
 ];
 let dtiPhase        = null; // 'buyers'|'income1'|'income2'|'debts'|'debt-amount'|'calculating'
@@ -617,7 +616,7 @@ function doStagedReveal(result) {
   revealResult = result;
   userDTIResponse = null;
   lastCalcResult = result;
-  setTimeout(() => showRevealStep(0), 400);
+  setTimeout(() => showRevealStep(1), 400);
 }
 
 function showRevealStep(step) {
@@ -831,13 +830,13 @@ function startDTICollection() {
 }
 
 function askIncome1() {
-  appendGetReal("What's your gross annual income? (Before tax — e.g. $85,000 or 85k)");
+  appendGetReal("What's your gross annual income? (Before tax, excluding super — e.g. $85,000 or 85k)");
   document.getElementById('user-input').placeholder = 'Your annual income…';
   document.getElementById('user-input').focus();
 }
 
 function askIncome2() {
-  appendGetReal("And your co-buyer's gross annual income?");
+  appendGetReal("And your co-buyer's gross annual income? (Before tax, excluding super)");
   document.getElementById('user-input').placeholder = "Co-buyer's annual income…";
   document.getElementById('user-input').focus();
 }
@@ -850,6 +849,8 @@ function askDebts() {
   grid.className = 'debt-toggles';
 
   DEBT_TYPES.forEach(dt => {
+    // FHBs can't have an existing mortgage — skip it
+    if (dt.key === 'mortgage' && knownFHB) return;
     const btn = document.createElement('button');
     btn.className = 'debt-toggle';
     btn.textContent = dt.label;
@@ -887,8 +888,38 @@ function askDebts() {
 }
 
 function askNextDebt() {
-  dtiPhase = 'debt-amount';
   const dt = DEBT_TYPES.find(d => d.key === dtiSelectedDebts[dtiDebtIndex]);
+
+  if (dt.key === 'mortgage') {
+    // First confirm they'll keep the mortgaged property after buying
+    dtiPhase = 'mortgage-confirm';
+    const wrap = appendGetReal("Is this a mortgage on a property you'll still own after you buy? If you're selling that property, we don't need to count it.");
+    appendQuickReplies([
+      {
+        label: "Yes, I'm keeping it",
+        action: () => {
+          appendUser("Yes, I'm keeping it");
+          dtiPhase = 'debt-amount';
+          appendGetReal("What's the remaining balance on your mortgage?");
+          document.getElementById('user-input').placeholder = 'Amount…';
+          document.getElementById('user-input').focus();
+        },
+      },
+      {
+        label: "No, I'm selling it",
+        action: () => {
+          appendUser("No, I'm selling it");
+          // Don't count this debt
+          dtiDebtIndex++;
+          if (dtiDebtIndex < dtiSelectedDebts.length) { askNextDebt(); }
+          else { runDTICalc(); }
+        },
+      },
+    ], wrap);
+    return;
+  }
+
+  dtiPhase = 'debt-amount';
   appendGetReal(`What's the ${dt.hint} on your ${dt.label.toLowerCase()}?`);
   document.getElementById('user-input').placeholder = 'Amount…';
   document.getElementById('user-input').focus();
@@ -929,22 +960,70 @@ async function runDTICalc() {
       return;
     }
 
-    // Show result
-    appendGetReal(`Based on ${incomeStr} income${totalDebt > 0 ? ' and ' + fmtMoney(totalDebt) + ' in existing debts' : ''}, here's your income ceiling:`);
-    appendDTIRevealCard(data);
-
-    setTimeout(() => {
-      const binding = data.maxPrice < lastCalcResult.maxPrice
-        ? "Your income is the binding constraint — this is lower than your deposit ceiling."
-        : "Your deposit is still the binding constraint — your income supports a higher price than your savings can reach.";
-      appendGetReal(binding);
-      postCalcPhase = 'ask-power';
-      setTimeout(() => askWhatsNext(), 700);
-    }, 600);
+    // Walk through steps before revealing the ceiling
+    appendGetReal(`Got it — ${incomeStr} income${totalDebt > 0 ? ', $' + totalDebt.toLocaleString('en-AU') + ' in existing debts' : ''}. Let me show you what that means.`);
+    setTimeout(() => showDTIRevealSteps(data, 0), 500);
 
   } catch (err) {
     removeThinking();
     appendError(err.message);
+  }
+}
+
+function showDTIRevealSteps(result, step) {
+  if (step === 0) {
+    // ── Repayments ──
+    appendGetReal("First, the repayments. At the 6× DTI ceiling, here's what you'd be paying each month:");
+    setTimeout(() => appendStepCard('Monthly repayment (indicative at 6.25%)', fmtMoney(result.monthlyRepay) + '/mo'), 500);
+    setTimeout(() => appendStepCard('At stress rate (9.25%)', fmtMoney(result.stressRepay) + '/mo'), 1000);
+    setTimeout(() => {
+      const wrap = appendGetReal(
+        "Banks test you at 3% above the current rate. That stress figure needs to be covered after all your living expenses.\n\nMake sense?"
+      );
+      appendQuickReplies([{ label: 'Got it →', primary: true, action: () => showDTIRevealSteps(result, 1) }], wrap);
+    }, 1600);
+
+  } else if (step === 1) {
+    // ── Stamp duty ──
+    const dutyLabel = result.isFirstHomeBuyer ? 'Stamp duty (FHB rate applied)' : 'Stamp duty';
+    const dutyIsZero = result.stampDuty === 0;
+
+    appendGetReal("Now upfront costs — what your savings look like before settlement:");
+    setTimeout(() => appendStepCard('Your savings', fmtMoney(result.savings)), 400);
+    setTimeout(() => appendStepCard(dutyLabel, dutyIsZero ? '$0 — exempt' : '−' + fmtMoney(result.stampDuty), dutyIsZero ? '' : 'negative'), 850);
+    if (result.regFee > 0) setTimeout(() => appendStepCard('Registration & transfer fees', '−' + fmtMoney(result.regFee), 'negative'), 1200);
+    if (result.lmiSd > 0) setTimeout(() => appendStepCard('LMI stamp duty', '−' + fmtMoney(result.lmiSd), 'negative'), 1500);
+
+    const delay = result.lmiSd > 0 ? 2000 : result.regFee > 0 ? 1800 : 1400;
+    setTimeout(() => {
+      let note = '';
+      if (result.isFirstHomeBuyer && dutyIsZero) {
+        note = "You're fully exempt from stamp duty as a first home buyer — saving you " + fmtMoney(result.standardDuty) + " vs the standard rate.";
+      } else if (result.isFirstHomeBuyer && result.fhbDutySaving > 0) {
+        note = "The FHB concession reduced your stamp duty by " + fmtMoney(result.fhbDutySaving) + " — you'd have paid " + fmtMoney(result.standardDuty) + " at the standard rate.";
+      } else if (result.isFirstHomeBuyer && !result.fhbDutySaving) {
+        note = "No FHB concession at this price — above the threshold for your state, so standard rate applies.";
+      } else {
+        note = "That's what's left to put toward the purchase.";
+      }
+      if (result.lmiPremium > 0) {
+        const lvrStr = result.lvrTier ? Math.round(result.lvrTier * 100) + '%' : 'above 80%';
+        note += " At " + lvrStr + " LVR, LMI also applies — " + fmtMoney(result.lmiPremium) + " capitalised into the loan.";
+      }
+      const wrap = appendGetReal(note + "\n\nReady to see your income ceiling?");
+      appendQuickReplies([{ label: 'Show me →', primary: true, action: () => showDTIRevealSteps(result, 2) }], wrap);
+    }, delay);
+
+  } else if (step === 2) {
+    // ── The reveal ──
+    setTimeout(() => appendDTIRevealCard(result), 200);
+    setTimeout(() => {
+      const binding = result.maxPrice < lastCalcResult.maxPrice
+        ? "Your income is the binding constraint — this is lower than your deposit ceiling."
+        : "Your deposit is still the binding constraint — your income supports a higher price than your savings can reach.";
+      appendGetReal(binding);
+    }, 700);
+    setTimeout(() => askWhatsNext(), 1400);
   }
 }
 
@@ -961,6 +1040,8 @@ function appendDTIRevealCard(result) {
 }
 
 function handleDTIInput(text) {
+  if (dtiPhase === 'mortgage-confirm') return; // handled by quick reply buttons
+
   const amount = parseAmount(text);
 
   if (dtiPhase === 'income1') {
