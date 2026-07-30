@@ -15,9 +15,10 @@
       color: #e5e5e5;
       font-family: 'Courier New', Courier, monospace;
       margin: 0;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     /* ── Header ── */
@@ -66,6 +67,8 @@
     /* ── Journey selection ── */
     .journey-wrap {
       flex: 1;
+      min-height: 0;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -123,7 +126,7 @@
     }
     .journey-desc {
       font-size: 0.68rem;
-      color: #666;
+      color: #999;
       line-height: 1.5;
       margin-top: 0.15rem;
     }
@@ -142,6 +145,7 @@
     /* ── Chat area ── */
     .chat-outer {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       display: none;
     }
@@ -215,12 +219,13 @@
     }
     .step-card-label {
       font-size: 0.68rem;
-      color: #666;
+      color: #aaa;
     }
     .step-card-value {
       font-size: 0.82rem;
-      color: #d4d4d4;
+      color: #e5e5e5;
       font-weight: 600;
+      text-align: right;
     }
     .step-card-value.negative { color: #f87171; }
     .step-card-value.result   { color: #fff; font-size: 1.1rem; }
@@ -251,7 +256,7 @@
     }
     .reveal-sub {
       font-size: 0.65rem;
-      color: #555;
+      color: #888;
       margin-top: 0.25rem;
       line-height: 1.5;
     }
@@ -419,8 +424,13 @@ let awaitingEmail = false;
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 function fmtMoney(n) {
-  if (!n && n !== 0) return '—';
+  if (n == null || isNaN(n)) return '—';
   return '$' + Math.round(n).toLocaleString('en-AU');
+}
+
+function fmtPct(n) {
+  if (n == null || isNaN(n)) return '—';
+  return Math.round(n * 100) + '%';
 }
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
@@ -594,117 +604,202 @@ function appendQuickReplies(options, container) {
   scrollToBottom();
 }
 
-// ─── Staged reveal ────────────────────────────────────────────────────────────
+// ─── Mortgage calculation helpers ─────────────────────────────────────────────
+const INDICATIVE_RATE  = 0.0625; // 6.25% — indicative only
+const STRESS_RATE      = 0.0925; // 9.25% — APRA +3% buffer
+const LOAN_TERM_MONTHS = 360;    // 30 years
+
+function calcMonthlyRepayment(principal, annualRate) {
+  if (!principal || principal <= 0) return 0;
+  const r = annualRate / 12;
+  return principal * r * Math.pow(1 + r, LOAN_TERM_MONTHS) / (Math.pow(1 + r, LOAN_TERM_MONTHS) - 1);
+}
+
+// ─── Staged reveal — gated educational flow ───────────────────────────────────
+let revealResult    = null;
+let userDTIResponse = null; // 'comfortable' | 'tight' | 'not-yet'
+
 function doStagedReveal(result) {
-  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+  revealResult = result;
+  userDTIResponse = null;
+  lastCalcResult = result;
+  setTimeout(() => showRevealStep(0), 400);
+}
 
-  async function reveal() {
-    await delay(400);
-    appendGetReal('Here\'s how your savings break down.');
+function showRevealStep(step) {
+  const result = revealResult;
+  const effectiveLoan    = (result.baseLoan || 0) + (result.lmiPremium || 0);
+  const minIncome        = Math.ceil(effectiveLoan / 6 / 1000) * 1000;
+  const monthlyRepayment = calcMonthlyRepayment(effectiveLoan, INDICATIVE_RATE);
+  const stressRepayment  = calcMonthlyRepayment(effectiveLoan, STRESS_RATE);
 
-    await delay(700);
-    appendStepCard('Your savings', fmtMoney(result.savings));
+  if (step === 0) {
+    // ── Teaser ──
+    const wrap = appendGetReal(
+      "I've got your number. Before I show you, let me walk you through what it actually means — takes about 30 seconds."
+    );
+    setTimeout(() => {
+      appendQuickReplies([{ label: "Let's go →", primary: true, action: () => showRevealStep(1) }], wrap);
+    }, 300);
 
-    await delay(600);
-    const dutyLabel = result.isFirstHomeBuyer
-      ? 'Stamp duty (FHB rate)'
-      : 'Stamp duty';
-    appendStepCard(dutyLabel, '−' + fmtMoney(result.stampDuty), result.stampDuty === 0 ? '' : 'negative');
+  } else if (step === 1) {
+    // ── DTI check ──
+    appendGetReal(
+      "Banks check two things beyond your deposit. The first is debt-to-income.\n\nGovernment rules cap total mortgage debt at 6× your gross annual income. For this ceiling, that means:"
+    );
+    setTimeout(() => {
+      appendStepCard('Minimum income needed', fmtMoney(minIncome) + '/yr gross');
+    }, 500);
+    setTimeout(() => {
+      const wrap = appendGetReal(
+        "That's if this is your only debt. Any other debt — credit cards, HECS, car loans — pushes that figure higher.\n\nDo you comfortably earn more than " + fmtMoney(minIncome) + " per year?"
+      );
+      appendQuickReplies([
+        { label: 'Yes, comfortably', primary: true, action: () => { appendUser('Yes, comfortably'); userDTIResponse = 'comfortable'; showRevealStep(2); } },
+        { label: "It's close",                     action: () => { appendUser("It's close");       userDTIResponse = 'tight';       showRevealStep(2); } },
+        { label: 'No, not yet',                    action: () => { appendUser('No, not yet');      userDTIResponse = 'not-yet';     showRevealStep(2); } },
+      ], wrap);
+    }, 1100);
 
-    if (result.regFee > 0) {
-      await delay(500);
-      appendStepCard('Registration fees', '−' + fmtMoney(result.regFee), 'negative');
-    }
+  } else if (step === 2) {
+    // ── Serviceability / repayments ──
+    appendGetReal("The second check is serviceability — whether the repayments are affordable at a stress-tested rate.");
+    setTimeout(() => {
+      appendStepCard('Monthly repayment (indicative at 6.25%)', fmtMoney(Math.round(monthlyRepayment)) + '/mo');
+    }, 500);
+    setTimeout(() => {
+      appendStepCard('At stress rate (9.25%)', fmtMoney(Math.round(stressRepayment)) + '/mo');
+    }, 1000);
+    setTimeout(() => {
+      const wrap = appendGetReal(
+        "Banks test you at 3% above the current rate. That stress-rate figure needs to be covered comfortably after all your living expenses — rent, food, transport, everything.\n\nMake sense?"
+      );
+      appendQuickReplies([
+        { label: 'Got it →', primary: true, action: () => showRevealStep(3) }
+      ], wrap);
+    }, 1600);
 
-    if (result.lmiSd > 0) {
-      await delay(500);
-      appendStepCard('LMI stamp duty', '−' + fmtMoney(result.lmiSd), 'negative');
-    }
+  } else if (step === 3) {
+    // ── Stamp duty breakdown ──
+    const dutyLabel = result.isFirstHomeBuyer ? 'Stamp duty (FHB rate applied)' : 'Stamp duty';
+    const dutyIsZero = result.stampDuty === 0;
 
-    await delay(600);
-    appendStepCard('Available as deposit', fmtMoney(result.availDeposit), 'result');
+    appendGetReal("Here's what upfront costs do to your savings before you even start.");
+    setTimeout(() => {
+      appendStepCard('Your savings', fmtMoney(result.savings));
+    }, 400);
+    setTimeout(() => {
+      appendStepCard(dutyLabel, dutyIsZero ? '$0 — exempt' : '−' + fmtMoney(result.stampDuty), dutyIsZero ? '' : 'negative');
+    }, 850);
+    setTimeout(() => {
+      if (result.regFee > 0) appendStepCard('Registration & transfer fees', '−' + fmtMoney(result.regFee), 'negative');
+    }, 1200);
+    setTimeout(() => {
+      if (result.lmiSd > 0) appendStepCard('LMI stamp duty', '−' + fmtMoney(result.lmiSd), 'negative');
+    }, 1500);
 
-    if (result.lmiPremium > 0) {
-      await delay(600);
-      appendGetReal(`At ${Math.round(result.baseLVR * 100)}% LVR, LMI applies. The premium of ${fmtMoney(result.lmiPremium)} is capitalised into your loan — you don't pay it upfront.`);
-    }
+    const dutyNoteDelay = result.lmiSd > 0 ? 2000 : result.regFee > 0 ? 1800 : 1600;
+    setTimeout(() => {
+      appendStepCard('Available as deposit', fmtMoney(result.availDeposit), 'result');
 
-    await delay(700);
-    appendRevealCard(result);
-    lastCalcResult = result;
+      let note = '';
+      if (result.isFirstHomeBuyer && dutyIsZero) {
+        note = "You're fully exempt from stamp duty as a first home buyer — a significant saving at this price.";
+      } else if (result.isFirstHomeBuyer && !dutyIsZero) {
+        note = "You've had the FHB rate applied, though at this price point the full exemption threshold may not apply.";
+      } else {
+        note = "That's what's left to put toward the actual purchase.";
+      }
 
-    await delay(1000);
-    startPostCalcFlow(result);
+      if (result.lmiPremium > 0) {
+        const lvr = result.baseLVR || (result.baseLoan && result.maxPrice ? result.baseLoan / result.maxPrice : null);
+        const lvrStr = lvr ? Math.round(lvr * 100) + '%' : 'above 80%';
+        note += ` At ${lvrStr} LVR, LMI also applies — ${fmtMoney(result.lmiPremium)} capitalised into the loan, not paid upfront.`;
+      }
+
+      setTimeout(() => {
+        const wrap = appendGetReal(note + "\n\nReady to see your ceiling?");
+        appendQuickReplies([
+          { label: 'Show me →', primary: true, action: () => showRevealStep(4) }
+        ], wrap);
+      }, 400);
+    }, dutyNoteDelay);
+
+  } else if (step === 4) {
+    // ── The reveal ──
+    setTimeout(() => {
+      appendRevealCard(result);
+    }, 200);
+
+    setTimeout(() => {
+      let context = '';
+      if (userDTIResponse === 'comfortable') {
+        context = "Based on what you've told me, income probably isn't the binding constraint here — your deposit ceiling is likely the real limit. Use the full calculator to confirm once you've entered your income and debts.";
+      } else if (userDTIResponse === 'tight') {
+        context = "Given your income is close to the minimum, the DTI or serviceability ceiling may land lower than this number. I'd treat this as an upper bound and check the full calculator before getting anchored to it.";
+      } else if (userDTIResponse === 'not-yet') {
+        context = "If your income is below the minimum, the DTI ceiling will be the binding constraint — not your deposit. The full calculator will show you the real ceiling based on what you actually earn. This number may be well out of reach.";
+      } else {
+        context = "This is the ceiling based on deposit alone. Income and debts are separate checks — use the full calculator to see all three ceilings together.";
+      }
+      appendGetReal(context);
+    }, 700);
+
+    setTimeout(() => startPostCalcFlow(result), 1400);
   }
-
-  reveal();
 }
 
 // ─── Post-calc Q&A ────────────────────────────────────────────────────────────
 function startPostCalcFlow(result) {
   postCalcPhase = 'ask-enough';
-  const priceStr = fmtMoney(result.maxPrice);
-
-  const msgWrap = appendGetReal(`Is ${priceStr} enough for what you're looking at?`);
+  const wrap = appendGetReal(`Is ${fmtMoney(result.maxPrice)} enough for what you're looking at?`);
   appendQuickReplies([
     { label: 'Yes, that works', action: () => handleEnough(true) },
     { label: 'No, I need more', action: () => handleEnough(false) },
-  ], msgWrap);
+  ], wrap);
 }
 
 function handleEnough(isEnough) {
   postCalcPhase = isEnough ? 'ask-power' : 'ask-target';
-
   if (!isEnough) {
     appendGetReal('What price are you aiming for?');
-    // Next free-text input will be treated as target price
   } else {
-    askAboutRepayments();
+    askWhatsNext();
   }
 }
 
 function handleTargetPrice(text) {
   postCalcPhase = 'ask-power';
-  const price = fmtMoney(lastCalcResult ? lastCalcResult.maxPrice : 0);
   appendGetReal(
-    `Got it. Your deposit ceiling is ${price} — you'd need more savings, a higher LVR lender, or a co-buyer to push beyond that. The full calculator can show you exactly how much more you'd need to save.`
+    `Got it. Your deposit ceiling is ${fmtMoney(lastCalcResult ? lastCalcResult.maxPrice : 0)} — to push higher you'd need more savings, a higher LVR lender, or a co-buyer. The full calculator can show exactly how much more you'd need to save.`
   );
-  setTimeout(() => askAboutRepayments(), 800);
+  setTimeout(() => askWhatsNext(), 700);
 }
 
-function askAboutRepayments() {
+function appendCtaLink(href, text) {
+  const el = document.createElement('a');
+  el.href = href;
+  el.style.cssText = 'display:block;font-size:0.7rem;color:#3b82f6;text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;margin-top:0.5rem;';
+  el.textContent = text;
+  chatEl().appendChild(el);
+  scrollToBottom();
+}
+
+function askWhatsNext() {
   postCalcPhase = 'ask-power';
-  const msgWrap = appendGetReal(
-    'Want to check whether you can actually afford the repayments — not just the deposit?'
-  );
+  const wrap = appendGetReal('Want to check whether you can actually afford the repayments — not just the deposit?');
   appendQuickReplies([
-    { label: 'Yes — check repayments', primary: true, action: () => {
-        appendGetReal('Head to the full calculator — it works through all three ceilings including serviceability.');
-        setTimeout(() => {
-          const el = document.createElement('a');
-          el.href = '/deposit.html';
-          el.style.cssText = 'display:block;font-size:0.7rem;color:#3b82f6;text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;margin-top:0.5rem;';
-          el.textContent = 'Open full calculator →';
-          chatEl().appendChild(el);
-          scrollToBottom();
-          postCalcPhase = 'done';
-        }, 300);
+    { label: 'Yes — full calculator', primary: true, action: () => {
+        appendGetReal('The full calculator works through all three ceilings — deposit, DTI, and serviceability.');
+        setTimeout(() => { appendCtaLink('/deposit.html', 'Open full calculator →'); postCalcPhase = 'done'; }, 300);
       }
     },
-    { label: 'No — check my property search', action: () => {
-        appendGetReal('Head to the realism checker — enter a suburb and price and we\'ll show you what share of that market your budget can reach.');
-        setTimeout(() => {
-          const el = document.createElement('a');
-          el.href = '/search.html';
-          el.style.cssText = 'display:block;font-size:0.7rem;color:#3b82f6;text-decoration:none;letter-spacing:0.05em;text-transform:uppercase;margin-top:0.5rem;';
-          el.textContent = 'Open realism checker →';
-          chatEl().appendChild(el);
-          scrollToBottom();
-          postCalcPhase = 'done';
-        }, 300);
+    { label: 'No — check my suburb', action: () => {
+        appendGetReal('Enter a suburb and price in the realism checker to see what share of that market your budget can access.');
+        setTimeout(() => { appendCtaLink('/search.html', 'Open realism checker →'); postCalcPhase = 'done'; }, 300);
       }
     },
-  ], msgWrap);
+  ], wrap);
 }
 
 // ─── Email capture ────────────────────────────────────────────────────────────
