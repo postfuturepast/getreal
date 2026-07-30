@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>GetReal — buying coach</title>
   <meta name="description" content="Tell GetReal where you are in your property journey. Work out your maximum budget, check if a property is realistic, and more.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -245,7 +245,7 @@
       border: 1px solid #252525;
       color: #e5e5e5;
       font-family: 'Courier New', monospace;
-      font-size: 0.82rem;
+      font-size: 16px; /* must be ≥16px to prevent iOS Safari zoom on focus */
       line-height: 1.5;
       padding: 0.65rem 0.85rem;
       resize: none;
@@ -1245,6 +1245,11 @@ async function handleInput(text) {
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 document.getElementById('user-input').addEventListener('input', function () {
   document.getElementById('send-btn').disabled = !this.value.trim() || waiting;
+});
+
+// On mobile, scroll to bottom when keyboard opens so latest messages stay visible
+document.getElementById('user-input').addEventListener('focus', () => {
+  setTimeout(scrollToBottom, 300);
 });
 
 boot();
