@@ -385,6 +385,8 @@ function goBack() {
   dtiPhase = null;
   dtiSelectedDebts = [];
   dtiDebtAmounts = {};
+  lastDTIResult = null;
+  svcPhase = null; svcTakeHome1 = 0; svcTakeHome2 = 0; svcDependants = 0; svcLocationType = 'metro';
   chatEl().innerHTML = '';
   document.getElementById('user-input').value = '';
   document.getElementById('user-input').style.height = '';
@@ -611,6 +613,14 @@ let dtiIncome2      = 0;
 let dtiSelectedDebts = [];   // array of DEBT_TYPES keys
 let dtiDebtAmounts  = {};
 let dtiDebtIndex    = 0;     // which selected debt type we're currently asking about
+let lastDTIResult   = null;  // stored after DTI reveal, used by svc binding comparison
+
+// ─── Serviceability collection state ─────────────────────────────────────────
+let svcPhase      = null;  // 'takeHome1'|'takeHome2'|'dependants'|'location'|'calculating'
+let svcTakeHome1  = 0;
+let svcTakeHome2  = 0;
+let svcDependants = 0;
+let svcLocationType = 'metro';
 
 function doStagedReveal(result) {
   revealResult = result;
@@ -786,14 +796,15 @@ function appendCtaLink(href, text) {
 
 function askWhatsNext() {
   postCalcPhase = 'ask-power';
-  const wrap = appendGetReal('Want to check whether you can actually afford the repayments — not just the deposit?');
+  const wrap = appendGetReal('Want to check if you can actually afford the repayments on that ceiling?');
   appendQuickReplies([
-    { label: 'Yes — full calculator', primary: true, action: () => {
-        appendGetReal('The full calculator works through all three ceilings — deposit, DTI, and serviceability.');
-        setTimeout(() => { appendCtaLink('/deposit.html', 'Open full calculator →'); postCalcPhase = 'done'; }, 300);
+    { label: 'Yes — check serviceability', primary: true, action: () => {
+        appendUser('Yes — check serviceability');
+        startSvcCollection();
       }
     },
     { label: 'No — check my suburb', action: () => {
+        appendUser('No — check my suburb');
         appendGetReal('Enter a suburb and price in the realism checker to see what share of that market your budget can access.');
         setTimeout(() => { appendCtaLink('/search.html', 'Open realism checker →'); postCalcPhase = 'done'; }, 300);
       }
@@ -961,6 +972,7 @@ async function runDTICalc() {
     }
 
     // Walk through steps before revealing the ceiling
+    lastDTIResult = data;
     appendGetReal(`Got it — ${incomeStr} income${totalDebt > 0 ? ', $' + totalDebt.toLocaleString('en-AU') + ' in existing debts' : ''}. Let me show you what that means.`);
     setTimeout(() => showDTIRevealSteps(data, 0), 500);
 
@@ -1090,6 +1102,168 @@ function handleDTIInput(text) {
   }
 }
 
+// ─── Serviceability collection flow ──────────────────────────────────────────
+function startSvcCollection() {
+  svcPhase = 'takeHome1';
+  svcTakeHome1 = 0; svcTakeHome2 = 0; svcDependants = 0; svcLocationType = 'metro';
+  appendGetReal("For this we need your take-home pay — what goes into your account each month after tax and super?");
+  document.getElementById('user-input').placeholder = 'Monthly take-home…';
+  document.getElementById('user-input').focus();
+}
+
+function askSvcTakeHome2() {
+  svcPhase = 'takeHome2';
+  appendGetReal("And your co-buyer's monthly take-home?");
+  document.getElementById('user-input').placeholder = "Co-buyer's monthly take-home…";
+  document.getElementById('user-input').focus();
+}
+
+function askSvcDependants() {
+  svcPhase = 'dependants';
+  const wrap = appendGetReal("How many children or dependants are in your household?");
+  appendQuickReplies([
+    { label: '0', action: () => { appendUser('0'); svcDependants = 0; askSvcLocation(); } },
+    { label: '1', action: () => { appendUser('1'); svcDependants = 1; askSvcLocation(); } },
+    { label: '2', action: () => { appendUser('2'); svcDependants = 2; askSvcLocation(); } },
+    { label: '3+', action: () => { appendUser('3+'); svcDependants = 3; askSvcLocation(); } },
+  ], wrap);
+}
+
+function askSvcLocation() {
+  svcPhase = 'location';
+  const wrap = appendGetReal("Are you buying in a capital city or regional area? (This affects living cost benchmarks)");
+  appendQuickReplies([
+    { label: 'Capital city',      action: () => { appendUser('Capital city');      svcLocationType = 'metro';    runSvcCalc(); } },
+    { label: 'Regional / rural',  action: () => { appendUser('Regional / rural');  svcLocationType = 'regional'; runSvcCalc(); } },
+  ], wrap);
+}
+
+async function runSvcCalc() {
+  svcPhase = 'calculating';
+  appendThinking();
+
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        calcType:         'serviceability',
+        savings:           lastCalcResult.savings,
+        state:             lastCalcResult.state,
+        propertyType:      lastCalcResult.propertyType || 'house',
+        isOwnerOccupier:   lastCalcResult.isOwnerOccupier !== false,
+        isFirstHomeBuyer:  lastCalcResult.isFirstHomeBuyer || false,
+        takeHome1:         svcTakeHome1,
+        takeHome2:         svcTakeHome2,
+        householdType:     dtiBuyers === 2 ? 'couple' : 'single',
+        dependants:        svcDependants,
+        locationType:      svcLocationType,
+        debts:             dtiDebtAmounts,
+      }),
+    });
+
+    removeThinking();
+    const data = await res.json();
+
+    if (data.error) {
+      appendGetReal("Couldn't calculate a serviceability ceiling: " + data.error);
+      appendCtaLink('/deposit.html', 'Open full calculator →');
+      postCalcPhase = 'done';
+      return;
+    }
+
+    appendGetReal("Got it. Let me walk you through what the numbers look like.");
+    setTimeout(() => showSvcRevealSteps(data, 0), 500);
+
+  } catch (err) {
+    removeThinking();
+    appendError(err.message);
+    appendCtaLink('/deposit.html', 'Open full calculator →');
+    postCalcPhase = 'done';
+  }
+}
+
+function showSvcRevealSteps(result, step) {
+  if (step === 0) {
+    // ── HEM breakdown ──
+    appendGetReal("The serviceability check uses HEM — a standard living cost benchmark banks apply. Here's what that looks like for your household:");
+    setTimeout(() => appendStepCard('HEM benchmark (living costs)', fmtMoney(result.hemMonthly) + '/mo'), 500);
+    const existDelay = result.existingMonthly > 0 ? 900 : 0;
+    if (result.existingMonthly > 0) {
+      setTimeout(() => appendStepCard('Existing debt repayments', '−' + fmtMoney(result.existingMonthly) + '/mo', 'negative'), 900);
+    }
+    setTimeout(() => appendStepCard('Take-home income', fmtMoney(result.netMonthly) + '/mo'), 900 + existDelay);
+    setTimeout(() => {
+      appendStepCard(
+        'Available for mortgage repayments',
+        fmtMoney(result.maxMonthlyRepay) + '/mo',
+        result.maxMonthlyRepay > 0 ? 'result' : 'negative'
+      );
+    }, 1300 + existDelay);
+    setTimeout(() => {
+      const wrap = appendGetReal("That's what's left after living costs and existing commitments to put toward a mortgage.");
+      appendQuickReplies([{ label: 'Got it →', primary: true, action: () => showSvcRevealSteps(result, 1) }], wrap);
+    }, 2000 + existDelay);
+
+  } else if (step === 1) {
+    // ── Reveal card + repayments + binding constraint ──
+    setTimeout(() => appendSvcRevealCard(result), 200);
+    setTimeout(() => appendStepCard('Monthly repayment (indicative at 6.25%)', fmtMoney(result.monthlyRepay) + '/mo'), 700);
+    setTimeout(() => appendStepCard('At stress rate (9.25%)', fmtMoney(result.stressRepay) + '/mo'), 1200);
+    setTimeout(() => {
+      const c1Price = lastCalcResult ? lastCalcResult.maxPrice : Infinity;
+      const c2Price = lastDTIResult  ? lastDTIResult.maxPrice  : Infinity;
+      const c3Price = result.maxPrice;
+
+      let bindingMsg;
+      if (c3Price < c1Price && c3Price < c2Price) {
+        bindingMsg = `Serviceability is your binding constraint — this is lower than your deposit ceiling. Your maximum based on income is ${fmtMoney(c3Price)}.`;
+      } else if (c3Price >= c1Price) {
+        bindingMsg = `Serviceability confirmed — you can service the repayments at your deposit ceiling. Your deposit is the binding constraint at ${fmtMoney(c1Price)}.`;
+      } else {
+        bindingMsg = `Serviceability confirmed at your income ceiling. DTI is the binding constraint at ${fmtMoney(c2Price)}.`;
+      }
+
+      appendGetReal(bindingMsg + "\n\nThe full calculator shows all three ceilings side by side with a complete cost breakdown.");
+      setTimeout(() => {
+        appendCtaLink('/deposit.html', 'See full breakdown →');
+        appendCtaLink('/search.html', 'Check a suburb →');
+        postCalcPhase = 'done';
+      }, 400);
+    }, 1900);
+  }
+}
+
+function appendSvcRevealCard(result) {
+  const card = document.createElement('div');
+  card.className = 'reveal-card';
+  card.innerHTML = `
+    <div class="reveal-label">Serviceability ceiling</div>
+    <div class="reveal-price">${fmtMoney(result.maxPrice)}</div>
+    <div class="reveal-sub">Based on take-home income of ${fmtMoney(result.netMonthly)}/mo after HEM living costs (${fmtMoney(result.hemMonthly)}/mo)${result.existingMonthly > 0 ? ' and existing debt commitments (' + fmtMoney(result.existingMonthly) + '/mo)' : ''}. Stress-tested at 9.25%.</div>
+  `;
+  chatEl().appendChild(card);
+  scrollToBottom();
+}
+
+function handleSvcInput(text) {
+  if (svcPhase === 'dependants' || svcPhase === 'location') return; // handled by quick replies
+
+  const amount = parseAmount(text);
+
+  if (svcPhase === 'takeHome1') {
+    if (!amount || amount < 100) { appendGetReal("That doesn't look right — enter a monthly figure, e.g. 5000 or 5k."); return; }
+    svcTakeHome1 = amount;
+    if (dtiBuyers === 2) { askSvcTakeHome2(); }
+    else { askSvcDependants(); }
+
+  } else if (svcPhase === 'takeHome2') {
+    if (amount === null || amount < 0) { appendGetReal("Enter a monthly figure, e.g. 4500 or 4.5k. Use 0 if they have no income."); return; }
+    svcTakeHome2 = amount;
+    askSvcDependants();
+  }
+}
+
 // ─── Email capture ────────────────────────────────────────────────────────────
 async function saveToWaitlist(email, tool) {
   try {
@@ -1204,6 +1378,14 @@ async function handleInput(text) {
   // DTI collection
   if (dtiPhase && dtiPhase !== 'calculating') {
     handleDTIInput(text);
+    waiting = false;
+    document.getElementById('send-btn').disabled = !document.getElementById('user-input').value.trim();
+    return;
+  }
+
+  // Serviceability collection
+  if (svcPhase && svcPhase !== 'calculating') {
+    handleSvcInput(text);
     waiting = false;
     document.getElementById('send-btn').disabled = !document.getElementById('user-input').value.trim();
     return;

@@ -90,6 +90,9 @@ const HARDCODED_LMI_RATES = [
 const HARDCODED_LMI_SD_RATES = { NSW:0.09, VIC:0.10, QLD:0.09, WA:0.10, SA:0.11, TAS:0.10, ACT:0.06, NT:0.10 };
 const HARDCODED_REG_FEES     = { NSW:670, VIC:1700, QLD:1250, WA:1120, SA:800, TAS:600, ACT:1100, NT:500 };
 
+const SUPABASE_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
+
 function _br(p, tbl) { for(const b of tbl){if(p<=b.max)return b.base+(p-b.min)*b.rate;} return 0; }
 function _nsw(p){return _br(p,[{min:0,max:16000,base:0,rate:0.0125},{min:16000,max:35000,base:200,rate:0.015},{min:35000,max:93000,base:485,rate:0.0175},{min:93000,max:351000,base:1500,rate:0.035},{min:351000,max:1168000,base:10530,rate:0.045},{min:1168000,max:3505000,base:47295,rate:0.055},{min:3505000,max:Infinity,base:175830,rate:0.07}]);}
 function _vicG(p){if(p<=25000)return p*0.014;if(p<=130000)return 350+(p-25000)*0.024;if(p<=960000)return 2870+(p-130000)*0.06;if(p<=2000000)return p*0.055;return 110000+(p-2000000)*0.065;}
@@ -320,6 +323,98 @@ function calcDTICeiling(body) {
   };
 }
 
+// ─── Serviceability ceiling calculation (no AI) ───────────────────────────────
+async function calcServiceabilityCeiling(body) {
+  const {
+    savings, state, propertyType = 'house',
+    isOwnerOccupier = true, isFirstHomeBuyer = false,
+    takeHome1 = 0, takeHome2 = 0,
+    householdType = 'single', dependants = 0, locationType = 'metro',
+    debts = {},
+  } = body;
+
+  // HEM lookup from Supabase
+  const dep = Math.min(Math.max(0, Math.round(dependants)), 4);
+  let hemMonthly = 3500;
+  try {
+    const hemUrl = `${SUPABASE_URL}/rest/v1/hem_benchmarks?household_type=eq.${householdType}&dependants=eq.${dep}&location_type=eq.${locationType}&select=monthly_amount`;
+    const hemRes = await fetch(hemUrl, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    });
+    const hemRows = await hemRes.json();
+    hemMonthly = hemRows[0]?.monthly_amount || 3500;
+  } catch (e) {
+    // fall through to default
+  }
+
+  // Net monthly income
+  const netMonthly = (takeHome1 || 0) + (takeHome2 || 0);
+
+  // Convert debt balances to monthly commitments:
+  //   creditCard:  3% of limit per month
+  //   carLoan / personalLoan / other: P&I at 9%/yr over 60 months → factor 0.02076
+  //   mortgage: P&I at 6.25%/yr over 300 months → factor 0.006598
+  const ccMonthly       = (debts.creditCard   || 0) * 0.03;
+  const carMonthly      = (debts.carLoan      || 0) * 0.02076;
+  const personalMonthly = (debts.personalLoan || 0) * 0.02076;
+  const otherMonthly    = (debts.other        || 0) * 0.02076;
+  const mortgageMonthly = (debts.mortgage     || 0) * 0.006598;
+  const existingMonthly = ccMonthly + carMonthly + personalMonthly + otherMonthly + mortgageMonthly;
+
+  // Available for new mortgage repayment
+  const maxMonthlyRepay = netMonthly - hemMonthly - existingMonthly;
+
+  if (maxMonthlyRepay <= 0) {
+    return { error: 'Income too low to cover living expenses and existing debts.' };
+  }
+
+  // Convert max repayment to max loan at 9.25% stress rate, 30yr P&I
+  const stressR = 9.25 / 100 / 12;
+  const n = 360;
+  const maxLoan = Math.round(
+    maxMonthlyRepay * (Math.pow(1 + stressR, n) - 1) / (stressR * Math.pow(1 + stressR, n))
+  );
+
+  const opts = {
+    savings,
+    state,
+    isFHB:    isFirstHomeBuyer,
+    isOO:     isOwnerOccupier,
+    propType: propertyType,
+  };
+
+  const c3 = findMaxPriceForLoanCap(maxLoan, opts);
+  if (!c3) {
+    return { error: 'Income too low to support any loan at these debt and living cost levels.' };
+  }
+
+  const effectiveLoan = c3.loanCap + (c3.lmiPremium || 0);
+  const monthlyRepay  = Math.round(calcMonthlyRepayment(effectiveLoan, 6.25));
+  const stressRepay   = Math.round(calcMonthlyRepayment(effectiveLoan, 9.25));
+
+  return {
+    type:             'svc_ceiling',
+    maxPrice:         c3.price,
+    maxLoan,
+    netMonthly:       Math.round(netMonthly),
+    hemMonthly:       Math.round(hemMonthly),
+    existingMonthly:  Math.round(existingMonthly),
+    maxMonthlyRepay:  Math.round(maxMonthlyRepay),
+    monthlyRepay,
+    stressRepay,
+    lvrTier:          c3.lvrTier,
+    stampDuty:        c3.stampDuty,
+    regFee:           c3.regFee || 0,
+    lmiPremium:       c3.lmiPremium || 0,
+    lmiSd:            c3.lmiSd || 0,
+    savings,
+    isFirstHomeBuyer,
+    householdType,
+    dependants,
+    locationType,
+  };
+}
+
 // ─── Workers AI model ─────────────────────────────────────────────────────────
 const AI_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
@@ -367,6 +462,14 @@ export async function onRequestPost(context) {
     // DTI ceiling — pure calc, no AI
     if (body.calcType === 'dti') {
       const result = calcDTICeiling(body);
+      return new Response(JSON.stringify(result), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
+    // Serviceability ceiling — pure calc, no AI
+    if (body.calcType === 'serviceability') {
+      const result = await calcServiceabilityCeiling(body);
       return new Response(JSON.stringify(result), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
