@@ -1017,13 +1017,35 @@ function showDTIRevealSteps(result, step) {
   } else if (step === 2) {
     // ── The reveal ──
     setTimeout(() => appendDTIRevealCard(result), 200);
+    setTimeout(() => appendStepCard('Monthly repayment (6.25%)', fmtMoney(result.monthlyRepay) + '/mo'), 600);
+    setTimeout(() => appendStepCard('Stressed repayment (9.25%)', fmtMoney(result.stressRepay) + '/mo'), 1000);
     setTimeout(() => {
-      const binding = result.maxPrice < lastCalcResult.maxPrice
-        ? "Your income is the binding constraint — this is lower than your deposit ceiling."
-        : "Your deposit is still the binding constraint — your income supports a higher price than your savings can reach.";
-      appendGetReal(binding);
-    }, 700);
-    setTimeout(() => askWhatsNext(), 1400);
+      const isIncomeBound = result.maxPrice < lastCalcResult.maxPrice;
+      const grossMonthly  = result.totalIncome / 12;
+      const repayPct      = Math.round((result.monthlyRepay / grossMonthly) * 100);
+      const stressPct     = Math.round((result.stressRepay  / grossMonthly) * 100);
+
+      // Qualitative read on repayment burden
+      let repayRead;
+      if (stressPct > 50) {
+        repayRead = `At ${stressPct}% of your gross monthly income under a stress test, this would be very tight — even if a bank approves it, it may not leave much room.`;
+      } else if (stressPct > 38) {
+        repayRead = `The stressed repayment is ${stressPct}% of gross monthly income — on the higher side. That's before tax, so net it's tighter still.`;
+      } else {
+        repayRead = `The stressed repayment is ${stressPct}% of gross monthly income — within a range most lenders consider manageable, but it depends on your living costs.`;
+      }
+
+      if (isIncomeBound) {
+        appendGetReal(
+          `Your income is the binding constraint — this ceiling is lower than your deposit allows.\n\n${repayRead}\n\nThe DTI cap is a regulatory rule, not an affordability check. Whether the repayments work after rent, food, and everything else is what serviceability actually tests — and we haven't done that yet.`
+        );
+      } else {
+        appendGetReal(
+          `Your deposit is the binding constraint — your income could support a higher price than your savings can reach.\n\n${repayRead}\n\nThe DTI cap is a regulatory ceiling. Actual affordability depends on your living expenses — the full serviceability check covers that.`
+        );
+      }
+    }, 1400);
+    setTimeout(() => askWhatsNext(), 2400);
   }
 }
 
