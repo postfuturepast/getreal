@@ -89,7 +89,7 @@
     .tool-choice-btn:hover { border-color: #3b82f6; background: #0f1823; color: #fff; }
     .tool-choice-btn.disabled { opacity: 0.45; cursor: default; }
     .tool-choice-btn.disabled:hover { border-color: #252525; background: #141414; color: #d4d4d4; }
-    .tool-choice-label { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+    .tool-choice-label { font-weight: 600; }
     .tool-choice-tag { font-size: 0.58rem; color: #555; letter-spacing: 0.08em; white-space: nowrap; }
 
     /* ── Chat area ── */
@@ -374,16 +374,19 @@ function boot() {
   choices.className = 'tool-choices';
 
   const tools = [
-    { key: 'budget',   label: 'Max budget',       tag: 'Tool 01',     coming: false },
-    { key: 'realism',  label: 'Realism check',    tag: 'Tool 02',     coming: false },
-    { key: 'mortgage', label: 'Mortgage tracker', tag: 'Coming soon', coming: true  },
-    { key: 'cgt',      label: 'CGT calculator',   tag: 'Coming soon', coming: true  },
+    { key: 'budget',   label: "Saving a deposit for my first home",              coming: false },
+    { key: 'budget',   label: "Looking to buy soon, unsure what I can afford",   coming: false },
+    { key: 'budget',   label: "I want to know the maximum I can stretch to",     coming: false },
+    { key: 'realism',  label: "I've started looking at properties",              coming: false },
+    { key: 'realism',  label: "I have a suburb and price in mind",               coming: false },
+    { key: 'mortgage', label: "I own and want to track my mortgage or equity",   coming: true  },
+    { key: 'cgt',      label: "I'm thinking of selling an investment property",  coming: true  },
   ];
 
   tools.forEach(t => {
     const btn = document.createElement('button');
     btn.className = 'tool-choice-btn' + (t.coming ? ' disabled' : '');
-    btn.innerHTML = `<span class="tool-choice-label">${t.label}</span><span class="tool-choice-tag">${t.tag}</span>`;
+    btn.innerHTML = `<span class="tool-choice-label">${t.label}</span>${t.coming ? '<span class="tool-choice-tag">Coming soon</span>' : ''}`;
     if (!t.coming) {
       btn.onclick = () => {
         choices.remove();
