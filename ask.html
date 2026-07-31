@@ -348,6 +348,7 @@ const SUPABASE_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
 // ─── State ────────────────────────────────────────────────────────────────────
 let journey      = null;        // 'budget' | 'realism' | 'mortgage' | 'selling'
 let knownFHB     = false;       // true when journey selection already answered the FHB question
+let journeyType  = null;        // 'budget' | 'realism' — sent to API to select system prompt
 let waiting      = false;
 let conversationHistory = [];
 let postCalcPhase = null;       // null | 'ask-enough' | 'ask-target' | 'ask-power' | 'done'
@@ -375,6 +376,7 @@ function scrollToBottom() {
 function goBack() {
   journey = null;
   knownFHB = false;
+  journeyType = null;
   waiting = false;
   conversationHistory = [];
   postCalcPhase = null;
@@ -406,8 +408,8 @@ function boot() {
   const tools = [
     { key: 'budget-fhb', label: "Saving for my first home"        },
     { key: 'budget',     label: "Wondering what I could afford"   },
-    { key: 'realism',   label: "Browsing properties online"       },
-    { key: 'realism',   label: "Going to inspections"             },
+    { key: 'realism-chat', label: "Browsing properties online"  },
+    { key: 'realism-chat', label: "Going to inspections"         },
     { key: 'mortgage',  label: "Trying to pay my mortgage down"   },
     { key: 'selling',   label: "Thinking of selling"              },
   ];
@@ -430,6 +432,8 @@ function boot() {
 // ─── Journey selection ────────────────────────────────────────────────────────
 function selectJourney(j, label) {
   if (j === 'budget-fhb') { j = 'budget'; knownFHB = true; }
+  if (j === 'realism-chat') { j = 'realism'; journeyType = 'realism'; }
+  else if (j === 'budget') { journeyType = 'budget'; }
   journey = j;
   document.getElementById('back-btn').style.display = 'block';
   if (label) appendUser(label);
@@ -442,8 +446,11 @@ function selectJourney(j, label) {
     document.getElementById('user-input').focus();
 
   } else if (j === 'realism') {
-    appendGetReal('Head to the realism checker — enter a suburb and price and we\'ll show you what share of that market your budget can access.');
-    setTimeout(() => appendCtaLink('/search.html', 'Open realism checker →'), 300);
+    appendGetReal(
+      "Let's check if your savings can get you there. Tell me about the property you have in mind — the price, where it is, and what you\'ve got saved."
+    );
+    document.getElementById('user-input').placeholder = 'Tell me about the property…';
+    document.getElementById('user-input').focus();
 
   } else if (j === 'mortgage') {
     appendGetReal(
@@ -626,7 +633,67 @@ function doStagedReveal(result) {
   revealResult = result;
   userDTIResponse = null;
   lastCalcResult = result;
-  setTimeout(() => showRevealStep(1), 400);
+  // Realism journey: show affordability verdict first, then same reveal
+  if (result.targetPrice) {
+    setTimeout(() => showRealismVerdict(result), 400);
+  } else {
+    setTimeout(() => showRevealStep(1), 400);
+  }
+}
+
+// ─── Realism verdict — can they afford the target? ───────────────────────────
+function showRealismVerdict(result) {
+  const target   = result.targetPrice;
+  const ceiling  = result.maxPrice;
+  const gap      = result.gapAmount || 0;
+
+  if (result.canAfford) {
+    // ✓ They can reach it
+    const surplus = ceiling - target;
+    const wrap = appendGetReal(
+      `Your deposit can reach ${fmtMoney(target)} — you have ${fmtMoney(surplus)} of headroom above that target.`
+    );
+    // Show the tick card
+    setTimeout(() => {
+      const card = document.createElement('div');
+      card.className = 'reveal-card';
+      card.style.borderLeftColor = '#22c55e';
+      card.innerHTML = `
+        <div class="reveal-label" style="color:#22c55e">DEPOSIT CHECK ✓</div>
+        <div class="reveal-price">${fmtMoney(target)}</div>
+        <div class="reveal-sub">Your deposit supports up to ${fmtMoney(ceiling)} — this target is within reach on deposit alone. Income and serviceability are still worth checking.</div>
+      `;
+      chatEl().appendChild(card);
+      scrollToBottom();
+    }, 400);
+    // Then continue with the standard educational reveal (repayments, stamp duty, etc.)
+    setTimeout(() => showRevealStep(2), 1000);
+
+  } else {
+    // ✗ Gap — show the shortfall and what it would take
+    const wrap = appendGetReal(
+      `Your deposit ceiling is ${fmtMoney(ceiling)} — that's ${fmtMoney(gap)} short of ${fmtMoney(target)}.`
+    );
+    setTimeout(() => {
+      const card = document.createElement('div');
+      card.className = 'reveal-card';
+      card.style.borderLeftColor = '#ef4444';
+      card.innerHTML = `
+        <div class="reveal-label" style="color:#ef4444">DEPOSIT GAP</div>
+        <div class="reveal-price">−${fmtMoney(gap)}</div>
+        <div class="reveal-sub">Deposit ceiling: ${fmtMoney(ceiling)} · Target: ${fmtMoney(target)}</div>
+      `;
+      chatEl().appendChild(card);
+      scrollToBottom();
+    }, 400);
+    setTimeout(() => {
+      appendGetReal(
+        `To reach ${fmtMoney(target)} on deposit alone you'd need roughly ${fmtMoney(gap)} more in savings — though a higher LVR lender or co-buyer could close part of that gap.\n\nLet me still walk you through the repayments and costs so you have the full picture.`
+      );
+    }, 1000);
+    // Still run the educational reveal — they should know what the repayments look like
+    setTimeout(() => showRevealStep(2), 1800);
+  }
 }
 
 function showRevealStep(step) {
@@ -1313,6 +1380,7 @@ async function callAI(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: conversationHistory,
+        journeyType,
         knownFacts: knownFHB ? 'This user is a first home buyer. Do NOT ask whether they are a first home buyer — it is already confirmed. Always include isFirstHomeBuyer: true in the CALC block.' : null,
       }),
     });

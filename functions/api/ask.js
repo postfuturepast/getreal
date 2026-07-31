@@ -448,6 +448,37 @@ Do NOT ask about income, debts, repayments, or expenses.
 Do NOT explain the result — it appears automatically.
 Never say "as an AI". You are GetReal.`;
 
+const REALISM_SYSTEM_PROMPT = `You are GetReal's buying coach. The user has a specific property price in mind and wants to know if they can afford it. Collect six pieces of information, confirm them, then trigger the calculation.
+
+STYLE:
+- Ask ONE question at a time, never a list
+- Be brief and conversational
+- Build on what they have already told you — never re-ask
+
+THE SIX THINGS YOU NEED:
+1. Target purchase price — the price they have in mind. If they give a suburb instead of a price, ask "roughly what price range are you thinking?"
+2. Australian state (NSW, VIC, QLD, WA, SA, TAS, ACT, NT)
+3. Total savings in dollars — ALWAYS confirm as a full dollar amount.
+4. Property type: house, apartment, or townhouse
+5. Owner-occupier or investor
+6. First home buyer: yes or no
+
+FLOW:
+Step 1 — Read what they said. Extract anything already given. Ask for the next missing piece only.
+Step 2 — Once you have all six, confirm in one sentence: "Just confirming: targeting $[target], [type] in [state], $[savings] saved, [FHB or not]. Is that right?"
+Step 3 — After they confirm, respond with exactly: "On it." then the CALC block. Nothing else after.
+
+ALL DOLLAR AMOUNTS in the CALC block must be plain integers. "$850k" → 850000. "$1.2m" → 1200000.
+
+CALC FORMAT (fill in real values, always include targetPrice):
+<CALC>
+{"state":"NSW","savings":150000,"propertyType":"house","isOwnerOccupier":true,"isFirstHomeBuyer":false,"targetPrice":850000}
+</CALC>
+
+Do NOT ask about income, debts, repayments, or expenses.
+Do NOT explain the result — it appears automatically.
+Never say "as an AI". You are GetReal.`;
+
 // ─── Handler ──────────────────────────────────────────────────────────────────
 export async function onRequestPost(context) {
   const corsHeaders = {
@@ -475,7 +506,7 @@ export async function onRequestPost(context) {
       });
     }
 
-    const { messages, knownFacts } = body;
+    const { messages, knownFacts, journeyType } = body;
 
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: 'messages array required' }), {
@@ -490,9 +521,10 @@ export async function onRequestPost(context) {
       });
     }
 
+    const basePrompt = journeyType === 'realism' ? REALISM_SYSTEM_PROMPT : SYSTEM_PROMPT;
     const effectivePrompt = knownFacts
-      ? SYSTEM_PROMPT + '\n\nALREADY CONFIRMED — do NOT ask about these:\n' + knownFacts
-      : SYSTEM_PROMPT;
+      ? basePrompt + '\n\nALREADY CONFIRMED — do NOT ask about these:\n' + knownFacts
+      : basePrompt;
 
     // Convert Gemini-format messages → OpenAI format
     const aiMessages = [
@@ -530,6 +562,9 @@ export async function onRequestPost(context) {
             ? calcStampDuty(c1.price, { state: params.state, isFHB: false, isOO: params.isOwnerOccupier !== false, propType: params.propertyType || 'house' })
             : c1.stampDuty;
           const fhbDutySaving   = Math.max(0, standardDuty - c1.stampDuty);
+          const targetPrice = params.targetPrice || null;
+          const canAfford   = targetPrice ? c1.price >= targetPrice : null;
+          const gapAmount   = targetPrice ? Math.max(0, targetPrice - c1.price) : null;
           toolResult = {
             type:             'deposit_ceiling',
             maxPrice:         c1.price,
@@ -549,6 +584,10 @@ export async function onRequestPost(context) {
             minDTIIncome,
             monthlyRepay,
             stressRepay,
+            // Realism check fields
+            targetPrice,
+            canAfford,
+            gapAmount,
           };
         } else {
           toolResult = { error: 'Could not calculate — savings may be too low.' };
