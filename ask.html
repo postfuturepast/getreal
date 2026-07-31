@@ -428,6 +428,12 @@ function boot() {
   });
 
   wrap.appendChild(choices);
+
+  const alpha = document.createElement('div');
+  alpha.style.cssText = 'margin-top:0.9rem;font-size:0.62rem;letter-spacing:0.08em;color:#444;text-transform:uppercase;';
+  alpha.textContent = 'Alpha · Results are estimates only · Not financial advice';
+  wrap.appendChild(alpha);
+
   scrollToBottom();
 }
 
