@@ -649,12 +649,48 @@ function doStagedReveal(result) {
   revealResult = result;
   userDTIResponse = null;
   lastCalcResult = result;
-  // Realism journey: show affordability verdict first, then same reveal
+  // Realism journey already has a target price — go straight to verdict
   if (result.targetPrice) {
     setTimeout(() => showRealismVerdict(result), 400);
   } else {
-    setTimeout(() => showRevealStep(1), 400);
+    // Budget journey: ask before revealing whether they have a price in mind
+    setTimeout(() => askMaxOrTarget(), 400);
   }
+}
+
+function askMaxOrTarget() {
+  const wrap = appendGetReal("Before I show you the numbers — are you working out your maximum, or do you have a specific price in mind?");
+  appendQuickReplies([
+    { label: 'Show me my maximum', primary: true, action: () => {
+        appendUser('Show me my maximum');
+        showRevealStep(1);
+      }
+    },
+    { label: 'I have a price in mind', action: () => {
+        appendUser('I have a price in mind');
+        postCalcPhase = 'ask-pre-reveal-target';
+        appendGetReal("What's the price? (e.g. $850k, $1.2m)");
+        document.getElementById('user-input').placeholder = 'Target price…';
+        document.getElementById('user-input').focus();
+      }
+    },
+  ], wrap);
+}
+
+function handlePreRevealTarget(text) {
+  const price = parseAmount(text);
+  if (!price || price < 100000) {
+    appendGetReal("Didn't catch that — try something like $850k or $1.2m.");
+    return;
+  }
+  postCalcPhase = null;
+  document.getElementById('user-input').placeholder = 'Type a message…';
+  lastCalcResult.targetPrice = price;
+  lastCalcResult.canAfford   = lastCalcResult.maxPrice >= price;
+  lastCalcResult.gapAmount   = Math.max(0, price - lastCalcResult.maxPrice);
+  // Run all 3 checks against this target (same as affordability mode)
+  isAffordabilityMode = true;
+  setTimeout(() => showRealismVerdict(lastCalcResult), 300);
 }
 
 // ─── Realism verdict — can they afford the target? ───────────────────────────
@@ -1803,6 +1839,14 @@ async function handleInput(text) {
   // Email capture mode (Tools 3 & 4)
   if (awaitingEmail) {
     await handleEmailInput(text);
+    waiting = false;
+    document.getElementById('send-btn').disabled = false;
+    return;
+  }
+
+  // Pre-reveal: user wants to check against a specific target price
+  if (postCalcPhase === 'ask-pre-reveal-target') {
+    handlePreRevealTarget(text);
     waiting = false;
     document.getElementById('send-btn').disabled = false;
     return;
