@@ -346,9 +346,10 @@ const SUPABASE_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
 
 // ─── State ────────────────────────────────────────────────────────────────────
-let journey      = null;        // 'budget' | 'realism' | 'mortgage' | 'selling'
-let knownFHB     = false;       // true when journey selection already answered the FHB question
-let journeyType  = null;        // 'budget' | 'realism' — sent to API to select system prompt
+let journey           = null;   // 'budget' | 'realism' | 'mortgage' | 'selling'
+let knownFHB          = false;  // true when journey selection already answered the FHB question
+let journeyType       = null;   // 'budget' | 'realism' — sent to API to select system prompt
+let isAffordabilityMode = false; // true when user wants "can I afford $X?" — runs all 3 checks
 let waiting      = false;
 let conversationHistory = [];
 let postCalcPhase = null;       // null | 'ask-enough' | 'ask-target' | 'ask-power' | 'done'
@@ -377,6 +378,7 @@ function goBack() {
   journey = null;
   knownFHB = false;
   journeyType = null;
+  isAffordabilityMode = false;
   waiting = false;
   conversationHistory = [];
   postCalcPhase = null;
@@ -408,8 +410,8 @@ function boot() {
   const tools = [
     { key: 'budget-fhb', label: "Saving for my first home"        },
     { key: 'budget',     label: "Wondering what I could afford"   },
-    { key: 'realism-chat', label: "Browsing properties online"  },
-    { key: 'realism-chat', label: "Going to inspections"         },
+    { key: 'realism-chat',   label: "Browsing properties online"  },
+    { key: 'affordability', label: "Going to inspections"         },
     { key: 'mortgage',  label: "Trying to pay my mortgage down"   },
     { key: 'selling',   label: "Thinking of selling"              },
   ];
@@ -431,9 +433,10 @@ function boot() {
 
 // ─── Journey selection ────────────────────────────────────────────────────────
 function selectJourney(j, label) {
-  if (j === 'budget-fhb') { j = 'budget'; knownFHB = true; }
+  if (j === 'budget-fhb')   { j = 'budget';  knownFHB = true; }
   if (j === 'realism-chat') { j = 'realism'; journeyType = 'realism'; }
-  else if (j === 'budget') { journeyType = 'budget'; }
+  else if (j === 'affordability') { j = 'realism'; journeyType = 'realism'; isAffordabilityMode = true; }
+  else if (j === 'budget')  { journeyType = 'budget'; }
   journey = j;
   document.getElementById('back-btn').style.display = 'block';
   if (label) appendUser(label);
@@ -446,9 +449,10 @@ function selectJourney(j, label) {
     document.getElementById('user-input').focus();
 
   } else if (j === 'realism') {
-    appendGetReal(
-      "Let's check if your savings can get you there. Tell me about the property you have in mind — the price, where it is, and what you\'ve got saved."
-    );
+    const opening = isAffordabilityMode
+      ? "Let's work out whether you can actually afford it — deposit, income, and repayments. Tell me the price you're looking at, where it is, and what you've got saved."
+      : "Let's check if your savings can get you there. Tell me about the property you have in mind — the price, where it is, and what you\'ve got saved.";
+    appendGetReal(opening);
     document.getElementById('user-input').placeholder = 'Tell me about the property…';
     document.getElementById('user-input').focus();
 
@@ -666,11 +670,18 @@ function showRealismVerdict(result) {
       chatEl().appendChild(card);
       scrollToBottom();
     }, 400);
-    // Then continue with the standard educational reveal (repayments, stamp duty, etc.)
-    setTimeout(() => showRevealStep(2), 1000);
+    // Affordability mode: auto-continue to income check; otherwise standard reveal
+    if (isAffordabilityMode) {
+      setTimeout(() => {
+        appendGetReal("Deposit: ✓\n\nNow let's check the income side — banks cap your total debt at 6× gross annual income.");
+        setTimeout(() => startDTICollection(), 700);
+      }, 1000);
+    } else {
+      setTimeout(() => showRevealStep(2), 1000);
+    }
 
   } else {
-    // ✗ Gap — show the shortfall and what it would take
+    // ✗ Gap — show the shortfall
     const wrap = appendGetReal(
       `Your deposit ceiling is ${fmtMoney(ceiling)} — that's ${fmtMoney(gap)} short of ${fmtMoney(target)}.`
     );
@@ -686,13 +697,20 @@ function showRealismVerdict(result) {
       chatEl().appendChild(card);
       scrollToBottom();
     }, 400);
-    setTimeout(() => {
-      appendGetReal(
-        `To reach ${fmtMoney(target)} on deposit alone you'd need roughly ${fmtMoney(gap)} more in savings — though a higher LVR lender or co-buyer could close part of that gap.\n\nLet me still walk you through the repayments and costs so you have the full picture.`
-      );
-    }, 1000);
-    // Still run the educational reveal — they should know what the repayments look like
-    setTimeout(() => showRevealStep(2), 1800);
+
+    if (isAffordabilityMode) {
+      setTimeout(() => {
+        appendGetReal(`Your deposit is ${fmtMoney(gap)} short of ${fmtMoney(target)}. You could close that with more savings, a higher LVR lender, or a co-buyer.\n\nLet's still check the income and repayments — they'll tell you if the gap is just the deposit or more than that.`);
+        setTimeout(() => startDTICollection(), 900);
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        appendGetReal(
+          `To reach ${fmtMoney(target)} on deposit alone you'd need roughly ${fmtMoney(gap)} more in savings — though a higher LVR lender or co-buyer could close part of that gap.\n\nLet me still walk you through the repayments and costs so you have the full picture.`
+        );
+      }, 1000);
+      setTimeout(() => showRevealStep(2), 1800);
+    }
   }
 }
 
@@ -1098,33 +1116,61 @@ function showDTIRevealSteps(result, step) {
     setTimeout(() => appendDTIRevealCard(result), 200);
     setTimeout(() => appendStepCard('Monthly repayment (6.25%)', fmtMoney(result.monthlyRepay) + '/mo'), 600);
     setTimeout(() => appendStepCard('Stressed repayment (9.25%)', fmtMoney(result.stressRepay) + '/mo'), 1000);
-    setTimeout(() => {
-      const isIncomeBound = result.maxPrice < lastCalcResult.maxPrice;
-      const grossMonthly  = result.totalIncome / 12;
-      const repayPct      = Math.round((result.monthlyRepay / grossMonthly) * 100);
-      const stressPct     = Math.round((result.stressRepay  / grossMonthly) * 100);
 
-      // Qualitative read on repayment burden
-      let repayRead;
-      if (stressPct > 50) {
-        repayRead = `At ${stressPct}% of your gross monthly income under a stress test, this would be very tight — even if a bank approves it, it may not leave much room.`;
-      } else if (stressPct > 38) {
-        repayRead = `The stressed repayment is ${stressPct}% of gross monthly income — on the higher side. That's before tax, so net it's tighter still.`;
-      } else {
-        repayRead = `The stressed repayment is ${stressPct}% of gross monthly income — within a range most lenders consider manageable, but it depends on your living costs.`;
-      }
+    if (isAffordabilityMode && lastCalcResult && lastCalcResult.targetPrice) {
+      // Affordability mode: show income verdict vs target, then auto-continue to serviceability
+      const target = lastCalcResult.targetPrice;
+      const incomeOk = result.maxPrice >= target;
+      setTimeout(() => {
+        if (incomeOk) {
+          const card = document.createElement('div');
+          card.className = 'reveal-card';
+          card.style.borderLeftColor = '#22c55e';
+          card.innerHTML = `
+            <div class="reveal-label" style="color:#22c55e">INCOME CHECK ✓</div>
+            <div class="reveal-price">${fmtMoney(target)}</div>
+            <div class="reveal-sub">Your income supports up to ${fmtMoney(result.maxPrice)} — enough for this target at the 6× DTI cap.</div>
+          `;
+          chatEl().appendChild(card);
+          scrollToBottom();
+        } else {
+          const incomeGap = target - result.maxPrice;
+          const card = document.createElement('div');
+          card.className = 'reveal-card';
+          card.style.borderLeftColor = '#ef4444';
+          card.innerHTML = `
+            <div class="reveal-label" style="color:#ef4444">INCOME GAP</div>
+            <div class="reveal-price">−${fmtMoney(incomeGap)}</div>
+            <div class="reveal-sub">Income supports up to ${fmtMoney(result.maxPrice)} at 6× DTI · Target: ${fmtMoney(target)}</div>
+          `;
+          chatEl().appendChild(card);
+          scrollToBottom();
+        }
+        setTimeout(() => {
+          appendGetReal(`Income: ${incomeOk ? '✓' : '✗'}\n\nLast check — let's see if you can actually service the repayments after living costs.`);
+          setTimeout(() => startSvcCollection(), 700);
+        }, 600);
+      }, 1400);
 
-      if (isIncomeBound) {
-        appendGetReal(
-          `Your income is the binding constraint — this ceiling is lower than your deposit allows.\n\n${repayRead}\n\nThe DTI cap is a regulatory rule, not an affordability check. Whether the repayments work after rent, food, and everything else is what serviceability actually tests — and we haven't done that yet.`
-        );
-      } else {
-        appendGetReal(
-          `Your deposit is the binding constraint — your income could support a higher price than your savings can reach.\n\n${repayRead}\n\nThe DTI cap is a regulatory ceiling. Actual affordability depends on your living expenses — the full serviceability check covers that.`
-        );
-      }
-    }, 1400);
-    setTimeout(() => askWhatsNext(), 2400);
+    } else {
+      // Standard mode: show binding constraint + offer serviceability
+      setTimeout(() => {
+        const isIncomeBound = result.maxPrice < lastCalcResult.maxPrice;
+        const grossMonthly  = result.totalIncome / 12;
+        const stressPct     = Math.round((result.stressRepay / grossMonthly) * 100);
+        let repayRead;
+        if (stressPct > 50)      repayRead = `At ${stressPct}% of gross monthly income under stress, this would be very tight.`;
+        else if (stressPct > 38) repayRead = `The stressed repayment is ${stressPct}% of gross monthly income — on the higher side.`;
+        else                     repayRead = `The stressed repayment is ${stressPct}% of gross monthly income — within a range most lenders consider manageable.`;
+
+        if (isIncomeBound) {
+          appendGetReal(`Your income is the binding constraint — this ceiling is lower than your deposit allows.\n\n${repayRead}\n\nThe DTI cap is a regulatory rule, not an affordability check. Serviceability tests whether repayments work after living expenses.`);
+        } else {
+          appendGetReal(`Your deposit is the binding constraint — your income could support a higher price.\n\n${repayRead}\n\nActual affordability depends on your living expenses — the full serviceability check covers that.`);
+        }
+      }, 1400);
+      setTimeout(() => askWhatsNext(), 2400);
+    }
   }
 }
 
@@ -1291,12 +1337,65 @@ function showSvcRevealSteps(result, step) {
         bindingMsg = `Serviceability confirmed at your income ceiling. DTI is the binding constraint at ${fmtMoney(c2Price)}.`;
       }
 
-      appendGetReal(bindingMsg + "\n\nThe full calculator shows all three ceilings side by side with a complete cost breakdown.");
-      setTimeout(() => {
-        appendCtaLink('/deposit.html', 'See full breakdown →');
-        appendCtaLink('/search.html', 'Check a suburb →');
-        postCalcPhase = 'done';
-      }, 400);
+      if (isAffordabilityMode && lastCalcResult && lastCalcResult.targetPrice) {
+        // Affordability mode: show serviceability verdict vs target, then summary
+        const target = lastCalcResult.targetPrice;
+        const svcOk  = result.maxPrice >= target;
+        const depositOk = lastCalcResult.canAfford;
+        const incomeOk  = lastDTIResult ? lastDTIResult.maxPrice >= target : null;
+
+        if (svcOk) {
+          const card = document.createElement('div');
+          card.className = 'reveal-card';
+          card.style.borderLeftColor = '#22c55e';
+          card.innerHTML = `
+            <div class="reveal-label" style="color:#22c55e">REPAYMENTS CHECK ✓</div>
+            <div class="reveal-price">${fmtMoney(target)}</div>
+            <div class="reveal-sub">Your take-home can cover the repayments at ${fmtMoney(target)} after living costs.</div>
+          `;
+          chatEl().appendChild(card);
+          scrollToBottom();
+        } else {
+          const svcGap = target - result.maxPrice;
+          const card = document.createElement('div');
+          card.className = 'reveal-card';
+          card.style.borderLeftColor = '#ef4444';
+          card.innerHTML = `
+            <div class="reveal-label" style="color:#ef4444">REPAYMENTS GAP</div>
+            <div class="reveal-price">−${fmtMoney(svcGap)}</div>
+            <div class="reveal-sub">Serviceability ceiling: ${fmtMoney(result.maxPrice)} · Target: ${fmtMoney(target)}</div>
+          `;
+          chatEl().appendChild(card);
+          scrollToBottom();
+        }
+
+        // Summary
+        setTimeout(() => {
+          const checks = [
+            `Deposit: ${depositOk ? '✓' : '✗  (' + fmtMoney(lastCalcResult.gapAmount) + ' short)'}`,
+            incomeOk !== null ? `Income: ${incomeOk ? '✓' : '✗  (income ceiling ' + fmtMoney(lastDTIResult.maxPrice) + ')'}` : null,
+            `Repayments: ${svcOk ? '✓' : '✗  (serviceability ceiling ' + fmtMoney(result.maxPrice) + ')'}`,
+          ].filter(Boolean).join('\n');
+
+          const allOk = depositOk && (incomeOk !== false) && svcOk;
+          const summary = allOk
+            ? `All three checks pass for ${fmtMoney(target)}. Based on deposit, income, and repayments — you can reach this target.\n\n${checks}`
+            : `Here's the full picture for ${fmtMoney(target)}:\n\n${checks}\n\nThe full calculator shows exactly what you'd need to close any gaps.`;
+          appendGetReal(summary);
+          setTimeout(() => {
+            appendCtaLink('/deposit.html', 'See full breakdown →');
+            postCalcPhase = 'done';
+          }, 400);
+        }, 800);
+
+      } else {
+        appendGetReal(bindingMsg + "\n\nThe full calculator shows all three ceilings side by side with a complete cost breakdown.");
+        setTimeout(() => {
+          appendCtaLink('/deposit.html', 'See full breakdown →');
+          appendCtaLink('/search.html', 'Check a suburb →');
+          postCalcPhase = 'done';
+        }, 400);
+      }
     }, 1900);
   }
 }
