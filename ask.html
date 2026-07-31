@@ -354,7 +354,10 @@ let waiting      = false;
 let conversationHistory = [];
 let postCalcPhase = null;       // null | 'ask-enough' | 'ask-target' | 'ask-power' | 'done'
 let lastCalcResult = null;
+let lastSvcResult  = null;
 let awaitingEmail = false;
+let suburbPhase = null;         // null | 'awaiting' | 'loading' | 'done'
+let suburbName  = null;
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 function fmtMoney(n) {
@@ -391,6 +394,9 @@ function goBack() {
   dtiDebtAmounts = {};
   lastDTIResult = null;
   svcPhase = null; svcTakeHome1 = 0; svcTakeHome2 = 0; svcDependants = 0; svcLocationType = 'metro';
+  lastSvcResult = null;
+  suburbPhase = null;
+  suburbName  = null;
   chatEl().innerHTML = '';
   document.getElementById('user-input').value = '';
   document.getElementById('user-input').style.height = '';
@@ -885,6 +891,223 @@ function appendCtaLink(href, text) {
   scrollToBottom();
 }
 
+// ─── Suburb realism check ─────────────────────────────────────────────────────
+
+// Scoring helpers (mirrored from search.html)
+const CHAT_NSW_DAYS = 390;
+const CHAT_FALLBACK_CURVE = [
+  [0.50,0.02],[0.60,0.05],[0.70,0.12],[0.75,0.18],[0.80,0.26],
+  [0.85,0.33],[0.90,0.40],[0.95,0.45],[1.00,0.50],[1.05,0.55],
+  [1.10,0.62],[1.15,0.67],[1.20,0.72],[1.30,0.80],[1.40,0.86],
+  [1.50,0.90],[1.75,0.94],[2.00,0.97]
+];
+let CHAT_PRICE_CURVES = null; // loaded lazily
+
+function chatInterpolateCurve(tbl, ratio) {
+  if (ratio <= tbl[0][0])              return tbl[0][1];
+  if (ratio >= tbl[tbl.length-1][0])  return tbl[tbl.length-1][1];
+  for (let i = 0; i < tbl.length-1; i++) {
+    if (ratio >= tbl[i][0] && ratio < tbl[i+1][0]) {
+      const t = (ratio - tbl[i][0]) / (tbl[i+1][0] - tbl[i][0]);
+      return tbl[i][1] + t * (tbl[i+1][1] - tbl[i][1]);
+    }
+  }
+  return 0.50;
+}
+
+function chatGetPriceBracket(median) {
+  if (median < 500000)  return 'under_500k';
+  if (median < 800000)  return '500k_800k';
+  if (median < 1200000) return '800k_1200k';
+  if (median < 1800000) return '1200k_1800k';
+  return 'over_1800k';
+}
+
+function chatGetPricePercentile(ratio, ptype, median, annualSales) {
+  if (CHAT_PRICE_CURVES && ptype && median && annualSales !== undefined) {
+    const bracket = chatGetPriceBracket(median);
+    const tier    = annualSales >= 30 ? 'active' : 'thin';
+    const ptypes  = ptype === 'townhouse' ? ['townhouse','house'] : [ptype];
+    for (const pt of ptypes) {
+      const curve = CHAT_PRICE_CURVES[pt]?.[bracket]?.[tier];
+      if (curve) return chatInterpolateCurve(curve, ratio);
+    }
+  }
+  return chatInterpolateCurve(CHAT_FALLBACK_CURVE, ratio);
+}
+
+async function loadChatPriceCurves() {
+  if (CHAT_PRICE_CURVES) return;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/price_curves?select=property_type,price_bracket,depth_tier,pct_at_05x,pct_at_06x,pct_at_07x,pct_at_08x,pct_at_09x,pct_at_10x,pct_at_11x,pct_at_12x,pct_at_15x`,
+      { headers: { apikey: SUPABASE_KEY } }
+    );
+    const rows = await res.json();
+    const COLS = [
+      [0.5,'pct_at_05x'],[0.6,'pct_at_06x'],[0.7,'pct_at_07x'],[0.8,'pct_at_08x'],
+      [0.9,'pct_at_09x'],[1.0,'pct_at_10x'],[1.1,'pct_at_11x'],[1.2,'pct_at_12x'],[1.5,'pct_at_15x']
+    ];
+    const cache = {};
+    for (const row of rows) {
+      const { property_type: pt, price_bracket: br, depth_tier: tier } = row;
+      cache[pt] = cache[pt] || {};
+      cache[pt][br] = cache[pt][br] || {};
+      cache[pt][br][tier] = COLS.map(([ratio, col]) => [ratio, (row[col] ?? 50) / 100]);
+    }
+    CHAT_PRICE_CURVES = cache;
+  } catch(e) {
+    // fall through — will use CHAT_FALLBACK_CURVE
+  }
+}
+
+async function scoreSuburbNSW(suburb, type, ceiling) {
+  const cutoff = new Date(Date.now() - CHAT_NSW_DAYS * 864e5).toISOString().slice(0, 10);
+  const q = `suburb=ilike.${encodeURIComponent(suburb)}`
+          + `&state=eq.NSW`
+          + `&property_type=eq.${encodeURIComponent(type)}`
+          + `&sale_date=gte.${cutoff}`
+          + `&select=sale_price&order=sale_price`;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/property_sales?${q}`, {
+    headers: { apikey: SUPABASE_KEY }
+  });
+  if (!res.ok) throw new Error(`Supabase ${res.status}`);
+  const rows = await res.json();
+  if (!rows.length) return null;
+  const prices = rows.map(r => r.sale_price);
+  const total  = prices.length;
+  const within = prices.filter(p => p <= ceiling).length;
+  const sorted = [...prices].sort((a,b)=>a-b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  return { total, within, median, score: Math.round(within / total * 100), source: 'exact' };
+}
+
+async function scoreSuburbVIC(suburb, type, ceiling) {
+  await loadChatPriceCurves();
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/suburb_analytics?state=eq.VIC&suburb=ilike.${encodeURIComponent(suburb)}&property_type=eq.${encodeURIComponent(type)}&select=suburb,median_price,annual_sales_count`,
+    { headers: { apikey: SUPABASE_KEY } }
+  );
+  if (!res.ok) throw new Error(`Supabase ${res.status}`);
+  const rows = await res.json();
+  if (!rows.length) return null;
+  const row = rows[0];
+  const median = row.median_price;
+  const annual = row.annual_sales_count;
+  const ratio  = ceiling / median;
+  const pct    = chatGetPricePercentile(ratio, type, median, annual);
+  const within = Math.round(annual * pct);
+  return {
+    total: annual, within, median,
+    score: Math.round(pct * 100),
+    source: 'estimated',
+    suburb: row.suburb
+  };
+}
+
+function suburbScoreLabel(score) {
+  if (score >= 75) return { label: 'Highly Realistic', color: '#22c55e' };
+  if (score >= 55) return { label: 'Realistic',        color: '#14b8a6' };
+  if (score >= 35) return { label: 'Competitive',      color: '#f59e0b' };
+  if (score >= 15) return { label: 'Tight',            color: '#f97316' };
+  if (score >=  5) return { label: 'Very Difficult',   color: '#ef4444' };
+  return                  { label: 'Out of Range',     color: '#b91c1c' };
+}
+
+function showSuburbResultCard(suburb, state, type, ceiling, result) {
+  const { score, total, within, median, source } = result;
+  const { label, color } = suburbScoreLabel(score);
+  const displaySuburb = (result.suburb || suburb).replace(/\b\w/g, c => c.toUpperCase());
+  const card = document.createElement('div');
+  card.className = 'reveal-card';
+  card.style.borderLeftColor = color;
+  card.innerHTML = `
+    <div class="reveal-label" style="color:${color}">${label.toUpperCase()} · ${score}%</div>
+    <div class="reveal-price" style="font-size:1.1rem;margin:0.4rem 0">${displaySuburb}, ${state}</div>
+    <div class="reveal-sub">
+      ${within} of ${total} ${type} sales${state === 'NSW' ? ' (last 13 months)' : ' in 2025 (VGV data)'} were at or below ${fmtMoney(ceiling)}.
+      ${median ? 'Median: ' + fmtMoney(median) + '.' : ''}
+      ${source === 'estimated' ? ' Score estimated from NSW distribution curves.' : ''}
+    </div>
+  `;
+  chatEl().appendChild(card);
+  scrollToBottom();
+}
+
+async function runSuburbCheck(suburb) {
+  const state   = lastCalcResult && lastCalcResult.state;
+  const type    = (lastCalcResult && lastCalcResult.propertyType) || 'house';
+  // Use lowest ceiling computed so far
+  const c1 = lastCalcResult ? lastCalcResult.maxPrice : null;
+  const c2 = lastDTIResult  ? lastDTIResult.maxPrice  : null;
+  const c3 = lastSvcResult  ? lastSvcResult.maxPrice  : null;
+  const ceiling = Math.min(...[c1, c2, c3].filter(Boolean));
+
+  appendThinking();
+
+  try {
+    if (state === 'NSW') {
+      const result = await scoreSuburbNSW(suburb, type, ceiling);
+      removeThinking();
+      if (!result) {
+        appendGetReal(`No ${type} sales found for "${suburb}" in NSW. Check the spelling — try the full suburb name (e.g. "Surry Hills", "Castle Hill").`);
+        suburbPhase = 'done';
+        return;
+      }
+      showSuburbResultCard(suburb, state, type, ceiling, result);
+      appendGetReal(`Based on ${result.total} ${type} sales in ${suburb} over the last 13 months. Your ceiling is ${fmtMoney(ceiling)}.`);
+    } else if (state === 'VIC') {
+      const result = await scoreSuburbVIC(suburb, type, ceiling);
+      removeThinking();
+      if (!result) {
+        appendGetReal(`No data found for "${suburb}" in VIC. Check the spelling — try title case (e.g. "Fitzroy", "South Yarra").`);
+        suburbPhase = 'done';
+        return;
+      }
+      showSuburbResultCard(suburb, state, type, ceiling, result);
+      appendGetReal(`Score estimated from VGV 2025 annual sales data and NSW distribution curves. VIC doesn't publish individual sale records — see the full realism checker for methodology details.`);
+    } else {
+      appendGetReal(`Suburb data is live for NSW and VIC. ${state ? state + ' is on the roadmap' : 'Other states are on the roadmap'} — we'll add them as the data becomes available.`);
+    }
+    suburbPhase = 'done';
+    setTimeout(() => {
+      appendCtaLink('/search.html', 'Open full realism checker →');
+    }, 400);
+  } catch(e) {
+    removeThinking();
+    appendGetReal(`Couldn't load suburb data right now. Try the realism checker directly.`);
+    setTimeout(() => appendCtaLink('/search.html', 'Open realism checker →'), 300);
+    suburbPhase = 'done';
+  }
+}
+
+function offerSuburbCheck() {
+  if (!lastCalcResult) return;
+  const state = lastCalcResult.state;
+  // Only offer for NSW/VIC (or if state unknown — let them try)
+  const wrap = appendGetReal('Want to see how your ceiling lands in a specific suburb?');
+  appendQuickReplies([
+    { label: 'Yes — check a suburb', primary: true, action: () => {
+        appendUser('Yes — check a suburb');
+        suburbPhase = 'awaiting';
+        const stateHint = state === 'NSW'
+          ? 'Type the suburb name — e.g. "Manly", "Parramatta", "Penrith".'
+          : state === 'VIC'
+          ? 'Type the suburb name — e.g. "Fitzroy", "Brunswick", "Footscray".'
+          : 'Type the suburb name.';
+        appendGetReal('Which suburb? ' + stateHint);
+        document.getElementById('user-input').placeholder = 'Suburb name…';
+        document.getElementById('user-input').focus();
+      }
+    },
+    { label: 'No thanks', action: () => {
+        appendUser('No thanks');
+        suburbPhase = 'done';
+      }
+    },
+  ], wrap);
+}
+
 function askWhatsNext() {
   postCalcPhase = 'ask-power';
   const wrap = appendGetReal('Want to check if you can actually afford the repayments on that ceiling?');
@@ -894,10 +1117,10 @@ function askWhatsNext() {
         startSvcCollection();
       }
     },
-    { label: 'No — check my suburb', action: () => {
-        appendUser('No — check my suburb');
-        appendGetReal('Enter a suburb and price in the realism checker to see what share of that market your budget can access.');
-        setTimeout(() => { appendCtaLink('/search.html', 'Open realism checker →'); postCalcPhase = 'done'; }, 300);
+    { label: 'No — check a suburb', action: () => {
+        appendUser('No — check a suburb');
+        postCalcPhase = 'done';
+        offerSuburbCheck();
       }
     },
   ], wrap);
@@ -1325,6 +1548,7 @@ function showSvcRevealSteps(result, step) {
     }, 2000 + existDelay);
 
   } else if (step === 1) {
+    lastSvcResult = result;
     // ── Reveal card + repayments + binding constraint ──
     setTimeout(() => appendSvcRevealCard(result), 200);
     setTimeout(() => appendStepCard('Monthly repayment (indicative at 6.25%)', fmtMoney(result.monthlyRepay) + '/mo'), 700);
@@ -1391,6 +1615,7 @@ function showSvcRevealSteps(result, step) {
           setTimeout(() => {
             appendCtaLink('/deposit.html', 'See full breakdown →');
             postCalcPhase = 'done';
+            setTimeout(() => offerSuburbCheck(), 400);
           }, 400);
         }, 800);
 
@@ -1398,8 +1623,8 @@ function showSvcRevealSteps(result, step) {
         appendGetReal(bindingMsg + "\n\nThe full calculator shows all three ceilings side by side with a complete cost breakdown.");
         setTimeout(() => {
           appendCtaLink('/deposit.html', 'See full breakdown →');
-          appendCtaLink('/search.html', 'Check a suburb →');
           postCalcPhase = 'done';
+          setTimeout(() => offerSuburbCheck(), 400);
         }, 400);
       }
     }, 1900);
@@ -1548,6 +1773,17 @@ function sendMessage() {
 }
 
 async function handleInput(text) {
+  // Suburb check collection
+  if (suburbPhase === 'awaiting') {
+    suburbName = text.trim();
+    appendUser(suburbName);
+    suburbPhase = 'loading';
+    waiting = false;
+    document.getElementById('send-btn').disabled = false;
+    await runSuburbCheck(suburbName);
+    return;
+  }
+
   // DTI collection
   if (dtiPhase && dtiPhase !== 'calculating') {
     handleDTIInput(text);
