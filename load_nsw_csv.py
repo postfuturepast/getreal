@@ -148,15 +148,7 @@ def parse_csv(zip_path, cutoff_date):
                     skipped += 1
                     continue
 
-                # Dedup key: Property ID + Sale counter
-                prop_id      = row.get("Property ID", "").strip()
-                sale_counter = row.get("Sale counter", "").strip()
-                dedup_key    = (prop_id, sale_counter)
-                if dedup_key in records:
-                    skipped += 1
-                    continue
-
-                # Build record
+                # Build record fields first so we can dedup on address+date+price
                 suburb      = row.get("Property locality", "").strip().upper()
                 postcode    = str(row.get("Property post code", "")).split(".")[0].strip()
                 unit_num    = row.get("Property unit number", "").strip()
@@ -179,6 +171,14 @@ def parse_csv(zip_path, cutoff_date):
                 address_full = "".join(addr_parts).strip()
                 if address_full and suburb:
                     address_full = f"{address_full}, {title_case(suburb)} NSW {postcode}".strip()
+
+                # Dedup on address + date + price — the VG generates multiple records
+                # per sale (one per property component), all with different property_ids
+                # but identical address/date/price. Deduping on property_id misses these.
+                dedup_key = (address_full, contract_date.isoformat(), price)
+                if dedup_key in records:
+                    skipped += 1
+                    continue
 
                 records[dedup_key] = {
                     "suburb":        suburb.lower(),
