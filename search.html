@@ -1281,6 +1281,7 @@ function barColor(pct) {
 function setBar(fillId, pctId, pct) {
     const el    = document.getElementById(fillId);
     const pctEl = document.getElementById(pctId);
+    if (!el || !pctEl) return;
     if (pct === null) {
         el.style.width      = '0%';
         el.style.background = '#2a2a2a';
