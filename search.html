@@ -1602,9 +1602,16 @@ async function runSearch() {
     const whatifs = buildWhatIfs(suburbKey, suburbData, type, budget, beds, baths, cars, result.score);
     renderWhatIfs(whatifs, result.score);
 
-    // No individual sale records for VIC — show suburb map instead
-    document.getElementById('comparablesSection').classList.add('hidden');
+    // VIC comparable cards — sourced from agency listings (Ray White, Barry Plant)
     document.getElementById('comparablesUnavailable').classList.add('hidden');
+    try {
+        const vicComps = await fetchVICComparables(suburbKey, type, budget);
+        if (vicComps.length) renderVICComparables(vicComps);
+        else document.getElementById('comparablesSection').classList.add('hidden');
+    } catch(e) {
+        console.warn('VIC comparables fetch failed:', e);
+        document.getElementById('comparablesSection').classList.add('hidden');
+    }
     renderSuburbMap(suburbKey, type, budget);
 
     document.getElementById('reportCta').classList.remove('hidden');
@@ -1789,6 +1796,50 @@ async function fetchNSWComparables(suburb, type, budget) {
     return out;
 }
 
+// ── VIC comparable sales — queries sourced_sales_vic ─────────────────────────
+const VIC_COMP_TYPE_CODES = {
+    house:     'HSE,house,SDC',
+    apartment: 'APT,UNT,apartment,unit',
+    townhouse: 'THS,VIL,townhouse,villa',
+};
+
+function vicCompCutoff() {
+    // 3-year window — VIC sourced data is limited; wider window maximises coverage
+    return new Date(Date.now() - 1095 * 864e5).toISOString().slice(0, 10);
+}
+
+async function fetchVICComparables(suburb, type, budget) {
+    const h     = { apikey: SUPABASE_ANON };
+    const codes = VIC_COMP_TYPE_CODES[type] || VIC_COMP_TYPE_CODES.house;
+    const base  = `${SUPABASE_URL}/rest/v1/sourced_sales_vic`
+                + `?suburb=ilike.${encodeURIComponent(suburb)}`
+                + `&property_type_code=in.(${codes})`
+                + `&sold_date=gte.${vicCompCutoff()}`
+                + `&sold_price=not.is.null`
+                + `&select=street_number,street_name,street_type,suburb,postcode,sold_price,sold_date`;
+    const [r1, r2] = await Promise.all([
+        fetch(`${base}&sold_price=lte.${budget}&order=sold_price.desc&limit=1`, { headers: h }),
+        fetch(`${base}&sold_price=gt.${budget}&order=sold_price.asc&limit=1`,   { headers: h }),
+    ]);
+    const [below, above] = await Promise.all([r1.json(), r2.json()]);
+    const fmt = iso => iso
+        ? new Date(iso).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' })
+        : '—';
+    const buildAddr = r => {
+        const street = [r.street_number, r.street_name, r.street_type].filter(Boolean).join(' ');
+        const loc    = [titleCase(r.suburb || suburb), 'VIC', r.postcode].filter(Boolean).join(' ');
+        return street ? `${street}, ${loc}` : loc;
+    };
+    const out = [];
+    if (below[0]) out.push({ label:'Closest within budget', labelCls:'comp-within',
+        price: below[0].sold_price, address: buildAddr(below[0]),
+        soldDate: fmt(below[0].sold_date), isReal: true });
+    if (above[0]) out.push({ label:'Just above budget', labelCls:'comp-above',
+        price: above[0].sold_price, address: buildAddr(above[0]),
+        soldDate: fmt(above[0].sold_date), isReal: true });
+    return out;
+}
+
 const GMAPS_KEY = 'AIzaSyChH49EIZmfRITmN0qiqphDz6dNhQbuZuk';
 
 function streetViewUrl(address) {
@@ -1822,7 +1873,7 @@ function addressToREAUrl(address) {
     } catch { return null; }
 }
 
-function renderNSWComparables(comps) {
+function renderComparables(comps, dataSourceLabel, noteText) {
     const grid = document.getElementById('comparablesGrid');
     const note = document.querySelector('.comparables-note');
     grid.innerHTML = '';
@@ -1851,7 +1902,7 @@ function renderNSWComparables(comps) {
             <div class="comp-address">${c.address}</div>
             <div class="comp-date">Sold ${c.soldDate}</div>
             <div class="comp-specs" style="display:flex;flex-direction:column;gap:0.3rem;">
-                <span style="color:#444;font-size:0.68rem">NSW Valuer General · public record</span>
+                <span style="color:#444;font-size:0.68rem">${dataSourceLabel}</span>
                 ${reaLink}
             </div>`;
 
@@ -1863,8 +1914,20 @@ function renderNSWComparables(comps) {
         grid.appendChild(card);
     });
 
-    if (note) note.textContent = 'Real NSW Valuer General sales data · Google Street View';
+    if (note) note.textContent = noteText;
     document.getElementById('comparablesSection').classList.remove('hidden');
+}
+
+function renderNSWComparables(comps) {
+    renderComparables(comps,
+        'NSW Valuer General · public record',
+        'Real NSW Valuer General sales data · Google Street View');
+}
+
+function renderVICComparables(comps) {
+    renderComparables(comps,
+        'Agency listing data · not a complete record',
+        'Agency listing data (Ray White, Barry Plant) · Coverage varies by suburb · Google Street View');
 }
 
 // ================================================================
