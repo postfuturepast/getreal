@@ -768,28 +768,16 @@
                     <span class="factor-pct" id="pctPrice">—</span>
                 </div>
                 <div class="factor">
-                    <span class="factor-label">Bedrooms</span>
-                    <div class="factor-track"><div class="factor-fill" id="barBeds" style="width:0%"></div></div>
-                    <span class="factor-pct" id="pctBeds">—</span>
-                </div>
-                <div class="factor">
-                    <span class="factor-label">Bathrooms</span>
-                    <div class="factor-track"><div class="factor-fill" id="barBaths" style="width:0%"></div></div>
-                    <span class="factor-pct" id="pctBaths">—</span>
-                </div>
-                <div class="factor">
                     <span class="factor-label">Car spaces</span>
                     <div class="factor-track"><div class="factor-fill" id="barCars" style="width:0%"></div></div>
                     <span class="factor-pct" id="pctCars">—</span>
                 </div>
                 <div id="nswFactorNote" class="hidden" style="font-family:monospace;font-size:0.65rem;color:#444;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1a1a1a;letter-spacing:0.04em;line-height:1.8;">
-                    · Score uses budget vs market — bedroom &amp; bathroom data not yet available for NSW · <a href="faq.html#vic-bedrooms" style="color:#555;text-decoration:underline;">Why not? →</a><br>
-                    · NSW Valuer General data doesn't include property attributes · <a href="manifesto.html" style="color:#555;text-decoration:underline;">Read more →</a>
+                    · Score uses budget vs market — NSW Valuer General data doesn't include property attributes · <a href="manifesto.html" style="color:#555;text-decoration:underline;">Read more →</a>
                 </div>
                 <div id="vicFactorNote" class="hidden" style="font-family:monospace;font-size:0.65rem;color:#444;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #1a1a1a;letter-spacing:0.04em;line-height:1.8;">
                     · Score estimated — VIC doesn't publish individual sale records · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">How? →</a><br>
-                    · Modelled from NSW data matched to this suburb's price &amp; volume · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">See the data tables →</a><br>
-                    · Bedroom &amp; bathroom data unavailable for the same reason · <a href="manifesto.html" style="color:#555;text-decoration:underline;">Why not? →</a>
+                    · Modelled from NSW data matched to this suburb's price &amp; volume · <a href="faq.html#vic-methodology" style="color:#555;text-decoration:underline;">See the data tables →</a>
                 </div>
             </div>
         </div>
@@ -1927,7 +1915,7 @@ function renderNSWComparables(comps) {
 function renderVICComparables(comps) {
     renderComparables(comps,
         'Agency listing data · not a complete record',
-        'Agency listing data (Ray White, Barry Plant) · Coverage varies by suburb · Google Street View');
+        'Agency listing data (Barry Plant) · not all sales included · Google Street View');
 }
 
 // ================================================================
