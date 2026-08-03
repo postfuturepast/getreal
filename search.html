@@ -257,13 +257,9 @@
         .factor-fill { height: 100%; border-radius: 0; transition: width 0.5s ease; }
         .factor-pct { width: 36px; text-align: right; font-weight: 700; font-size: 0.8rem; font-family: monospace; }
 
-        /* Desktop: fill the results card height with the factor bars */
         @media (min-width: 781px) {
             #resultsCard { display: flex; flex-direction: column; }
             .results-empty { flex: 1; }
-            #scoreArea { flex: 1; display: flex; flex-direction: column; }
-            .factors-box { flex: 1; display: flex; flex-direction: column; }
-            .factor { flex: 1; margin-bottom: 0; min-height: 28px; }
         }
 
         .error-box {
