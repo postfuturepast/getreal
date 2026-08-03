@@ -2977,37 +2977,6 @@ function buildMockComparables(suburbName, type, budget, beds, baths, cars) {
 
 let _lightboxComps = [];
 
-function renderComparables(comparables) {
-    const section = document.getElementById('comparablesSection');
-    const grid    = document.getElementById('comparablesGrid');
-    grid.innerHTML = '';
-    _lightboxComps = comparables;
-
-    comparables.forEach((c, idx) => {
-        const thumbId = `https://picsum.photos/seed/${c.photos[0]}/800/500`;
-        grid.innerHTML += `
-        <div class="comp-card" onclick="openLightbox(${idx}, 0)">
-            <div class="comp-img">
-                <img src="${thumbId}" alt="Property photo" loading="lazy" onerror="this.style.display='none'">
-                <span class="comp-label ${c.labelCls}">${c.label}</span>
-                <span class="comp-photo-hint">View photos →</span>
-            </div>
-            <div class="comp-body">
-                <div class="comp-price">${fmtCurrencyFull(c.price)}</div>
-                <div class="comp-address">${c.address}</div>
-                <div class="comp-date">Sold ${c.soldDate}</div>
-                <div class="comp-specs">
-                    <span>${c.beds} bed</span>
-                    <span>${c.baths} bath</span>
-                    <span>${c.cars} car</span>
-                </div>
-            </div>
-        </div>`;
-    });
-
-    section.classList.remove('hidden');
-}
-
 // ── Lightbox ──────────────────────────────────────────────────────
 let _lbComp = null, _lbIdx = 0;
 
