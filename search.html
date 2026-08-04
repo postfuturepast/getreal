@@ -301,7 +301,14 @@
         .map-pct-btn:active { opacity: 0.7; }
 
         /* ── What-if ─────────────────────────────────────── */
-        .whatif-section { grid-column: 1 / -1; }
+        .whatif-section {
+            margin: 1.25rem -1.5rem -1.5rem;
+            border-top: 1px solid var(--border);
+        }
+        .whatif-section .section-heading {
+            padding: 1.25rem 1.5rem 0;
+            margin-bottom: 0.9rem;
+        }
         .section-heading {
             font-family: monospace;
             font-size: 1rem;
@@ -771,12 +778,12 @@
 
         <!-- Error state -->
         <div id="errorBox" class="error-box hidden" role="alert"></div>
-    </div>
 
-    <!-- ── What-if section ───────────── -->
-    <div class="whatif-section hidden" id="whatifSection">
-        <div class="section-heading">What if you changed one thing?</div>
-        <div class="whatif-grid" id="whatifGrid"></div>
+        <!-- ── What-if section ───────────── -->
+        <div class="whatif-section hidden" id="whatifSection">
+            <div class="section-heading">What if you changed one thing?</div>
+            <div class="whatif-grid" id="whatifGrid"></div>
+        </div>
     </div>
 
     <!-- ── Comparable properties ──────── -->
