@@ -4,19 +4,15 @@ name: Sourced Sales — Monthly Refresh (All Agencies)
 # (weekly, incremental) via raywhite-incremental.yml.
 # Raine & Horne excluded — negligible data.
 #
-# EMAIL NOTIFICATIONS
-# GitHub emails you automatically on workflow failure. To enable:
-#   GitHub → Settings → Notifications → Actions → check "Failed workflows only"
-#   (or "All" if you want success emails too from GitHub's built-in system)
-#
-# For a detailed completion summary email, add these two secrets in your repo:
-#   EMAIL_USERNAME  — your Gmail address
-#   EMAIL_PASSWORD  — Gmail app password (myaccount.google.com → Security → App passwords)
+# NOTIFICATIONS
+# After each run, this workflow updates a pinned GitHub issue with a stats
+# table (new records per agency, per state). GitHub emails you when the issue
+# is updated — no extra credentials needed.
 
 on:
   schedule:
-    # First Sunday of each month at 2am AEST (Sunday 16:00 UTC)
-    - cron: '0 16 1-7 * 0'
+    # Every Sunday at 2am AEST (Sunday 16:00 UTC)
+    - cron: '0 16 * * 0'
   workflow_dispatch:
     inputs:
       scraper:
@@ -28,14 +24,16 @@ on:
         required: false
         default: ''
       since:
-        description: 'Barry Plant only: fetch listings from last N days (default: 40)'
+        description: 'Barry Plant only: fetch listings from last N days (default: 21)'
         required: false
-        default: '40'
+        default: '21'
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    permissions:
+      issues: write   # needed to create/update the report issue
 
     steps:
       - name: Checkout repo
@@ -50,8 +48,6 @@ jobs:
         run: pip install requests beautifulsoup4 curl-cffi
 
       # ── Restore cached state files from previous run ───────────────────────
-      # Scrapers use these to skip listings they've already seen, stopping
-      # pagination early once they hit a page of all-known IDs.
       - name: Restore scraper state files
         uses: actions/cache@v4
         with:
@@ -72,8 +68,9 @@ jobs:
         env:
           SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
         run: |
-          echo "=== Nelson Alexander ===" | tee -a $GITHUB_STEP_SUMMARY
-          python3 fetch_nelsonalexander.py --resume 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_nelsonalexander.py --resume 2>&1 | tee /tmp/na_out.txt
+          DONE=$(grep -E '^Done:' /tmp/na_out.txt | tail -1 || echo "no output")
+          echo "NA_RESULT=$DONE" >> $GITHUB_ENV
 
       - name: Jellis Craig (VIC)
         if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'jelliscraig' }}
@@ -81,8 +78,9 @@ jobs:
         env:
           SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
         run: |
-          echo "=== Jellis Craig ===" | tee -a $GITHUB_STEP_SUMMARY
-          python3 fetch_jelliscraig.py --resume 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_jelliscraig.py --resume 2>&1 | tee /tmp/jc_out.txt
+          DONE=$(grep -E '^Done:' /tmp/jc_out.txt | tail -1 || echo "no output")
+          echo "JC_RESULT=$DONE" >> $GITHUB_ENV
 
       # ── National agencies ──────────────────────────────────────────────────
 
@@ -92,9 +90,10 @@ jobs:
         env:
           SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
         run: |
-          SINCE="${{ github.event.inputs.since || '40' }}"
-          echo "=== Barry Plant (last ${SINCE} days) ===" | tee -a $GITHUB_STEP_SUMMARY
-          python3 fetch_barryplant.py --resume --since "$SINCE" 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          SINCE="${{ github.event.inputs.since || '21' }}"
+          python3 fetch_barryplant.py --resume --since "$SINCE" 2>&1 | tee /tmp/bp_out.txt
+          DONE=$(grep -E '^Done:' /tmp/bp_out.txt | tail -1 || echo "no output")
+          echo "BP_RESULT=$DONE" >> $GITHUB_ENV
 
       - name: Harcourts (all states)
         if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'harcourts' }}
@@ -102,8 +101,9 @@ jobs:
         env:
           SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
         run: |
-          echo "=== Harcourts ===" | tee -a $GITHUB_STEP_SUMMARY
-          python3 fetch_harcourts.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_harcourts.py 2>&1 | tee /tmp/hc_out.txt
+          DONE=$(grep -E '^Done:' /tmp/hc_out.txt | tail -1 || echo "no output")
+          echo "HC_RESULT=$DONE" >> $GITHUB_ENV
 
       - name: LJ Hooker (all states)
         if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'ljhooker' }}
@@ -111,8 +111,9 @@ jobs:
         env:
           SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
         run: |
-          echo "=== LJ Hooker ===" | tee -a $GITHUB_STEP_SUMMARY
-          python3 fetch_ljhooker_all_states.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_ljhooker_all_states.py 2>&1 | tee /tmp/ljh_out.txt
+          DONE=$(grep -E '^Done:' /tmp/ljh_out.txt | tail -1 || echo "no output")
+          echo "LJH_RESULT=$DONE" >> $GITHUB_ENV
 
       - name: McGrath (all states)
         if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'mcgrath' }}
@@ -120,8 +121,9 @@ jobs:
         env:
           SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
         run: |
-          echo "=== McGrath ===" | tee -a $GITHUB_STEP_SUMMARY
-          python3 fetch_mcgrath.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_mcgrath.py 2>&1 | tee /tmp/mg_out.txt
+          DONE=$(grep -E '^Done:' /tmp/mg_out.txt | tail -1 || echo "no output")
+          echo "MG_RESULT=$DONE" >> $GITHUB_ENV
 
       - name: McGrath Franchise (all states)
         if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'mcgrath_franchise' }}
@@ -129,8 +131,9 @@ jobs:
         env:
           SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
         run: |
-          echo "=== McGrath Franchise ===" | tee -a $GITHUB_STEP_SUMMARY
-          python3 fetch_mcgrath_franchise.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_mcgrath_franchise.py 2>&1 | tee /tmp/mgf_out.txt
+          DONE=$(grep -E '^Done:' /tmp/mgf_out.txt | tail -1 || echo "no output")
+          echo "MGF_RESULT=$DONE" >> $GITHUB_ENV
 
       # ── Save state files for next run ──────────────────────────────────────
       - name: Save scraper state files
@@ -144,7 +147,7 @@ jobs:
             .harcourts_state.json
           key: sourced-sales-state-${{ github.run_id }}
 
-      # ── Artifacts ─────────────────────────────────────────────────────────
+      # ── Upload NDJSON artifacts ────────────────────────────────────────────
       - name: Upload NDJSON artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -161,26 +164,75 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-      # ── Email summary ──────────────────────────────────────────────────────
-      # Requires EMAIL_USERNAME + EMAIL_PASSWORD secrets (Gmail app password).
-      # Remove this step if you don't want email — GitHub already emails on failure.
-      - name: Send completion email
+      # ── Post report to GitHub issue ────────────────────────────────────────
+      # Updates a single pinned issue with the latest run stats.
+      # GitHub emails you when the issue is updated — no extra secrets needed.
+      - name: Post run report to GitHub issue
         if: always()
-        uses: dawidd6/action-send-mail@v3
-        continue-on-error: true   # don't fail the run if email fails
+        uses: actions/github-script@v7
         with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "GetReal sourced sales — ${{ job.status == 'success' && '✅ complete' || '❌ failed' }} (${{ github.run_id }})"
-          to: Tristan.Cooke@civica.com
-          from: GetReal Pipeline <${{ secrets.EMAIL_USERNAME }}>
-          body: |
-            Sourced sales monthly refresh finished.
+          script: |
+            const status   = '${{ job.status }}';
+            const emoji    = status === 'success' ? '✅' : '⚠️';
+            const runDate  = new Date().toLocaleDateString('en-AU', {
+              timeZone: 'Australia/Melbourne',
+              day: '2-digit', month: 'short', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            });
 
-            Status: ${{ job.status }}
-            Run:    ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            const rows = [
+              ['Nelson Alexander', 'VIC',      process.env.NA_RESULT  || '—'],
+              ['Jellis Craig',     'VIC',      process.env.JC_RESULT  || '—'],
+              ['Barry Plant',      'All states', process.env.BP_RESULT || '—'],
+              ['Harcourts',        'All states', process.env.HC_RESULT || '—'],
+              ['LJ Hooker',        'All states', process.env.LJH_RESULT || '—'],
+              ['McGrath',          'All states', process.env.MG_RESULT  || '—'],
+              ['McGrath Franchise','All states', process.env.MGF_RESULT || '—'],
+            ];
 
-            Open the link above to see per-scraper output and record counts.
+            const table = [
+              '| Agency | States | Result |',
+              '|--------|--------|--------|',
+              ...rows.map(([a, s, r]) => `| ${a} | ${s} | ${r} |`),
+            ].join('\n');
+
+            const body = [
+              `## ${emoji} Sourced Sales Refresh — ${runDate} AEST`,
+              '',
+              `**Status:** ${status}  `,
+              `**Run:** [View full logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+              '',
+              table,
+              '',
+              '---',
+              '_This issue is updated automatically after each monthly run._',
+            ].join('\n');
+
+            // Find existing report issue (label: pipeline-report) or create one
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'pipeline-report',
+              state: 'open',
+              per_page: 1,
+            });
+
+            if (issues.length > 0) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                title: `Sourced sales refresh — ${runDate} AEST — ${status}`,
+                body,
+              });
+              console.log(`Updated issue #${issues[0].number}`);
+            } else {
+              const { data: issue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Sourced sales refresh — ${runDate} AEST — ${status}`,
+                body,
+                labels: ['pipeline-report'],
+              });
+              console.log(`Created issue #${issue.number}`);
+            }
