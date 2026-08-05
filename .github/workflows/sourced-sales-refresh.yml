@@ -1,0 +1,186 @@
+name: Sourced Sales — Monthly Refresh (All Agencies)
+
+# Covers all non-Ray White agency scrapers. Ray White runs separately
+# (weekly, incremental) via raywhite-incremental.yml.
+# Raine & Horne excluded — negligible data.
+#
+# EMAIL NOTIFICATIONS
+# GitHub emails you automatically on workflow failure. To enable:
+#   GitHub → Settings → Notifications → Actions → check "Failed workflows only"
+#   (or "All" if you want success emails too from GitHub's built-in system)
+#
+# For a detailed completion summary email, add these two secrets in your repo:
+#   EMAIL_USERNAME  — your Gmail address
+#   EMAIL_PASSWORD  — Gmail app password (myaccount.google.com → Security → App passwords)
+
+on:
+  schedule:
+    # First Sunday of each month at 2am AEST (Sunday 16:00 UTC)
+    - cron: '0 16 1-7 * 0'
+  workflow_dispatch:
+    inputs:
+      scraper:
+        description: >
+          Run a specific scraper only:
+          nelsonalexander | barryplant | jelliscraig | harcourts |
+          ljhooker | mcgrath | mcgrath_franchise
+          Leave blank for all.
+        required: false
+        default: ''
+      since:
+        description: 'Barry Plant only: fetch listings from last N days (default: 40)'
+        required: false
+        default: '40'
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 curl-cffi
+
+      # ── Restore cached state files from previous run ───────────────────────
+      # Scrapers use these to skip listings they've already seen, stopping
+      # pagination early once they hit a page of all-known IDs.
+      - name: Restore scraper state files
+        uses: actions/cache@v4
+        with:
+          path: |
+            .nelsonalexander_state.json
+            .jelliscraig_state.json
+            .barryplant_state.json
+            .harcourts_state.json
+          key: sourced-sales-state-${{ github.run_id }}
+          restore-keys: |
+            sourced-sales-state-
+
+      # ── VIC-only agencies ──────────────────────────────────────────────────
+
+      - name: Nelson Alexander (VIC)
+        if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'nelsonalexander' }}
+        continue-on-error: true
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: |
+          echo "=== Nelson Alexander ===" | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_nelsonalexander.py --resume 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+
+      - name: Jellis Craig (VIC)
+        if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'jelliscraig' }}
+        continue-on-error: true
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: |
+          echo "=== Jellis Craig ===" | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_jelliscraig.py --resume 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+
+      # ── National agencies ──────────────────────────────────────────────────
+
+      - name: Barry Plant (all states, incremental)
+        if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'barryplant' }}
+        continue-on-error: true
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: |
+          SINCE="${{ github.event.inputs.since || '40' }}"
+          echo "=== Barry Plant (last ${SINCE} days) ===" | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_barryplant.py --resume --since "$SINCE" 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+
+      - name: Harcourts (all states)
+        if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'harcourts' }}
+        continue-on-error: true
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: |
+          echo "=== Harcourts ===" | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_harcourts.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+
+      - name: LJ Hooker (all states)
+        if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'ljhooker' }}
+        continue-on-error: true
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: |
+          echo "=== LJ Hooker ===" | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_ljhooker_all_states.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+
+      - name: McGrath (all states)
+        if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'mcgrath' }}
+        continue-on-error: true
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: |
+          echo "=== McGrath ===" | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_mcgrath.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+
+      - name: McGrath Franchise (all states)
+        if: ${{ github.event.inputs.scraper == '' || github.event.inputs.scraper == 'mcgrath_franchise' }}
+        continue-on-error: true
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: |
+          echo "=== McGrath Franchise ===" | tee -a $GITHUB_STEP_SUMMARY
+          python3 fetch_mcgrath_franchise.py 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+
+      # ── Save state files for next run ──────────────────────────────────────
+      - name: Save scraper state files
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: |
+            .nelsonalexander_state.json
+            .jelliscraig_state.json
+            .barryplant_state.json
+            .harcourts_state.json
+          key: sourced-sales-state-${{ github.run_id }}
+
+      # ── Artifacts ─────────────────────────────────────────────────────────
+      - name: Upload NDJSON artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sourced-sales-ndjson-${{ github.run_id }}
+          path: |
+            nelsonalexander_listings.ndjson
+            jelliscraig_listings.ndjson
+            barryplant_listings.ndjson
+            harcourts_listings.ndjson
+            ljhooker_listings.ndjson
+            mcgrath_listings.ndjson
+            mcgrath_franchise_listings.ndjson
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # ── Email summary ──────────────────────────────────────────────────────
+      # Requires EMAIL_USERNAME + EMAIL_PASSWORD secrets (Gmail app password).
+      # Remove this step if you don't want email — GitHub already emails on failure.
+      - name: Send completion email
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        continue-on-error: true   # don't fail the run if email fails
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "GetReal sourced sales — ${{ job.status == 'success' && '✅ complete' || '❌ failed' }} (${{ github.run_id }})"
+          to: Tristan.Cooke@civica.com
+          from: GetReal Pipeline <${{ secrets.EMAIL_USERNAME }}>
+          body: |
+            Sourced sales monthly refresh finished.
+
+            Status: ${{ job.status }}
+            Run:    ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Open the link above to see per-scraper output and record counts.
