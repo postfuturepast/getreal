@@ -314,7 +314,7 @@
       placeholder="Type a message…"
       rows="1"
       onkeydown="handleKey(event)"
-      oninput="autoResize(this)"
+      oninput="autoResize(this); liveFormatNumber(this, event)"
     ></textarea>
     <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>Send</button>
   </div>
@@ -445,22 +445,7 @@ function selectJourney(j, label) {
     appendQuickReplies([
       { label: 'I have a price in mind', action: () => {
           appendUser('I have a price in mind');
-          const wrap2 = appendGetReal('What do you want to find out?');
-          appendQuickReplies([
-            { label: 'Can I afford it?', action: () => {
-                appendUser('Can I afford it?');
-                startStructuredAffordFlow();
-              }
-            },
-            { label: 'Is it a realistic price for this market?', action: () => {
-                appendUser('Is it a realistic price for this market?');
-                journeyType = 'realism';
-                appendGetReal("Let's check it against the market. Tell me about the property — the price, where it is, and what you've got saved.");
-                document.getElementById('user-input').placeholder = 'Tell me about the property…';
-                document.getElementById('user-input').focus();
-              }
-            },
-          ], wrap2);
+          startPimFlow();
         }
       },
       { label: 'Show me my maximum', action: () => {
@@ -671,7 +656,7 @@ function doStagedReveal(result) {
 function askMaxOrTarget() {
   const wrap = appendGetReal("Before I show you the numbers — are you working out your maximum, or do you have a specific price in mind?");
   appendQuickReplies([
-    { label: 'Show me my maximum', primary: true, action: () => {
+    { label: 'Show me my maximum', action: () => {
         appendUser('Show me my maximum');
         showRevealStep(1);
       }
@@ -1167,47 +1152,31 @@ function offerSuburbCheck() {
 }
 
 // ─── Structured intake flow ───────────────────────────────────────────────────
+// Modes:
+//   'pim'    — "I have a price in mind": price → suburb → proptype → fork
+//   'afford' — after pim fork "Can I afford it?": state → fhb → oo → savings
+//   'max'    — "Show me my maximum": state → fhb → suburb → proptype → oo → savings
+
+const AU_STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
+
+// Entry points
+function startPimFlow() {
+  sf.mode = 'pim';
+  sfAskPrice();
+}
 
 function startStructuredMaxFlow() {
   sf.mode = 'max';
   sfAskState();
 }
 
-function startStructuredAffordFlow() {
-  sf.mode = 'afford';
-  sfAskPrice();
-}
+// ── pim: price → suburb → proptype → fork ────────────────────────────────────
 
 function sfAskPrice() {
   sf.phase = 'sf-price';
   appendGetReal("What's the price you have in mind? (e.g. $850k, $1.2m)");
   document.getElementById('user-input').placeholder = 'Target price…';
   document.getElementById('user-input').focus();
-}
-
-const AU_STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
-
-function sfAskState() {
-  sf.phase = 'sf-state';
-  const wrap = appendGetReal('Which state are you buying in?');
-  appendQuickReplies(
-    AU_STATES.map(s => ({ label: s, action: () => { appendUser(s); sf.state = s; sfNextAfterState(); } })),
-    wrap
-  );
-}
-
-function sfNextAfterState() {
-  if (knownFHB) { sf.isFirstHomeBuyer = true; sfAskSuburb(); }
-  else { sfAskFHB(); }
-}
-
-function sfAskFHB() {
-  sf.phase = 'sf-fhb';
-  const wrap = appendGetReal('Are you a first home buyer?');
-  appendQuickReplies([
-    { label: 'Yes', primary: true, action: () => { appendUser('Yes'); sf.isFirstHomeBuyer = true; knownFHB = true; sfAskSuburb(); } },
-    { label: 'No',                 action: () => { appendUser('No');  sf.isFirstHomeBuyer = false;                sfAskSuburb(); } },
-  ], wrap);
 }
 
 function sfAskSuburb() {
@@ -1224,25 +1193,85 @@ function sfAskPropType() {
   sf.phase = 'sf-proptype';
   const wrap = appendGetReal('What type of property?');
   appendQuickReplies([
-    { label: 'House',     primary: true, action: () => { appendUser('House');     sf.propertyType = 'house';     sfAskOO(); } },
-    { label: 'Apartment',              action: () => { appendUser('Apartment'); sf.propertyType = 'apartment'; sfAskOO(); } },
-    { label: 'Townhouse',              action: () => { appendUser('Townhouse'); sf.propertyType = 'townhouse'; sfAskOO(); } },
+    { label: 'House',     action: () => { appendUser('House');     sf.propertyType = 'house';     sfAfterPropType(); } },
+    { label: 'Apartment', action: () => { appendUser('Apartment'); sf.propertyType = 'apartment'; sfAfterPropType(); } },
+    { label: 'Townhouse', action: () => { appendUser('Townhouse'); sf.propertyType = 'townhouse'; sfAfterPropType(); } },
   ], wrap);
+}
+// Note: no primary on property type — equal choices
+
+function sfAfterPropType() {
+  if (sf.mode === 'pim') { sfShowPimFork(); }
+  else { sfAskOO(); } // max mode
+}
+
+function sfShowPimFork() {
+  sf.phase = null; // fork handled by quick replies, no text routing needed
+  const wrap = appendGetReal('What do you want to find out?');
+  appendQuickReplies([
+    { label: 'Can I afford it?', action: () => {
+        appendUser('Can I afford it?');
+        sf.mode = 'afford';
+        sfAskState();
+      }
+    },
+    { label: 'Is it a realistic price for this market?', action: () => {
+        appendUser('Is it a realistic price for this market?');
+        sf.phase = null; // hand off to AI
+        journeyType = 'realism';
+        appendGetReal("Let's check it against the market. Tell me anything else, or just hit send and I'll use what you've already told me.");
+        document.getElementById('user-input').placeholder = 'Anything to add…';
+        document.getElementById('user-input').focus();
+      }
+    },
+  ], wrap);
+}
+
+// ── afford/max: state → fhb → [suburb if max] → oo → savings ─────────────────
+
+function sfAskState() {
+  sf.phase = 'sf-state';
+  const wrap = appendGetReal('Which state are you buying in?');
+  appendQuickReplies(
+    AU_STATES.map(s => ({ label: s, action: () => { appendUser(s); sf.state = s; sfNextAfterState(); } })),
+    wrap
+  );
+}
+
+function sfNextAfterState() {
+  if (knownFHB) { sf.isFirstHomeBuyer = true; sfAfterFHB(); }
+  else { sfAskFHB(); }
+}
+
+function sfAskFHB() {
+  sf.phase = 'sf-fhb';
+  const wrap = appendGetReal('Are you a first home buyer?');
+  appendQuickReplies([
+    { label: 'Yes', action: () => { appendUser('Yes'); sf.isFirstHomeBuyer = true; knownFHB = true; sfAfterFHB(); } },
+    { label: 'No',  action: () => { appendUser('No');  sf.isFirstHomeBuyer = false;                sfAfterFHB(); } },
+  ], wrap);
+}
+
+function sfAfterFHB() {
+  // Both afford and max ask suburb next (suburb always comes after state)
+  // afford: suburb → oo → savings (proptype already set in pim)
+  // max:    suburb → proptype → oo → savings
+  sfAskSuburb();
 }
 
 function sfAskOO() {
   sf.phase = 'sf-oo';
   const wrap = appendGetReal('Will you live in it, or rent it out?');
   appendQuickReplies([
-    { label: 'Live in it — my home',     primary: true, action: () => { appendUser('Live in it');  sf.isOwnerOccupier = true;  sfAskSavings(); } },
-    { label: 'Rent it out — investment',              action: () => { appendUser('Rent it out'); sf.isOwnerOccupier = false; sfAskSavings(); } },
+    { label: 'Live in it — my home',    action: () => { appendUser('Live in it');  sf.isOwnerOccupier = true;  sfAskSavings(); } },
+    { label: 'Rent it out — investment', action: () => { appendUser('Rent it out'); sf.isOwnerOccupier = false; sfAskSavings(); } },
   ], wrap);
 }
 
 function sfAskSavings() {
   sf.phase = 'sf-savings';
-  appendGetReal('How much have you saved? (e.g. $120k, $250,000 — include cash you could put toward the purchase)');
-  document.getElementById('user-input').placeholder = 'Your savings…';
+  appendGetReal('How much do you have available for the purchase? Include anything you could put toward it — savings, equity from a sale, a gift, or a first home grant.');
+  document.getElementById('user-input').placeholder = 'Available funds…';
   document.getElementById('user-input').focus();
 }
 
@@ -1251,11 +1280,14 @@ function handleSFInput(text) {
     const price = parseAmount(text);
     if (!price || price < 100000) { appendGetReal("Try something like $850k or $1.2m."); return; }
     sf.price = price;
-    sfAskState();
+    sfAskPropType(); // pim: price → proptype → fork (suburb comes after state)
 
   } else if (sf.phase === 'sf-suburb') {
     sf.suburb = text.trim().toLowerCase();
-    sfAskPropType();
+    // afford: suburb → oo (proptype already set in pim)
+    // max:    suburb → proptype → oo
+    if (sf.mode === 'afford') { sfAskOO(); }
+    else { sfAskPropType(); }
 
   } else if (sf.phase === 'sf-savings') {
     const amount = parseAmount(text);
@@ -1269,44 +1301,65 @@ function handleSFInput(text) {
 async function runStructuredDepositCalc() {
   isAffordabilityMode = sf.mode === 'afford';
   sf.phase = 'sf-calculating';
+
+  // Build a single context message containing everything the AI needs
+  const fundsFormatted = '$' + sf.savings.toLocaleString('en-AU');
+  const who  = sf.isFirstHomeBuyer ? 'a first home buyer' : 'not a first home buyer';
+  const use  = sf.isOwnerOccupier  ? 'live in (owner-occupier)' : 'rent out (investment)';
+  let contextMsg = `I'm buying in ${sf.state}${sf.suburb ? ', ' + sf.suburb : ''}. I'm ${who}. I'm looking at a ${sf.propertyType} to ${use}. I have ${fundsFormatted} available for the purchase.`;
+  if (sf.mode === 'afford' && sf.price) {
+    contextMsg += ` My target price is $${sf.price.toLocaleString('en-AU')}.`;
+  }
+
+  // Pre-populate conversation — AI sees all facts, skips data collection, runs calc
+  conversationHistory = [{ role: 'user', parts: [{ text: contextMsg }] }];
+  journeyType = 'budget';
+
+  const knownFacts = [
+    'All data has already been collected — do NOT ask for any more information.',
+    `State: ${sf.state}.`,
+    sf.suburb ? `Suburb: ${sf.suburb}.` : '',
+    `Property type: ${sf.propertyType}.`,
+    `Owner-occupier: ${sf.isOwnerOccupier}.`,
+    `First home buyer: ${sf.isFirstHomeBuyer}.`,
+    `Available funds (deposit): ${fundsFormatted}.`,
+    sf.mode === 'afford' && sf.price ? `Target price: $${sf.price.toLocaleString('en-AU')}.` : '',
+    'Calculate the deposit ceiling immediately and return the tool result.',
+    sf.isFirstHomeBuyer ? 'This user is a first home buyer — always include isFirstHomeBuyer: true in the CALC block.' : '',
+  ].filter(Boolean).join(' ');
+
   appendThinking();
 
   try {
     const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        calcType:         'deposit',
-        savings:           sf.savings,
-        state:             sf.state,
-        propertyType:      sf.propertyType,
-        isOwnerOccupier:   sf.isOwnerOccupier,
-        isFirstHomeBuyer:  sf.isFirstHomeBuyer,
-      }),
+      body: JSON.stringify({ messages: conversationHistory, journeyType: 'budget', knownFacts }),
     });
 
     removeThinking();
     const data = await res.json();
 
-    if (data.error || data.maxPrice == null) {
-      appendGetReal("Couldn't calculate your ceiling right now — try the full calculator.");
+    if (!data.toolResult) {
+      // AI returned text but no calculation — shouldn't happen if knownFacts is heeded
+      appendGetReal(data.reply || "Couldn't calculate your ceiling right now — try the full calculator.");
       appendCtaLink('/deposit.html', 'Open full calculator →');
       sf.phase = null;
       return;
     }
 
-    // Patch in data the server doesn't echo back
-    if (!data.propertyType) data.propertyType = sf.propertyType;
-    data.isOwnerOccupier = sf.isOwnerOccupier;
+    const result = data.toolResult;
+    if (!result.propertyType) result.propertyType = sf.propertyType;
+    result.isOwnerOccupier = sf.isOwnerOccupier;
 
     if (sf.mode === 'afford') {
-      data.targetPrice = sf.price;
-      data.canAfford   = data.maxPrice >= sf.price;
-      data.gapAmount   = Math.max(0, sf.price - data.maxPrice);
+      result.targetPrice = sf.price;
+      result.canAfford   = result.maxPrice >= sf.price;
+      result.gapAmount   = Math.max(0, sf.price - result.maxPrice);
     }
 
     sf.phase = null;
-    doStagedReveal(data);
+    doStagedReveal(result);
 
   } catch (err) {
     removeThinking();
@@ -1953,6 +2006,22 @@ async function callAI(text) {
     appendGetReal('Could not reach the server. Check your connection and try again.');
     appendError(err.message);
   }
+}
+
+// ─── Live number formatting ───────────────────────────────────────────────────
+// Formats pure-integer input with commas as the user types.
+// Skips on deletion (avoids cursor fights), and skips non-numeric input (suburb, email, etc.)
+function liveFormatNumber(el, event) {
+  if (event && event.inputType && event.inputType.startsWith('delete')) return;
+  const raw = el.value;
+  const stripped = raw.replace(/[$,\s]/g, '');
+  if (!/^\d+$/.test(stripped) || stripped.length < 4) return; // non-numeric or too short
+  const formatted = parseInt(stripped, 10).toLocaleString('en-AU');
+  if (formatted === raw) return;
+  const distFromEnd = raw.length - (el.selectionEnd || raw.length);
+  el.value = formatted;
+  const newPos = Math.max(0, formatted.length - distFromEnd);
+  el.setSelectionRange(newPos, newPos);
 }
 
 // ─── Input handling ───────────────────────────────────────────────────────────
