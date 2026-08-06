@@ -331,7 +331,7 @@
       placeholder="Type a message…"
       rows="1"
       onkeydown="handleKey(event)"
-      oninput="autoResize(this); liveFormatNumber(this, event)"
+      oninput="autoResize(this); liveFormatNumber(this)"
     ></textarea>
     <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>Send</button>
   </div>
@@ -1129,6 +1129,51 @@ async function runSuburbCheck(suburb) {
   }
 }
 
+async function runPimRealism() {
+  const suburb  = sf.suburb;
+  const state   = sf.state;
+  const type    = sf.propertyType || 'house';
+  const ceiling = sf.price;
+  const displaySuburb = suburb.replace(/\b\w/g, c => c.toUpperCase());
+
+  appendGetReal(`Checking ${displaySuburb}, ${state} — ${type} sales at or below ${fmtMoney(ceiling)}…`);
+  suburbPhase = 'loading';
+  appendThinking();
+
+  try {
+    if (state === 'NSW') {
+      const result = await scoreSuburbNSW(suburb, type, ceiling);
+      removeThinking();
+      if (!result) {
+        appendGetReal(`No ${type} sales found for "${suburb}" in NSW. Check the spelling — try the full suburb name (e.g. "Surry Hills", "Castle Hill").`);
+        suburbPhase = 'done';
+        return;
+      }
+      showSuburbResultCard(suburb, state, type, ceiling, result);
+    } else if (state === 'VIC') {
+      const result = await scoreSuburbVIC(suburb, type, ceiling);
+      removeThinking();
+      if (!result) {
+        appendGetReal(`No data found for "${suburb}" in VIC. Check the spelling — try title case (e.g. "Fitzroy", "South Yarra").`);
+        suburbPhase = 'done';
+        return;
+      }
+      showSuburbResultCard(suburb, state, type, ceiling, result);
+      appendGetReal(`Score estimated from VGV 2025 annual sales data and NSW distribution curves. VIC doesn't publish individual sale records — see the full realism checker for methodology details.`);
+    } else {
+      removeThinking();
+      appendGetReal(`Suburb data is live for NSW and VIC. ${state} is on the roadmap — we'll add it as the data becomes available.`);
+    }
+    suburbPhase = 'done';
+    setTimeout(() => appendCtaLink('/search.html', 'Open full realism checker →'), 400);
+  } catch(e) {
+    removeThinking();
+    appendGetReal(`Couldn't load suburb data right now. Try the realism checker directly.`);
+    setTimeout(() => appendCtaLink('/search.html', 'Open realism checker →'), 300);
+    suburbPhase = 'done';
+  }
+}
+
 function offerSuburbCheck() {
   if (!lastCalcResult) return;
   const state = lastCalcResult.state;
@@ -1234,11 +1279,8 @@ function sfShowPimFork() {
     },
     { label: 'Is it a realistic price for this market?', action: () => {
         appendUser('Is it a realistic price for this market?');
-        sf.phase = null; // hand off to AI
-        journeyType = 'realism';
-        appendGetReal("Let's check it against the market. Tell me anything else, or just hit send and I'll use what you've already told me.");
-        document.getElementById('user-input').placeholder = 'Anything to add…';
-        document.getElementById('user-input').focus();
+        sf.mode = 'realism-pim';
+        sfAskState();
       }
     },
   ], wrap);
@@ -1256,6 +1298,7 @@ function sfAskState() {
 }
 
 function sfNextAfterState() {
+  if (sf.mode === 'realism-pim') { sfAskSuburb(); return; }
   if (knownFHB) { sf.isFirstHomeBuyer = true; sfAfterFHB(); }
   else { sfAskFHB(); }
 }
@@ -1303,7 +1346,9 @@ function handleSFInput(text) {
     sf.suburb = text.trim().toLowerCase();
     // afford: suburb → oo (proptype already set in pim)
     // max:    suburb → proptype → oo
+    // realism-pim: suburb → run check directly
     if (sf.mode === 'afford') { sfAskOO(); }
+    else if (sf.mode === 'realism-pim') { sf.phase = null; runPimRealism(); }
     else { sfAskPropType(); }
 
   } else if (sf.phase === 'sf-savings') {
@@ -2026,15 +2071,14 @@ async function callAI(text) {
 }
 
 // ─── Live number formatting ───────────────────────────────────────────────────
-// Formats pure-integer input with commas as the user types.
-// Skips on deletion (avoids cursor fights), and skips non-numeric input (suburb, email, etc.)
-function liveFormatNumber(el, event) {
-  if (event && event.inputType && event.inputType.startsWith('delete')) return;
+// Formats pure-integer input with commas on every keystroke (including delete).
+function liveFormatNumber(el) {
   const raw = el.value;
   const stripped = raw.replace(/[$,\s]/g, '');
   if (!/^\d+$/.test(stripped) || stripped.length < 4) return; // non-numeric or too short
   const formatted = parseInt(stripped, 10).toLocaleString('en-AU');
   if (formatted === raw) return;
+  // Preserve cursor distance from end so it doesn't jump to start
   const distFromEnd = raw.length - (el.selectionEnd || raw.length);
   el.value = formatted;
   const newPos = Math.max(0, formatted.length - distFromEnd);
