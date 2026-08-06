@@ -1373,12 +1373,17 @@ async function runStructuredDepositCalc() {
     contextMsg += ` My target price is $${sf.price.toLocaleString('en-AU')}.`;
   }
 
-  // Pre-populate conversation — AI sees all facts, skips data collection, runs calc
-  conversationHistory = [{ role: 'user', parts: [{ text: contextMsg }] }];
+  // Pre-populate conversation — AI sees all facts AND a user confirmation, so it skips
+  // data collection and the confirmation step and goes straight to the calculation tool.
+  conversationHistory = [
+    { role: 'user',      parts: [{ text: contextMsg }] },
+    { role: 'assistant', parts: [{ text: 'Got it. Running the calculation now.' }] },
+    { role: 'user',      parts: [{ text: 'Yes, that\'s correct. Please calculate.' }] },
+  ];
   journeyType = 'budget';
 
   const knownFacts = [
-    'All data has already been collected — do NOT ask for any more information.',
+    'All data has already been collected and confirmed by the user — do NOT ask for more information and do NOT ask "is that right?" or similar confirmation questions.',
     `State: ${sf.state}.`,
     sf.suburb ? `Suburb: ${sf.suburb}.` : '',
     `Property type: ${sf.propertyType}.`,
@@ -1386,7 +1391,7 @@ async function runStructuredDepositCalc() {
     `First home buyer: ${sf.isFirstHomeBuyer}.`,
     `Available funds (deposit): ${fundsFormatted}.`,
     sf.mode === 'afford' && sf.price ? `Target price: $${sf.price.toLocaleString('en-AU')}.` : '',
-    'Calculate the deposit ceiling immediately and return the tool result.',
+    'Run the deposit ceiling calculation tool immediately. Do not output any text — only the tool call.',
     sf.isFirstHomeBuyer ? 'This user is a first home buyer — always include isFirstHomeBuyer: true in the CALC block.' : '',
   ].filter(Boolean).join(' ');
 
