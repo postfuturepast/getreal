@@ -339,6 +339,12 @@ let awaitingEmail = false;
 let suburbPhase = null;         // null | 'awaiting' | 'loading' | 'done'
 let suburbName  = null;
 
+// ─── Structured intake flow state ─────────────────────────────────────────────
+// Used by the "Show me my maximum" and "Can I afford it" structured flows.
+// Phases: sf-price, sf-state, sf-fhb, sf-suburb, sf-proptype, sf-oo, sf-savings, sf-calculating
+const sf = { mode: null, phase: null, price: null, state: null, isFirstHomeBuyer: null, suburb: null, propertyType: null, isOwnerOccupier: null, savings: null };
+function sfReset() { sf.mode = null; sf.phase = null; sf.price = null; sf.state = null; sf.isFirstHomeBuyer = null; sf.suburb = null; sf.propertyType = null; sf.isOwnerOccupier = null; sf.savings = null; }
+
 // ─── Formatters ───────────────────────────────────────────────────────────────
 function fmtMoney(n) {
   if (n == null || isNaN(n)) return '—';
@@ -377,6 +383,7 @@ function goBack() {
   lastSvcResult = null;
   suburbPhase = null;
   suburbName  = null;
+  sfReset();
   chatEl().innerHTML = '';
   document.getElementById('user-input').value = '';
   document.getElementById('user-input').style.height = '';
@@ -434,11 +441,34 @@ function selectJourney(j, label) {
   if (label) appendUser(label);
 
   if (j === 'budget') {
-    appendGetReal(
-      'A good first step is working out how much your deposit could let you buy. That tells us the loan you\'d need — and from there we can sense-check whether a bank would likely support it based on your income and debts.\n\nLet\'s start with the basics. Where in Australia are you looking, and what are you working with?'
-    );
-    document.getElementById('user-input').placeholder = 'Tell me about your situation…';
-    document.getElementById('user-input').focus();
+    const wrap = appendGetReal('Do you have a price in mind, or want to know your maximum?');
+    appendQuickReplies([
+      { label: 'I have a price in mind', primary: true, action: () => {
+          appendUser('I have a price in mind');
+          const wrap2 = appendGetReal('What do you want to find out?');
+          appendQuickReplies([
+            { label: 'Can I afford it?', primary: true, action: () => {
+                appendUser('Can I afford it?');
+                startStructuredAffordFlow();
+              }
+            },
+            { label: 'Is it a realistic price for this market?', action: () => {
+                appendUser('Is it a realistic price for this market?');
+                journeyType = 'realism';
+                appendGetReal("Let's check it against the market. Tell me about the property — the price, where it is, and what you've got saved.");
+                document.getElementById('user-input').placeholder = 'Tell me about the property…';
+                document.getElementById('user-input').focus();
+              }
+            },
+          ], wrap2);
+        }
+      },
+      { label: 'Show me my maximum', action: () => {
+          appendUser('Show me my maximum');
+          startStructuredMaxFlow();
+        }
+      },
+    ], wrap);
 
   } else if (j === 'realism') {
     const opening = isAffordabilityMode
@@ -1100,7 +1130,19 @@ async function runSuburbCheck(suburb) {
 function offerSuburbCheck() {
   if (!lastCalcResult) return;
   const state = lastCalcResult.state;
-  // Only offer for NSW/VIC (or if state unknown — let them try)
+
+  // Structured flow: auto-run suburb check if we already collected the suburb
+  if (sf.suburb && (state === 'NSW' || state === 'VIC')) {
+    const displaySuburb = sf.suburb.replace(/\b\w/g, c => c.toUpperCase());
+    setTimeout(() => {
+      appendGetReal(`One more thing — let's see how your ceiling stacks up in ${displaySuburb}.`);
+      suburbPhase = 'loading';
+      runSuburbCheck(sf.suburb);
+    }, 400);
+    return;
+  }
+
+  // Otherwise offer as usual
   const wrap = appendGetReal('Want to see how your ceiling lands in a specific suburb?');
   appendQuickReplies([
     { label: 'Yes — check a suburb', primary: true, action: () => {
@@ -1122,6 +1164,156 @@ function offerSuburbCheck() {
       }
     },
   ], wrap);
+}
+
+// ─── Structured intake flow ───────────────────────────────────────────────────
+
+function startStructuredMaxFlow() {
+  sf.mode = 'max';
+  sfAskState();
+}
+
+function startStructuredAffordFlow() {
+  sf.mode = 'afford';
+  sfAskPrice();
+}
+
+function sfAskPrice() {
+  sf.phase = 'sf-price';
+  appendGetReal("What's the price you have in mind? (e.g. $850k, $1.2m)");
+  document.getElementById('user-input').placeholder = 'Target price…';
+  document.getElementById('user-input').focus();
+}
+
+const AU_STATES = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
+
+function sfAskState() {
+  sf.phase = 'sf-state';
+  const wrap = appendGetReal('Which state are you buying in?');
+  appendQuickReplies(
+    AU_STATES.map(s => ({ label: s, action: () => { appendUser(s); sf.state = s; sfNextAfterState(); } })),
+    wrap
+  );
+}
+
+function sfNextAfterState() {
+  if (knownFHB) { sf.isFirstHomeBuyer = true; sfAskSuburb(); }
+  else { sfAskFHB(); }
+}
+
+function sfAskFHB() {
+  sf.phase = 'sf-fhb';
+  const wrap = appendGetReal('Are you a first home buyer?');
+  appendQuickReplies([
+    { label: 'Yes', primary: true, action: () => { appendUser('Yes'); sf.isFirstHomeBuyer = true; knownFHB = true; sfAskSuburb(); } },
+    { label: 'No',                 action: () => { appendUser('No');  sf.isFirstHomeBuyer = false;                sfAskSuburb(); } },
+  ], wrap);
+}
+
+function sfAskSuburb() {
+  sf.phase = 'sf-suburb';
+  const hint = sf.state === 'NSW' ? 'e.g. Parramatta, Manly, Penrith'
+    : sf.state === 'VIC' ? 'e.g. Fitzroy, Brunswick, Richmond'
+    : 'suburb or town name';
+  appendGetReal(`Which suburb are you looking in? (${hint})`);
+  document.getElementById('user-input').placeholder = 'Suburb name…';
+  document.getElementById('user-input').focus();
+}
+
+function sfAskPropType() {
+  sf.phase = 'sf-proptype';
+  const wrap = appendGetReal('What type of property?');
+  appendQuickReplies([
+    { label: 'House',     primary: true, action: () => { appendUser('House');     sf.propertyType = 'house';     sfAskOO(); } },
+    { label: 'Apartment',              action: () => { appendUser('Apartment'); sf.propertyType = 'apartment'; sfAskOO(); } },
+    { label: 'Townhouse',              action: () => { appendUser('Townhouse'); sf.propertyType = 'townhouse'; sfAskOO(); } },
+  ], wrap);
+}
+
+function sfAskOO() {
+  sf.phase = 'sf-oo';
+  const wrap = appendGetReal('Will you live in it, or rent it out?');
+  appendQuickReplies([
+    { label: 'Live in it — my home',     primary: true, action: () => { appendUser('Live in it');  sf.isOwnerOccupier = true;  sfAskSavings(); } },
+    { label: 'Rent it out — investment',              action: () => { appendUser('Rent it out'); sf.isOwnerOccupier = false; sfAskSavings(); } },
+  ], wrap);
+}
+
+function sfAskSavings() {
+  sf.phase = 'sf-savings';
+  appendGetReal('How much have you saved? (e.g. $120k, $250,000 — include cash you could put toward the purchase)');
+  document.getElementById('user-input').placeholder = 'Your savings…';
+  document.getElementById('user-input').focus();
+}
+
+function handleSFInput(text) {
+  if (sf.phase === 'sf-price') {
+    const price = parseAmount(text);
+    if (!price || price < 100000) { appendGetReal("Try something like $850k or $1.2m."); return; }
+    sf.price = price;
+    sfAskState();
+
+  } else if (sf.phase === 'sf-suburb') {
+    sf.suburb = text.trim().toLowerCase();
+    sfAskPropType();
+
+  } else if (sf.phase === 'sf-savings') {
+    const amount = parseAmount(text);
+    if (!amount || amount < 1000) { appendGetReal("Enter a dollar amount, e.g. $120,000 or 120k."); return; }
+    sf.savings = amount;
+    sf.phase = null;
+    runStructuredDepositCalc();
+  }
+}
+
+async function runStructuredDepositCalc() {
+  isAffordabilityMode = sf.mode === 'afford';
+  sf.phase = 'sf-calculating';
+  appendThinking();
+
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        calcType:         'deposit',
+        savings:           sf.savings,
+        state:             sf.state,
+        propertyType:      sf.propertyType,
+        isOwnerOccupier:   sf.isOwnerOccupier,
+        isFirstHomeBuyer:  sf.isFirstHomeBuyer,
+      }),
+    });
+
+    removeThinking();
+    const data = await res.json();
+
+    if (data.error || data.maxPrice == null) {
+      appendGetReal("Couldn't calculate your ceiling right now — try the full calculator.");
+      appendCtaLink('/deposit.html', 'Open full calculator →');
+      sf.phase = null;
+      return;
+    }
+
+    // Patch in data the server doesn't echo back
+    if (!data.propertyType) data.propertyType = sf.propertyType;
+    data.isOwnerOccupier = sf.isOwnerOccupier;
+
+    if (sf.mode === 'afford') {
+      data.targetPrice = sf.price;
+      data.canAfford   = data.maxPrice >= sf.price;
+      data.gapAmount   = Math.max(0, sf.price - data.maxPrice);
+    }
+
+    sf.phase = null;
+    doStagedReveal(data);
+
+  } catch (err) {
+    removeThinking();
+    sf.phase = null;
+    appendGetReal('Could not reach the server. Check your connection and try again.');
+    appendError(err.message);
+  }
 }
 
 function askWhatsNext() {
@@ -1789,6 +1981,14 @@ function sendMessage() {
 }
 
 async function handleInput(text) {
+  // Structured intake flow
+  if (sf.phase && sf.phase !== 'sf-calculating') {
+    handleSFInput(text);
+    waiting = false;
+    document.getElementById('send-btn').disabled = !document.getElementById('user-input').value.trim();
+    return;
+  }
+
   // Suburb check collection
   if (suburbPhase === 'awaiting') {
     suburbName = text.trim();
