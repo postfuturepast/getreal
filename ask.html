@@ -194,10 +194,10 @@
       letter-spacing: -0.01em;
     }
     .reveal-sub {
-      font-size: 0.65rem;
+      font-size: 0.85rem;
       color: #888;
       margin-top: 0.25rem;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     /* ── Typing indicator ── */
@@ -712,12 +712,7 @@ function showRealismVerdict(result) {
   const gap      = result.gapAmount || 0;
 
   if (result.canAfford) {
-    // ✓ They can reach it
-    const surplus = ceiling - target;
-    const wrap = appendGetReal(
-      `Your deposit can reach ${fmtMoney(target)} — you have ${fmtMoney(surplus)} of headroom above that target.`
-    );
-    // Show the tick card
+    // ✓ Show verdict card first
     setTimeout(() => {
       const card = document.createElement('div');
       card.className = 'reveal-card';
@@ -725,19 +720,55 @@ function showRealismVerdict(result) {
       card.innerHTML = `
         <div class="reveal-label" style="color:#22c55e">DEPOSIT CHECK ✓</div>
         <div class="reveal-price">${fmtMoney(target)}</div>
-        <div class="reveal-sub">Your deposit supports up to ${fmtMoney(ceiling)} — this target is within reach on deposit alone. Income and serviceability are still worth checking.</div>
       `;
       chatEl().appendChild(card);
       scrollToBottom();
-    }, 400);
-    // Affordability mode: auto-continue to income check; otherwise standard reveal
+    }, 300);
+
+    // Then show the deposit breakdown
+    setTimeout(() => appendGetReal("Here's how your funds cover this purchase."), 700);
+    setTimeout(() => appendStepCard('Your available funds', fmtMoney(result.savings)), 1100);
+    setTimeout(() => {
+      const dutyLabel = result.isFirstHomeBuyer ? 'Stamp duty (FHB rate)' : 'Stamp duty';
+      const dutyIsZero = result.stampDuty === 0;
+      appendStepCard(dutyLabel, dutyIsZero ? '$0 — exempt' : '−' + fmtMoney(result.stampDuty), dutyIsZero ? '' : 'negative');
+    }, 1500);
+    setTimeout(() => {
+      if (result.regFee > 0) appendStepCard('Registration & transfer fees', '−' + fmtMoney(result.regFee), 'negative');
+    }, 1850);
+    const postBreakdownDelay = result.regFee > 0 ? 2200 : 1900;
+    setTimeout(() => {
+      appendStepCard('Available as deposit', fmtMoney(result.availDeposit), 'result');
+      const lvrPct = result.lvrTier ? Math.round(result.lvrTier * 100) : Math.round((1 - result.availDeposit / target) * 100);
+      const loan = target - result.availDeposit;
+      setTimeout(() => appendStepCard('LVR · Loan required', lvrPct + '% · ' + fmtMoney(loan)), 400);
+    }, postBreakdownDelay);
+
+    // FHB / LMI note + continue
+    const noteDelay = postBreakdownDelay + 900;
+    setTimeout(() => {
+      let note = '';
+      if (result.isFirstHomeBuyer && result.stampDuty === 0) {
+        note = "You're fully exempt from stamp duty as a first home buyer — saving " + fmtMoney(result.standardDuty) + " vs the standard rate.";
+      } else if (result.isFirstHomeBuyer && result.fhbDutySaving > 0) {
+        note = "FHB concession reduced your stamp duty by " + fmtMoney(result.fhbDutySaving) + ".";
+      }
+      if (result.lmiPremium > 0) {
+        const lvrStr = result.lvrTier ? Math.round(result.lvrTier * 100) + '%' : 'above 80%';
+        note += (note ? ' ' : '') + "At " + lvrStr + " LVR, LMI applies — " + fmtMoney(result.lmiPremium) + " capitalised into the loan.";
+      }
+      if (note) appendGetReal(note);
+    }, noteDelay);
+
+    // Continue to income check
+    const continueDelay = noteDelay + 600;
     if (isAffordabilityMode) {
       setTimeout(() => {
         appendGetReal("Deposit: ✓\n\nNow let's check the income side — banks cap your total debt at 6× gross annual income.");
         setTimeout(() => startDTICollection(), 700);
-      }, 1000);
+      }, continueDelay);
     } else {
-      setTimeout(() => showRevealStep(2), 1000);
+      setTimeout(() => showRevealStep(2), continueDelay);
     }
 
   } else {
@@ -1477,13 +1508,16 @@ function startDTICollection() {
 
   const wrap = appendGetReal("No problem — let me work out what your income would support instead.\n\nFirst: are you buying on your own, or with someone else?");
   appendQuickReplies([
-    { label: 'Just me',                   primary: true, action: () => { appendUser('Just me');                   dtiBuyers = 1; dtiPhase = 'income1'; askIncome1(); } },
+    { label: 'Just me',                   action: () => { appendUser('Just me');                   dtiBuyers = 1; dtiPhase = 'income1'; askIncome1(); } },
     { label: 'Buying with a partner / co-buyer', action: () => { appendUser('Buying with a partner / co-buyer'); dtiBuyers = 2; dtiPhase = 'income1'; askIncome1(); } },
   ], wrap);
 }
 
 function askIncome1() {
-  appendGetReal("What's your gross annual income? (Before tax, excluding super — e.g. $85,000 or 85k)");
+  const prompt = dtiBuyers === 2
+    ? "Let's start with your income. What's your gross annual income? (Before tax, excluding super — e.g. $85,000 or 85k)"
+    : "What's your gross annual income? (Before tax, excluding super — e.g. $85,000 or 85k)";
+  appendGetReal(prompt);
   document.getElementById('user-input').placeholder = 'Your annual income…';
   document.getElementById('user-input').focus();
 }
