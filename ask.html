@@ -443,11 +443,11 @@ function selectJourney(j, label) {
   if (j === 'budget') {
     const wrap = appendGetReal('Do you have a price in mind, or want to know your maximum?');
     appendQuickReplies([
-      { label: 'I have a price in mind', primary: true, action: () => {
+      { label: 'I have a price in mind', action: () => {
           appendUser('I have a price in mind');
           const wrap2 = appendGetReal('What do you want to find out?');
           appendQuickReplies([
-            { label: 'Can I afford it?', primary: true, action: () => {
+            { label: 'Can I afford it?', action: () => {
                 appendUser('Can I afford it?');
                 startStructuredAffordFlow();
               }
