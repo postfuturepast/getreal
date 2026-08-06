@@ -22,38 +22,11 @@
     }
 
     /* ── Header ── */
-    .ask-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.9rem 1.25rem;
-      border-bottom: 1px solid #1e1e1e;
-      background: #0e0e0e;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .ask-header-logo {
-      font-family: 'Courier New', monospace;
-      font-size: 0.9rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #fff;
-      text-decoration: none;
-    }
-    .ask-header-tag {
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #555;
-      margin-left: auto;
-    }
     .back-btn {
       font-size: 0.6rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #555;
+      color: #888;
       background: none;
       border: none;
       cursor: pointer;
@@ -62,7 +35,7 @@
       margin-left: auto;
       display: none;
     }
-    .back-btn:hover { color: #e5e5e5; }
+    .back-btn:hover { color: #18181b; }
 
     /* ── Tool choice quick replies ── */
     .tool-choices {
@@ -317,10 +290,17 @@
 </head>
 <body>
 
-<div class="ask-header">
-  <a class="ask-header-logo" href="/">GetReal</a>
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
   <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none">← Start over</button>
-</div>
+</header>
 
 <div class="chat-outer" id="chat-outer">
   <div class="chat-wrap" id="chat"></div>
