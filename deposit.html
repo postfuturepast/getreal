@@ -528,6 +528,10 @@
     <button class="btn" onclick="goTo('intro2')" style="width: 100%; text-align: center;">
       Got it →
     </button>
+
+    <div style="margin-top: 1.5rem; font-family: var(--font-mono); font-size: 0.65rem; color: #444; text-align: center; line-height: 1.8;">
+      Estimates only — not financial advice. · <a href="deposit-faq.html" style="color: #555; text-decoration: underline;">How it works</a> · <a href="manifesto.html" style="color: #555; text-decoration: underline;">Data freedom</a> · <span id="deployStamp" style="opacity: 0.5;">—</span>
+    </div>
   </div>
 
   <!-- ── Screen 0b: Ceiling 1 Gate ─────────────────────────────────────── -->
@@ -1677,6 +1681,22 @@ async function loadData() {
 }
 
 loadData();
+
+// ─── Deploy stamp ─────────────────────────────────────────────────────────────
+fetch('https://api.github.com/repos/postfuturepast/getreal/commits/main')
+  .then(r => r.json())
+  .then(data => {
+    const iso = data?.commit?.committer?.date || data?.commit?.author?.date;
+    if (!iso) return;
+    const d = new Date(iso);
+    const stamp = d.toLocaleString('en-AU', {
+      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+      timeZone: 'Australia/Sydney', hour12: false,
+    });
+    const el = document.getElementById('deployStamp');
+    if (el) el.textContent = `deployed ${stamp}`;
+  })
+  .catch(() => {});
 
 // ─── App state ───────────────────────────────────────────────────────────────
 const d = {
