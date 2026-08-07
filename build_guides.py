@@ -279,15 +279,22 @@ def faq_json(faqs):
     }, indent=2)
 
 
-NAV_HTML = """<nav class="site-nav">
-  <a href="/" class="nav-logo">GetReal</a>
-  <div class="nav-links">
+NAV_HTML = """<header class="site-header">
+  <a class="brand" href="/">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+  <nav class="site-nav-links">
     <a href="/deposit">Borrowing ceiling</a>
     <a href="/stamp-duty">Stamp duty</a>
-    <a href="/search-intro">Property realism</a>
+    <a href="/guides/">Guides</a>
     <a href="/methodology">Methodology</a>
-  </div>
-</nav>"""
+  </nav>
+</header>"""
 
 FOOTER_HTML = """<footer class="site-footer">
   <p>GetReal is a free tool. Data from NSW and Victorian Valuer Generals. Not financial advice.</p>
