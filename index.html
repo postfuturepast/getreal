@@ -160,6 +160,9 @@
             .explore-section { padding: 0 2rem 1rem; }
             .explore-grid { grid-template-columns: repeat(4, 1fr); }
         }
+        @media (max-width: 699px) {
+            .explore-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -285,6 +288,27 @@
             <div class="explore-tile-inner">
                 <div class="explore-tile-tag">Understand</div>
                 <div class="explore-tile-name">Methodology & FAQ</div>
+            </div>
+            <div class="explore-tile-arrow">›</div>
+        </a>
+        <a class="explore-tile" href="/faq">
+            <div class="explore-tile-inner">
+                <div class="explore-tile-tag">Questions</div>
+                <div class="explore-tile-name">FAQ</div>
+            </div>
+            <div class="explore-tile-arrow">›</div>
+        </a>
+        <a class="explore-tile" href="/manifesto">
+            <div class="explore-tile-inner">
+                <div class="explore-tile-tag">Data freedom</div>
+                <div class="explore-tile-name">Manifesto</div>
+            </div>
+            <div class="explore-tile-arrow">›</div>
+        </a>
+        <a class="explore-tile" href="/ask">
+            <div class="explore-tile-inner">
+                <div class="explore-tile-tag">AI guide</div>
+                <div class="explore-tile-name">Ask GetReal</div>
             </div>
             <div class="explore-tile-arrow">›</div>
         </a>
