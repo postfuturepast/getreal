@@ -8,6 +8,10 @@
   <link rel="canonical" href="https://get-real.co/suburbs/">
   <meta property="og:title" content="Australian suburb property data — GetReal">
   <meta property="og:description" content="Median property prices and sales volumes for 2,600+ Australian suburbs.">
+    <meta property="og:image" content="https://get-real.co/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:image" content="https://get-real.co/og-image.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
   <style>
@@ -53,6 +57,29 @@
       .suburb-state { display: none; }
     }
   </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "@id": "https://get-real.co/suburbs/",
+    "name": "Australian Suburb Property Data — GetReal",
+    "description": "Median sale prices, annual sales volumes, and property type breakdowns for suburbs across NSW and VIC. NSW data sourced from NSW Valuer General individual sale records (146,000+ transactions). VIC data from Victorian Valuer General quarterly reports.",
+    "url": "https://get-real.co/suburbs/",
+    "inLanguage": "en-AU",
+    "isAccessibleForFree": true,
+    "spatialCoverage": {
+      "@type": "Country",
+      "name": "Australia"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "@id": "https://get-real.co/#organization",
+      "name": "GetReal",
+      "url": "https://get-real.co"
+    },
+    "license": "https://get-real.co/manifesto"
+  }
+  </script>
 </head>
 <body>
 

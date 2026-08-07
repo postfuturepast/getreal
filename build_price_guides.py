@@ -500,6 +500,11 @@ def generate_page(
   <link rel="canonical" href="{BASE_URL}/guides/can-i-afford/{price}/">
   <meta property="og:title" content="Can I afford a {price_fmt} property? — GetReal">
   <meta property="og:description" content="Deposit {fmt(round(price*0.2))}, income required {fmt(income_single)}, stamp duty varies by state. See full breakdown.">
+  <meta property="og:image" content="https://get-real.co/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://get-real.co/og-image.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <style>
