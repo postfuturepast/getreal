@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Can I afford a $1,850,000 property? — GetReal</title>
+  <meta name="description" content="To buy a $1,850,000 property you need a deposit of $370,000 (20%) and an income of approximately $239,000. Stamp duty by state, LMI costs, and example suburbs.">
+  <link rel="canonical" href="https://get-real.co/guides/can-i-afford/1850000/">
+  <meta property="og:title" content="Can I afford a $1,850,000 property? — GetReal">
+  <meta property="og:description" content="Deposit $370,000, income required $239,000, stamp duty varies by state. See full breakdown.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .guide-wrap { max-width:860px;margin:0 auto;padding:2.5rem 1.5rem 5rem; }
+    .breadcrumb { font-family:monospace;font-size:0.65rem;color:var(--dim);margin-bottom:1.5rem; }
+    .breadcrumb a { color:var(--dim);text-decoration:none; }
+    h1 { font-size:1.6rem;margin-bottom:0.4rem;line-height:1.3; }
+    .lead { color:var(--muted);font-size:0.9rem;line-height:1.8;margin-bottom:1.5rem;max-width:640px; }
+
+    .input-bar {
+      border:1px solid var(--border);background:var(--card);
+      padding:1rem 1.25rem;margin:0 0 1rem;
+      display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+    }
+    .input-group { display:flex;flex-direction:column;gap:4px; }
+    .input-group label { font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim); }
+    .input-group select {
+      font-family:monospace;font-size:0.9rem;
+      background:var(--bg);border:1px solid var(--border);
+      color:var(--text);padding:5px 10px;cursor:pointer;
+    }
+    .toggle-group { display:flex;flex-direction:column;gap:4px; }
+    .toggle-group label { font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim); }
+    .toggle-row { display:flex; }
+    .toggle-btn {
+      font-family:monospace;font-size:0.78rem;
+      border:1px solid var(--border);padding:5px 12px;
+      cursor:pointer;background:var(--card);color:var(--muted);
+    }
+    .toggle-btn.active { background:var(--text);color:var(--bg); }
+
+    /* Assumptions */
+    .assumptions {
+      border:1px solid #b45309;background:var(--card);
+      padding:1rem 1.25rem;margin:0 0 1rem;
+    }
+    .assumptions-hdr {
+      display:flex;align-items:center;gap:8px;
+      font-family:monospace;font-size:0.65rem;text-transform:uppercase;
+      letter-spacing:0.1em;color:#f59e0b;margin-bottom:0.6rem;
+    }
+    .warn-circle {
+      width:16px;height:16px;border:1.5px solid #f59e0b;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:700;color:#f59e0b;flex-shrink:0;
+    }
+    .assume-grid { display:grid;grid-template-columns:1fr 1fr;gap:0; }
+    .assume-row {
+      display:flex;justify-content:space-between;font-size:0.8rem;
+      padding:5px 0;border-bottom:1px solid var(--border);gap:1rem;
+    }
+    .assume-key { color:var(--dim); }
+    .assume-val { color:var(--text);font-weight:500;text-align:right; }
+    .assume-footer {
+      margin-top:0.6rem;font-size:0.75rem;color:var(--dim);
+      line-height:1.6;border-top:1px solid var(--border);padding-top:0.5rem;
+    }
+    .assume-footer a { color:#f59e0b; }
+
+    /* Stamp duty block */
+    .duty-block {
+      border:1px solid var(--border);padding:1.25rem;margin:0 0 1rem;
+    }
+    .duty-headline { display:flex;align-items:baseline;gap:1.5rem;flex-wrap:wrap; }
+    .duty-figure { font-size:2rem;font-weight:700;color:#4caf50;line-height:1; }
+    .duty-figure.high { color:#ef5350; }
+    .duty-figure.mid { color:#f59e0b; }
+    .duty-label { font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);margin-top:3px; }
+    .duty-saving { font-size:1rem;color:#4caf50; }
+    .duty-note { font-size:0.82rem;color:var(--muted);margin-top:8px;line-height:1.6; }
+
+    /* Compare table */
+    details { margin-bottom:1rem; }
+    details summary { font-size:0.8rem;color:var(--dim);cursor:pointer;padding:4px 0; }
+    .compare-table { width:100%;border-collapse:collapse;font-size:0.83rem;margin-top:8px; }
+    .compare-table th {
+      text-align:left;font-weight:400;font-family:monospace;font-size:0.65rem;
+      text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);
+      border-bottom:1px solid var(--border);padding:3px 8px;
+    }
+    .compare-table td { padding:6px 8px;border-bottom:1px solid var(--border);color:var(--muted); }
+    .compare-table tr:last-child td { border-bottom:none; }
+    .compare-table .selected td { background:var(--card);color:var(--text);font-weight:500; }
+    .sc { color:var(--dim);font-size:0.75rem; }
+    .hi { color:#4caf50; }
+    .lo { color:#ef5350; }
+    .mid { color:#f59e0b; }
+
+    /* Section label */
+    .section-label {
+      font-family:monospace;font-size:0.65rem;text-transform:uppercase;
+      letter-spacing:0.1em;color:var(--dim);border-bottom:1px solid var(--border);
+      padding-bottom:0.4rem;margin:1.5rem 0 0.75rem;
+    }
+
+    /* Deposit cards */
+    .three-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem; }
+    .deposit-card { border:1px solid var(--border);padding:0.85rem 1rem; }
+    .deposit-card.featured { border-color:#4caf50; }
+    .dep-label { font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);margin-bottom:4px; }
+    .dep-amount { font-size:1.1rem;font-weight:500;color:var(--text); }
+    .dep-note { font-size:0.8rem;color:var(--muted);margin-top:3px; }
+    .dep-good { font-size:0.8rem;color:#4caf50;margin-top:3px; }
+    .dep-warn { font-size:0.8rem;color:#f59e0b;margin-top:3px; }
+
+    /* Income grid */
+    .two-grid { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem; }
+    .income-card { border:1px solid var(--border);padding:0.85rem 1rem; }
+    .inc-label { font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);margin-bottom:4px; }
+    .inc-val { font-size:1.1rem;font-weight:500;color:var(--text); }
+    .inc-sub { font-size:0.8rem;color:var(--muted);margin-top:3px; }
+
+    /* Suburb chips */
+    .suburb-chips { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem; }
+    .suburb-chip {
+      font-size:0.8rem;border:1px solid var(--border);
+      padding:4px 10px;color:#4caf50;text-decoration:none;
+    }
+    .suburb-chip:hover { border-color:#4caf50; }
+
+    /* CTA */
+    .cta-strip {
+      border:1px solid var(--border);padding:1rem 1.25rem;
+      display:flex;align-items:center;justify-content:space-between;
+      gap:1rem;flex-wrap:wrap;margin-top:1.5rem;
+    }
+    .cta-text { font-size:0.85rem;color:var(--muted); }
+    .cta-text strong { color:var(--text);display:block;margin-bottom:2px; }
+
+    /* Pagination */
+    .pagination {
+      display:flex;justify-content:space-between;
+      margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border);
+      font-size:0.85rem;
+    }
+
+    @media(max-width:600px) {
+      .three-grid { grid-template-columns:1fr; }
+      .two-grid { grid-template-columns:1fr; }
+      .assume-grid { grid-template-columns:1fr; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Can I afford a $1,850,000 property?",
+    "description": "Deposit, income, stamp duty, and LMI costs for a $1,850,000 property purchase in Australia.",
+    "url": "https://get-real.co/guides/can-i-afford/1850000/",
+    "publisher": {"@type": "Organization", "name": "GetReal", "url": "https://get-real.co"},
+    "dateModified": "2026-08-07"
+  }
+  </script>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="/">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="guide-wrap">
+
+  <nav class="breadcrumb">
+    <a href="/">Home</a> ›
+    <a href="/guides/">Guides</a> ›
+    <a href="/guides/can-i-afford/">Can I afford</a> ›
+    $1,850,000
+  </nav>
+
+  <p class="eyebrow" style="margin-bottom:0.75rem;">Affordability</p>
+  <h1>What do you need to buy a $1,850,000 property?</h1>
+  <p class="lead">
+    Deposit, stamp duty, LMI, and the income needed to service the loan.
+    Select your state and buyer type — stamp duty updates instantly.
+  </p>
+
+  <!-- Input bar -->
+  <div class="input-bar">
+    <div class="input-group">
+      <label>Your state</label>
+      <select id="stateSelect" onchange="update()">
+        <option value="NSW">NSW</option>
+        <option value="VIC">VIC</option>
+        <option value="QLD">QLD</option>
+        <option value="WA">WA</option>
+        <option value="SA">SA</option>
+        <option value="ACT">ACT</option>
+        <option value="TAS">TAS</option>
+        <option value="NT">NT</option>
+      </select>
+    </div>
+    <div class="toggle-group">
+      <label>Buyer type</label>
+      <div class="toggle-row">
+        <button class="toggle-btn active" onclick="setBuyer('fhb',this)">First home buyer</button>
+        <button class="toggle-btn" onclick="setBuyer('oo',this)">Owner-occupier</button>
+        <button class="toggle-btn" onclick="setBuyer('inv',this)">Investor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assumptions panel -->
+  <div class="assumptions">
+    <div class="assumptions-hdr">
+      <div class="warn-circle">!</div>
+      Income figures assume: single borrower, no existing debt, metro HEM
+    </div>
+    <div class="assume-grid">
+      <div class="assume-row"><span class="assume-key">Assessment rate</span><span class="assume-val">7.35% (RBA 4.35% + 3.0%)</span></div>
+      <div class="assume-row"><span class="assume-key">Loan term</span><span class="assume-val">30 years P&amp;I</span></div>
+      <div class="assume-row"><span class="assume-key">Living expenses</span><span class="assume-val">HEM metro ($2,800/mo)</span></div>
+      <div class="assume-row"><span class="assume-key">Existing debt</span><span class="assume-val">None</span></div>
+    </div>
+    <div class="assume-footer">
+      ⚠ Assessment rate sourced from RBA F1 data (effective 2026-08-06), updated automatically each week.
+      Stamp duty figures are sourced from state revenue offices — accurate as at 2026-08-07.
+      For a personalised affordability check, <a href="/search">use the search tool →</a>
+    </div>
+  </div>
+
+  <!-- Stamp duty — state-specific headline -->
+  <div class="section-label" id="dutyLabel">Stamp duty — NSW, first home buyer</div>
+  <div class="duty-block" id="dutyBlock">
+    <div id="dutyContent"></div>
+  </div>
+
+  <details>
+    <summary>Compare all states →</summary>
+    <table class="compare-table" id="compareTable">
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Buyer type</th>
+          <th style="text-align:right;">Duty payable</th>
+          <th style="text-align:right;">FHB saving</th>
+        </tr>
+      </thead>
+      <tbody id="compareBody"></tbody>
+    </table>
+  </details>
+
+  <!-- Deposit tiers -->
+  <div class="section-label">Deposit options — $1,850,000</div>
+  <div class="three-grid" id="depositGrid">
+    
+      <div class="deposit-card featured">
+        <div class="dep-label">20% deposit</div>
+        <div class="dep-amount">$370,000</div>
+        <div class="dep-note">Loan: $1,480,000</div>
+        <div class="dep-good">No LMI required</div>
+      </div>
+      <div class="deposit-card">
+        <div class="dep-label">10% deposit</div>
+        <div class="dep-amount">$185,000</div>
+        <div class="dep-note">Loan: $1,665,000</div>
+        <div class="dep-warn">+ $76,806 LMI est.</div>
+      </div>
+      <div class="deposit-card">
+        <div class="dep-label">5% deposit</div>
+        <div class="dep-amount">$92,500</div>
+        <div class="dep-note">Loan: $1,757,500</div>
+        <div class="dep-warn">+ $81,073 LMI est.</div>
+      </div>
+  </div>
+
+  <!-- Income required -->
+  <div class="section-label">Minimum income to service the loan (20% deposit)</div>
+  <div class="two-grid">
+    <div class="income-card">
+      <div class="inc-label">Single borrower</div>
+      <div class="inc-val">$239,000</div>
+      <div class="inc-sub">gross annual, no existing debt</div>
+    </div>
+    <div class="income-card">
+      <div class="inc-label">Two borrowers</div>
+      <div class="inc-val">$131,000 each</div>
+      <div class="inc-sub">or any split totalling $239,000</div>
+    </div>
+  </div>
+
+  <!-- Suburb chips -->
+  <div class="section-label" id="suburbLabel">What does $1,850,000 get you?</div>
+  <div class="suburb-chips">
+    <a class="suburb-chip" href="/suburbs/vic/glen-waverley/">Glen Waverley VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/doncaster-east/">Doncaster East VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/mount-eliza/">Mount Eliza VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/essendon/">Essendon VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/moonee-ponds/">Moonee Ponds VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/templestowe/">Templestowe VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/bentleigh/">Bentleigh VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/fitzroy-north/">Fitzroy North VIC ›</a>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-strip">
+    <div class="cta-text">
+      <strong>Check if this is realistic for a specific suburb</strong>
+      See what share of the market your budget can reach.
+    </div>
+    <a class="btn" href="/search">Search now →</a>
+  </div>
+
+  <div class="pagination">
+    <span><a href="/guides/can-i-afford/1800000/" style="color:var(--muted);">← $1,800,000</a></span>
+    <span><a href="/guides/can-i-afford/1900000/" style="color:var(--muted);">$1,900,000 →</a></span>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var PRICE = 1850000;
+  var DUTY  = {"NSW":{"standard":84805,"fhb":84805,"fhb_saving":0,"fhb_note":"No FHB concession above $1M","investor":84805},"VIC":{"standard":101750,"fhb":0,"fhb_saving":101750,"fhb_note":"PPR rate \u2014 no FHB waiver above $600k","investor":101750},"QLD":{"standard":86900,"fhb":86900,"fhb_saving":0,"fhb_note":"No FHB concession above $550k","investor":86900},"WA":{"standard":0,"fhb":0,"fhb_saving":0,"fhb_note":"No FHB concession above $530k","investor":0},"SA":{"standard":0,"fhb":0,"fhb_saving":0,"fhb_note":"SA has no FHB stamp duty concession","investor":0},"ACT":{"standard":97967,"fhb":97967,"fhb_saving":0,"fhb_note":"Exceeds HBCS price cap","investor":97967},"TAS":{"standard":78435,"fhb":78435,"fhb_saving":0,"fhb_note":"No FHB concession above $600k","investor":78435},"NT":{"standard":91575,"fhb":91575,"fhb_saving":0,"fhb_note":"No FHB rebate above $650k","investor":91575}};
+  var STATES_ORDER = ["NSW", "VIC", "QLD", "WA", "SA", "ACT", "TAS", "NT"];
+
+  var buyerType = 'fhb';
+  var state     = 'NSW';
+
+  function fmtDollar(n) {
+    if (n === 0) return '$0';
+    return '$' + Math.round(n).toLocaleString('en-AU');
+  }
+
+  function dutyClass(n) {
+    if (n === 0) return 'hi';
+    if (n > 40000) return 'lo';
+    if (n > 20000) return 'mid';
+    return '';
+  }
+
+  function setBuyer(type, btn) {
+    buyerType = type;
+    document.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    update();
+  }
+  window.setBuyer = setBuyer;
+
+  function getDuty() {
+    var d = DUTY[state];
+    if (!d) return {duty: 0, saving: 0, note: ''};
+    if (buyerType === 'fhb') return {duty: d.fhb, saving: d.fhb_saving, note: d.fhb_note};
+    if (buyerType === 'inv') return {duty: d.investor, saving: 0, note: 'Investor — standard rate'};
+    return {duty: d.standard, saving: 0, note: 'Owner-occupier — standard rate'};
+  }
+
+  function update() {
+    state = document.getElementById('stateSelect').value;
+    var buyerLabel = buyerType === 'fhb' ? 'first home buyer' : buyerType === 'oo' ? 'owner-occupier' : 'investor';
+
+    document.getElementById('dutyLabel').textContent = 'Stamp duty — ' + state + ', ' + buyerLabel;
+    document.getElementById('suburbLabel').textContent = 'What does $1,850,000 get you?';
+
+    var d = getDuty();
+    var dc = dutyClass(d.duty);
+
+    var savingHtml = d.saving > 0
+      ? '<span style="font-size:0.9rem;color:#4caf50;margin-left:1rem;">saving ' + fmtDollar(d.saving) + '</span>'
+      : '';
+
+    var strikeHtml = '';
+    if (buyerType === 'fhb' && d.saving > 0) {
+      var std = DUTY[state].standard;
+      strikeHtml = '<div style="margin-top:4px;"><span style="font-size:0.85rem;color:var(--dim);">Standard rate: </span>'
+        + '<span style="font-size:0.85rem;color:var(--muted);text-decoration:line-through;">' + fmtDollar(std) + '</span></div>';
+    }
+
+    document.getElementById('dutyContent').innerHTML =
+      '<div class="duty-headline">'
+      + '<div><div class="duty-figure ' + dc + '">' + fmtDollar(d.duty) + '</div>'
+      + '<div class="duty-label">Stamp duty payable</div></div>'
+      + savingHtml
+      + '</div>'
+      + strikeHtml
+      + '<div class="duty-note">' + (d.note || '') + '</div>';
+
+    // Compare table
+    var tbody = document.getElementById('compareBody');
+    tbody.innerHTML = '';
+    STATES_ORDER.forEach(function(st) {
+      var sd   = DUTY[st];
+      var duty = buyerType === 'fhb' ? sd.fhb : sd.standard;
+      var sav  = buyerType === 'fhb' ? sd.fhb_saving : 0;
+      var tr   = document.createElement('tr');
+      if (st === state) tr.className = 'selected';
+      var savCell = sav > 0
+        ? '<td class="hi" style="text-align:right;">−' + fmtDollar(sav) + '</td>'
+        : '<td style="text-align:right;color:var(--dim);">—</td>';
+      tr.innerHTML = '<td><span class="sc">' + st + '</span></td>'
+        + '<td style="color:var(--muted);">' + buyerLabel + '</td>'
+        + '<td class="' + dutyClass(duty) + '" style="text-align:right;">' + fmtDollar(duty) + '</td>'
+        + savCell;
+      tbody.appendChild(tr);
+    });
+  }
+
+  window.update = update;
+  update();
+})();
+</script>
+
+</body>
+</html>
