@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Australian suburb property data — GetReal</title>
+  <meta name="description" content="Median property prices and sales volumes for 2,642 Australian suburbs, from official Valuer General data.">
+  <link rel="canonical" href="https://get-real.co/suburbs/">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .idx { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; color: #f0f0f0; }
+    .idx h1 { font-size: 1.9rem; margin-bottom: 0.5rem; }
+    .idx p { color: #999; font-size: 0.9rem; margin-bottom: 2.5rem; max-width: 600px; line-height: 1.7; }
+    .state-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #2a2a2a; border: 1px solid #2a2a2a; }
+    .state-card { background: #111; padding: 2rem 1.5rem; text-decoration: none; color: #f0f0f0; display: block; }
+    .state-card:hover { background: #1a1a1a; }
+    .state-tag { font-family: monospace; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: #4caf50; margin-bottom: 0.5rem; }
+    .state-name { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .state-count { font-family: monospace; font-size: 0.72rem; color: #555; }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="/">
+    <svg width="20" height="20" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+  <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+  <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+  <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+</svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+<div class="idx">
+  <h1>Australian suburb property data</h1>
+  <p>Median prices, sales volumes, and price distributions for 2,642 suburbs across NSW and Victoria — sourced directly from state Valuer General records.</p>
+  <div class="state-cards">
+    <a class="state-card" href="/suburbs/nsw/">
+      <div class="state-tag">Individual sale records</div>
+      <div class="state-name">New South Wales</div>
+      <div class="state-count">1,909 suburbs</div>
+    </a>
+    <a class="state-card" href="/suburbs/vic/">
+      <div class="state-tag">VGV quarterly data</div>
+      <div class="state-name">Victoria</div>
+      <div class="state-count">733 suburbs</div>
+    </a>
+  </div>
+</div>
+</body>
+</html>

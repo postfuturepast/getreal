@@ -1,0 +1,4440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIC suburb property data — GetReal</title>
+  <meta name="description" content="Median property prices and sales volumes for VIC suburbs, from official Valuer General data.">
+  <link rel="canonical" href="https://get-real.co/suburbs/vic/">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .idx { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; color: #f0f0f0; }
+    .idx h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+    .idx p { color: #999; font-size: 0.9rem; margin-bottom: 2rem; }
+    .suburb-list { display: grid; gap: 1px; background: #2a2a2a; border: 1px solid #2a2a2a; margin-top: 1rem; }
+    .suburb-row { background: #111; display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1rem; text-decoration: none; color: #f0f0f0; transition: background 0.1s; }
+    .suburb-row:hover { background: #1a1a1a; }
+    .suburb-name { flex: 1; font-size: 0.9rem; font-weight: 500; }
+    .suburb-median { font-family: monospace; font-size: 0.8rem; color: #4caf50; width: 80px; text-align: right; }
+    .suburb-count { font-family: monospace; font-size: 0.72rem; color: #555; width: 80px; text-align: right; }
+    .suburb-arrow { color: #333; }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="/">
+    <svg width="20" height="20" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+  <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+  <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+  <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+</svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+<div class="idx">
+  <h1>VIC property data by suburb</h1>
+  <p>733 suburbs · Real transaction data from the VIC Valuer General</p>
+  <div class="suburb-list">
+    <a class="suburb-row" href="/suburbs/vic/abbotsford">
+      <span class="suburb-name">Abbotsford</span>
+      <span class="suburb-median">$561k</span>
+      <span class="suburb-count">424 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/aberfeldie">
+      <span class="suburb-name">Aberfeldie</span>
+      <span class="suburb-median">$1.84M</span>
+      <span class="suburb-count">124 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/aintree">
+      <span class="suburb-name">Aintree</span>
+      <span class="suburb-median">$725k</span>
+      <span class="suburb-count">298 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/aireys-inlet">
+      <span class="suburb-name">Aireys Inlet</span>
+      <span class="suburb-median">$1.38M</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/airport-west">
+      <span class="suburb-name">Airport West</span>
+      <span class="suburb-median">$1.1M</span>
+      <span class="suburb-count">342 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/albanvale">
+      <span class="suburb-name">Albanvale</span>
+      <span class="suburb-median">$701k</span>
+      <span class="suburb-count">130 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/albert-park">
+      <span class="suburb-name">Albert Park</span>
+      <span class="suburb-median">$2.1M</span>
+      <span class="suburb-count">235 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/albion">
+      <span class="suburb-name">Albion</span>
+      <span class="suburb-median">$461k</span>
+      <span class="suburb-count">163 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/alexandra">
+      <span class="suburb-name">Alexandra</span>
+      <span class="suburb-median">$600k</span>
+      <span class="suburb-count">58 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/alfredton">
+      <span class="suburb-name">Alfredton</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">626 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/allansford">
+      <span class="suburb-name">Allansford</span>
+      <span class="suburb-median">$515k</span>
+      <span class="suburb-count">26 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/alphington">
+      <span class="suburb-name">Alphington</span>
+      <span class="suburb-median">$810k</span>
+      <span class="suburb-count">222 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/altona">
+      <span class="suburb-name">Altona</span>
+      <span class="suburb-median">$738k</span>
+      <span class="suburb-count">384 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/altona-east">
+      <span class="suburb-name">Altona East</span>
+      <span class="suburb-median">$1.07M</span>
+      <span class="suburb-count">70 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/altona-meadows">
+      <span class="suburb-name">Altona Meadows</span>
+      <span class="suburb-median">$836k</span>
+      <span class="suburb-count">228 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/altona-north">
+      <span class="suburb-name">Altona North</span>
+      <span class="suburb-median">$998k</span>
+      <span class="suburb-count">401 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/anglesea">
+      <span class="suburb-name">Anglesea</span>
+      <span class="suburb-median">$1.49M</span>
+      <span class="suburb-count">110 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/apollo-bay">
+      <span class="suburb-name">Apollo Bay</span>
+      <span class="suburb-median">$795k</span>
+      <span class="suburb-count">50 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ararat">
+      <span class="suburb-name">Ararat</span>
+      <span class="suburb-median">$430k</span>
+      <span class="suburb-count">302 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ardeer">
+      <span class="suburb-name">Ardeer</span>
+      <span class="suburb-median">$711k</span>
+      <span class="suburb-count">110 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/armadale">
+      <span class="suburb-name">Armadale</span>
+      <span class="suburb-median">$662k</span>
+      <span class="suburb-count">374 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/armstrong-creek">
+      <span class="suburb-name">Armstrong Creek</span>
+      <span class="suburb-median">$680k</span>
+      <span class="suburb-count">775 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ascot-greater-bendigo">
+      <span class="suburb-name">Ascot (greater Bendigo)</span>
+      <span class="suburb-median">$646k</span>
+      <span class="suburb-count">82 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ascot-vale">
+      <span class="suburb-name">Ascot Vale</span>
+      <span class="suburb-median">$1.36M</span>
+      <span class="suburb-count">421 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ashburton">
+      <span class="suburb-name">Ashburton</span>
+      <span class="suburb-median">$1.99M</span>
+      <span class="suburb-count">200 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ashwood">
+      <span class="suburb-name">Ashwood</span>
+      <span class="suburb-median">$1.43M</span>
+      <span class="suburb-count">162 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/aspendale">
+      <span class="suburb-name">Aspendale</span>
+      <span class="suburb-median">$1.49M</span>
+      <span class="suburb-count">174 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/aspendale-gardens">
+      <span class="suburb-name">Aspendale Gardens</span>
+      <span class="suburb-median">$1.36M</span>
+      <span class="suburb-count">66 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/attwood">
+      <span class="suburb-name">Attwood</span>
+      <span class="suburb-median">$895k</span>
+      <span class="suburb-count">52 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/avenel">
+      <span class="suburb-name">Avenel</span>
+      <span class="suburb-median">$580k</span>
+      <span class="suburb-count">24 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/avoca">
+      <span class="suburb-name">Avoca</span>
+      <span class="suburb-median">$344k</span>
+      <span class="suburb-count">53 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/avondale-heights">
+      <span class="suburb-name">Avondale Heights</span>
+      <span class="suburb-median">$1.08M</span>
+      <span class="suburb-count">339 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bacchus-marsh">
+      <span class="suburb-name">Bacchus Marsh</span>
+      <span class="suburb-median">$651k</span>
+      <span class="suburb-count">325 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/badger-creek">
+      <span class="suburb-name">Badger Creek</span>
+      <span class="suburb-median">$690k</span>
+      <span class="suburb-count">34 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bairnsdale">
+      <span class="suburb-name">Bairnsdale</span>
+      <span class="suburb-median">$485k</span>
+      <span class="suburb-count">347 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/balaclava">
+      <span class="suburb-name">Balaclava</span>
+      <span class="suburb-median">$600k</span>
+      <span class="suburb-count">186 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/balcombe">
+      <span class="suburb-name">Balcombe</span>
+      <span class="suburb-median">$1.63M</span>
+      <span class="suburb-count">168 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ballan">
+      <span class="suburb-name">Ballan</span>
+      <span class="suburb-median">$638k</span>
+      <span class="suburb-count">89 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ballarat-central">
+      <span class="suburb-name">Ballarat Central</span>
+      <span class="suburb-median">$750k</span>
+      <span class="suburb-count">243 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ballarat-east">
+      <span class="suburb-name">Ballarat East</span>
+      <span class="suburb-median">$580k</span>
+      <span class="suburb-count">291 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ballarat-north">
+      <span class="suburb-name">Ballarat North</span>
+      <span class="suburb-median">$590k</span>
+      <span class="suburb-count">183 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/balnarring">
+      <span class="suburb-name">Balnarring</span>
+      <span class="suburb-median">$1.58M</span>
+      <span class="suburb-count">56 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/balnarring-beach">
+      <span class="suburb-name">Balnarring Beach</span>
+      <span class="suburb-median">$2.02M</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/balwyn">
+      <span class="suburb-name">Balwyn</span>
+      <span class="suburb-median">$856k</span>
+      <span class="suburb-count">417 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/balwyn-north">
+      <span class="suburb-name">Balwyn North</span>
+      <span class="suburb-median">$2.36M</span>
+      <span class="suburb-count">514 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bannockburn">
+      <span class="suburb-name">Bannockburn</span>
+      <span class="suburb-median">$705k</span>
+      <span class="suburb-count">127 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/baranduda">
+      <span class="suburb-name">Baranduda</span>
+      <span class="suburb-median">$750k</span>
+      <span class="suburb-count">97 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/barwon-heads">
+      <span class="suburb-name">Barwon Heads</span>
+      <span class="suburb-median">$1.56M</span>
+      <span class="suburb-count">131 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/baxter">
+      <span class="suburb-name">Baxter</span>
+      <span class="suburb-median">$770k</span>
+      <span class="suburb-count">63 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bayswater">
+      <span class="suburb-name">Bayswater</span>
+      <span class="suburb-median">$704k</span>
+      <span class="suburb-count">360 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bayswater-north">
+      <span class="suburb-name">Bayswater North</span>
+      <span class="suburb-median">$656k</span>
+      <span class="suburb-count">249 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/beaconsfield">
+      <span class="suburb-name">Beaconsfield</span>
+      <span class="suburb-median">$1M</span>
+      <span class="suburb-count">178 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/beaconsfield-upper">
+      <span class="suburb-name">Beaconsfield Upper</span>
+      <span class="suburb-median">$1.27M</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/beaufort">
+      <span class="suburb-name">Beaufort</span>
+      <span class="suburb-median">$435k</span>
+      <span class="suburb-count">60 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/beaumaris">
+      <span class="suburb-name">Beaumaris</span>
+      <span class="suburb-median">$2.1M</span>
+      <span class="suburb-count">349 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/beechworth">
+      <span class="suburb-name">Beechworth</span>
+      <span class="suburb-median">$818k</span>
+      <span class="suburb-count">94 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/belgrave">
+      <span class="suburb-name">Belgrave</span>
+      <span class="suburb-median">$816k</span>
+      <span class="suburb-count">85 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/belgrave-heights">
+      <span class="suburb-name">Belgrave Heights</span>
+      <span class="suburb-median">$1.01M</span>
+      <span class="suburb-count">23 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bell-park">
+      <span class="suburb-name">Bell Park</span>
+      <span class="suburb-median">$701k</span>
+      <span class="suburb-count">179 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bell-post-hill">
+      <span class="suburb-name">Bell Post Hill</span>
+      <span class="suburb-median">$762k</span>
+      <span class="suburb-count">179 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bellfield-banyule">
+      <span class="suburb-name">Bellfield (banyule)</span>
+      <span class="suburb-median">$994k</span>
+      <span class="suburb-count">80 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/belmont">
+      <span class="suburb-name">Belmont</span>
+      <span class="suburb-median">$745k</span>
+      <span class="suburb-count">580 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/benalla">
+      <span class="suburb-name">Benalla</span>
+      <span class="suburb-median">$495k</span>
+      <span class="suburb-count">411 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bendigo">
+      <span class="suburb-name">Bendigo</span>
+      <span class="suburb-median">$605k</span>
+      <span class="suburb-count">255 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bentleigh">
+      <span class="suburb-name">Bentleigh</span>
+      <span class="suburb-median">$910k</span>
+      <span class="suburb-count">497 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bentleigh-east">
+      <span class="suburb-name">Bentleigh East</span>
+      <span class="suburb-median">$1.61M</span>
+      <span class="suburb-count">804 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/berwick">
+      <span class="suburb-name">Berwick</span>
+      <span class="suburb-median">$907k</span>
+      <span class="suburb-count">1,437 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/beveridge">
+      <span class="suburb-name">Beveridge</span>
+      <span class="suburb-median">$652k</span>
+      <span class="suburb-count">475 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/birregurra">
+      <span class="suburb-name">Birregurra</span>
+      <span class="suburb-median">$765k</span>
+      <span class="suburb-count">27 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bittern">
+      <span class="suburb-name">Bittern</span>
+      <span class="suburb-median">$850k</span>
+      <span class="suburb-count">91 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/black-hill">
+      <span class="suburb-name">Black Hill</span>
+      <span class="suburb-median">$581k</span>
+      <span class="suburb-count">87 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/black-rock">
+      <span class="suburb-name">Black Rock</span>
+      <span class="suburb-median">$2.32M</span>
+      <span class="suburb-count">137 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/blackburn">
+      <span class="suburb-name">Blackburn</span>
+      <span class="suburb-median">$788k</span>
+      <span class="suburb-count">426 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/blackburn-north">
+      <span class="suburb-name">Blackburn North</span>
+      <span class="suburb-median">$1.47M</span>
+      <span class="suburb-count">194 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/blackburn-south">
+      <span class="suburb-name">Blackburn South</span>
+      <span class="suburb-median">$1.36M</span>
+      <span class="suburb-count">219 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/blairgowrie">
+      <span class="suburb-name">Blairgowrie</span>
+      <span class="suburb-median">$1.57M</span>
+      <span class="suburb-count">191 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/blind-bight">
+      <span class="suburb-name">Blind Bight</span>
+      <span class="suburb-median">$735k</span>
+      <span class="suburb-count">33 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bonbeach">
+      <span class="suburb-name">Bonbeach</span>
+      <span class="suburb-median">$853k</span>
+      <span class="suburb-count">211 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bonnie-brook">
+      <span class="suburb-name">Bonnie Brook</span>
+      <span class="suburb-median">$696k</span>
+      <span class="suburb-count">200 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bonshaw">
+      <span class="suburb-name">Bonshaw</span>
+      <span class="suburb-median">$605k</span>
+      <span class="suburb-count">143 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/boort">
+      <span class="suburb-name">Boort</span>
+      <span class="suburb-median">$370k</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/boronia">
+      <span class="suburb-name">Boronia</span>
+      <span class="suburb-median">$720k</span>
+      <span class="suburb-count">648 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/botanic-ridge">
+      <span class="suburb-name">Botanic Ridge</span>
+      <span class="suburb-median">$958k</span>
+      <span class="suburb-count">268 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/box-hill">
+      <span class="suburb-name">Box Hill</span>
+      <span class="suburb-median">$570k</span>
+      <span class="suburb-count">640 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/box-hill-north">
+      <span class="suburb-name">Box Hill North</span>
+      <span class="suburb-median">$1.39M</span>
+      <span class="suburb-count">326 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/box-hill-south">
+      <span class="suburb-name">Box Hill South</span>
+      <span class="suburb-median">$1.59M</span>
+      <span class="suburb-count">233 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/braybrook">
+      <span class="suburb-name">Braybrook</span>
+      <span class="suburb-median">$790k</span>
+      <span class="suburb-count">290 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/breakwater">
+      <span class="suburb-name">Breakwater</span>
+      <span class="suburb-median">$570k</span>
+      <span class="suburb-count">47 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/briar-hill">
+      <span class="suburb-name">Briar Hill</span>
+      <span class="suburb-median">$996k</span>
+      <span class="suburb-count">89 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bright">
+      <span class="suburb-name">Bright</span>
+      <span class="suburb-median">$1.15M</span>
+      <span class="suburb-count">89 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/brighton">
+      <span class="suburb-name">Brighton</span>
+      <span class="suburb-median">$1.09M</span>
+      <span class="suburb-count">744 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/brighton-east">
+      <span class="suburb-name">Brighton East</span>
+      <span class="suburb-median">$2.17M</span>
+      <span class="suburb-count">418 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/broadford">
+      <span class="suburb-name">Broadford</span>
+      <span class="suburb-median">$600k</span>
+      <span class="suburb-count">140 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/broadmeadows">
+      <span class="suburb-name">Broadmeadows</span>
+      <span class="suburb-median">$670k</span>
+      <span class="suburb-count">397 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/brookfield">
+      <span class="suburb-name">Brookfield</span>
+      <span class="suburb-median">$626k</span>
+      <span class="suburb-count">353 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/brooklyn">
+      <span class="suburb-name">Brooklyn</span>
+      <span class="suburb-median">$680k</span>
+      <span class="suburb-count">87 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/brown-hill">
+      <span class="suburb-name">Brown Hill</span>
+      <span class="suburb-median">$684k</span>
+      <span class="suburb-count">146 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/brunswick">
+      <span class="suburb-name">Brunswick</span>
+      <span class="suburb-median">$610k</span>
+      <span class="suburb-count">885 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/brunswick-east">
+      <span class="suburb-name">Brunswick East</span>
+      <span class="suburb-median">$530k</span>
+      <span class="suburb-count">570 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/brunswick-west">
+      <span class="suburb-name">Brunswick West</span>
+      <span class="suburb-median">$589k</span>
+      <span class="suburb-count">494 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bulleen">
+      <span class="suburb-name">Bulleen</span>
+      <span class="suburb-median">$1.38M</span>
+      <span class="suburb-count">243 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bundoora">
+      <span class="suburb-name">Bundoora</span>
+      <span class="suburb-median">$950k</span>
+      <span class="suburb-count">727 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/buninyong">
+      <span class="suburb-name">Buninyong</span>
+      <span class="suburb-median">$725k</span>
+      <span class="suburb-count">81 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/bunyip">
+      <span class="suburb-name">Bunyip</span>
+      <span class="suburb-median">$815k</span>
+      <span class="suburb-count">46 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/burnside">
+      <span class="suburb-name">Burnside</span>
+      <span class="suburb-median">$780k</span>
+      <span class="suburb-count">116 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/burnside-heights">
+      <span class="suburb-name">Burnside Heights</span>
+      <span class="suburb-median">$770k</span>
+      <span class="suburb-count">139 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/burwood">
+      <span class="suburb-name">Burwood</span>
+      <span class="suburb-median">$972k</span>
+      <span class="suburb-count">363 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/burwood-east">
+      <span class="suburb-name">Burwood East</span>
+      <span class="suburb-median">$1.39M</span>
+      <span class="suburb-count">302 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cairnlea">
+      <span class="suburb-name">Cairnlea</span>
+      <span class="suburb-median">$982k</span>
+      <span class="suburb-count">157 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/california-gully">
+      <span class="suburb-name">California Gully</span>
+      <span class="suburb-median">$562k</span>
+      <span class="suburb-count">144 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/camberwell">
+      <span class="suburb-name">Camberwell</span>
+      <span class="suburb-median">$2.53M</span>
+      <span class="suburb-count">607 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/campbellfield">
+      <span class="suburb-name">Campbellfield</span>
+      <span class="suburb-median">$717k</span>
+      <span class="suburb-count">89 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/campbells-creek">
+      <span class="suburb-name">Campbells Creek</span>
+      <span class="suburb-median">$675k</span>
+      <span class="suburb-count">66 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/camperdown">
+      <span class="suburb-name">Camperdown</span>
+      <span class="suburb-median">$536k</span>
+      <span class="suburb-count">92 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/canadian">
+      <span class="suburb-name">Canadian</span>
+      <span class="suburb-median">$594k</span>
+      <span class="suburb-count">210 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/canterbury">
+      <span class="suburb-name">Canterbury</span>
+      <span class="suburb-median">$3M</span>
+      <span class="suburb-count">200 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cape-paterson">
+      <span class="suburb-name">Cape Paterson</span>
+      <span class="suburb-median">$865k</span>
+      <span class="suburb-count">59 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cape-schanck">
+      <span class="suburb-name">Cape Schanck</span>
+      <span class="suburb-median">$882k</span>
+      <span class="suburb-count">24 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/capel-sound">
+      <span class="suburb-name">Capel Sound</span>
+      <span class="suburb-median">$747k</span>
+      <span class="suburb-count">208 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cardigan">
+      <span class="suburb-name">Cardigan</span>
+      <span class="suburb-median">$1.11M</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/carisbrook">
+      <span class="suburb-name">Carisbrook</span>
+      <span class="suburb-median">$465k</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/carlton">
+      <span class="suburb-name">Carlton</span>
+      <span class="suburb-median">$360k</span>
+      <span class="suburb-count">617 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/carlton-north">
+      <span class="suburb-name">Carlton North</span>
+      <span class="suburb-median">$1.8M</span>
+      <span class="suburb-count">177 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/carnegie">
+      <span class="suburb-name">Carnegie</span>
+      <span class="suburb-median">$630k</span>
+      <span class="suburb-count">612 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/caroline-springs">
+      <span class="suburb-name">Caroline Springs</span>
+      <span class="suburb-median">$835k</span>
+      <span class="suburb-count">558 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/carrum">
+      <span class="suburb-name">Carrum</span>
+      <span class="suburb-median">$992k</span>
+      <span class="suburb-count">140 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/carrum-downs">
+      <span class="suburb-name">Carrum Downs</span>
+      <span class="suburb-median">$845k</span>
+      <span class="suburb-count">682 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/casterton">
+      <span class="suburb-name">Casterton</span>
+      <span class="suburb-median">$325k</span>
+      <span class="suburb-count">56 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/castlemaine">
+      <span class="suburb-name">Castlemaine</span>
+      <span class="suburb-median">$730k</span>
+      <span class="suburb-count">217 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/caulfield">
+      <span class="suburb-name">Caulfield</span>
+      <span class="suburb-median">$738k</span>
+      <span class="suburb-count">138 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/caulfield-east">
+      <span class="suburb-name">Caulfield East</span>
+      <span class="suburb-median">$300k</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/caulfield-north">
+      <span class="suburb-name">Caulfield North</span>
+      <span class="suburb-median">$665k</span>
+      <span class="suburb-count">433 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/caulfield-south">
+      <span class="suburb-name">Caulfield South</span>
+      <span class="suburb-median">$1.19M</span>
+      <span class="suburb-count">332 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/chadstone">
+      <span class="suburb-name">Chadstone</span>
+      <span class="suburb-median">$894k</span>
+      <span class="suburb-count">227 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/charlemont">
+      <span class="suburb-name">Charlemont</span>
+      <span class="suburb-median">$630k</span>
+      <span class="suburb-count">242 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/charlton">
+      <span class="suburb-name">Charlton</span>
+      <span class="suburb-median">$320k</span>
+      <span class="suburb-count">34 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/chelsea">
+      <span class="suburb-name">Chelsea</span>
+      <span class="suburb-median">$803k</span>
+      <span class="suburb-count">279 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/chelsea-heights">
+      <span class="suburb-name">Chelsea Heights</span>
+      <span class="suburb-median">$990k</span>
+      <span class="suburb-count">102 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cheltenham">
+      <span class="suburb-name">Cheltenham</span>
+      <span class="suburb-median">$722k</span>
+      <span class="suburb-count">503 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cheltenham-east">
+      <span class="suburb-name">Cheltenham East</span>
+      <span class="suburb-median">$1.29M</span>
+      <span class="suburb-count">131 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cheltenham-north">
+      <span class="suburb-name">Cheltenham North</span>
+      <span class="suburb-median">$1.19M</span>
+      <span class="suburb-count">108 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/chewton">
+      <span class="suburb-name">Chewton</span>
+      <span class="suburb-median">$852k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/chiltern">
+      <span class="suburb-name">Chiltern</span>
+      <span class="suburb-median">$525k</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/chirnside-park">
+      <span class="suburb-name">Chirnside Park</span>
+      <span class="suburb-median">$980k</span>
+      <span class="suburb-count">316 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/churchill">
+      <span class="suburb-name">Churchill</span>
+      <span class="suburb-median">$448k</span>
+      <span class="suburb-count">169 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/clarinda">
+      <span class="suburb-name">Clarinda</span>
+      <span class="suburb-median">$1.1M</span>
+      <span class="suburb-count">99 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/clayton">
+      <span class="suburb-name">Clayton</span>
+      <span class="suburb-median">$686k</span>
+      <span class="suburb-count">388 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/clayton-north">
+      <span class="suburb-name">Clayton North</span>
+      <span class="suburb-median">$703k</span>
+      <span class="suburb-count">82 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/clayton-south">
+      <span class="suburb-name">Clayton South</span>
+      <span class="suburb-median">$811k</span>
+      <span class="suburb-count">139 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/clifton-hill">
+      <span class="suburb-name">Clifton Hill</span>
+      <span class="suburb-median">$1.6M</span>
+      <span class="suburb-count">159 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/clifton-springs">
+      <span class="suburb-name">Clifton Springs</span>
+      <span class="suburb-median">$710k</span>
+      <span class="suburb-count">265 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/clunes">
+      <span class="suburb-name">Clunes</span>
+      <span class="suburb-median">$540k</span>
+      <span class="suburb-count">39 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/clyde">
+      <span class="suburb-name">Clyde</span>
+      <span class="suburb-median">$725k</span>
+      <span class="suburb-count">858 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/clyde-north">
+      <span class="suburb-name">Clyde North</span>
+      <span class="suburb-median">$757k</span>
+      <span class="suburb-count">1,682 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cobblebank">
+      <span class="suburb-name">Cobblebank</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">179 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cobden">
+      <span class="suburb-name">Cobden</span>
+      <span class="suburb-median">$455k</span>
+      <span class="suburb-count">36 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cobram">
+      <span class="suburb-name">Cobram</span>
+      <span class="suburb-median">$481k</span>
+      <span class="suburb-count">140 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/coburg">
+      <span class="suburb-name">Coburg</span>
+      <span class="suburb-median">$1.27M</span>
+      <span class="suburb-count">709 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/coburg-east">
+      <span class="suburb-name">Coburg East</span>
+      <span class="suburb-median">$1.18M</span>
+      <span class="suburb-count">165 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/coburg-north">
+      <span class="suburb-name">Coburg North</span>
+      <span class="suburb-median">$1.15M</span>
+      <span class="suburb-count">149 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cockatoo">
+      <span class="suburb-name">Cockatoo</span>
+      <span class="suburb-median">$802k</span>
+      <span class="suburb-count">92 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cohuna">
+      <span class="suburb-name">Cohuna</span>
+      <span class="suburb-median">$418k</span>
+      <span class="suburb-count">76 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/colac">
+      <span class="suburb-name">Colac</span>
+      <span class="suburb-median">$520k</span>
+      <span class="suburb-count">297 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/coldstream">
+      <span class="suburb-name">Coldstream</span>
+      <span class="suburb-median">$895k</span>
+      <span class="suburb-count">37 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/coleraine">
+      <span class="suburb-name">Coleraine</span>
+      <span class="suburb-median">$351k</span>
+      <span class="suburb-count">42 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/collingwood">
+      <span class="suburb-name">Collingwood</span>
+      <span class="suburb-median">$615k</span>
+      <span class="suburb-count">328 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/coolaroo">
+      <span class="suburb-name">Coolaroo</span>
+      <span class="suburb-median">$662k</span>
+      <span class="suburb-count">60 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/coonans-hill">
+      <span class="suburb-name">Coonans Hill</span>
+      <span class="suburb-median">$1.26M</span>
+      <span class="suburb-count">62 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/corinella">
+      <span class="suburb-name">Corinella</span>
+      <span class="suburb-median">$686k</span>
+      <span class="suburb-count">78 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/corio">
+      <span class="suburb-name">Corio</span>
+      <span class="suburb-median">$595k</span>
+      <span class="suburb-count">604 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/coronet-bay">
+      <span class="suburb-name">Coronet Bay</span>
+      <span class="suburb-median">$580k</span>
+      <span class="suburb-count">91 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/corryong">
+      <span class="suburb-name">Corryong</span>
+      <span class="suburb-median">$362k</span>
+      <span class="suburb-count">34 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cowes">
+      <span class="suburb-name">Cowes</span>
+      <span class="suburb-median">$680k</span>
+      <span class="suburb-count">84 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cowes-west">
+      <span class="suburb-name">Cowes West</span>
+      <span class="suburb-median">$662k</span>
+      <span class="suburb-count">256 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/craigieburn">
+      <span class="suburb-name">Craigieburn</span>
+      <span class="suburb-median">$730k</span>
+      <span class="suburb-count">1,983 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cranbourne">
+      <span class="suburb-name">Cranbourne</span>
+      <span class="suburb-median">$714k</span>
+      <span class="suburb-count">775 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cranbourne-east">
+      <span class="suburb-name">Cranbourne East</span>
+      <span class="suburb-median">$755k</span>
+      <span class="suburb-count">700 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cranbourne-north">
+      <span class="suburb-name">Cranbourne North</span>
+      <span class="suburb-median">$812k</span>
+      <span class="suburb-count">568 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cranbourne-south">
+      <span class="suburb-name">Cranbourne South</span>
+      <span class="suburb-median">$932k</span>
+      <span class="suburb-count">126 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cranbourne-west">
+      <span class="suburb-name">Cranbourne West</span>
+      <span class="suburb-median">$740k</span>
+      <span class="suburb-count">593 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/cremorne">
+      <span class="suburb-name">Cremorne</span>
+      <span class="suburb-median">$682k</span>
+      <span class="suburb-count">99 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/creswick">
+      <span class="suburb-name">Creswick</span>
+      <span class="suburb-median">$595k</span>
+      <span class="suburb-count">111 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/crib-point">
+      <span class="suburb-name">Crib Point</span>
+      <span class="suburb-median">$731k</span>
+      <span class="suburb-count">103 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/croydon">
+      <span class="suburb-name">Croydon</span>
+      <span class="suburb-median">$765k</span>
+      <span class="suburb-count">893 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/croydon-hills">
+      <span class="suburb-name">Croydon Hills</span>
+      <span class="suburb-median">$1.18M</span>
+      <span class="suburb-count">84 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/croydon-north">
+      <span class="suburb-name">Croydon North</span>
+      <span class="suburb-median">$1.21M</span>
+      <span class="suburb-count">190 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/croydon-south">
+      <span class="suburb-name">Croydon South</span>
+      <span class="suburb-median">$1.02M</span>
+      <span class="suburb-count">130 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/curlewis">
+      <span class="suburb-name">Curlewis</span>
+      <span class="suburb-median">$728k</span>
+      <span class="suburb-count">160 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/dallas">
+      <span class="suburb-name">Dallas</span>
+      <span class="suburb-median">$640k</span>
+      <span class="suburb-count">155 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/dalyston">
+      <span class="suburb-name">Dalyston</span>
+      <span class="suburb-median">$595k</span>
+      <span class="suburb-count">50 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/dandenong">
+      <span class="suburb-name">Dandenong</span>
+      <span class="suburb-median">$468k</span>
+      <span class="suburb-count">843 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/dandenong-north">
+      <span class="suburb-name">Dandenong North</span>
+      <span class="suburb-median">$830k</span>
+      <span class="suburb-count">475 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/darley">
+      <span class="suburb-name">Darley</span>
+      <span class="suburb-median">$682k</span>
+      <span class="suburb-count">323 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/daylesford">
+      <span class="suburb-name">Daylesford</span>
+      <span class="suburb-median">$792k</span>
+      <span class="suburb-count">105 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/deanside">
+      <span class="suburb-name">Deanside</span>
+      <span class="suburb-median">$700k</span>
+      <span class="suburb-count">455 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/deepdene">
+      <span class="suburb-name">Deepdene</span>
+      <span class="suburb-median">$2.87M</span>
+      <span class="suburb-count">62 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/deer-park">
+      <span class="suburb-name">Deer Park</span>
+      <span class="suburb-median">$711k</span>
+      <span class="suburb-count">406 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/delacombe">
+      <span class="suburb-name">Delacombe</span>
+      <span class="suburb-median">$623k</span>
+      <span class="suburb-count">184 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/delahey">
+      <span class="suburb-name">Delahey</span>
+      <span class="suburb-median">$750k</span>
+      <span class="suburb-count">116 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/dennington">
+      <span class="suburb-name">Dennington</span>
+      <span class="suburb-median">$645k</span>
+      <span class="suburb-count">58 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/derrimut">
+      <span class="suburb-name">Derrimut</span>
+      <span class="suburb-median">$825k</span>
+      <span class="suburb-count">107 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/diamond-creek">
+      <span class="suburb-name">Diamond Creek</span>
+      <span class="suburb-median">$1.06M</span>
+      <span class="suburb-count">263 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/diggers-rest">
+      <span class="suburb-name">Diggers Rest</span>
+      <span class="suburb-median">$680k</span>
+      <span class="suburb-count">310 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/dimboola">
+      <span class="suburb-name">Dimboola</span>
+      <span class="suburb-median">$306k</span>
+      <span class="suburb-count">47 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/dingley-village">
+      <span class="suburb-name">Dingley Village</span>
+      <span class="suburb-median">$1.22M</span>
+      <span class="suburb-count">218 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/docklands">
+      <span class="suburb-name">Docklands</span>
+      <span class="suburb-median">$560k</span>
+      <span class="suburb-count">572 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/donald">
+      <span class="suburb-name">Donald</span>
+      <span class="suburb-median">$345k</span>
+      <span class="suburb-count">36 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/doncaster">
+      <span class="suburb-name">Doncaster</span>
+      <span class="suburb-median">$680k</span>
+      <span class="suburb-count">817 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/doncaster-east">
+      <span class="suburb-name">Doncaster East</span>
+      <span class="suburb-median">$1.66M</span>
+      <span class="suburb-count">798 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/donnybrook">
+      <span class="suburb-name">Donnybrook</span>
+      <span class="suburb-median">$660k</span>
+      <span class="suburb-count">855 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/donvale">
+      <span class="suburb-name">Donvale</span>
+      <span class="suburb-median">$1.57M</span>
+      <span class="suburb-count">213 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/doreen">
+      <span class="suburb-name">Doreen</span>
+      <span class="suburb-median">$834k</span>
+      <span class="suburb-count">777 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/doveton">
+      <span class="suburb-name">Doveton</span>
+      <span class="suburb-median">$668k</span>
+      <span class="suburb-count">386 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/dromana">
+      <span class="suburb-name">Dromana</span>
+      <span class="suburb-median">$1.01M</span>
+      <span class="suburb-count">291 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/drouin">
+      <span class="suburb-name">Drouin</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">672 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/drysdale">
+      <span class="suburb-name">Drysdale</span>
+      <span class="suburb-median">$696k</span>
+      <span class="suburb-count">137 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eagle-point">
+      <span class="suburb-name">Eagle Point</span>
+      <span class="suburb-median">$569k</span>
+      <span class="suburb-count">31 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eaglehawk">
+      <span class="suburb-name">Eaglehawk</span>
+      <span class="suburb-median">$615k</span>
+      <span class="suburb-count">201 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eaglemont">
+      <span class="suburb-name">Eaglemont</span>
+      <span class="suburb-median">$2.58M</span>
+      <span class="suburb-count">93 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/east-bairnsdale">
+      <span class="suburb-name">East Bairnsdale</span>
+      <span class="suburb-median">$425k</span>
+      <span class="suburb-count">49 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/east-bendigo">
+      <span class="suburb-name">East Bendigo</span>
+      <span class="suburb-median">$615k</span>
+      <span class="suburb-count">97 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/east-geelong">
+      <span class="suburb-name">East Geelong</span>
+      <span class="suburb-median">$902k</span>
+      <span class="suburb-count">134 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/east-melbourne">
+      <span class="suburb-name">East Melbourne</span>
+      <span class="suburb-median">$686k</span>
+      <span class="suburb-count">136 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/east-warburton">
+      <span class="suburb-name">East Warburton</span>
+      <span class="suburb-median">$640k</span>
+      <span class="suburb-count">31 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eastwood">
+      <span class="suburb-name">Eastwood</span>
+      <span class="suburb-median">$689k</span>
+      <span class="suburb-count">81 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/echuca">
+      <span class="suburb-name">Echuca</span>
+      <span class="suburb-median">$600k</span>
+      <span class="suburb-count">443 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/edenhope">
+      <span class="suburb-name">Edenhope</span>
+      <span class="suburb-median">$310k</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/edithvale">
+      <span class="suburb-name">Edithvale</span>
+      <span class="suburb-median">$867k</span>
+      <span class="suburb-count">173 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eildon">
+      <span class="suburb-name">Eildon</span>
+      <span class="suburb-median">$318k</span>
+      <span class="suburb-count">39 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/elliminyt">
+      <span class="suburb-name">Elliminyt</span>
+      <span class="suburb-median">$675k</span>
+      <span class="suburb-count">69 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/elmore">
+      <span class="suburb-name">Elmore</span>
+      <span class="suburb-median">$510k</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/elsternwick">
+      <span class="suburb-name">Elsternwick</span>
+      <span class="suburb-median">$642k</span>
+      <span class="suburb-count">325 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eltham">
+      <span class="suburb-name">Eltham</span>
+      <span class="suburb-median">$1.27M</span>
+      <span class="suburb-count">370 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eltham-north">
+      <span class="suburb-name">Eltham North</span>
+      <span class="suburb-median">$1.22M</span>
+      <span class="suburb-count">126 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/elwood">
+      <span class="suburb-name">Elwood</span>
+      <span class="suburb-median">$620k</span>
+      <span class="suburb-count">650 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/emerald">
+      <span class="suburb-name">Emerald</span>
+      <span class="suburb-median">$890k</span>
+      <span class="suburb-count">118 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/endeavour-hills">
+      <span class="suburb-name">Endeavour Hills</span>
+      <span class="suburb-median">$900k</span>
+      <span class="suburb-count">479 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/epping">
+      <span class="suburb-name">Epping</span>
+      <span class="suburb-median">$760k</span>
+      <span class="suburb-count">843 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/epsom">
+      <span class="suburb-name">Epsom</span>
+      <span class="suburb-median">$665k</span>
+      <span class="suburb-count">209 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/essendon">
+      <span class="suburb-name">Essendon</span>
+      <span class="suburb-median">$585k</span>
+      <span class="suburb-count">705 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/essendon-north">
+      <span class="suburb-name">Essendon North</span>
+      <span class="suburb-median">$499k</span>
+      <span class="suburb-count">134 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/essendon-west">
+      <span class="suburb-name">Essendon West</span>
+      <span class="suburb-median">$1.35M</span>
+      <span class="suburb-count">42 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eumemmerring">
+      <span class="suburb-name">Eumemmerring</span>
+      <span class="suburb-median">$606k</span>
+      <span class="suburb-count">71 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eureka">
+      <span class="suburb-name">Eureka</span>
+      <span class="suburb-median">$534k</span>
+      <span class="suburb-count">26 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/euroa">
+      <span class="suburb-name">Euroa</span>
+      <span class="suburb-median">$545k</span>
+      <span class="suburb-count">91 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/eynesbury">
+      <span class="suburb-name">Eynesbury</span>
+      <span class="suburb-median">$730k</span>
+      <span class="suburb-count">147 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/fairfield">
+      <span class="suburb-name">Fairfield</span>
+      <span class="suburb-median">$493k</span>
+      <span class="suburb-count">209 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/fawkner">
+      <span class="suburb-name">Fawkner</span>
+      <span class="suburb-median">$874k</span>
+      <span class="suburb-count">454 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ferntree-gully">
+      <span class="suburb-name">Ferntree Gully</span>
+      <span class="suburb-median">$965k</span>
+      <span class="suburb-count">664 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ferny-creek">
+      <span class="suburb-name">Ferny Creek</span>
+      <span class="suburb-median">$1.04M</span>
+      <span class="suburb-count">27 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/fishermans-bend">
+      <span class="suburb-name">Fishermans Bend</span>
+      <span class="suburb-median">$720k</span>
+      <span class="suburb-count">94 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/fitzroy">
+      <span class="suburb-name">Fitzroy</span>
+      <span class="suburb-median">$867k</span>
+      <span class="suburb-count">295 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/fitzroy-north">
+      <span class="suburb-name">Fitzroy North</span>
+      <span class="suburb-median">$695k</span>
+      <span class="suburb-count">366 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/flemington">
+      <span class="suburb-name">Flemington</span>
+      <span class="suburb-median">$567k</span>
+      <span class="suburb-count">334 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/flinders">
+      <span class="suburb-name">Flinders</span>
+      <span class="suburb-median">$1.9M</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/flora-hill">
+      <span class="suburb-name">Flora Hill</span>
+      <span class="suburb-median">$592k</span>
+      <span class="suburb-count">193 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/footscray">
+      <span class="suburb-name">Footscray</span>
+      <span class="suburb-median">$480k</span>
+      <span class="suburb-count">753 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/forest-hill">
+      <span class="suburb-name">Forest Hill</span>
+      <span class="suburb-median">$1.27M</span>
+      <span class="suburb-count">280 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/foster">
+      <span class="suburb-name">Foster</span>
+      <span class="suburb-median">$428k</span>
+      <span class="suburb-count">42 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/frankston">
+      <span class="suburb-name">Frankston</span>
+      <span class="suburb-median">$880k</span>
+      <span class="suburb-count">1,491 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/frankston-north">
+      <span class="suburb-name">Frankston North</span>
+      <span class="suburb-median">$740k</span>
+      <span class="suburb-count">208 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/frankston-south">
+      <span class="suburb-name">Frankston South</span>
+      <span class="suburb-median">$1.2M</span>
+      <span class="suburb-count">529 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/fraser-rise">
+      <span class="suburb-name">Fraser Rise</span>
+      <span class="suburb-median">$700k</span>
+      <span class="suburb-count">740 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/fyansford">
+      <span class="suburb-name">Fyansford</span>
+      <span class="suburb-median">$895k</span>
+      <span class="suburb-count">50 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/garden-city">
+      <span class="suburb-name">Garden City</span>
+      <span class="suburb-median">$2.22M</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/gardenvale">
+      <span class="suburb-name">Gardenvale</span>
+      <span class="suburb-median">$335k</span>
+      <span class="suburb-count">34 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/garfield">
+      <span class="suburb-name">Garfield</span>
+      <span class="suburb-median">$850k</span>
+      <span class="suburb-count">44 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/geelong">
+      <span class="suburb-name">Geelong</span>
+      <span class="suburb-median">$670k</span>
+      <span class="suburb-count">197 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/geelong-west">
+      <span class="suburb-name">Geelong West</span>
+      <span class="suburb-median">$840k</span>
+      <span class="suburb-count">242 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/gembrook">
+      <span class="suburb-name">Gembrook</span>
+      <span class="suburb-median">$876k</span>
+      <span class="suburb-count">31 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/gisborne">
+      <span class="suburb-name">Gisborne</span>
+      <span class="suburb-median">$945k</span>
+      <span class="suburb-count">336 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/gladstone-park">
+      <span class="suburb-name">Gladstone Park</span>
+      <span class="suburb-median">$850k</span>
+      <span class="suburb-count">211 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/glen-huntly">
+      <span class="suburb-name">Glen Huntly</span>
+      <span class="suburb-median">$660k</span>
+      <span class="suburb-count">172 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/glen-iris">
+      <span class="suburb-name">Glen Iris</span>
+      <span class="suburb-median">$740k</span>
+      <span class="suburb-count">739 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/glen-waverley">
+      <span class="suburb-name">Glen Waverley</span>
+      <span class="suburb-median">$1.8M</span>
+      <span class="suburb-count">931 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/glenrowan">
+      <span class="suburb-name">Glenrowan</span>
+      <span class="suburb-median">$420k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/glenroy">
+      <span class="suburb-name">Glenroy</span>
+      <span class="suburb-median">$630k</span>
+      <span class="suburb-count">872 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/golden-beach">
+      <span class="suburb-name">Golden Beach</span>
+      <span class="suburb-median">$390k</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/golden-point-ballarat">
+      <span class="suburb-name">Golden Point (ballarat)</span>
+      <span class="suburb-median">$549k</span>
+      <span class="suburb-count">137 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/golden-square">
+      <span class="suburb-name">Golden Square</span>
+      <span class="suburb-median">$610k</span>
+      <span class="suburb-count">414 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/gordon">
+      <span class="suburb-name">Gordon</span>
+      <span class="suburb-median">$850k</span>
+      <span class="suburb-count">27 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/gowanbrae">
+      <span class="suburb-name">Gowanbrae</span>
+      <span class="suburb-median">$960k</span>
+      <span class="suburb-count">50 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/grantville">
+      <span class="suburb-name">Grantville</span>
+      <span class="suburb-median">$630k</span>
+      <span class="suburb-count">44 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/green-lake">
+      <span class="suburb-name">Green Lake</span>
+      <span class="suburb-median">$517k</span>
+      <span class="suburb-count">36 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/greensborough">
+      <span class="suburb-name">Greensborough</span>
+      <span class="suburb-median">$997k</span>
+      <span class="suburb-count">477 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/greenvale">
+      <span class="suburb-name">Greenvale</span>
+      <span class="suburb-median">$906k</span>
+      <span class="suburb-count">666 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/grovedale">
+      <span class="suburb-name">Grovedale</span>
+      <span class="suburb-median">$740k</span>
+      <span class="suburb-count">474 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hadfield">
+      <span class="suburb-name">Hadfield</span>
+      <span class="suburb-median">$925k</span>
+      <span class="suburb-count">268 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hallam">
+      <span class="suburb-name">Hallam</span>
+      <span class="suburb-median">$830k</span>
+      <span class="suburb-count">239 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hamilton">
+      <span class="suburb-name">Hamilton</span>
+      <span class="suburb-median">$445k</span>
+      <span class="suburb-count">331 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hamlyn-heights">
+      <span class="suburb-name">Hamlyn Heights</span>
+      <span class="suburb-median">$760k</span>
+      <span class="suburb-count">242 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hampton">
+      <span class="suburb-name">Hampton</span>
+      <span class="suburb-median">$1.21M</span>
+      <span class="suburb-count">422 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hampton-east">
+      <span class="suburb-name">Hampton East</span>
+      <span class="suburb-median">$1.54M</span>
+      <span class="suburb-count">131 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hampton-park">
+      <span class="suburb-name">Hampton Park</span>
+      <span class="suburb-median">$735k</span>
+      <span class="suburb-count">668 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/harcourt">
+      <span class="suburb-name">Harcourt</span>
+      <span class="suburb-median">$730k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/harkness">
+      <span class="suburb-name">Harkness</span>
+      <span class="suburb-median">$637k</span>
+      <span class="suburb-count">464 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hastings">
+      <span class="suburb-name">Hastings</span>
+      <span class="suburb-median">$740k</span>
+      <span class="suburb-count">230 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hastings-west">
+      <span class="suburb-name">Hastings West</span>
+      <span class="suburb-median">$658k</span>
+      <span class="suburb-count">44 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hawthorn">
+      <span class="suburb-name">Hawthorn</span>
+      <span class="suburb-median">$581k</span>
+      <span class="suburb-count">772 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hawthorn-east">
+      <span class="suburb-name">Hawthorn East</span>
+      <span class="suburb-median">$640k</span>
+      <span class="suburb-count">571 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/healesville">
+      <span class="suburb-name">Healesville</span>
+      <span class="suburb-median">$855k</span>
+      <span class="suburb-count">151 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/heathcote">
+      <span class="suburb-name">Heathcote</span>
+      <span class="suburb-median">$550k</span>
+      <span class="suburb-count">73 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/heatherton">
+      <span class="suburb-name">Heatherton</span>
+      <span class="suburb-median">$1.15M</span>
+      <span class="suburb-count">40 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/heathmont">
+      <span class="suburb-name">Heathmont</span>
+      <span class="suburb-median">$1.16M</span>
+      <span class="suburb-count">233 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/heidelberg">
+      <span class="suburb-name">Heidelberg</span>
+      <span class="suburb-median">$684k</span>
+      <span class="suburb-count">210 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/heidelberg-heights">
+      <span class="suburb-name">Heidelberg Heights</span>
+      <span class="suburb-median">$760k</span>
+      <span class="suburb-count">277 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/heidelberg-west">
+      <span class="suburb-name">Heidelberg West</span>
+      <span class="suburb-median">$672k</span>
+      <span class="suburb-count">250 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/herne-hill">
+      <span class="suburb-name">Herne Hill</span>
+      <span class="suburb-median">$800k</span>
+      <span class="suburb-count">160 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/heyfield">
+      <span class="suburb-name">Heyfield</span>
+      <span class="suburb-median">$358k</span>
+      <span class="suburb-count">58 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/heywood">
+      <span class="suburb-name">Heywood</span>
+      <span class="suburb-median">$418k</span>
+      <span class="suburb-count">44 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/highett">
+      <span class="suburb-name">Highett</span>
+      <span class="suburb-median">$702k</span>
+      <span class="suburb-count">450 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/highton">
+      <span class="suburb-name">Highton</span>
+      <span class="suburb-median">$886k</span>
+      <span class="suburb-count">587 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hillside-melton">
+      <span class="suburb-name">Hillside (melton)</span>
+      <span class="suburb-median">$848k</span>
+      <span class="suburb-count">282 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hoppers-crossing">
+      <span class="suburb-name">Hoppers Crossing</span>
+      <span class="suburb-median">$700k</span>
+      <span class="suburb-count">1,143 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/horsham">
+      <span class="suburb-name">Horsham</span>
+      <span class="suburb-median">$480k</span>
+      <span class="suburb-count">554 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hughesdale">
+      <span class="suburb-name">Hughesdale</span>
+      <span class="suburb-median">$762k</span>
+      <span class="suburb-count">180 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/huntingdale">
+      <span class="suburb-name">Huntingdale</span>
+      <span class="suburb-median">$1.28M</span>
+      <span class="suburb-count">48 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/huntly">
+      <span class="suburb-name">Huntly</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">201 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/hurstbridge">
+      <span class="suburb-name">Hurstbridge</span>
+      <span class="suburb-median">$970k</span>
+      <span class="suburb-count">62 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/indented-head">
+      <span class="suburb-name">Indented Head</span>
+      <span class="suburb-median">$601k</span>
+      <span class="suburb-count">47 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/inglewood">
+      <span class="suburb-name">Inglewood</span>
+      <span class="suburb-median">$378k</span>
+      <span class="suburb-count">31 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/inverloch">
+      <span class="suburb-name">Inverloch</span>
+      <span class="suburb-median">$835k</span>
+      <span class="suburb-count">270 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/invermay-park">
+      <span class="suburb-name">Invermay Park</span>
+      <span class="suburb-median">$625k</span>
+      <span class="suburb-count">47 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ironbark">
+      <span class="suburb-name">Ironbark</span>
+      <span class="suburb-median">$525k</span>
+      <span class="suburb-count">49 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/irymple">
+      <span class="suburb-name">Irymple</span>
+      <span class="suburb-median">$635k</span>
+      <span class="suburb-count">153 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ivanhoe">
+      <span class="suburb-name">Ivanhoe</span>
+      <span class="suburb-median">$725k</span>
+      <span class="suburb-count">422 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ivanhoe-east">
+      <span class="suburb-name">Ivanhoe East</span>
+      <span class="suburb-median">$881k</span>
+      <span class="suburb-count">108 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/jacana">
+      <span class="suburb-name">Jacana</span>
+      <span class="suburb-median">$660k</span>
+      <span class="suburb-count">73 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/jackass-flat">
+      <span class="suburb-name">Jackass Flat</span>
+      <span class="suburb-median">$645k</span>
+      <span class="suburb-count">84 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/jamieson">
+      <span class="suburb-name">Jamieson</span>
+      <span class="suburb-median">$590k</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/jan-juc">
+      <span class="suburb-name">Jan Juc</span>
+      <span class="suburb-median">$1.5M</span>
+      <span class="suburb-count">97 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/jeeralang-north">
+      <span class="suburb-name">Jeeralang North</span>
+      <span class="suburb-median">$410k</span>
+      <span class="suburb-count">65 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/jeparit">
+      <span class="suburb-name">Jeparit</span>
+      <span class="suburb-median">$212k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/jolimont">
+      <span class="suburb-name">Jolimont</span>
+      <span class="suburb-median">$1.03M</span>
+      <span class="suburb-count">39 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/junction-village">
+      <span class="suburb-name">Junction Village</span>
+      <span class="suburb-median">$662k</span>
+      <span class="suburb-count">73 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/junortoun">
+      <span class="suburb-name">Junortoun</span>
+      <span class="suburb-median">$857k</span>
+      <span class="suburb-count">56 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kalimna">
+      <span class="suburb-name">Kalimna</span>
+      <span class="suburb-median">$540k</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kalkallo">
+      <span class="suburb-name">Kalkallo</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">636 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kallista">
+      <span class="suburb-name">Kallista</span>
+      <span class="suburb-median">$820k</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kalorama">
+      <span class="suburb-name">Kalorama</span>
+      <span class="suburb-median">$857k</span>
+      <span class="suburb-count">31 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kangaroo-flat">
+      <span class="suburb-name">Kangaroo Flat</span>
+      <span class="suburb-median">$602k</span>
+      <span class="suburb-count">431 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kangaroo-ground-south">
+      <span class="suburb-name">Kangaroo Ground South</span>
+      <span class="suburb-median">$1.7M</span>
+      <span class="suburb-count">26 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kaniva">
+      <span class="suburb-name">Kaniva</span>
+      <span class="suburb-median">$190k</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kealba">
+      <span class="suburb-name">Kealba</span>
+      <span class="suburb-median">$752k</span>
+      <span class="suburb-count">75 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/keilor">
+      <span class="suburb-name">Keilor</span>
+      <span class="suburb-median">$1.2M</span>
+      <span class="suburb-count">110 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/keilor-downs">
+      <span class="suburb-name">Keilor Downs</span>
+      <span class="suburb-median">$891k</span>
+      <span class="suburb-count">177 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/keilor-east">
+      <span class="suburb-name">Keilor East</span>
+      <span class="suburb-median">$1.1M</span>
+      <span class="suburb-count">425 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/keilor-lodge">
+      <span class="suburb-name">Keilor Lodge</span>
+      <span class="suburb-median">$1.09M</span>
+      <span class="suburb-count">31 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/keilor-park">
+      <span class="suburb-name">Keilor Park</span>
+      <span class="suburb-median">$922k</span>
+      <span class="suburb-count">55 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kennington">
+      <span class="suburb-name">Kennington</span>
+      <span class="suburb-median">$654k</span>
+      <span class="suburb-count">291 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kensington">
+      <span class="suburb-name">Kensington</span>
+      <span class="suburb-median">$458k</span>
+      <span class="suburb-count">348 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kerang">
+      <span class="suburb-name">Kerang</span>
+      <span class="suburb-median">$412k</span>
+      <span class="suburb-count">107 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kew">
+      <span class="suburb-name">Kew</span>
+      <span class="suburb-median">$846k</span>
+      <span class="suburb-count">719 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kew-north">
+      <span class="suburb-name">Kew North</span>
+      <span class="suburb-median">$2.45M</span>
+      <span class="suburb-count">130 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/keysborough">
+      <span class="suburb-name">Keysborough</span>
+      <span class="suburb-median">$1M</span>
+      <span class="suburb-count">558 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kialla">
+      <span class="suburb-name">Kialla</span>
+      <span class="suburb-median">$665k</span>
+      <span class="suburb-count">218 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/killara-wodonga">
+      <span class="suburb-name">Killara (wodonga)</span>
+      <span class="suburb-median">$740k</span>
+      <span class="suburb-count">47 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kilmore">
+      <span class="suburb-name">Kilmore</span>
+      <span class="suburb-median">$615k</span>
+      <span class="suburb-count">341 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kilsyth">
+      <span class="suburb-name">Kilsyth</span>
+      <span class="suburb-median">$870k</span>
+      <span class="suburb-count">349 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kilsyth-south">
+      <span class="suburb-name">Kilsyth South</span>
+      <span class="suburb-median">$961k</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kinglake">
+      <span class="suburb-name">Kinglake</span>
+      <span class="suburb-median">$672k</span>
+      <span class="suburb-count">47 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kings-park">
+      <span class="suburb-name">Kings Park</span>
+      <span class="suburb-median">$669k</span>
+      <span class="suburb-count">142 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kingsbury">
+      <span class="suburb-name">Kingsbury</span>
+      <span class="suburb-median">$896k</span>
+      <span class="suburb-count">120 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kingsville">
+      <span class="suburb-name">Kingsville</span>
+      <span class="suburb-median">$415k</span>
+      <span class="suburb-count">145 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/knoxfield">
+      <span class="suburb-name">Knoxfield</span>
+      <span class="suburb-median">$1.07M</span>
+      <span class="suburb-count">169 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/koo-wee-rup">
+      <span class="suburb-name">Koo Wee Rup</span>
+      <span class="suburb-median">$720k</span>
+      <span class="suburb-count">111 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/koondrook">
+      <span class="suburb-name">Koondrook</span>
+      <span class="suburb-median">$508k</span>
+      <span class="suburb-count">31 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/koroit">
+      <span class="suburb-name">Koroit</span>
+      <span class="suburb-median">$660k</span>
+      <span class="suburb-count">49 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/korumburra">
+      <span class="suburb-name">Korumburra</span>
+      <span class="suburb-median">$610k</span>
+      <span class="suburb-count">163 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kurunjang">
+      <span class="suburb-name">Kurunjang</span>
+      <span class="suburb-median">$610k</span>
+      <span class="suburb-count">349 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kyabram">
+      <span class="suburb-name">Kyabram</span>
+      <span class="suburb-median">$485k</span>
+      <span class="suburb-count">186 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/kyneton">
+      <span class="suburb-name">Kyneton</span>
+      <span class="suburb-median">$810k</span>
+      <span class="suburb-count">188 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lake-boga">
+      <span class="suburb-name">Lake Boga</span>
+      <span class="suburb-median">$330k</span>
+      <span class="suburb-count">27 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lake-gardens">
+      <span class="suburb-name">Lake Gardens</span>
+      <span class="suburb-median">$710k</span>
+      <span class="suburb-count">50 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lake-tyers-beach">
+      <span class="suburb-name">Lake Tyers Beach</span>
+      <span class="suburb-median">$588k</span>
+      <span class="suburb-count">39 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lake-wendouree">
+      <span class="suburb-name">Lake Wendouree</span>
+      <span class="suburb-median">$1.25M</span>
+      <span class="suburb-count">103 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lakes-entrance">
+      <span class="suburb-name">Lakes Entrance</span>
+      <span class="suburb-median">$485k</span>
+      <span class="suburb-count">157 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lalor">
+      <span class="suburb-name">Lalor</span>
+      <span class="suburb-median">$788k</span>
+      <span class="suburb-count">588 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lancefield">
+      <span class="suburb-name">Lancefield</span>
+      <span class="suburb-median">$792k</span>
+      <span class="suburb-count">56 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lang-lang">
+      <span class="suburb-name">Lang Lang</span>
+      <span class="suburb-median">$755k</span>
+      <span class="suburb-count">111 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/langwarrin">
+      <span class="suburb-name">Langwarrin</span>
+      <span class="suburb-median">$912k</span>
+      <span class="suburb-count">635 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lara">
+      <span class="suburb-name">Lara</span>
+      <span class="suburb-median">$715k</span>
+      <span class="suburb-count">380 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lara-lake">
+      <span class="suburb-name">Lara Lake</span>
+      <span class="suburb-median">$713k</span>
+      <span class="suburb-count">359 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/launching-place">
+      <span class="suburb-name">Launching Place</span>
+      <span class="suburb-median">$798k</span>
+      <span class="suburb-count">60 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/laverton">
+      <span class="suburb-name">Laverton</span>
+      <span class="suburb-median">$640k</span>
+      <span class="suburb-count">305 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/laverton-south">
+      <span class="suburb-name">Laverton South</span>
+      <span class="suburb-median">$815k</span>
+      <span class="suburb-count">263 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/leneva">
+      <span class="suburb-name">Leneva</span>
+      <span class="suburb-median">$712k</span>
+      <span class="suburb-count">76 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/leongatha">
+      <span class="suburb-name">Leongatha</span>
+      <span class="suburb-median">$585k</span>
+      <span class="suburb-count">184 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/leopold">
+      <span class="suburb-name">Leopold</span>
+      <span class="suburb-median">$735k</span>
+      <span class="suburb-count">416 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lilydale">
+      <span class="suburb-name">Lilydale</span>
+      <span class="suburb-median">$932k</span>
+      <span class="suburb-count">578 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/loch-sport">
+      <span class="suburb-name">Loch Sport</span>
+      <span class="suburb-median">$395k</span>
+      <span class="suburb-count">111 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/long-gully">
+      <span class="suburb-name">Long Gully</span>
+      <span class="suburb-median">$490k</span>
+      <span class="suburb-count">141 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/longwarry">
+      <span class="suburb-name">Longwarry</span>
+      <span class="suburb-median">$628k</span>
+      <span class="suburb-count">109 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lorne">
+      <span class="suburb-name">Lorne</span>
+      <span class="suburb-median">$2.62M</span>
+      <span class="suburb-count">70 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lovely-banks">
+      <span class="suburb-name">Lovely Banks</span>
+      <span class="suburb-median">$790k</span>
+      <span class="suburb-count">43 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lower-plenty">
+      <span class="suburb-name">Lower Plenty</span>
+      <span class="suburb-median">$828k</span>
+      <span class="suburb-count">81 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lucas">
+      <span class="suburb-name">Lucas</span>
+      <span class="suburb-median">$645k</span>
+      <span class="suburb-count">356 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lucknow">
+      <span class="suburb-name">Lucknow</span>
+      <span class="suburb-median">$498k</span>
+      <span class="suburb-count">46 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lynbrook">
+      <span class="suburb-name">Lynbrook</span>
+      <span class="suburb-median">$958k</span>
+      <span class="suburb-count">155 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lyndhurst">
+      <span class="suburb-name">Lyndhurst</span>
+      <span class="suburb-median">$1.05M</span>
+      <span class="suburb-count">153 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/lysterfield">
+      <span class="suburb-name">Lysterfield</span>
+      <span class="suburb-median">$1.48M</span>
+      <span class="suburb-count">68 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/macedon">
+      <span class="suburb-name">Macedon</span>
+      <span class="suburb-median">$1.04M</span>
+      <span class="suburb-count">23 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/macleod">
+      <span class="suburb-name">Macleod</span>
+      <span class="suburb-median">$1.1M</span>
+      <span class="suburb-count">210 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/maddingley">
+      <span class="suburb-name">Maddingley</span>
+      <span class="suburb-median">$638k</span>
+      <span class="suburb-count">200 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/maffra">
+      <span class="suburb-name">Maffra</span>
+      <span class="suburb-median">$442k</span>
+      <span class="suburb-count">152 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/maiden-gully">
+      <span class="suburb-name">Maiden Gully</span>
+      <span class="suburb-median">$874k</span>
+      <span class="suburb-count">84 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/maidstone">
+      <span class="suburb-name">Maidstone</span>
+      <span class="suburb-median">$620k</span>
+      <span class="suburb-count">308 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/maldon">
+      <span class="suburb-name">Maldon</span>
+      <span class="suburb-median">$730k</span>
+      <span class="suburb-count">36 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mallacoota">
+      <span class="suburb-name">Mallacoota</span>
+      <span class="suburb-median">$600k</span>
+      <span class="suburb-count">27 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/malmsbury">
+      <span class="suburb-name">Malmsbury</span>
+      <span class="suburb-median">$835k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/malvern">
+      <span class="suburb-name">Malvern</span>
+      <span class="suburb-median">$700k</span>
+      <span class="suburb-count">327 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/malvern-east">
+      <span class="suburb-name">Malvern East</span>
+      <span class="suburb-median">$648k</span>
+      <span class="suburb-count">647 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mambourin">
+      <span class="suburb-name">Mambourin</span>
+      <span class="suburb-median">$635k</span>
+      <span class="suburb-count">227 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/manifold-heights">
+      <span class="suburb-name">Manifold Heights</span>
+      <span class="suburb-median">$1.02M</span>
+      <span class="suburb-count">91 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/manor-lakes">
+      <span class="suburb-name">Manor Lakes</span>
+      <span class="suburb-median">$660k</span>
+      <span class="suburb-count">572 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mansfield">
+      <span class="suburb-name">Mansfield</span>
+      <span class="suburb-median">$762k</span>
+      <span class="suburb-count">137 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/maribyrnong">
+      <span class="suburb-name">Maribyrnong</span>
+      <span class="suburb-median">$505k</span>
+      <span class="suburb-count">409 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/marong">
+      <span class="suburb-name">Marong</span>
+      <span class="suburb-median">$674k</span>
+      <span class="suburb-count">58 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/marshall">
+      <span class="suburb-name">Marshall</span>
+      <span class="suburb-median">$658k</span>
+      <span class="suburb-count">49 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/maryborough">
+      <span class="suburb-name">Maryborough</span>
+      <span class="suburb-median">$435k</span>
+      <span class="suburb-count">348 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mccrae">
+      <span class="suburb-name">Mccrae</span>
+      <span class="suburb-median">$1.05M</span>
+      <span class="suburb-count">123 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mckenzie-hill">
+      <span class="suburb-name">Mckenzie Hill</span>
+      <span class="suburb-median">$748k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mckinnon">
+      <span class="suburb-name">Mckinnon</span>
+      <span class="suburb-median">$894k</span>
+      <span class="suburb-count">165 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/meadow-heights">
+      <span class="suburb-name">Meadow Heights</span>
+      <span class="suburb-median">$700k</span>
+      <span class="suburb-count">287 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/melbourne">
+      <span class="suburb-name">Melbourne</span>
+      <span class="suburb-median">$525k</span>
+      <span class="suburb-count">2,843 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/melton">
+      <span class="suburb-name">Melton</span>
+      <span class="suburb-median">$578k</span>
+      <span class="suburb-count">363 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/melton-south">
+      <span class="suburb-name">Melton South</span>
+      <span class="suburb-median">$581k</span>
+      <span class="suburb-count">576 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/melton-west">
+      <span class="suburb-name">Melton West</span>
+      <span class="suburb-median">$648k</span>
+      <span class="suburb-count">292 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mentone">
+      <span class="suburb-name">Mentone</span>
+      <span class="suburb-median">$640k</span>
+      <span class="suburb-count">471 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/merbein">
+      <span class="suburb-name">Merbein</span>
+      <span class="suburb-median">$457k</span>
+      <span class="suburb-count">112 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/merinda-park">
+      <span class="suburb-name">Merinda Park</span>
+      <span class="suburb-median">$700k</span>
+      <span class="suburb-count">63 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mernda">
+      <span class="suburb-name">Mernda</span>
+      <span class="suburb-median">$758k</span>
+      <span class="suburb-count">704 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/metung">
+      <span class="suburb-name">Metung</span>
+      <span class="suburb-median">$592k</span>
+      <span class="suburb-count">53 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mickleham">
+      <span class="suburb-name">Mickleham</span>
+      <span class="suburb-median">$717k</span>
+      <span class="suburb-count">1,603 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/middle-park">
+      <span class="suburb-name">Middle Park</span>
+      <span class="suburb-median">$2.94M</span>
+      <span class="suburb-count">132 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mildura">
+      <span class="suburb-name">Mildura</span>
+      <span class="suburb-median">$575k</span>
+      <span class="suburb-count">1,439 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mill-park">
+      <span class="suburb-name">Mill Park</span>
+      <span class="suburb-median">$891k</span>
+      <span class="suburb-count">650 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/millgrove">
+      <span class="suburb-name">Millgrove</span>
+      <span class="suburb-median">$627k</span>
+      <span class="suburb-count">68 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/miners-rest">
+      <span class="suburb-name">Miners Rest</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">116 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mirboo-north">
+      <span class="suburb-name">Mirboo North</span>
+      <span class="suburb-median">$488k</span>
+      <span class="suburb-count">31 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mitcham">
+      <span class="suburb-name">Mitcham</span>
+      <span class="suburb-median">$915k</span>
+      <span class="suburb-count">411 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mitchell-park">
+      <span class="suburb-name">Mitchell Park</span>
+      <span class="suburb-median">$470k</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/moe">
+      <span class="suburb-name">Moe</span>
+      <span class="suburb-median">$420k</span>
+      <span class="suburb-count">481 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/monbulk">
+      <span class="suburb-name">Monbulk</span>
+      <span class="suburb-median">$802k</span>
+      <span class="suburb-count">55 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mont-albert">
+      <span class="suburb-name">Mont Albert</span>
+      <span class="suburb-median">$750k</span>
+      <span class="suburb-count">139 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mont-albert-north">
+      <span class="suburb-name">Mont Albert North</span>
+      <span class="suburb-median">$1.71M</span>
+      <span class="suburb-count">144 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/montmorency">
+      <span class="suburb-name">Montmorency</span>
+      <span class="suburb-median">$1.18M</span>
+      <span class="suburb-count">231 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/montrose">
+      <span class="suburb-name">Montrose</span>
+      <span class="suburb-median">$975k</span>
+      <span class="suburb-count">120 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/moonee-ponds">
+      <span class="suburb-name">Moonee Ponds</span>
+      <span class="suburb-median">$624k</span>
+      <span class="suburb-count">614 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/moorabbin">
+      <span class="suburb-name">Moorabbin</span>
+      <span class="suburb-median">$635k</span>
+      <span class="suburb-count">210 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mooroolbark">
+      <span class="suburb-name">Mooroolbark</span>
+      <span class="suburb-median">$902k</span>
+      <span class="suburb-count">616 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mooroopna">
+      <span class="suburb-name">Mooroopna</span>
+      <span class="suburb-median">$465k</span>
+      <span class="suburb-count">325 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mordialloc">
+      <span class="suburb-name">Mordialloc</span>
+      <span class="suburb-median">$774k</span>
+      <span class="suburb-count">216 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mornington">
+      <span class="suburb-name">Mornington</span>
+      <span class="suburb-median">$1.16M</span>
+      <span class="suburb-count">740 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mortlake">
+      <span class="suburb-name">Mortlake</span>
+      <span class="suburb-median">$375k</span>
+      <span class="suburb-count">43 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/morwell">
+      <span class="suburb-name">Morwell</span>
+      <span class="suburb-median">$392k</span>
+      <span class="suburb-count">917 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-beauty">
+      <span class="suburb-name">Mount Beauty</span>
+      <span class="suburb-median">$610k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-clear">
+      <span class="suburb-name">Mount Clear</span>
+      <span class="suburb-median">$591k</span>
+      <span class="suburb-count">149 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-cottrell">
+      <span class="suburb-name">Mount Cottrell</span>
+      <span class="suburb-median">$750k</span>
+      <span class="suburb-count">62 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-dandenong">
+      <span class="suburb-name">Mount Dandenong</span>
+      <span class="suburb-median">$1.14M</span>
+      <span class="suburb-count">39 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-duneed">
+      <span class="suburb-name">Mount Duneed</span>
+      <span class="suburb-median">$720k</span>
+      <span class="suburb-count">397 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-eliza">
+      <span class="suburb-name">Mount Eliza</span>
+      <span class="suburb-median">$1.78M</span>
+      <span class="suburb-count">471 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-evelyn">
+      <span class="suburb-name">Mount Evelyn</span>
+      <span class="suburb-median">$882k</span>
+      <span class="suburb-count">184 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-helen">
+      <span class="suburb-name">Mount Helen</span>
+      <span class="suburb-median">$722k</span>
+      <span class="suburb-count">91 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-martha">
+      <span class="suburb-name">Mount Martha</span>
+      <span class="suburb-median">$1.81M</span>
+      <span class="suburb-count">160 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-pleasant">
+      <span class="suburb-name">Mount Pleasant</span>
+      <span class="suburb-median">$565k</span>
+      <span class="suburb-count">102 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mount-waverley">
+      <span class="suburb-name">Mount Waverley</span>
+      <span class="suburb-median">$1.59M</span>
+      <span class="suburb-count">902 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/mulgrave">
+      <span class="suburb-name">Mulgrave</span>
+      <span class="suburb-median">$1.14M</span>
+      <span class="suburb-count">494 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/murchison">
+      <span class="suburb-name">Murchison</span>
+      <span class="suburb-median">$425k</span>
+      <span class="suburb-count">24 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/murrumbeena">
+      <span class="suburb-name">Murrumbeena</span>
+      <span class="suburb-median">$630k</span>
+      <span class="suburb-count">314 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/murtoa">
+      <span class="suburb-name">Murtoa</span>
+      <span class="suburb-median">$308k</span>
+      <span class="suburb-count">26 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/myrtleford">
+      <span class="suburb-name">Myrtleford</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">65 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/nagambie">
+      <span class="suburb-name">Nagambie</span>
+      <span class="suburb-median">$568k</span>
+      <span class="suburb-count">95 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/nar-nar-goon-north">
+      <span class="suburb-name">Nar Nar Goon North</span>
+      <span class="suburb-median">$708k</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/narre-warren">
+      <span class="suburb-name">Narre Warren</span>
+      <span class="suburb-median">$838k</span>
+      <span class="suburb-count">755 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/narre-warren-north">
+      <span class="suburb-name">Narre Warren North</span>
+      <span class="suburb-median">$1.5M</span>
+      <span class="suburb-count">71 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/narre-warren-south">
+      <span class="suburb-name">Narre Warren South</span>
+      <span class="suburb-median">$858k</span>
+      <span class="suburb-count">635 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/nathalia">
+      <span class="suburb-name">Nathalia</span>
+      <span class="suburb-median">$372k</span>
+      <span class="suburb-count">46 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/neerim-south">
+      <span class="suburb-name">Neerim South</span>
+      <span class="suburb-median">$645k</span>
+      <span class="suburb-count">42 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/nerrina">
+      <span class="suburb-name">Nerrina</span>
+      <span class="suburb-median">$850k</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/new-gisborne">
+      <span class="suburb-name">New Gisborne</span>
+      <span class="suburb-median">$876k</span>
+      <span class="suburb-count">50 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/newborough">
+      <span class="suburb-name">Newborough</span>
+      <span class="suburb-median">$480k</span>
+      <span class="suburb-count">271 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/newcomb">
+      <span class="suburb-name">Newcomb</span>
+      <span class="suburb-median">$624k</span>
+      <span class="suburb-count">184 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/newington">
+      <span class="suburb-name">Newington</span>
+      <span class="suburb-median">$560k</span>
+      <span class="suburb-count">71 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/newlands-arm">
+      <span class="suburb-name">Newlands Arm</span>
+      <span class="suburb-median">$610k</span>
+      <span class="suburb-count">24 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/newport">
+      <span class="suburb-name">Newport</span>
+      <span class="suburb-median">$1.34M</span>
+      <span class="suburb-count">442 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/newstead">
+      <span class="suburb-name">Newstead</span>
+      <span class="suburb-median">$520k</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/newtown-greater-geelong">
+      <span class="suburb-name">Newtown (greater Geelong)</span>
+      <span class="suburb-median">$1.1M</span>
+      <span class="suburb-count">323 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/nhill">
+      <span class="suburb-name">Nhill</span>
+      <span class="suburb-median">$218k</span>
+      <span class="suburb-count">66 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/niddrie">
+      <span class="suburb-name">Niddrie</span>
+      <span class="suburb-median">$1.25M</span>
+      <span class="suburb-count">210 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/noble-park">
+      <span class="suburb-name">Noble Park</span>
+      <span class="suburb-median">$572k</span>
+      <span class="suburb-count">697 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/noble-park-north">
+      <span class="suburb-name">Noble Park North</span>
+      <span class="suburb-median">$815k</span>
+      <span class="suburb-count">149 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/norlane">
+      <span class="suburb-name">Norlane</span>
+      <span class="suburb-median">$540k</span>
+      <span class="suburb-count">478 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/north-bendigo">
+      <span class="suburb-name">North Bendigo</span>
+      <span class="suburb-median">$596k</span>
+      <span class="suburb-count">177 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/north-geelong">
+      <span class="suburb-name">North Geelong</span>
+      <span class="suburb-median">$711k</span>
+      <span class="suburb-count">119 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/north-melbourne">
+      <span class="suburb-name">North Melbourne</span>
+      <span class="suburb-median">$599k</span>
+      <span class="suburb-count">510 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/north-wonthaggi">
+      <span class="suburb-name">North Wonthaggi</span>
+      <span class="suburb-median">$595k</span>
+      <span class="suburb-count">155 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/northcote">
+      <span class="suburb-name">Northcote</span>
+      <span class="suburb-median">$670k</span>
+      <span class="suburb-count">631 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/notting-hill">
+      <span class="suburb-name">Notting Hill</span>
+      <span class="suburb-median">$445k</span>
+      <span class="suburb-count">78 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/numurkah">
+      <span class="suburb-name">Numurkah</span>
+      <span class="suburb-median">$420k</span>
+      <span class="suburb-count">158 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/nunawading">
+      <span class="suburb-name">Nunawading</span>
+      <span class="suburb-median">$844k</span>
+      <span class="suburb-count">257 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/oak-park">
+      <span class="suburb-name">Oak Park</span>
+      <span class="suburb-median">$750k</span>
+      <span class="suburb-count">215 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/oakleigh">
+      <span class="suburb-name">Oakleigh</span>
+      <span class="suburb-median">$593k</span>
+      <span class="suburb-count">224 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/oakleigh-east">
+      <span class="suburb-name">Oakleigh East</span>
+      <span class="suburb-median">$820k</span>
+      <span class="suburb-count">142 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/oakleigh-south">
+      <span class="suburb-name">Oakleigh South</span>
+      <span class="suburb-median">$1.32M</span>
+      <span class="suburb-count">209 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ocean-grove">
+      <span class="suburb-name">Ocean Grove</span>
+      <span class="suburb-median">$900k</span>
+      <span class="suburb-count">604 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/officer">
+      <span class="suburb-name">Officer</span>
+      <span class="suburb-median">$775k</span>
+      <span class="suburb-count">817 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/officer-south">
+      <span class="suburb-name">Officer South</span>
+      <span class="suburb-median">$890k</span>
+      <span class="suburb-count">69 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/olinda">
+      <span class="suburb-name">Olinda</span>
+      <span class="suburb-median">$1.06M</span>
+      <span class="suburb-count">56 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/orbost">
+      <span class="suburb-name">Orbost</span>
+      <span class="suburb-median">$369k</span>
+      <span class="suburb-count">68 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ormond">
+      <span class="suburb-name">Ormond</span>
+      <span class="suburb-median">$503k</span>
+      <span class="suburb-count">233 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/osborne">
+      <span class="suburb-name">Osborne</span>
+      <span class="suburb-median">$1.13M</span>
+      <span class="suburb-count">230 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ouyen">
+      <span class="suburb-name">Ouyen</span>
+      <span class="suburb-median">$299k</span>
+      <span class="suburb-count">36 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/pakenham">
+      <span class="suburb-name">Pakenham</span>
+      <span class="suburb-median">$725k</span>
+      <span class="suburb-count">1,907 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/park-orchards">
+      <span class="suburb-name">Park Orchards</span>
+      <span class="suburb-median">$1.8M</span>
+      <span class="suburb-count">26 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/parkdale">
+      <span class="suburb-name">Parkdale</span>
+      <span class="suburb-median">$806k</span>
+      <span class="suburb-count">339 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/parkville">
+      <span class="suburb-name">Parkville</span>
+      <span class="suburb-median">$492k</span>
+      <span class="suburb-count">156 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/pascoe-vale">
+      <span class="suburb-name">Pascoe Vale</span>
+      <span class="suburb-median">$690k</span>
+      <span class="suburb-count">633 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/pascoe-vale-south">
+      <span class="suburb-name">Pascoe Vale South</span>
+      <span class="suburb-median">$1.26M</span>
+      <span class="suburb-count">223 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/patterson-gardens">
+      <span class="suburb-name">Patterson Gardens</span>
+      <span class="suburb-median">$1.37M</span>
+      <span class="suburb-count">42 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/patterson-lakes">
+      <span class="suburb-name">Patterson Lakes</span>
+      <span class="suburb-median">$1.42M</span>
+      <span class="suburb-count">163 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/paynesville">
+      <span class="suburb-name">Paynesville</span>
+      <span class="suburb-median">$510k</span>
+      <span class="suburb-count">201 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/pearcedale">
+      <span class="suburb-name">Pearcedale</span>
+      <span class="suburb-median">$922k</span>
+      <span class="suburb-count">59 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/pioneer-bay">
+      <span class="suburb-name">Pioneer Bay</span>
+      <span class="suburb-median">$500k</span>
+      <span class="suburb-count">24 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/plenty">
+      <span class="suburb-name">Plenty</span>
+      <span class="suburb-median">$1.63M</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/point-cook">
+      <span class="suburb-name">Point Cook</span>
+      <span class="suburb-median">$842k</span>
+      <span class="suburb-count">1,198 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/point-lonsdale">
+      <span class="suburb-name">Point Lonsdale</span>
+      <span class="suburb-median">$1.11M</span>
+      <span class="suburb-count">124 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/porepunkah">
+      <span class="suburb-name">Porepunkah</span>
+      <span class="suburb-median">$875k</span>
+      <span class="suburb-count">33 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/port-fairy">
+      <span class="suburb-name">Port Fairy</span>
+      <span class="suburb-median">$800k</span>
+      <span class="suburb-count">97 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/port-melbourne">
+      <span class="suburb-name">Port Melbourne</span>
+      <span class="suburb-median">$760k</span>
+      <span class="suburb-count">588 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/portarlington">
+      <span class="suburb-name">Portarlington</span>
+      <span class="suburb-median">$820k</span>
+      <span class="suburb-count">165 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/portland">
+      <span class="suburb-name">Portland</span>
+      <span class="suburb-median">$450k</span>
+      <span class="suburb-count">351 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/portsea">
+      <span class="suburb-name">Portsea</span>
+      <span class="suburb-median">$3.8M</span>
+      <span class="suburb-count">46 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/prahran">
+      <span class="suburb-name">Prahran</span>
+      <span class="suburb-median">$445k</span>
+      <span class="suburb-count">627 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/preston">
+      <span class="suburb-name">Preston</span>
+      <span class="suburb-median">$620k</span>
+      <span class="suburb-count">1,019 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/princes-hill">
+      <span class="suburb-name">Princes Hill</span>
+      <span class="suburb-median">$2.26M</span>
+      <span class="suburb-count">40 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/quarry-hill">
+      <span class="suburb-name">Quarry Hill</span>
+      <span class="suburb-median">$715k</span>
+      <span class="suburb-count">93 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/queenscliff">
+      <span class="suburb-name">Queenscliff</span>
+      <span class="suburb-median">$955k</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/raymond-island">
+      <span class="suburb-name">Raymond Island</span>
+      <span class="suburb-median">$452k</span>
+      <span class="suburb-count">34 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/red-cliffs">
+      <span class="suburb-name">Red Cliffs</span>
+      <span class="suburb-median">$406k</span>
+      <span class="suburb-count">163 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/red-hill">
+      <span class="suburb-name">Red Hill</span>
+      <span class="suburb-median">$1.71M</span>
+      <span class="suburb-count">24 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/redan">
+      <span class="suburb-name">Redan</span>
+      <span class="suburb-median">$508k</span>
+      <span class="suburb-count">188 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/research">
+      <span class="suburb-name">Research</span>
+      <span class="suburb-median">$1.22M</span>
+      <span class="suburb-count">37 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/reservoir">
+      <span class="suburb-name">Reservoir</span>
+      <span class="suburb-median">$670k</span>
+      <span class="suburb-count">1,568 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rhyll">
+      <span class="suburb-name">Rhyll</span>
+      <span class="suburb-median">$895k</span>
+      <span class="suburb-count">34 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/richmond">
+      <span class="suburb-name">Richmond</span>
+      <span class="suburb-median">$582k</span>
+      <span class="suburb-count">1,011 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/riddells-creek">
+      <span class="suburb-name">Riddells Creek</span>
+      <span class="suburb-median">$820k</span>
+      <span class="suburb-count">79 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ringwood">
+      <span class="suburb-name">Ringwood</span>
+      <span class="suburb-median">$663k</span>
+      <span class="suburb-count">579 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ringwood-east">
+      <span class="suburb-name">Ringwood East</span>
+      <span class="suburb-median">$736k</span>
+      <span class="suburb-count">274 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ringwood-north">
+      <span class="suburb-name">Ringwood North</span>
+      <span class="suburb-median">$1.27M</span>
+      <span class="suburb-count">240 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rippleside">
+      <span class="suburb-name">Rippleside</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">35 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ripponlea">
+      <span class="suburb-name">Ripponlea</span>
+      <span class="suburb-median">$460k</span>
+      <span class="suburb-count">46 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/robinvale">
+      <span class="suburb-name">Robinvale</span>
+      <span class="suburb-median">$419k</span>
+      <span class="suburb-count">37 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rochester">
+      <span class="suburb-name">Rochester</span>
+      <span class="suburb-median">$478k</span>
+      <span class="suburb-count">91 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rockbank">
+      <span class="suburb-name">Rockbank</span>
+      <span class="suburb-median">$638k</span>
+      <span class="suburb-count">351 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/romsey">
+      <span class="suburb-name">Romsey</span>
+      <span class="suburb-median">$810k</span>
+      <span class="suburb-count">128 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rosanna">
+      <span class="suburb-name">Rosanna</span>
+      <span class="suburb-median">$1.4M</span>
+      <span class="suburb-count">215 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rosebud">
+      <span class="suburb-name">Rosebud</span>
+      <span class="suburb-median">$731k</span>
+      <span class="suburb-count">438 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rosebud-south">
+      <span class="suburb-name">Rosebud South</span>
+      <span class="suburb-median">$1M</span>
+      <span class="suburb-count">122 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rosedale">
+      <span class="suburb-name">Rosedale</span>
+      <span class="suburb-median">$455k</span>
+      <span class="suburb-count">39 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rowville">
+      <span class="suburb-name">Rowville</span>
+      <span class="suburb-median">$1.22M</span>
+      <span class="suburb-count">610 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/roxburgh-park">
+      <span class="suburb-name">Roxburgh Park</span>
+      <span class="suburb-median">$735k</span>
+      <span class="suburb-count">509 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rushworth">
+      <span class="suburb-name">Rushworth</span>
+      <span class="suburb-median">$318k</span>
+      <span class="suburb-count">26 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rutherglen">
+      <span class="suburb-name">Rutherglen</span>
+      <span class="suburb-median">$570k</span>
+      <span class="suburb-count">60 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/rye">
+      <span class="suburb-name">Rye</span>
+      <span class="suburb-median">$950k</span>
+      <span class="suburb-count">485 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/safety-beach">
+      <span class="suburb-name">Safety Beach</span>
+      <span class="suburb-median">$1.18M</span>
+      <span class="suburb-count">209 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sale">
+      <span class="suburb-name">Sale</span>
+      <span class="suburb-median">$550k</span>
+      <span class="suburb-count">621 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/san-remo">
+      <span class="suburb-name">San Remo</span>
+      <span class="suburb-median">$792k</span>
+      <span class="suburb-count">81 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sanctuary-lakes">
+      <span class="suburb-name">Sanctuary Lakes</span>
+      <span class="suburb-median">$855k</span>
+      <span class="suburb-count">668 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sandhurst">
+      <span class="suburb-name">Sandhurst</span>
+      <span class="suburb-median">$1.07M</span>
+      <span class="suburb-count">157 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sandringham">
+      <span class="suburb-name">Sandringham</span>
+      <span class="suburb-median">$746k</span>
+      <span class="suburb-count">314 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sandy-point">
+      <span class="suburb-name">Sandy Point</span>
+      <span class="suburb-median">$805k</span>
+      <span class="suburb-count">23 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sassafras">
+      <span class="suburb-name">Sassafras</span>
+      <span class="suburb-median">$1.01M</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/scoresby">
+      <span class="suburb-name">Scoresby</span>
+      <span class="suburb-median">$975k</span>
+      <span class="suburb-count">139 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sea-lake">
+      <span class="suburb-name">Sea Lake</span>
+      <span class="suburb-median">$300k</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/seabrook">
+      <span class="suburb-name">Seabrook</span>
+      <span class="suburb-median">$811k</span>
+      <span class="suburb-count">95 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/seaford">
+      <span class="suburb-name">Seaford</span>
+      <span class="suburb-median">$942k</span>
+      <span class="suburb-count">608 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/seaholme">
+      <span class="suburb-name">Seaholme</span>
+      <span class="suburb-median">$1.35M</span>
+      <span class="suburb-count">34 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sebastopol">
+      <span class="suburb-name">Sebastopol</span>
+      <span class="suburb-median">$513k</span>
+      <span class="suburb-count">576 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/seddon">
+      <span class="suburb-name">Seddon</span>
+      <span class="suburb-median">$1.02M</span>
+      <span class="suburb-count">174 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/selby">
+      <span class="suburb-name">Selby</span>
+      <span class="suburb-median">$885k</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/seville">
+      <span class="suburb-name">Seville</span>
+      <span class="suburb-median">$896k</span>
+      <span class="suburb-count">37 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/seymour">
+      <span class="suburb-name">Seymour</span>
+      <span class="suburb-median">$450k</span>
+      <span class="suburb-count">234 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/shepparton">
+      <span class="suburb-name">Shepparton</span>
+      <span class="suburb-median">$537k</span>
+      <span class="suburb-count">1,231 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/shepparton-north">
+      <span class="suburb-name">Shepparton North</span>
+      <span class="suburb-median">$720k</span>
+      <span class="suburb-count">56 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/silverleaves">
+      <span class="suburb-name">Silverleaves</span>
+      <span class="suburb-median">$720k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/skye">
+      <span class="suburb-name">Skye</span>
+      <span class="suburb-median">$872k</span>
+      <span class="suburb-count">211 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/smiths-beach">
+      <span class="suburb-name">Smiths Beach</span>
+      <span class="suburb-median">$799k</span>
+      <span class="suburb-count">24 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/smythes-creek">
+      <span class="suburb-name">Smythes Creek</span>
+      <span class="suburb-median">$608k</span>
+      <span class="suburb-count">73 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/soldiers-hill">
+      <span class="suburb-name">Soldiers Hill</span>
+      <span class="suburb-median">$618k</span>
+      <span class="suburb-count">127 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/somers">
+      <span class="suburb-name">Somers</span>
+      <span class="suburb-median">$1.42M</span>
+      <span class="suburb-count">55 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/somerville">
+      <span class="suburb-name">Somerville</span>
+      <span class="suburb-median">$875k</span>
+      <span class="suburb-count">321 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sorrento">
+      <span class="suburb-name">Sorrento</span>
+      <span class="suburb-median">$1.85M</span>
+      <span class="suburb-count">147 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/south-geelong">
+      <span class="suburb-name">South Geelong</span>
+      <span class="suburb-median">$760k</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/south-kingsville">
+      <span class="suburb-name">South Kingsville</span>
+      <span class="suburb-median">$1.66M</span>
+      <span class="suburb-count">64 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/south-melbourne">
+      <span class="suburb-name">South Melbourne</span>
+      <span class="suburb-median">$630k</span>
+      <span class="suburb-count">468 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/south-morang">
+      <span class="suburb-name">South Morang</span>
+      <span class="suburb-median">$810k</span>
+      <span class="suburb-count">612 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/south-yarra">
+      <span class="suburb-name">South Yarra</span>
+      <span class="suburb-median">$594k</span>
+      <span class="suburb-count">1,115 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/southbank">
+      <span class="suburb-name">Southbank</span>
+      <span class="suburb-median">$588k</span>
+      <span class="suburb-count">1,165 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/spotswood">
+      <span class="suburb-name">Spotswood</span>
+      <span class="suburb-median">$1M</span>
+      <span class="suburb-count">82 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/spring-gully">
+      <span class="suburb-name">Spring Gully</span>
+      <span class="suburb-median">$715k</span>
+      <span class="suburb-count">96 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/springvale">
+      <span class="suburb-name">Springvale</span>
+      <span class="suburb-median">$970k</span>
+      <span class="suburb-count">346 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/springvale-south">
+      <span class="suburb-name">Springvale South</span>
+      <span class="suburb-median">$859k</span>
+      <span class="suburb-count">186 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/st-albans">
+      <span class="suburb-name">St Albans</span>
+      <span class="suburb-median">$730k</span>
+      <span class="suburb-count">891 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/st-albans-park">
+      <span class="suburb-name">St Albans Park</span>
+      <span class="suburb-median">$693k</span>
+      <span class="suburb-count">121 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/st-andrews-beach">
+      <span class="suburb-name">St Andrews Beach</span>
+      <span class="suburb-median">$1.3M</span>
+      <span class="suburb-count">36 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/st-arnaud">
+      <span class="suburb-name">St Arnaud</span>
+      <span class="suburb-median">$262k</span>
+      <span class="suburb-count">60 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/st-helena">
+      <span class="suburb-name">St Helena</span>
+      <span class="suburb-median">$1.32M</span>
+      <span class="suburb-count">44 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/st-kilda">
+      <span class="suburb-name">St Kilda</span>
+      <span class="suburb-median">$522k</span>
+      <span class="suburb-count">829 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/st-kilda-east">
+      <span class="suburb-name">St Kilda East</span>
+      <span class="suburb-median">$600k</span>
+      <span class="suburb-count">452 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/st-kilda-west">
+      <span class="suburb-name">St Kilda West</span>
+      <span class="suburb-median">$496k</span>
+      <span class="suburb-count">112 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/st-leonards">
+      <span class="suburb-name">St Leonards</span>
+      <span class="suburb-median">$740k</span>
+      <span class="suburb-count">239 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/stawell">
+      <span class="suburb-name">Stawell</span>
+      <span class="suburb-median">$386k</span>
+      <span class="suburb-count">175 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/stratford">
+      <span class="suburb-name">Stratford</span>
+      <span class="suburb-median">$550k</span>
+      <span class="suburb-count">104 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/strathdale">
+      <span class="suburb-name">Strathdale</span>
+      <span class="suburb-median">$750k</span>
+      <span class="suburb-count">216 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/strathfieldsaye">
+      <span class="suburb-name">Strathfieldsaye</span>
+      <span class="suburb-median">$772k</span>
+      <span class="suburb-count">176 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/strathmore">
+      <span class="suburb-name">Strathmore</span>
+      <span class="suburb-median">$1.45M</span>
+      <span class="suburb-count">252 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/strathmore-heights">
+      <span class="suburb-name">Strathmore Heights</span>
+      <span class="suburb-median">$1.45M</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/strathtulloh">
+      <span class="suburb-name">Strathtulloh</span>
+      <span class="suburb-median">$615k</span>
+      <span class="suburb-count">348 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/studfield">
+      <span class="suburb-name">Studfield</span>
+      <span class="suburb-median">$1.12M</span>
+      <span class="suburb-count">95 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sunbury">
+      <span class="suburb-name">Sunbury</span>
+      <span class="suburb-median">$740k</span>
+      <span class="suburb-count">1,672 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sunderland-bay">
+      <span class="suburb-name">Sunderland Bay</span>
+      <span class="suburb-median">$659k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sunnycliffs">
+      <span class="suburb-name">Sunnycliffs</span>
+      <span class="suburb-median">$502k</span>
+      <span class="suburb-count">26 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sunset-strip">
+      <span class="suburb-name">Sunset Strip</span>
+      <span class="suburb-median">$614k</span>
+      <span class="suburb-count">31 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sunshine">
+      <span class="suburb-name">Sunshine</span>
+      <span class="suburb-median">$885k</span>
+      <span class="suburb-count">280 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sunshine-north">
+      <span class="suburb-name">Sunshine North</span>
+      <span class="suburb-median">$806k</span>
+      <span class="suburb-count">316 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sunshine-west">
+      <span class="suburb-name">Sunshine West</span>
+      <span class="suburb-median">$809k</span>
+      <span class="suburb-count">450 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/surf-beach">
+      <span class="suburb-name">Surf Beach</span>
+      <span class="suburb-median">$720k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/surrey-hills">
+      <span class="suburb-name">Surrey Hills</span>
+      <span class="suburb-median">$2.2M</span>
+      <span class="suburb-count">364 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/swan-hill">
+      <span class="suburb-name">Swan Hill</span>
+      <span class="suburb-median">$470k</span>
+      <span class="suburb-count">296 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/sydenham">
+      <span class="suburb-name">Sydenham</span>
+      <span class="suburb-median">$752k</span>
+      <span class="suburb-count">263 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/syndal">
+      <span class="suburb-name">Syndal</span>
+      <span class="suburb-median">$1.9M</span>
+      <span class="suburb-count">143 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tallangatta">
+      <span class="suburb-name">Tallangatta</span>
+      <span class="suburb-median">$623k</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tangambalanga">
+      <span class="suburb-name">Tangambalanga</span>
+      <span class="suburb-median">$644k</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tarneit">
+      <span class="suburb-name">Tarneit</span>
+      <span class="suburb-median">$675k</span>
+      <span class="suburb-count">2,944 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tatura">
+      <span class="suburb-name">Tatura</span>
+      <span class="suburb-median">$500k</span>
+      <span class="suburb-count">120 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tawonga-south">
+      <span class="suburb-name">Tawonga South</span>
+      <span class="suburb-median">$604k</span>
+      <span class="suburb-count">37 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/taylors-hill">
+      <span class="suburb-name">Taylors Hill</span>
+      <span class="suburb-median">$938k</span>
+      <span class="suburb-count">178 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/taylors-lakes">
+      <span class="suburb-name">Taylors Lakes</span>
+      <span class="suburb-median">$935k</span>
+      <span class="suburb-count">233 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tecoma">
+      <span class="suburb-name">Tecoma</span>
+      <span class="suburb-median">$1.09M</span>
+      <span class="suburb-count">47 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/templestowe">
+      <span class="suburb-name">Templestowe</span>
+      <span class="suburb-median">$1.76M</span>
+      <span class="suburb-count">373 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/templestowe-lower">
+      <span class="suburb-name">Templestowe Lower</span>
+      <span class="suburb-median">$1.38M</span>
+      <span class="suburb-count">389 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/terang">
+      <span class="suburb-name">Terang</span>
+      <span class="suburb-median">$372k</span>
+      <span class="suburb-count">53 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/the-basin">
+      <span class="suburb-name">The Basin</span>
+      <span class="suburb-median">$958k</span>
+      <span class="suburb-count">87 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/thomastown">
+      <span class="suburb-name">Thomastown</span>
+      <span class="suburb-median">$810k</span>
+      <span class="suburb-count">532 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/thomson-greater-geelong">
+      <span class="suburb-name">Thomson (greater Geelong)</span>
+      <span class="suburb-median">$615k</span>
+      <span class="suburb-count">65 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/thornbury">
+      <span class="suburb-name">Thornbury</span>
+      <span class="suburb-median">$674k</span>
+      <span class="suburb-count">567 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/thornhill-park">
+      <span class="suburb-name">Thornhill Park</span>
+      <span class="suburb-median">$605k</span>
+      <span class="suburb-count">401 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/timboon">
+      <span class="suburb-name">Timboon</span>
+      <span class="suburb-median">$490k</span>
+      <span class="suburb-count">37 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tongala">
+      <span class="suburb-name">Tongala</span>
+      <span class="suburb-median">$495k</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tooradin">
+      <span class="suburb-name">Tooradin</span>
+      <span class="suburb-median">$1.07M</span>
+      <span class="suburb-count">26 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/toorak">
+      <span class="suburb-name">Toorak</span>
+      <span class="suburb-median">$917k</span>
+      <span class="suburb-count">457 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tootgarook">
+      <span class="suburb-name">Tootgarook</span>
+      <span class="suburb-median">$882k</span>
+      <span class="suburb-count">139 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/torquay">
+      <span class="suburb-name">Torquay</span>
+      <span class="suburb-median">$1.21M</span>
+      <span class="suburb-count">564 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/trafalgar">
+      <span class="suburb-name">Trafalgar</span>
+      <span class="suburb-median">$615k</span>
+      <span class="suburb-count">139 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/traralgon">
+      <span class="suburb-name">Traralgon</span>
+      <span class="suburb-median">$569k</span>
+      <span class="suburb-count">1,190 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/traralgon-east">
+      <span class="suburb-name">Traralgon East</span>
+      <span class="suburb-median">$839k</span>
+      <span class="suburb-count">36 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/travancore">
+      <span class="suburb-name">Travancore</span>
+      <span class="suburb-median">$380k</span>
+      <span class="suburb-count">99 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/trentham">
+      <span class="suburb-name">Trentham</span>
+      <span class="suburb-median">$860k</span>
+      <span class="suburb-count">40 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/truganina">
+      <span class="suburb-name">Truganina</span>
+      <span class="suburb-median">$672k</span>
+      <span class="suburb-count">1,465 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tullamarine">
+      <span class="suburb-name">Tullamarine</span>
+      <span class="suburb-median">$535k</span>
+      <span class="suburb-count">245 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/tyabb">
+      <span class="suburb-name">Tyabb</span>
+      <span class="suburb-median">$875k</span>
+      <span class="suburb-count">75 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/upper-ferntree-gully">
+      <span class="suburb-name">Upper Ferntree Gully</span>
+      <span class="suburb-median">$990k</span>
+      <span class="suburb-count">70 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/upwey">
+      <span class="suburb-name">Upwey</span>
+      <span class="suburb-median">$905k</span>
+      <span class="suburb-count">149 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/ventnor">
+      <span class="suburb-name">Ventnor</span>
+      <span class="suburb-median">$730k</span>
+      <span class="suburb-count">55 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/venus-bay">
+      <span class="suburb-name">Venus Bay</span>
+      <span class="suburb-median">$515k</span>
+      <span class="suburb-count">107 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/vermont">
+      <span class="suburb-name">Vermont</span>
+      <span class="suburb-median">$1.33M</span>
+      <span class="suburb-count">224 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/vermont-south">
+      <span class="suburb-name">Vermont South</span>
+      <span class="suburb-median">$1.57M</span>
+      <span class="suburb-count">271 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/viewbank">
+      <span class="suburb-name">Viewbank</span>
+      <span class="suburb-median">$1.3M</span>
+      <span class="suburb-count">144 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/violet-town">
+      <span class="suburb-name">Violet Town</span>
+      <span class="suburb-median">$460k</span>
+      <span class="suburb-count">20 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wahgunyah">
+      <span class="suburb-name">Wahgunyah</span>
+      <span class="suburb-median">$458k</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wallan">
+      <span class="suburb-name">Wallan</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">376 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wallan-east">
+      <span class="suburb-name">Wallan East</span>
+      <span class="suburb-median">$605k</span>
+      <span class="suburb-count">239 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wandana-heights">
+      <span class="suburb-name">Wandana Heights</span>
+      <span class="suburb-median">$1.15M</span>
+      <span class="suburb-count">50 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wandin-north">
+      <span class="suburb-name">Wandin North</span>
+      <span class="suburb-median">$1.1M</span>
+      <span class="suburb-count">52 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wangaratta">
+      <span class="suburb-name">Wangaratta</span>
+      <span class="suburb-median">$540k</span>
+      <span class="suburb-count">636 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wantirna">
+      <span class="suburb-name">Wantirna</span>
+      <span class="suburb-median">$1.12M</span>
+      <span class="suburb-count">296 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wantirna-south">
+      <span class="suburb-name">Wantirna South</span>
+      <span class="suburb-median">$1.33M</span>
+      <span class="suburb-count">332 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/warburton">
+      <span class="suburb-name">Warburton</span>
+      <span class="suburb-median">$750k</span>
+      <span class="suburb-count">73 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/warracknabeal">
+      <span class="suburb-name">Warracknabeal</span>
+      <span class="suburb-median">$320k</span>
+      <span class="suburb-count">92 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/warragul">
+      <span class="suburb-name">Warragul</span>
+      <span class="suburb-median">$668k</span>
+      <span class="suburb-count">816 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/warrandyte">
+      <span class="suburb-name">Warrandyte</span>
+      <span class="suburb-median">$1.22M</span>
+      <span class="suburb-count">92 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/warranwood">
+      <span class="suburb-name">Warranwood</span>
+      <span class="suburb-median">$1.27M</span>
+      <span class="suburb-count">97 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/warrnambool">
+      <span class="suburb-name">Warrnambool</span>
+      <span class="suburb-median">$646k</span>
+      <span class="suburb-count">958 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/waterways">
+      <span class="suburb-name">Waterways</span>
+      <span class="suburb-median">$1.67M</span>
+      <span class="suburb-count">56 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/watsonia">
+      <span class="suburb-name">Watsonia</span>
+      <span class="suburb-median">$1.03M</span>
+      <span class="suburb-count">123 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/watsonia-north">
+      <span class="suburb-name">Watsonia North</span>
+      <span class="suburb-median">$968k</span>
+      <span class="suburb-count">58 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wattle-glen">
+      <span class="suburb-name">Wattle Glen</span>
+      <span class="suburb-median">$1M</span>
+      <span class="suburb-count">37 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/waurn-ponds">
+      <span class="suburb-name">Waurn Ponds</span>
+      <span class="suburb-median">$820k</span>
+      <span class="suburb-count">100 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wedderburn">
+      <span class="suburb-name">Wedderburn</span>
+      <span class="suburb-median">$315k</span>
+      <span class="suburb-count">23 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/weir-views">
+      <span class="suburb-name">Weir Views</span>
+      <span class="suburb-median">$598k</span>
+      <span class="suburb-count">352 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wendouree">
+      <span class="suburb-name">Wendouree</span>
+      <span class="suburb-median">$538k</span>
+      <span class="suburb-count">428 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wendouree-west">
+      <span class="suburb-name">Wendouree West</span>
+      <span class="suburb-median">$420k</span>
+      <span class="suburb-count">81 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/werribee">
+      <span class="suburb-name">Werribee</span>
+      <span class="suburb-median">$680k</span>
+      <span class="suburb-count">1,858 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/werribee-south">
+      <span class="suburb-name">Werribee South</span>
+      <span class="suburb-median">$460k</span>
+      <span class="suburb-count">80 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wesburn">
+      <span class="suburb-name">Wesburn</span>
+      <span class="suburb-median">$634k</span>
+      <span class="suburb-count">21 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/west-footscray">
+      <span class="suburb-name">West Footscray</span>
+      <span class="suburb-median">$380k</span>
+      <span class="suburb-count">348 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/west-melbourne">
+      <span class="suburb-name">West Melbourne</span>
+      <span class="suburb-median">$572k</span>
+      <span class="suburb-count">351 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/west-wodonga">
+      <span class="suburb-name">West Wodonga</span>
+      <span class="suburb-median">$640k</span>
+      <span class="suburb-count">425 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/westall">
+      <span class="suburb-name">Westall</span>
+      <span class="suburb-median">$605k</span>
+      <span class="suburb-count">197 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/westgarth">
+      <span class="suburb-name">Westgarth</span>
+      <span class="suburb-median">$2M</span>
+      <span class="suburb-count">148 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/westmeadows">
+      <span class="suburb-name">Westmeadows</span>
+      <span class="suburb-median">$800k</span>
+      <span class="suburb-count">164 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wheelers-hill">
+      <span class="suburb-name">Wheelers Hill</span>
+      <span class="suburb-median">$1.54M</span>
+      <span class="suburb-count">379 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/white-hills">
+      <span class="suburb-name">White Hills</span>
+      <span class="suburb-median">$598k</span>
+      <span class="suburb-count">143 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/whittington">
+      <span class="suburb-name">Whittington</span>
+      <span class="suburb-median">$602k</span>
+      <span class="suburb-count">156 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/whittlesea">
+      <span class="suburb-name">Whittlesea</span>
+      <span class="suburb-median">$750k</span>
+      <span class="suburb-count">136 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/williams-landing">
+      <span class="suburb-name">Williams Landing</span>
+      <span class="suburb-median">$840k</span>
+      <span class="suburb-count">297 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/williamstown">
+      <span class="suburb-name">Williamstown</span>
+      <span class="suburb-median">$1.56M</span>
+      <span class="suburb-count">391 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/williamstown-north">
+      <span class="suburb-name">Williamstown North</span>
+      <span class="suburb-median">$925k</span>
+      <span class="suburb-count">65 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/winchelsea">
+      <span class="suburb-name">Winchelsea</span>
+      <span class="suburb-median">$640k</span>
+      <span class="suburb-count">94 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/windsor">
+      <span class="suburb-name">Windsor</span>
+      <span class="suburb-median">$522k</span>
+      <span class="suburb-count">298 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/winter-valley">
+      <span class="suburb-name">Winter Valley</span>
+      <span class="suburb-median">$600k</span>
+      <span class="suburb-count">392 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wodonga">
+      <span class="suburb-name">Wodonga</span>
+      <span class="suburb-median">$635k</span>
+      <span class="suburb-count">799 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wollert">
+      <span class="suburb-name">Wollert</span>
+      <span class="suburb-median">$725k</span>
+      <span class="suburb-count">1,588 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wonga-park">
+      <span class="suburb-name">Wonga Park</span>
+      <span class="suburb-median">$1.39M</span>
+      <span class="suburb-count">52 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wonthaggi">
+      <span class="suburb-name">Wonthaggi</span>
+      <span class="suburb-median">$508k</span>
+      <span class="suburb-count">186 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/woodend">
+      <span class="suburb-name">Woodend</span>
+      <span class="suburb-median">$1.08M</span>
+      <span class="suburb-count">161 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/woodstock">
+      <span class="suburb-name">Woodstock</span>
+      <span class="suburb-median">$640k</span>
+      <span class="suburb-count">66 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/woolamai-waters">
+      <span class="suburb-name">Woolamai Waters</span>
+      <span class="suburb-median">$790k</span>
+      <span class="suburb-count">94 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/woori-yallock">
+      <span class="suburb-name">Woori Yallock</span>
+      <span class="suburb-median">$736k</span>
+      <span class="suburb-count">66 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wy-yung">
+      <span class="suburb-name">Wy Yung</span>
+      <span class="suburb-median">$534k</span>
+      <span class="suburb-count">30 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/wyndham-vale">
+      <span class="suburb-name">Wyndham Vale</span>
+      <span class="suburb-median">$615k</span>
+      <span class="suburb-count">1,113 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yackandandah">
+      <span class="suburb-name">Yackandandah</span>
+      <span class="suburb-median">$685k</span>
+      <span class="suburb-count">26 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yallambie">
+      <span class="suburb-name">Yallambie</span>
+      <span class="suburb-median">$1.03M</span>
+      <span class="suburb-count">53 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yallourn-north">
+      <span class="suburb-name">Yallourn North</span>
+      <span class="suburb-median">$340k</span>
+      <span class="suburb-count">53 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yarra-glen">
+      <span class="suburb-name">Yarra Glen</span>
+      <span class="suburb-median">$951k</span>
+      <span class="suburb-count">56 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yarra-junction">
+      <span class="suburb-name">Yarra Junction</span>
+      <span class="suburb-median">$770k</span>
+      <span class="suburb-count">75 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yarragon">
+      <span class="suburb-name">Yarragon</span>
+      <span class="suburb-median">$650k</span>
+      <span class="suburb-count">60 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yarram">
+      <span class="suburb-name">Yarram</span>
+      <span class="suburb-median">$398k</span>
+      <span class="suburb-count">58 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yarraville">
+      <span class="suburb-name">Yarraville</span>
+      <span class="suburb-median">$1.21M</span>
+      <span class="suburb-count">497 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yarrawonga">
+      <span class="suburb-name">Yarrawonga</span>
+      <span class="suburb-median">$668k</span>
+      <span class="suburb-count">343 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yea">
+      <span class="suburb-name">Yea</span>
+      <span class="suburb-median">$598k</span>
+      <span class="suburb-count">62 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+    <a class="suburb-row" href="/suburbs/vic/yinnar">
+      <span class="suburb-name">Yinnar</span>
+      <span class="suburb-median">$580k</span>
+      <span class="suburb-count">29 sales</span>
+      <span class="suburb-arrow">›</span>
+    </a>
+  </div>
+</div>
+</body>
+</html>

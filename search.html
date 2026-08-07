@@ -3652,6 +3652,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('input, select').forEach(el => {
         el.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
     });
+
+    // Pre-fill from query string — e.g. /search?suburb=Bondi&state=NSW
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const suburb = params.get('suburb');
+        const state  = params.get('state');
+        if (state) {
+            const stateEl = document.getElementById('stateSelect');
+            stateEl.value = state;
+            onStateChange();
+        }
+        if (suburb) {
+            const suburbEl = document.getElementById('suburb');
+            suburbEl.value = suburb;
+        }
+    })();
 });
 </script>
 <!-- ── Lead Capture Modal ──────────────────────────────────── -->
