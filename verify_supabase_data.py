@@ -41,14 +41,18 @@ def fetch(path):
         return json.loads(r.read())
 
 def anon_fetch(table):
-    """Fetch a single row via the anon key — tests frontend read access."""
+    """Fetch a single row via the anon key — tests frontend read access.
+    Returns (ok, error_msg). Fails if HTTP error OR if RLS blocks and returns empty array."""
     url = f"{SUPABASE_URL}/rest/v1/{table}?limit=1"
     req = urllib.request.Request(url, headers=ANON_HEADERS)
     try:
         with urllib.request.urlopen(req) as r:
+            data = json.loads(r.read())
+            if isinstance(data, list) and len(data) == 0:
+                return False, "RLS blocked — returned empty array (GRANT exists but no policy)"
             return True, None
     except urllib.error.HTTPError as e:
-        return False, f"HTTP {e.code}"
+        return False, f"HTTP {e.code} — missing GRANT"
     except Exception as e:
         return False, str(e)
 
