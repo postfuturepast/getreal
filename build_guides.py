@@ -288,12 +288,6 @@ NAV_HTML = """<header class="site-header">
     </svg>
     <span class="brand-name">GetReal</span>
   </a>
-  <nav class="site-nav-links">
-    <a href="/deposit">Borrowing ceiling</a>
-    <a href="/stamp-duty">Stamp duty</a>
-    <a href="/guides/">Guides</a>
-    <a href="/methodology">Methodology</a>
-  </nav>
 </header>"""
 
 FOOTER_HTML = """<footer class="site-footer">
@@ -456,7 +450,7 @@ def build_concept_page(page):
 
     <div class="guide-section">
       <p style="font-size:0.85rem;color:var(--muted);">
-        This page is part of GetReal's <a href="/methodology#{meth_anchor}">methodology documentation</a>.
+        This page is part of GetReal's <a href="/methodology#{meth_anchor}" style="color:var(--muted);text-decoration:underline;">methodology documentation</a>.
         Figures are updated when underlying data in our Supabase database changes.
         This is not financial advice.
       </p>
