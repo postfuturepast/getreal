@@ -2266,6 +2266,17 @@ document.getElementById('user-input').addEventListener('focus', () => {
 });
 
 boot();
+
+// Prefill from ?q= URL param (e.g. homepage sticky bar)
+(function() {
+  var q = new URLSearchParams(window.location.search).get('q');
+  if (q && q.trim()) {
+    var el = document.getElementById('user-input');
+    el.value = q.trim();
+    el.dispatchEvent(new Event('input'));
+    setTimeout(function() { sendMessage(); }, 400);
+  }
+})();
 </script>
 </body>
 </html>
