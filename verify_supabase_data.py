@@ -9,6 +9,8 @@ import os, sys, json
 import urllib.request
 
 SUPABASE_URL = "https://lkxzxeeeqfiymunpqvgt.supabase.co"
+ANON_KEY = "sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc"
+
 SECRET = os.environ.get("SUPABASE_SECRET")
 if not SECRET:
     print("ERROR: SUPABASE_SECRET env var not set.")
@@ -17,6 +19,12 @@ if not SECRET:
 HEADERS = {
     "apikey": SECRET,
     "Authorization": f"Bearer {SECRET}",
+    "Content-Type": "application/json",
+}
+
+ANON_HEADERS = {
+    "apikey": ANON_KEY,
+    "Authorization": f"Bearer {ANON_KEY}",
     "Content-Type": "application/json",
 }
 
@@ -31,6 +39,18 @@ def fetch(path):
     req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req) as r:
         return json.loads(r.read())
+
+def anon_fetch(table):
+    """Fetch a single row via the anon key — tests frontend read access."""
+    url = f"{SUPABASE_URL}/rest/v1/{table}?limit=1"
+    req = urllib.request.Request(url, headers=ANON_HEADERS)
+    try:
+        with urllib.request.urlopen(req) as r:
+            return True, None
+    except urllib.error.HTTPError as e:
+        return False, f"HTTP {e.code}"
+    except Exception as e:
+        return False, str(e)
 
 def check(condition, msg):
     global errors
@@ -214,6 +234,28 @@ try:
     check(len(bad_hem) == 0, "All monthly_amount values > 0")
 except Exception as e:
     print(f"  {FAIL} Fetch failed: {e}"); errors += 1
+
+
+# ── Frontend (anon key) read access ──────────────────────────
+# All tables read by deposit.html / ask.js must be accessible via the anon key.
+# If any fail here, run: GRANT SELECT ON public.<table> TO anon, authenticated;
+section("Frontend anon key access (deposit.html / ask.js)")
+FRONTEND_TABLES = [
+    "lending_policy_constants",
+    "lvr_limits",
+    "benchmark_rates",
+    "stamp_duty_brackets",
+    "stamp_duty_concessions",
+    "nt_duty_formula",
+    "registration_fees",
+    "lmi_rates",
+    "lmi_stamp_duty_rates",
+    "hem_benchmarks",
+    "postcode_locations",
+]
+for table in FRONTEND_TABLES:
+    ok, err = anon_fetch(table)
+    check(ok, f"{table} readable by anon key" + (f" — {err}" if err else ""))
 
 
 # ── Summary ───────────────────────────────────────────────────
