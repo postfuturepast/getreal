@@ -146,6 +146,20 @@
         @media (min-width: 1100px) {
             .tool-card { flex: 1 1 calc(25% - 0.75rem); }
         }
+        /* Explore nav row */
+        .explore-section { padding: 0 var(--pad-page) 0.75rem; }
+        .explore-label { font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--dim); margin-bottom: 0.75rem; padding-top: 1.75rem; border-top: 1px solid var(--border); }
+        .explore-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+        .explore-tile { background: var(--card); display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; text-decoration: none; color: inherit; transition: background 0.1s; }
+        .explore-tile:hover { background: var(--surface); }
+        .explore-tile-inner { display: flex; flex-direction: column; gap: 0.2rem; }
+        .explore-tile-tag { font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); }
+        .explore-tile-name { font-size: 0.9rem; font-weight: 600; }
+        .explore-tile-arrow { color: var(--green); font-size: 1rem; }
+        @media (min-width: 700px) {
+            .explore-section { padding: 0 2rem 1rem; }
+            .explore-grid { grid-template-columns: repeat(4, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -203,17 +217,6 @@
         <div class="tool-title">What's your buying ceiling?</div>
         <div class="tool-tagline">Three things cap what you can buy — deposit, debt-to-income, and serviceability. Enter your numbers, find your real limit.</div>
         <a class="btn" href="deposit.html">Find my ceiling</a>
-        <div class="tool-learn-links">
-            <span>Learn:</span>
-            <a href="guides/serviceability-buffer">Serviceability buffer</a>
-            <a href="guides/debt-to-income-ratio">DTI</a>
-            <a href="guides/what-is-lmi">LMI</a>
-            <a href="guides/what-is-lvr">LVR</a>
-            <a href="guides/">All guides →</a>
-        </div>
-        <div style="margin-top: 0.35rem; font-family: var(--font-mono); font-size: 0.65rem; color: var(--dim);">
-            Also: <a href="stamp-duty.html" style="color: var(--dim); text-decoration: underline;">stamp duty calculator →</a>
-        </div>
     </div>
 
     <div class="tool-card">
@@ -224,13 +227,6 @@
         <div class="tool-title">Looking for a property?</div>
         <div class="tool-tagline">See how many properties in your target suburb fall within your budget.</div>
         <a class="btn" href="https://get-real.co/search-intro">Check my search</a>
-        <div class="tool-learn-links">
-            <span>Learn:</span>
-            <a href="guides/stamp-duty/nsw">NSW stamp duty</a>
-            <a href="guides/stamp-duty/vic">VIC stamp duty</a>
-            <a href="guides/stamp-duty/qld">QLD stamp duty</a>
-            <a href="guides/">All guides →</a>
-        </div>
     </div>
 
     <div class="tool-card">
@@ -251,6 +247,40 @@
         <div class="tool-title">Selling your investment?</div>
         <div class="tool-tagline">Predicts the CGT you'd pay based on your use of the property, the profit and sale date.</div>
         <button class="btn" onclick="document.getElementById('cgtModal').style.display='flex'">Find out more</button>
+    </div>
+</div>
+
+<div class="explore-section">
+    <div class="explore-label">Explore</div>
+    <div class="explore-grid">
+        <a class="explore-tile" href="/suburbs/">
+            <div class="explore-tile-inner">
+                <div class="explore-tile-tag">Data</div>
+                <div class="explore-tile-name">Suburb profiles</div>
+            </div>
+            <div class="explore-tile-arrow">›</div>
+        </a>
+        <a class="explore-tile" href="/guides/">
+            <div class="explore-tile-inner">
+                <div class="explore-tile-tag">Learn</div>
+                <div class="explore-tile-name">Guides</div>
+            </div>
+            <div class="explore-tile-arrow">›</div>
+        </a>
+        <a class="explore-tile" href="/stamp-duty">
+            <div class="explore-tile-inner">
+                <div class="explore-tile-tag">Calculate</div>
+                <div class="explore-tile-name">Stamp duty</div>
+            </div>
+            <div class="explore-tile-arrow">›</div>
+        </a>
+        <a class="explore-tile" href="/methodology">
+            <div class="explore-tile-inner">
+                <div class="explore-tile-tag">Understand</div>
+                <div class="explore-tile-name">Methodology & FAQ</div>
+            </div>
+            <div class="explore-tile-arrow">›</div>
+        </a>
     </div>
 </div>
 
