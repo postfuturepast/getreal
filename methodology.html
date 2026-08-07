@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Methodology — GetReal</title>
+  <meta name="description" content="How GetReal calculates borrowing capacity, serviceability, stamp duty, LMI, DTI, HEM, and property realism scores. Every formula, every assumption, every source.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="GetReal methodology — every formula explained">
+  <meta property="og:description" content="How GetReal calculates borrowing capacity, serviceability, stamp duty, LMI, DTI, HEM, and property realism scores. Every formula, every assumption, every source.">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="GetReal methodology — every formula explained">
+  <meta name="twitter:description" content="How GetReal calculates borrowing capacity, stamp duty, LMI, serviceability, and property realism scores. Transparent, sourced, versioned.">
+  <link rel="canonical" href="https://get-real.co/methodology" />
+  <meta name="article:published_time" content="2025-01-01" />
+  <meta name="article:modified_time" content="2026-08-07" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        "@id": "https://get-real.co/methodology#article",
+        "headline": "GetReal methodology — how every calculation works",
+        "description": "Complete methodology documentation for all GetReal tools. Covers serviceability stress testing, debt-to-income ratio, stamp duty formulas for all 8 Australian states, LVR limits, LMI calculation, HECS/HELP treatment, HEM benchmarks, interest rate assumptions, property realism score, and VIC suburb estimation methodology.",
+        "url": "https://get-real.co/methodology",
+        "datePublished": "2025-01-01",
+        "dateModified": "2026-08-07",
+        "author": {
+          "@type": "Organization",
+          "name": "GetReal",
+          "url": "https://get-real.co"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "GetReal",
+          "url": "https://get-real.co"
+        },
+        "citation": [
+          {
+            "@type": "CreativeWork",
+            "name": "APRA Prudential Practice Guide APG 223 — Residential Mortgage Lending",
+            "url": "https://www.apra.gov.au/sites/default/files/2022-08/Final%20-%20APG%20223%20-%20Residential%20Mortgage%20Lending%20-%20August%202022.pdf"
+          },
+          {
+            "@type": "CreativeWork",
+            "name": "APRA direction to exclude HECS/HELP from DTI (September 2025)",
+            "url": "https://www.apra.gov.au"
+          },
+          {
+            "@type": "CreativeWork",
+            "name": "NSW Valuer General Bulk Property Sales Information",
+            "url": "https://www.valuergeneral.nsw.gov.au/design/bulk_psi_content/bulk_psi"
+          },
+          {
+            "@type": "CreativeWork",
+            "name": "Victorian Valuer General Quarterly Property Sales Statistics",
+            "url": "https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics"
+          },
+          {
+            "@type": "CreativeWork",
+            "name": "Melbourne Institute Household Expenditure Measure (HEM)",
+            "url": "https://melbourneinstitute.unimelb.edu.au"
+          }
+        ],
+        "inLanguage": "en-AU"
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What serviceability buffer does GetReal use?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "GetReal applies a 3.0 percentage point buffer above the loan's interest rate, as required by APRA's Prudential Practice Guide APG 223 (updated August 2022). For example, if the interest rate is 6.49%, the stress-test rate is 9.49%. The lender must verify the borrower can service the loan at this higher rate."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the debt-to-income ratio cap in Australia?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "APRA's macro-prudential guidance sets a practical cap of 6 times gross annual income across all debts. GetReal uses 6× as its DTI ceiling. Existing mortgage balances, credit card limits (treated as fully drawn), car loans, personal loans, and BNPL are included. HECS/HELP is excluded from DTI since 30 September 2025 per APRA direction."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does HECS debt affect borrowing capacity in Australia?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Since 30 September 2025, HECS/HELP balances are excluded from lenders' debt-to-income ratio calculations under APRA direction. However, HECS/HELP still reduces borrowing capacity indirectly: the ATO compulsorily withholds repayments above income thresholds, which reduces net take-home pay and therefore the monthly surplus available to service a mortgage (the serviceability ceiling). GetReal accounts for this by deducting estimated HECS repayments from net income in the serviceability calculation."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What LVR limits does GetReal apply?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "GetReal applies the following maximum LVR limits: owner-occupier houses and townhouses 95%, owner-occupier apartments 90%, investor houses and townhouses 90%, investor apartments 80%. LMI is payable when the LVR exceeds 80%. These are mainstream lender maximums — individual lenders may apply lower limits."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is HEM and how does GetReal use it?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "HEM is the Household Expenditure Measure, published quarterly by the Melbourne Institute. It is the minimum living cost benchmark that APRA-regulated lenders must apply when assessing serviceability — even if a borrower declares lower expenses. GetReal uses HEM benchmarks segmented by household type (single, couple), number of dependants, and location (metropolitan vs regional). The higher of HEM or declared expenses is used in the serviceability calculation."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does GetReal calculate stamp duty?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "GetReal calculates stamp duty using bracket tables sourced directly from each state and territory revenue office. Every state uses a progressive bracket system. VIC has two rate schedules — standard and owner-occupier PPR (principal place of residence). ACT uses a separate set of brackets. NT uses a formula: D = (0.06571441 × V² + 15V) ÷ 1000, where V = purchase price ÷ 1000, for prices up to $525,000, then a flat rate above. First home buyer concessions and exemptions are applied per state rules."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is the GetReal property realism score calculated?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The realism score estimates what percentage of properties in a suburb would match all of a buyer's criteria based on last year's actual sales. For NSW, this is calculated directly from 146,000+ individual Valuer General sale records: the budget percentile is measured exactly, and bedroom/bathroom distributions are calculated from agency-sourced data. For VIC, budgets are estimated using NSW-derived price distribution curves matched by property type, price bracket, and market depth. Bedroom and bathroom distributions use national estimates. The score is capped at 100% when 25 or more matching sales per year are estimated."
+            }
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "GetReal",
+            "item": "https://get-real.co/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Methodology",
+            "item": "https://get-real.co/methodology"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    .meth-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 2rem var(--pad-page) 5rem;
+    }
+
+    .meth-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .meth-title {
+      font-size: clamp(1.6rem, 6vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 0.75rem;
+    }
+
+    .meth-lead {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+      border-left: 2px solid var(--border);
+      padding: 0.5rem 0.9rem;
+    }
+
+    /* Table of contents */
+    .toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1.25rem 1.4rem;
+      margin-bottom: 2.5rem;
+    }
+    .toc-label {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.85rem;
+    }
+    .toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .toc-list li {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+    }
+    .toc-num {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--dim);
+      min-width: 1.6rem;
+    }
+    .toc-list a {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.2rem 0;
+      border-bottom: 1px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .toc-list a:hover {
+      color: var(--text);
+      border-bottom-color: var(--border);
+    }
+
+    /* Sections */
+    .meth-section {
+      border-top: 1px solid var(--border);
+      padding-top: 2.25rem;
+      margin-bottom: 3rem;
+      scroll-margin-top: 1.5rem;
+    }
+
+    .meth-section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .meth-section-num {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      min-width: 2rem;
+    }
+
+    .meth-section-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .meth-version {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--dim);
+      letter-spacing: 0.06em;
+      margin-bottom: 1.25rem;
+      padding-left: 2.75rem;
+    }
+
+    .meth-body {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.8;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .meth-body p { margin: 0; }
+    .meth-body strong { color: var(--text); }
+    .meth-body a {
+      color: var(--dim);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .meth-body a:hover { color: var(--text); }
+
+    /* The rule — highlighted answer block */
+    .rule-box {
+      background: rgba(0,221,56,0.04);
+      border-left: 3px solid #00b02c;
+      padding: 0.85rem 1rem;
+      font-size: 0.88rem;
+      color: var(--text);
+      line-height: 1.65;
+      font-weight: 500;
+    }
+
+    /* Formula */
+    .formula {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid #555;
+      padding: 1rem 1.15rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .formula .kw { color: var(--text); font-weight: 700; }
+    .formula .cm { color: #444; }
+    .formula .hl { color: #f0a500; }
+
+    /* Data table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.73rem;
+    }
+    .data-table th {
+      text-align: left;
+      color: var(--dim);
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.62rem;
+      padding: 0.4rem 0.75rem 0.4rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 0.5rem 0.75rem 0.5rem 0;
+      color: var(--muted);
+      border-bottom: 1px solid #1f1f1f;
+      vertical-align: top;
+    }
+    .data-table td:first-child { color: var(--text); font-weight: 700; }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    /* Example */
+    .example-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 1rem 1.15rem;
+    }
+    .example-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.6rem;
+    }
+    .example-body {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+    .example-body .hl { color: var(--text); font-weight: 700; }
+
+    /* Advisory / caveat */
+    .advisory {
+      background: rgba(240,165,0,0.05);
+      border-left: 2px solid #f0a500;
+      padding: 0.7rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .advisory strong { color: var(--text); }
+
+    .note-box {
+      background: var(--card);
+      border-left: 2px solid var(--border);
+      padding: 0.65rem 0.9rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--dim);
+      line-height: 1.65;
+    }
+    .note-box a { color: var(--dim); text-decoration: underline; }
+
+    /* Source link */
+    .source-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      letter-spacing: 0.04em;
+    }
+    .source-link:hover { color: var(--muted); }
+
+    .meth-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--dim);
+      line-height: 1.8;
+    }
+
+    .subsection-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="meth-wrap">
+
+  <div style="margin-bottom: 1.5rem;">
+    <a href="index.html" style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--dim); text-decoration: underline; letter-spacing: 0.06em; text-transform: uppercase;">← GetReal home</a>
+  </div>
+
+  <div class="meth-eyebrow">GetReal — Methodology</div>
+  <h1 class="meth-title">How the calculations work</h1>
+
+  <div class="meth-lead">
+    Every number GetReal produces can be traced back to a specific formula, regulatory source, or data set. This page documents all of them. If you think something is wrong or oversimplified, this is where to check — and where to tell us.
+  </div>
+
+  <!-- Table of contents -->
+  <div class="toc">
+    <div class="toc-label">On this page</div>
+    <ul class="toc-list">
+      <li><span class="toc-num">01</span><a href="#serviceability">Serviceability</a></li>
+      <li><span class="toc-num">02</span><a href="#dti">Debt-to-income ratio</a></li>
+      <li><span class="toc-num">03</span><a href="#lvr">LVR limits</a></li>
+      <li><span class="toc-num">04</span><a href="#lmi">Lenders mortgage insurance (LMI)</a></li>
+      <li><span class="toc-num">05</span><a href="#stamp-duty">Stamp duty</a></li>
+      <li><span class="toc-num">06</span><a href="#hecs">HECS/HELP</a></li>
+      <li><span class="toc-num">07</span><a href="#hem">Living expenses (HEM)</a></li>
+      <li><span class="toc-num">08</span><a href="#interest-rates">Interest rate assumptions</a></li>
+      <li><span class="toc-num">09</span><a href="#realism-score">Property realism score</a></li>
+      <li><span class="toc-num">10</span><a href="#vic-methodology">VIC suburb methodology</a></li>
+      <li><span class="toc-num">11</span><a href="#data-sources">Data sources</a></li>
+      <li><span class="toc-num">12</span><a href="#changelog">Changelog</a></li>
+    </ul>
+  </div>
+
+
+  <!-- ── 01. SERVICEABILITY ──────────────────────────────────────────────── -->
+  <div class="meth-section" id="serviceability">
+    <div class="meth-section-header">
+      <span class="meth-section-num">01</span>
+      <h2 class="meth-section-title">Serviceability</h2>
+    </div>
+    <div class="meth-version">v1.1 — updated September 2025 (HECS exclusion from DTI)</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        The rule: lenders must verify that a borrower can meet monthly repayments at the actual interest rate plus a 3 percentage point buffer. GetReal stress-tests at rate + 3.0%. The maximum loan is the one where monthly repayments at the stress rate exactly consume the available monthly surplus.
+      </div>
+
+      <p>
+        Serviceability is the third and most nuanced ceiling. It answers: given your income and all your committed expenses, what's the biggest loan you can actually repay?
+      </p>
+
+      <p class="subsection-title">The stress-test rate</p>
+      <p>
+        APRA's Prudential Practice Guide APG 223 (August 2022) requires all authorised deposit-taking institutions to assess mortgage applications at a minimum buffer of 3.0 percentage points above the loan's interest rate. GetReal applies this buffer to its current interest rate assumption. See <a href="#interest-rates">Interest rate assumptions</a> for the rate used.
+      </p>
+
+      <div class="formula"><span class="kw">Stress-test rate</span> = interest_rate + <span class="hl">0.03</span>
+
+<span class="kw">Monthly repayment</span> = loan × <span class="hl">stress_rate_monthly</span> × (1 + <span class="hl">stress_rate_monthly</span>)^<span class="hl">360</span>
+                      ÷ ((1 + <span class="hl">stress_rate_monthly</span>)^<span class="hl">360</span> - 1)
+
+<span class="cm">  where stress_rate_monthly = stress_test_rate ÷ 12
+  and 360 = 30-year loan term in months</span></div>
+
+      <p class="subsection-title">Monthly surplus</p>
+      <p>
+        The available surplus is net income minus all committed monthly expenses. GetReal calculates this as:
+      </p>
+
+      <div class="formula"><span class="kw">Monthly surplus</span> =
+    take_home_pay_monthly
+  − HEM_floor                   <span class="cm">// see HEM section</span>
+  − declared_living_expenses     <span class="cm">// if higher than HEM</span>
+  − existing_loan_repayments
+  − existing_mortgage_repayments
+  − credit_card_monthly_cost     <span class="cm">// 3% of total limit</span>
+  − rent                         <span class="cm">// if currently renting</span>
+  − school_fees_monthly
+  − private_health_monthly
+  − hecs_monthly_repayment       <span class="cm">// estimated from income, see HECS section</span></div>
+
+      <p class="subsection-title">Maximum serviceable loan</p>
+      <p>
+        The maximum loan is solved iteratively (binary search): find the highest loan amount where monthly repayments at the stress rate do not exceed the monthly surplus.
+      </p>
+
+      <div class="example-box">
+        <div class="example-label">Worked example</div>
+        <div class="example-body">
+Take-home pay:         $5,200/month (single borrower)
+HEM floor (metro):     $2,480/month
+HECS repayment:        $520/month (estimated at $90k income)
+Car loan repayment:    $430/month
+─────────────────────────────────────────
+Monthly surplus:       <span class="hl">$1,770/month</span>
+
+Stress-test rate:      9.49% (6.49% + 3.0%)
+Monthly stress rate:   0.7908%
+
+Max loan where repayments = $1,770:  <span class="hl">≈ $219,000</span>
+        </div>
+      </div>
+
+      <div class="advisory">
+        <strong>Lender variation:</strong> Individual lenders may apply higher buffers, stricter HEM interpretations, or additional expense categories. GetReal's estimate should be treated as indicative.
+      </div>
+
+      <a class="source-link" href="https://www.apra.gov.au/sites/default/files/2022-08/Final%20-%20APG%20223%20-%20Residential%20Mortgage%20Lending%20-%20August%202022.pdf" target="_blank" rel="noopener">
+        ↗ Source: APRA APG 223 — Residential Mortgage Lending (August 2022)
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 02. DTI ─────────────────────────────────────────────────────────── -->
+  <div class="meth-section" id="dti">
+    <div class="meth-section-header">
+      <span class="meth-section-num">02</span>
+      <h2 class="meth-section-title">Debt-to-income ratio</h2>
+    </div>
+    <div class="meth-version">v1.1 — updated September 2025 (HECS excluded from DTI per APRA)</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        The rule: total debt across all loans cannot exceed 6 times gross annual income. GetReal uses 6× as its DTI ceiling. This is the dominant cap at most mainstream Australian lenders.
+      </div>
+
+      <p>
+        APRA's macro-prudential framework directs lenders to limit high-DTI lending. While APRA does not set an absolute hard cap, mainstream lenders have adopted 6× gross income as their practical ceiling. GetReal applies 6× as its upper bound.
+      </p>
+
+      <div class="formula"><span class="kw">Max total debt</span> = gross_annual_income × <span class="hl">6</span>
+
+<span class="kw">Max new mortgage</span> = max_total_debt
+    − existing_mortgage_balances
+    − credit_card_limits           <span class="cm">// full limit, not balance</span>
+    − car_loan_balances
+    − personal_loan_balances
+    <span class="cm">// HECS/HELP excluded since 30 Sep 2025</span></div>
+
+      <p class="subsection-title">What counts as debt</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Debt type</th>
+            <th>How it's counted</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Existing mortgages</td>
+            <td>Outstanding balance at time of application</td>
+          </tr>
+          <tr>
+            <td>Credit cards</td>
+            <td>Total approved limit across all cards — not the balance</td>
+          </tr>
+          <tr>
+            <td>Car loans / personal loans</td>
+            <td>Outstanding balance</td>
+          </tr>
+          <tr>
+            <td>HECS/HELP</td>
+            <td>Excluded from DTI since 30 September 2025</td>
+          </tr>
+          <tr>
+            <td>BNPL (Afterpay, etc.)</td>
+            <td>Outstanding balance — included if declared</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note-box">
+        Credit card limits are counted in full regardless of actual balance. A $20,000 limit with a $0 balance still adds $20,000 to total debt. Reducing or closing cards before applying can materially increase borrowing capacity.
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Worked example</div>
+        <div class="example-body">
+Gross income (couple):   $180,000/year
+DTI cap (6×):            <span class="hl">$1,080,000</span> total debt
+
+Existing car loan:       − $22,000
+Credit card limit:       − $15,000
+─────────────────────────────────────
+Max new mortgage:        <span class="hl">$1,043,000</span>
+        </div>
+      </div>
+
+      <a class="source-link" href="https://www.apra.gov.au" target="_blank" rel="noopener">
+        ↗ Source: APRA macro-prudential policy framework
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 03. LVR ─────────────────────────────────────────────────────────── -->
+  <div class="meth-section" id="lvr">
+    <div class="meth-section-header">
+      <span class="meth-section-num">03</span>
+      <h2 class="meth-section-title">LVR limits</h2>
+    </div>
+    <div class="meth-version">v1.0 — January 2025</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        LVR (loan-to-value ratio) is the loan as a percentage of the purchase price. Lenders cap LVR based on property type and whether the buyer will live there. LMI is payable when LVR exceeds 80%.
+      </div>
+
+      <p>
+        LVR determines how much of a property's value a lender will fund. The higher the LVR, the more risk the lender takes on — so they charge LMI as protection above 80%, and cap the LVR outright at a maximum.
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Property type</th>
+            <th>Owner-occupier max LVR</th>
+            <th>Investor max LVR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>House</td>
+            <td>95%</td>
+            <td>90%</td>
+          </tr>
+          <tr>
+            <td>Townhouse</td>
+            <td>95%</td>
+            <td>90%</td>
+          </tr>
+          <tr>
+            <td>Apartment</td>
+            <td>90%</td>
+            <td>80%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        These are practical market maximums at mainstream lenders. Individual lenders may apply stricter limits — particularly for apartments in high-density postcodes, small apartments under 50m², studio apartments, or in regional areas with limited comparable sales.
+      </p>
+
+      <p>
+        <strong>LMI capitalisation:</strong> When LMI is added to the loan balance (capitalised), GetReal ensures the resulting LVR including LMI does not exceed the ceiling. A 95% LVR ceiling means the total loan including capitalised LMI is at most 95% of the purchase price.
+      </p>
+
+      <div class="advisory">
+        <strong>First Home Guarantee:</strong> Eligible first home buyers can borrow up to 95% LVR without paying LMI, with the federal government guaranteeing the difference. GetReal does not currently model this scheme — if you're eligible, your actual ceiling may be higher.
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── 04. LMI ─────────────────────────────────────────────────────────── -->
+  <div class="meth-section" id="lmi">
+    <div class="meth-section-header">
+      <span class="meth-section-num">04</span>
+      <h2 class="meth-section-title">Lenders mortgage insurance (LMI)</h2>
+    </div>
+    <div class="meth-version">v1.0 — January 2025 (rates updated May 2026)</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        LMI is an insurance premium paid by the borrower that protects the lender if the borrower defaults. It's payable when LVR exceeds 80%. The premium is a percentage of the loan amount that varies by LVR band and loan size.
+      </div>
+
+      <p>
+        LMI is not optional at high LVR — it's a lender requirement. It protects the lender, not the borrower. The premium can be paid upfront or capitalised into the loan (added to the balance). GetReal assumes capitalisation, as this is the most common approach.
+      </p>
+
+      <p>
+        Additionally, stamp duty is payable on the LMI premium itself in most states. GetReal applies state-based LMI stamp duty rates from the <code>lmi_stamp_duty_rates</code> table.
+      </p>
+
+      <p class="subsection-title">LMI rates</p>
+      <p>
+        GetReal uses indicative LMI rates from the Home Loan Experts rate table (May 2026), stored in the <code>lmi_rates</code> Supabase table. Rates are segmented by LVR band (15 bands) and loan amount band (5 bands from under $300k to over $1M).
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>LVR band</th>
+            <th>Loan &lt;$300k</th>
+            <th>$300k–$500k</th>
+            <th>$500k–$750k</th>
+            <th>$750k–$1M</th>
+            <th>Over $1M</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>80.01–85%</td>
+            <td>0.70%</td>
+            <td>0.70%</td>
+            <td>0.76%</td>
+            <td>0.76%</td>
+            <td>0.76%</td>
+          </tr>
+          <tr>
+            <td>85.01–90%</td>
+            <td>1.43%</td>
+            <td>1.43%</td>
+            <td>1.43%</td>
+            <td>1.43%</td>
+            <td>1.43%</td>
+          </tr>
+          <tr>
+            <td>90.01–95%</td>
+            <td>2.77%</td>
+            <td>2.77%</td>
+            <td>3.09%</td>
+            <td>3.09%</td>
+            <td>3.09%</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--dim);">Indicative only. Actual rates depend on lender and insurer. Genworth and QBE are the two main LMI providers in Australia.</p>
+
+      <div class="formula"><span class="kw">LMI premium</span>     = loan_amount × lmi_rate_pct
+<span class="kw">LMI stamp duty</span>  = lmi_premium × state_lmi_stamp_duty_rate
+<span class="kw">Total LMI cost</span>  = lmi_premium + lmi_stamp_duty
+
+<span class="cm">// When capitalised:</span>
+<span class="kw">Total loan</span>      = base_loan + lmi_premium
+<span class="cm">// LMI stamp duty is paid upfront (not capitalised)</span></div>
+
+      <a class="source-link" href="https://www.homeloanexperts.com.au/lenders-mortgage-insurance/lmi-rates/" target="_blank" rel="noopener">
+        ↗ Source: Home Loan Experts — indicative LMI rate table (May 2026)
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 05. STAMP DUTY ──────────────────────────────────────────────────── -->
+  <div class="meth-section" id="stamp-duty">
+    <div class="meth-section-header">
+      <span class="meth-section-num">05</span>
+      <h2 class="meth-section-title">Stamp duty</h2>
+    </div>
+    <div class="meth-version">v1.0 — January 2025 (rates verified August 2026)</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        Stamp duty (transfer duty) is a state and territory tax on property purchases. Every state uses a progressive bracket system. GetReal calculates it from bracket tables sourced directly from each state revenue office, stored in the <code>stamp_duty_brackets</code> Supabase table.
+      </div>
+
+      <p>
+        Stamp duty is calculated before deposit can be applied — it comes out of your savings first. This is why it matters so much to the deposit ceiling calculation: a $50,000 stamp duty bill on a $900,000 purchase is $50,000 that doesn't become deposit.
+      </p>
+
+      <p class="subsection-title">General formula (all states)</p>
+      <div class="formula"><span class="kw">Duty</span> = base_amount_for_bracket
+       + (purchase_price − bracket_min) × marginal_rate</div>
+
+      <p class="subsection-title">State-by-state rates (standard, non-FHB, established)</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>$500k</th>
+            <th>$800k</th>
+            <th>$1.0M</th>
+            <th>$1.5M</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>NSW</td>
+            <td>$17,990</td>
+            <td>$31,090</td>
+            <td>$40,090</td>
+            <td>$68,215</td>
+          </tr>
+          <tr>
+            <td>VIC (standard)</td>
+            <td>$21,970</td>
+            <td>$43,070</td>
+            <td>$55,000</td>
+            <td>$82,500</td>
+          </tr>
+          <tr>
+            <td>VIC (owner-occ ≤$550k)</td>
+            <td>$5,765</td>
+            <td>$43,070</td>
+            <td>$55,000</td>
+            <td>$82,500</td>
+          </tr>
+          <tr>
+            <td>QLD</td>
+            <td>$8,750</td>
+            <td>$24,525</td>
+            <td>$34,525</td>
+            <td>$59,525</td>
+          </tr>
+          <tr>
+            <td>WA</td>
+            <td>$17,765</td>
+            <td>$28,453</td>
+            <td>$37,453</td>
+            <td>$63,453</td>
+          </tr>
+          <tr>
+            <td>SA</td>
+            <td>$21,330</td>
+            <td>$38,730</td>
+            <td>$50,730</td>
+            <td>$81,730</td>
+          </tr>
+          <tr>
+            <td>TAS</td>
+            <td>$18,247</td>
+            <td>$30,247</td>
+            <td>$38,247</td>
+            <td>$63,247</td>
+          </tr>
+          <tr>
+            <td>ACT</td>
+            <td>$12,800</td>
+            <td>$25,200</td>
+            <td>$34,200</td>
+            <td>$60,200</td>
+          </tr>
+          <tr>
+            <td>NT</td>
+            <td>$23,929</td>
+            <td>$38,422</td>
+            <td>$49,007</td>
+            <td>$82,543</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--dim);">Figures are approximate, rounded, non-FHB, established property. Use the <a href="stamp-duty.html" style="color: var(--dim);">stamp duty calculator</a> for precise figures.</p>
+
+      <p class="subsection-title">NT — formula-based calculation</p>
+      <p>
+        NT uses a formula rather than bracket tables for purchases up to $525,000:
+      </p>
+      <div class="formula"><span class="cm">// Where V = purchase_price ÷ 1000</span>
+<span class="kw">Duty</span> = (0.06571441 × V² + 15 × V) ÷ 1000
+
+<span class="cm">// Above $525,000: flat rate of 5.45% applies</span>
+<span class="kw">Duty</span> = purchase_price × <span class="hl">0.0545</span></div>
+
+      <p class="subsection-title">First home buyer concessions</p>
+      <p>Every state offers some form of FHB relief. Thresholds and taper rates are stored in the <code>stamp_duty_concessions</code> table and applied automatically when you indicate you're a first home buyer in the calculator.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>FHB exemption threshold</th>
+            <th>Taper top</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>NSW</td>
+            <td>$800,000</td>
+            <td>$1,000,000</td>
+          </tr>
+          <tr>
+            <td>VIC</td>
+            <td>$600,000</td>
+            <td>$750,000</td>
+          </tr>
+          <tr>
+            <td>QLD</td>
+            <td>$700,000</td>
+            <td>$800,000</td>
+          </tr>
+          <tr>
+            <td>WA</td>
+            <td>$450,000</td>
+            <td>$600,000</td>
+          </tr>
+          <tr>
+            <td>SA</td>
+            <td>No duty concession (grant only)</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>TAS</td>
+            <td>50% discount on established homes</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>ACT</td>
+            <td>Full exemption (income-tested, Home Buyer Concession Scheme)</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>NT</td>
+            <td>$18,601 rebate (phaseout starts at $650k)</td>
+            <td>$723,000</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <a class="source-link" href="stamp-duty.html">
+        → Use the stamp duty calculator
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 06. HECS ────────────────────────────────────────────────────────── -->
+  <div class="meth-section" id="hecs">
+    <div class="meth-section-header">
+      <span class="meth-section-num">06</span>
+      <h2 class="meth-section-title">HECS/HELP</h2>
+    </div>
+    <div class="meth-version">v1.1 — updated September 2025 (APRA exclusion from DTI)</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        Since 30 September 2025, HECS/HELP balances are excluded from lenders' debt-to-income calculations. HECS does not count toward the 6× DTI cap. However, HECS still reduces borrowing capacity by reducing net take-home pay through compulsory ATO repayment withholding.
+      </div>
+
+      <p>
+        The change means HECS no longer affects your DTI ceiling (Ceiling 2). But it still affects your serviceability ceiling (Ceiling 3), because the ATO automatically withholds HECS repayments from your salary above certain income thresholds — reducing the take-home pay available to service a mortgage.
+      </p>
+
+      <p class="subsection-title">Compulsory HECS repayment rates (2025–26)</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Repayment income threshold</th>
+            <th>Repayment rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Below $54,435</td><td>Nil</td></tr>
+          <tr><td>$54,435 – $62,738</td><td>1.0%</td></tr>
+          <tr><td>$62,739 – $66,602</td><td>2.0%</td></tr>
+          <tr><td>$66,603 – $70,619</td><td>2.5%</td></tr>
+          <tr><td>$70,620 – $74,856</td><td>3.0%</td></tr>
+          <tr><td>$74,857 – $79,347</td><td>3.5%</td></tr>
+          <tr><td>$79,348 – $84,107</td><td>4.0%</td></tr>
+          <tr><td>$84,108 – $89,154</td><td>4.5%</td></tr>
+          <tr><td>$89,155 – $94,503</td><td>5.0%</td></tr>
+          <tr><td>$94,504 – $100,174</td><td>5.5%</td></tr>
+          <tr><td>$100,175 – $106,185</td><td>6.0%</td></tr>
+          <tr><td>$106,186 – $112,556</td><td>6.5%</td></tr>
+          <tr><td>$112,557 – $119,309</td><td>7.0%</td></tr>
+          <tr><td>$119,310 – $126,467</td><td>7.5%</td></tr>
+          <tr><td>$126,468 and above</td><td>8.0%</td></tr>
+        </tbody>
+      </table>
+
+      <p>
+        GetReal estimates monthly HECS withholding from gross income and deducts it from take-home pay in the serviceability calculation. If you enter your actual take-home pay (already net of HECS), GetReal does not double-count — HECS withholding is only applied if you declare a HECS debt and the tool is estimating your net income.
+      </p>
+
+      <a class="source-link" href="https://www.ato.gov.au/individuals-and-families/study-and-training-support-loans/ato-study-and-training-support-loans/help-debt-repayment" target="_blank" rel="noopener">
+        ↗ Source: ATO — HELP debt repayment thresholds
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 07. HEM ─────────────────────────────────────────────────────────── -->
+  <div class="meth-section" id="hem">
+    <div class="meth-section-header">
+      <span class="meth-section-num">07</span>
+      <h2 class="meth-section-title">Living expenses — HEM</h2>
+    </div>
+    <div class="meth-version">v1.0 — March 2026 (HEM figures current)</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        HEM (Household Expenditure Measure) is a minimum living cost benchmark published quarterly by the Melbourne Institute. APRA requires all lenders to apply at least HEM when assessing serviceability — even if the borrower declares lower expenses. GetReal uses HEM as the floor.
+      </div>
+
+      <p>
+        HEM covers basic living costs: food, utilities, transport, clothing, and everyday spending. It excludes rent, school fees, and private health insurance — these are added separately. GetReal segments HEM by household type, number of dependants, and location (metropolitan vs regional).
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Household type</th>
+            <th>Dependants</th>
+            <th>Metro / month</th>
+            <th>Regional / month</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Single</td><td>0</td><td>$2,480</td><td>$2,150</td></tr>
+          <tr><td>Single</td><td>1</td><td>$3,050</td><td>$2,700</td></tr>
+          <tr><td>Single</td><td>2</td><td>$3,480</td><td>$3,100</td></tr>
+          <tr><td>Single</td><td>3+</td><td>$3,950</td><td>$3,520</td></tr>
+          <tr><td>Couple</td><td>0</td><td>$3,680</td><td>$3,200</td></tr>
+          <tr><td>Couple</td><td>1</td><td>$4,200</td><td>$3,700</td></tr>
+          <tr><td>Couple</td><td>2</td><td>$4,680</td><td>$4,150</td></tr>
+          <tr><td>Couple</td><td>3+</td><td>$5,200</td><td>$4,650</td></tr>
+        </tbody>
+      </table>
+      <p style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--dim);">Indicative figures based on JMD Mortgages HEM estimates (March 2026). Actual lender HEM benchmarks vary and are not publicly published.</p>
+
+      <p>
+        <strong>Metro vs regional:</strong> GetReal determines location type (metropolitan or regional) from the buyer's postcode, using ABS ASGS Edition 3 classifications. Metropolitan = all eight GCCSA capital cities. Regional = everything else.
+      </p>
+
+      <div class="note-box">
+        HEM figures are not publicly published by the Melbourne Institute — lenders license them. GetReal uses indicative estimates. If a lender applies a stricter HEM, your actual serviceability ceiling may be lower than GetReal's estimate.
+      </div>
+
+      <a class="source-link" href="https://melbourneinstitute.unimelb.edu.au" target="_blank" rel="noopener">
+        ↗ Source: Melbourne Institute — Household Expenditure Measure
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 08. INTEREST RATES ──────────────────────────────────────────────── -->
+  <div class="meth-section" id="interest-rates">
+    <div class="meth-section-header">
+      <span class="meth-section-num">08</span>
+      <h2 class="meth-section-title">Interest rate assumptions</h2>
+    </div>
+    <div class="meth-version">v1.0 — updated periodically from RBA</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        GetReal uses a single representative variable rate based on the RBA cash rate plus average lender margin. This rate is updated periodically — it is not a real-time feed. The stress-test rate is this rate plus the 3% APRA buffer.
+      </div>
+
+      <p>
+        All three serviceability ceilings are sensitive to the interest rate assumption. GetReal uses a market-average variable rate rather than any lender's advertised rate, because the tool is designed to give a realistic estimate across lenders, not to reflect any specific product.
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Rate component</th>
+            <th>Current assumption</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Representative variable rate</td>
+            <td>6.49% p.a.</td>
+          </tr>
+          <tr>
+            <td>APRA serviceability buffer</td>
+            <td>+ 3.00%</td>
+          </tr>
+          <tr>
+            <td>Stress-test rate</td>
+            <td>9.49% p.a.</td>
+          </tr>
+          <tr>
+            <td>Loan term assumed</td>
+            <td>30 years, principal and interest</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        The calculator allows an interest rate override if you have a specific rate in mind — for example, a pre-approval offer from a lender. When overridden, the stress-test rate is still the entered rate + 3%.
+      </p>
+
+      <div class="note-box">
+        Rate last reviewed: August 2026. RBA cash rate: 3.85% (as of August 2026).
+      </div>
+
+      <a class="source-link" href="https://www.rba.gov.au/statistics/cash-rate/" target="_blank" rel="noopener">
+        ↗ Source: RBA — Cash Rate Target
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 09. REALISM SCORE ───────────────────────────────────────────────── -->
+  <div class="meth-section" id="realism-score">
+    <div class="meth-section-header">
+      <span class="meth-section-num">09</span>
+      <h2 class="meth-section-title">Property realism score</h2>
+    </div>
+    <div class="meth-version">v1.0 — January 2025</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        The realism score estimates what percentage of properties in a suburb would match all of a buyer's criteria (suburb, type, budget, bedrooms, bathrooms, car spaces) based on actual sales from the last year. A score of 100% means 25 or more matching sales per year.
+      </div>
+
+      <p>
+        The score is not a count of available listings. It's a signal of how often properties matching your full combination of criteria appear in this market. A tight score on any single factor — especially budget — dominates the result.
+      </p>
+
+      <p class="subsection-title">Score calculation</p>
+      <div class="formula"><span class="kw">raw_score</span> = budget_pct × bedrooms_pct × bathrooms_pct × car_spaces_pct
+
+<span class="cm">// Each factor is the fraction of sales meeting that criterion.
+// Factors are independent — assumed not correlated.</span>
+
+<span class="kw">estimated_matches</span> = raw_score × annual_sales_count
+
+<span class="kw">display_score</span> = min(estimated_matches ÷ <span class="hl">25</span>, 1.0) × 100
+<span class="cm">// 25 matching sales/year = 100%</span></div>
+
+      <p class="subsection-title">Budget factor (NSW)</p>
+      <p>
+        For NSW suburbs, GetReal counts exactly how many of the last 13 months' sold properties fall at or below the budget. This is a direct calculation from individual records — no estimation involved.
+      </p>
+
+      <p class="subsection-title">Budget factor (VIC)</p>
+      <p>
+        VIC budget scoring uses estimated curves — see <a href="#vic-methodology">VIC methodology</a> below.
+      </p>
+
+      <p class="subsection-title">Bedroom and bathroom factors (NSW)</p>
+      <p>
+        Where agency-sourced enrichment data is available (Ray White, McGrath, LJ Hooker), bedroom and bathroom distributions are calculated from actual sold records. For un-enriched properties, national distribution estimates are used as a fallback. Current NSW enrichment coverage: approximately 12% of records.
+      </p>
+
+      <p class="subsection-title">Grade labels</p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Grade</th>
+            <th>Score range</th>
+            <th>What it means</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Highly Realistic</td><td>75–100%</td><td>Strong supply. Regular opportunities.</td></tr>
+          <tr><td>Realistic</td><td>55–74%</td><td>Good supply. Patience needed.</td></tr>
+          <tr><td>Competitive</td><td>35–54%</td><td>Limited supply. Act quickly or compromise.</td></tr>
+          <tr><td>Tight</td><td>15–34%</td><td>Very limited supply. Consider relaxing one criterion.</td></tr>
+          <tr><td>Very Difficult</td><td>5–14%</td><td>Rare supply. Most criteria are binding.</td></tr>
+          <tr><td>Unrealistic</td><td>0–4%</td><td>This combination almost never appears.</td></tr>
+        </tbody>
+      </table>
+
+      <a class="source-link" href="faq.html">
+        → More detail in the FAQ
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 10. VIC METHODOLOGY ─────────────────────────────────────────────── -->
+  <div class="meth-section" id="vic-methodology">
+    <div class="meth-section-header">
+      <span class="meth-section-num">10</span>
+      <h2 class="meth-section-title">VIC suburb methodology</h2>
+    </div>
+    <div class="meth-version">v1.0 — January 2025 (VIC data: Q4 2025 VGV report)</div>
+
+    <div class="meth-body">
+      <div class="rule-box">
+        Victoria does not publish individual sale records. GetReal estimates VIC budget scores using NSW price distribution curves matched by property type, price bracket, and market depth. This is an estimation approach — not a direct count of VIC sales. GetReal is transparent about this on every VIC result.
+      </div>
+
+      <p>
+        NSW has over 146,000 individual sale records, which makes it possible to measure the actual distribution of sale prices around the median — how many sales fall at 80% of median, 90%, 100%, 110%, and so on. This distribution shape turns out to be consistent across NSW with two meaningful variables: price bracket and market depth.
+      </p>
+
+      <p class="subsection-title">Price brackets</p>
+      <table class="data-table">
+        <thead><tr><th>Bracket</th><th>Median price range</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Under $500,000</td></tr>
+          <tr><td>2</td><td>$500,000 – $800,000</td></tr>
+          <tr><td>3</td><td>$800,000 – $1,200,000</td></tr>
+          <tr><td>4</td><td>$1,200,000 – $1,800,000</td></tr>
+          <tr><td>5</td><td>Over $1,800,000</td></tr>
+        </tbody>
+      </table>
+
+      <p class="subsection-title">Market depth</p>
+      <p>
+        Suburbs with fewer than 30 sales per year (thin markets) cluster more tightly around the median — buyers compete hard for the limited stock. Active markets (30+ sales) have wider price dispersion. GetReal uses two depth tiers: active (≥30 sales/year) and thin (&lt;30 sales/year). Three tiers were tested; high-volume and medium-volume suburbs were statistically indistinguishable.
+      </p>
+
+      <p class="subsection-title">Annual sales count — important note</p>
+      <p>
+        The annual sales count for VIC suburbs is the rolling 12-month figure from the Q4 2025 VGV report — meaning calendar year 2025, not the trailing 12 months from today. GetReal says "in 2025 (VGV annual data)" not "in the last 12 months" for this reason.
+      </p>
+
+      <p class="subsection-title">Curve lookup</p>
+      <div class="formula"><span class="cm">// For a VIC suburb with median $750k, 45 sales/year, property type: house:</span>
+
+<span class="kw">bracket</span>    = 2   <span class="cm">// $500k–$800k</span>
+<span class="kw">depth_tier</span> = active   <span class="cm">// 45 ≥ 30</span>
+
+<span class="kw">ratio</span>      = budget ÷ suburb_median
+<span class="cm">// e.g. $650k budget ÷ $750k median = 0.867</span>
+
+<span class="kw">budget_pct</span> = interpolate(price_curves, property_type, bracket, depth_tier, ratio)
+<span class="cm">// Curves store percentiles at 9 ratio thresholds: 0.5×, 0.6×, 0.7×, 0.8×,
+// 0.9×, 1.0×, 1.1×, 1.2×, 1.3×, 1.4×, 1.5× median</span></div>
+
+      <div class="advisory">
+        <strong>Honest limitation:</strong> VIC scores are estimates calibrated to NSW market behaviour. Actual VIC distribution may differ — particularly in suburbs with very different housing stock mix or buyer dynamics. Treat VIC scores as directionally useful, not precise.
+      </div>
+
+      <a class="source-link" href="https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics" target="_blank" rel="noopener">
+        ↗ Source: Victorian Valuer General — Quarterly Property Sales Statistics
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 11. DATA SOURCES ────────────────────────────────────────────────── -->
+  <div class="meth-section" id="data-sources">
+    <div class="meth-section-header">
+      <span class="meth-section-num">11</span>
+      <h2 class="meth-section-title">Data sources</h2>
+    </div>
+    <div class="meth-version">v1.0 — August 2026</div>
+
+    <div class="meth-body">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Used for</th>
+            <th>Update frequency</th>
+            <th>Licence</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>NSW Valuer General — Bulk PSI</td>
+            <td>NSW individual sale records (146,000+)</td>
+            <td>Daily</td>
+            <td>Open — CC BY</td>
+          </tr>
+          <tr>
+            <td>Victorian Valuer General — Quarterly report</td>
+            <td>VIC suburb medians + sales volumes</td>
+            <td>Quarterly</td>
+            <td>Open</td>
+          </tr>
+          <tr>
+            <td>Ray White sold listings (API)</td>
+            <td>NSW bedroom/bathroom enrichment</td>
+            <td>Weekly</td>
+            <td>Scraping — best effort</td>
+          </tr>
+          <tr>
+            <td>McGrath sold listings (scrape)</td>
+            <td>NSW bedroom/bathroom enrichment</td>
+            <td>Weekly</td>
+            <td>Scraping — best effort</td>
+          </tr>
+          <tr>
+            <td>LJ Hooker sold listings (API)</td>
+            <td>NSW bedroom/bathroom enrichment</td>
+            <td>Weekly</td>
+            <td>Scraping — best effort</td>
+          </tr>
+          <tr>
+            <td>State revenue offices (all 8)</td>
+            <td>Stamp duty brackets and concessions</td>
+            <td>On legislative change</td>
+            <td>Public</td>
+          </tr>
+          <tr>
+            <td>Melbourne Institute — HEM</td>
+            <td>Living expense benchmarks</td>
+            <td>Quarterly (licensed)</td>
+            <td>Licensed — indicative figures used</td>
+          </tr>
+          <tr>
+            <td>Home Loan Experts — LMI rates</td>
+            <td>LMI premium estimation</td>
+            <td>As published</td>
+            <td>Indicative</td>
+          </tr>
+          <tr>
+            <td>RBA — Cash Rate Target</td>
+            <td>Interest rate assumption base</td>
+            <td>Periodic manual review</td>
+            <td>Public</td>
+          </tr>
+          <tr>
+            <td>ABS ASGS Edition 3</td>
+            <td>Postcode metro/regional classification</td>
+            <td>Static (2021)</td>
+            <td>CC BY</td>
+          </tr>
+          <tr>
+            <td>ATO — HECS repayment schedule</td>
+            <td>Estimated HECS withholding by income</td>
+            <td>Annual (July)</td>
+            <td>Public</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <a class="source-link" href="enrichment-dashboard.html">
+        → View live NSW enrichment coverage stats
+      </a>
+    </div>
+  </div>
+
+
+  <!-- ── 12. CHANGELOG ──────────────────────────────────────────────────── -->
+  <div class="meth-section" id="changelog">
+    <div class="meth-section-header">
+      <span class="meth-section-num">12</span>
+      <h2 class="meth-section-title">Changelog</h2>
+    </div>
+
+    <div class="meth-body">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Change</th>
+            <th>Section</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Aug 2026</td>
+            <td>Methodology page created. All formulas consolidated from deposit-faq.html and faq.html.</td>
+            <td>All</td>
+          </tr>
+          <tr>
+            <td>Sep 2025</td>
+            <td>HECS/HELP excluded from DTI calculation per APRA direction effective 30 September 2025. DTI section updated.</td>
+            <td>DTI, HECS</td>
+          </tr>
+          <tr>
+            <td>Aug 2025</td>
+            <td>LMI rates updated to May 2026 Home Loan Experts table.</td>
+            <td>LMI</td>
+          </tr>
+          <tr>
+            <td>Jan 2025</td>
+            <td>Initial methodology documented. NSW individual records pipeline live. VIC curve estimation methodology established.</td>
+            <td>All</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <div class="meth-footer">
+    <p>GetReal is an informational tool. Nothing on this page is financial advice. Consult a licensed mortgage broker or financial adviser before making property decisions.</p>
+    <p style="margin-top: 0.5rem;">See something wrong? <a href="mailto:hello@get-real.co" style="color: var(--dim); text-decoration: underline;">hello@get-real.co</a></p>
+  </div>
+
+</div>
+</body>
+</html>
