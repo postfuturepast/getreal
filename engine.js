@@ -241,6 +241,116 @@
     return p * 0.0495;
   }
 
+  // ─── Supabase-sourced stamp duty helpers ──────────────────────────────────
+
+  // Applies one bracket from the stamp_duty_brackets Supabase schema.
+  // Iterates sorted ascending by bracket_min; returns when price <= bracket_max (null = ∞).
+  function _supabaseBrackets(price, brackets) {
+    for (const b of brackets) {
+      const maxVal = b.bracket_max === null ? Infinity : b.bracket_max;
+      if (price <= maxVal) {
+        if (b.is_full_price) return price * b.rate;
+        return b.base_amount + (price - b.bracket_min) * b.rate;
+      }
+    }
+    return 0;
+  }
+
+  // Applies hardcoded FHB concession thresholds when sdConcessions data is unavailable.
+  function _fhbHardcodedConcession(price, full, state) {
+    switch (state) {
+      case 'NSW':
+        if (price <= 800000) return 0;
+        if (price <= 1000000) return Math.round(full * (price - 800000) / 200000);
+        return Math.round(full);
+      case 'VIC':
+        if (price <= 600000) return 0;
+        if (price <= 750000) return Math.round(full * (price - 600000) / 150000);
+        return Math.round(full);
+      case 'QLD':
+        if (price <= 500000) return 0;
+        if (price <= 550000) return Math.round(full * (price - 500000) / 50000);
+        return Math.round(full);
+      case 'WA':
+        if (price <= 600000) return 0;
+        if (price <= 800000) return Math.round(full * (price - 600000) / 200000);
+        return Math.round(full);
+      case 'TAS':
+        if (price < 600000) return Math.round(full * 0.5);
+        return Math.round(full);
+      default:
+        return Math.round(full);
+    }
+  }
+
+  // Computes duty using live Supabase bracket data.
+  // Returns null if the required data for this state isn't available (caller falls back to hardcoded).
+  function _calcDutyFromSupabase(price, ctx, sdBrackets, sdConcessions, ntFormula) {
+    const { state, isFHB = false, isOO = true, isHBCS = false } = ctx;
+
+    // NT uses a formula, not brackets
+    if (state === 'NT') {
+      if (!ntFormula) return null;
+      const V = price / ntFormula.divisor;
+      const full = price <= ntFormula.formula_threshold
+        ? ntFormula.coeff_a * V * V + ntFormula.coeff_b * V
+        : price * ntFormula.flat_rate_above;
+      if (isFHB) {
+        const conc = sdConcessions && sdConcessions['NT'];
+        const priceCap    = (conc && conc.fhb_price_cap)        || 650000;
+        const phaseStart  = (conc && conc.fhb_phaseout_start)   || 500000;
+        const maxDiscount = (conc && conc.fhb_max_discount)      || 18601;
+        if (price < priceCap) {
+          const factor   = price <= phaseStart ? 1 : (priceCap - price) / (priceCap - phaseStart);
+          const discount = Math.min(full, maxDiscount * factor);
+          return Math.max(0, Math.round(full - discount));
+        }
+      }
+      return Math.round(full);
+    }
+
+    // Filter brackets for this state
+    const stateBrackets = sdBrackets.filter(b => b.state === state);
+    if (!stateBrackets.length) return null; // state not in Supabase — signal caller to use hardcoded
+
+    // ACT: full exemption for FHB / HBCS before bracket lookup
+    if (state === 'ACT') {
+      if (isFHB || isHBCS) return 0;
+    }
+
+    // Select bracket set: VIC has 'standard' and 'vic_ppr'; all others use 'standard'
+    // FHB always uses 'standard' (concession applied on top), PPR rate only applies to non-FHB OO ≤ $550k
+    const bracketSet = (state === 'VIC' && !isFHB && isOO && price <= 550000) ? 'vic_ppr' : 'standard';
+    const selectedBrackets = stateBrackets
+      .filter(b => b.bracket_set === bracketSet)
+      .sort((a, b_) => a.bracket_min - b_.bracket_min);
+    if (!selectedBrackets.length) return null;
+
+    const full = _supabaseBrackets(price, selectedBrackets);
+    if (!isFHB) return Math.round(full);
+
+    // Apply FHB concession — use Supabase data if available, else fall back to hardcoded thresholds
+    const conc = sdConcessions && sdConcessions[state];
+
+    // Taper-based exemption (NSW, VIC, QLD, WA)
+    if (conc && conc.fhb_exempt_threshold !== undefined && conc.fhb_taper_top !== undefined) {
+      if (price <= conc.fhb_exempt_threshold) return 0;
+      if (price <= conc.fhb_taper_top) {
+        return Math.round(full * (price - conc.fhb_exempt_threshold) / (conc.fhb_taper_top - conc.fhb_exempt_threshold));
+      }
+      return Math.round(full);
+    }
+
+    // Percentage discount (TAS)
+    if (conc && conc.fhb_discount_pct !== undefined && conc.fhb_price_cap !== undefined) {
+      if (price < conc.fhb_price_cap) return Math.round(full * (1 - conc.fhb_discount_pct / 100));
+      return Math.round(full);
+    }
+
+    // No concession data — apply hardcoded thresholds for this state's FHB concession
+    return _fhbHardcodedConcession(price, full, state);
+  }
+
   // ─── Public: calcStampDuty ─────────────────────────────────────────────────
   /**
    * Returns the stamp duty payable after FHB/HBCS/PPR concessions.
@@ -248,9 +358,19 @@
    *
    * @param {number} price
    * @param {{ state, isFHB, isOO, isHBCS, isNewBuild, propType }} ctx
+   * @param {Array}  [sdBrackets]   rows from stamp_duty_brackets Supabase table (all states)
+   * @param {object} [sdConcessions] { state → { concession_key → value } } from stamp_duty_concessions
+   * @param {object} [ntFormula]    single row from nt_duty_formula Supabase table
    * @returns {number} rounded duty in dollars
    */
-  function calcStampDuty(price, ctx) {
+  function calcStampDuty(price, ctx, sdBrackets, sdConcessions, ntFormula) {
+    // Try Supabase-sourced data first
+    if (sdBrackets && sdBrackets.length) {
+      const result = _calcDutyFromSupabase(price, ctx, sdBrackets, sdConcessions, ntFormula);
+      if (result !== null) return result;
+    }
+
+    // Fall back to hardcoded tables
     const { state, isFHB = false, isOO = true, isHBCS = false } = ctx;
     switch (state) {
       case 'NSW': {
@@ -402,6 +522,7 @@
       savings, state, isFHB = false, isOO = true,
       isHBCS = false, isNewBuild = false, propType = 'house',
       lmiRates, regFees: regFeesMap, lmiSdRates: lmiSdRatesMap,
+      sdBrackets, sdConcessions, ntDutyFormula,
     } = opts;
 
     if (!savings || savings <= 0) return null;
@@ -418,7 +539,7 @@
     for (let i = 0; i < 60; i++) {
       const mid = Math.floor((low + high) / 2);
       if (mid <= 0) { high = mid - 1; continue; }
-      const duty = calcStampDuty(mid, ctx);
+      const duty = calcStampDuty(mid, ctx, sdBrackets, sdConcessions, ntDutyFormula);
       const r    = _computeAtPrice(mid, savings, maxLVR, duty, regFee, lmiSdRate, lmiRates);
       if (r !== null) { best = r; low = mid + 1; }
       else            { high = mid - 1; }
@@ -442,12 +563,13 @@
       state, isFHB = false, isOO = true, isHBCS = false,
       isNewBuild = false, propType = 'house', lvrTier = 0.80,
       lmiRates, regFees: regFeesMap, lmiSdRates: lmiSdRatesMap,
+      sdBrackets, sdConcessions, ntDutyFormula,
     } = opts;
 
     if (price <= 0 || lvrTier <= 0) return null;
 
     const ctx       = { state, isFHB, isOO, isHBCS, isNewBuild, propType };
-    const stampDuty = calcStampDuty(price, ctx);
+    const stampDuty = calcStampDuty(price, ctx, sdBrackets, sdConcessions, ntDutyFormula);
     const regFee    = (regFeesMap && regFeesMap[state]) || DEFAULT_REG_FEES[state] || 400;
     const lmiSdRate = (lmiSdRatesMap && lmiSdRatesMap[state]) || DEFAULT_LMI_SD_RATES[state] || 0;
     const baseLoan  = Math.round(price * lvrTier);
@@ -479,6 +601,7 @@
       savings, state, isFHB = false, isOO = true,
       isHBCS = false, isNewBuild = false, propType = 'house',
       lmiRates, regFees: regFeesMap, lmiSdRates: lmiSdRatesMap,
+      sdBrackets, sdConcessions, ntDutyFormula,
     } = opts;
 
     if (loanCap <= 0 || !savings || savings <= 0) return null;
@@ -502,7 +625,7 @@
       const baseLVR = loanCap / mid;
       if (baseLVR > maxLVR) { lo = mid + 1; continue; }
 
-      const stampDuty = calcStampDuty(mid, ctx);
+      const stampDuty = calcStampDuty(mid, ctx, sdBrackets, sdConcessions, ntDutyFormula);
       let lmiPremium = 0, lmiSd = 0;
       if (baseLVR > 0.80) {
         const rate = lookupLMIRate(baseLVR * 100, loanCap, lmiRates);
@@ -693,6 +816,9 @@
    *   lmiRates:        Array,
    *   regFees:         object,   // { NSW: 670, ... }
    *   lmiSdRates:      object,   // { NSW: 0.09, ... }
+   *   sdBrackets:      Array,    // rows from stamp_duty_brackets (all states)
+   *   sdConcessions:   object,   // { state → { concession_key → value } }
+   *   ntDutyFormula:   object,   // single row from nt_duty_formula
    * }} inputs
    *
    * @returns {{
@@ -732,6 +858,9 @@
       lmiRates,
       regFees: regFeesIn,
       lmiSdRates: lmiSdRatesIn,
+      sdBrackets,
+      sdConcessions,
+      ntDutyFormula,
     } = inputs;
 
     const baseOpts = {
@@ -744,6 +873,9 @@
       lmiRates,
       regFees: regFeesIn,
       lmiSdRates: lmiSdRatesIn,
+      sdBrackets,
+      sdConcessions,
+      ntDutyFormula,
     };
 
     // ── C1: Deposit ceiling ──

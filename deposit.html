@@ -1581,6 +1581,8 @@ const SB_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
 let lmiRates        = [];
 let lmiSdRates      = {};  // state → decimal rate (e.g. 0.10 for 10%)
 let regFees         = {};  // state → total fee amount
+let sdBrackets      = [];  // rows from stamp_duty_brackets (all states)
+let ntDutyFormula   = null; // single row from nt_duty_formula
 let benchmarkRates      = {};  // purpose ('oo'|'investor') → { rate_pct, reference_month }
 let hemData             = [];  // all rows from hem_benchmarks
 let newbuildConcessions = [];  // rows from newbuild_concessions, filtered to currently active
@@ -1597,15 +1599,17 @@ async function loadData() {
       'Authorization': `Bearer ${SB_KEY}`,
     };
     const today = new Date().toISOString().split('T')[0];
-    const [lmiRes, sdRes, regRes, rateRes, hemRes] = await Promise.all([
+    const [lmiRes, sdRes, regRes, rateRes, hemRes, sdBracketsRes, ntFormulaRes] = await Promise.all([
       fetch(`${SB_URL}/rest/v1/lmi_rates?select=*&order=lvr_min,loan_max`, { headers }),
       fetch(`${SB_URL}/rest/v1/lmi_stamp_duty_rates?select=*`, { headers }),
       fetch(`${SB_URL}/rest/v1/registration_fees?select=*`, { headers }),
       // OO and investor P&I new loan rates — aggregate (rate_type null = all rate types combined)
       fetch(`${SB_URL}/rest/v1/benchmark_rates?select=purpose,rate_pct,reference_month&repayment_type=eq.pi&loan_status=eq.new&rate_type=is.null&lvr_band=is.null&loan_size_band=is.null&order=reference_month.desc&limit=4`, { headers }),
       fetch(`${SB_URL}/rest/v1/hem_benchmarks?select=*`, { headers }),
+      fetch(`${SB_URL}/rest/v1/stamp_duty_brackets?select=*&order=state,bracket_min`, { headers }),
+      fetch(`${SB_URL}/rest/v1/nt_duty_formula?select=*&limit=1`, { headers }),
     ]);
-    if (!lmiRes.ok || !sdRes.ok || !regRes.ok || !rateRes.ok || !hemRes.ok) throw new Error('HTTP error');
+    if (!lmiRes.ok || !sdRes.ok || !regRes.ok || !rateRes.ok || !hemRes.ok || !sdBracketsRes.ok || !ntFormulaRes.ok) throw new Error('HTTP error');
 
     // New build concessions — fetched separately so a failure here doesn't break the whole load
     try {
@@ -1637,11 +1641,14 @@ async function loadData() {
     const regRows  = await regRes.json();
     const rateRows = await rateRes.json();
     hemData        = await hemRes.json();
+    sdBrackets     = await sdBracketsRes.json();
+    const ntRows   = await ntFormulaRes.json();
+    ntDutyFormula  = ntRows.length ? ntRows[0] : null;
     // Note: newbuildConcessions is already set in the inner try/catch above — do not re-fetch nbRes here
 
     // RLS guard: if any critical table returns empty, Supabase likely blocked the read
-    if (!lmiRates.length || !sdRows.length || !regRows.length || !rateRows.length) {
-      throw new Error('Rate tables returned empty — check Supabase RLS policies for anon read access on lmi_rates, lmi_stamp_duty_rates, registration_fees, benchmark_rates');
+    if (!lmiRates.length || !sdRows.length || !regRows.length || !rateRows.length || !sdBrackets.length) {
+      throw new Error('Rate tables returned empty — check Supabase RLS policies for anon read access on lmi_rates, lmi_stamp_duty_rates, registration_fees, benchmark_rates, stamp_duty_brackets');
     }
 
     sdRows.forEach(r  => { lmiSdRates[r.state] = r.rate_pct / 100; });
@@ -2448,7 +2455,10 @@ function calcRawDutyForPrice(p) {
     isHBCS:   d.isHBCS,
     isNewBuild: d.isNewBuild,
     propType: d.propType,
-  });
+  },
+  sdBrackets.length ? sdBrackets : null,
+  Object.keys(fhbConcessions).length ? fhbConcessions : null,
+  ntDutyFormula);
 }
 
 // Returns { full, payable, concession, label } for stamp duty at price p.
@@ -2614,9 +2624,12 @@ function requiredSavingsForPrice(price, lvrTier) {
     state:    d.state, isFHB: d.isFHB, isOO: d.isOO,
     isHBCS:   d.isHBCS, isNewBuild: d.isNewBuild, propType: d.propType,
     lvrTier,
-    lmiRates: lmiRates.length ? lmiRates : null,
-    regFees:  Object.keys(regFees).length ? regFees : null,
-    lmiSdRates: Object.keys(lmiSdRates).length ? lmiSdRates : null,
+    lmiRates:      lmiRates.length ? lmiRates : null,
+    regFees:       Object.keys(regFees).length ? regFees : null,
+    lmiSdRates:    Object.keys(lmiSdRates).length ? lmiSdRates : null,
+    sdBrackets:    sdBrackets.length ? sdBrackets : null,
+    sdConcessions: Object.keys(fhbConcessions).length ? fhbConcessions : null,
+    ntDutyFormula,
   });
 }
 
@@ -2635,9 +2648,12 @@ function findMaxPriceForLoanCap(loanCap) {
     savings:  d.savings,
     state:    d.state, isFHB: d.isFHB, isOO: d.isOO,
     isHBCS:   d.isHBCS, isNewBuild: d.isNewBuild, propType: d.propType,
-    lmiRates: lmiRates.length ? lmiRates : null,
-    regFees:  Object.keys(regFees).length ? regFees : null,
-    lmiSdRates: Object.keys(lmiSdRates).length ? lmiSdRates : null,
+    lmiRates:      lmiRates.length ? lmiRates : null,
+    regFees:       Object.keys(regFees).length ? regFees : null,
+    lmiSdRates:    Object.keys(lmiSdRates).length ? lmiSdRates : null,
+    sdBrackets:    sdBrackets.length ? sdBrackets : null,
+    sdConcessions: Object.keys(fhbConcessions).length ? fhbConcessions : null,
+    ntDutyFormula,
   });
 }
 
