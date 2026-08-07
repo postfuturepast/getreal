@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LVR limits — GetReal Methodology</title>
+  <meta name="description" content="Maximum loan-to-value ratio (LVR) limits for Australian mortgages by property type and buyer type. Owner-occupier houses: 95%. Apartments: 90%. Investors: 90% or 80%. LMI payable above 80%.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="LVR limits — GetReal Methodology">
+  <meta property="og:description" content="Maximum loan-to-value ratio (LVR) limits for Australian mortgages by property type and buyer type. Owner-occupier houses: 95%. Apartments: 90%. Investors: 90% or 80%. LMI payable above 80%.">
+  <meta property="og:image" content="https://get-real.co/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://get-real.co/og-image.png">
+  <meta name="twitter:title" content="LVR limits — GetReal Methodology">
+  <meta name="twitter:description" content="Maximum loan-to-value ratio (LVR) limits for Australian mortgages by property type and buyer type. Owner-occupier houses: 95%. Apartments: 90%. Investors: 90% or 80%. LMI payable above 80%.">
+  <meta name="article:published_time" content="2025-01-01">
+  <meta name="article:modified_time" content="2026-08-07">
+  <link rel="canonical" href="https://get-real.co/methodology/lvr">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+      "@type": "Article",
+      "@id": "https://get-real.co/methodology/lvr#article",
+      "headline": "LVR limits — GetReal Methodology",
+      "description": "Maximum loan-to-value ratio (LVR) limits for Australian mortgages by property type and buyer type. Owner-occupier houses: 95%. Apartments: 90%. Investors: 90% or 80%. LMI payable above 80%.",
+      "url": "https://get-real.co/methodology/lvr",
+      "datePublished": "2025-01-01",
+      "dateModified": "2026-08-07",
+      "author": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "publisher": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "inLanguage": "en-AU",
+      "isPartOf": {"@type":"WebPage","url":"https://get-real.co/methodology"}
+    },
+      {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"GetReal","item":"https://get-real.co/"},
+        {"@type":"ListItem","position":2,"name":"Methodology","item":"https://get-real.co/methodology"},
+        {"@type":"ListItem","position":3,"name":"LVR limits","item":"https://get-real.co/methodology/lvr"}
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+          {"@type":"Question","name":"What is LVR in Australian mortgages?","acceptedAnswer":{"@type":"Answer","text":"LVR stands for loan-to-value ratio — the loan amount as a percentage of the property's purchase price. For example, a $720,000 loan on an $800,000 property has an LVR of 90%. Lenders cap LVR based on property type and whether the borrower will live in the property. LMI (lenders mortgage insurance) is payable when LVR exceeds 80%."}},
+          {"@type":"Question","name":"What is the maximum LVR for a home loan in Australia?","acceptedAnswer":{"@type":"Answer","text":"Maximum LVR limits at mainstream lenders are: owner-occupier house or townhouse — 95%; owner-occupier apartment — 90%; investor house or townhouse — 90%; investor apartment — 80%. LMI is required above 80% LVR. The First Home Guarantee scheme allows eligible first home buyers to borrow at 95% LVR without paying LMI."}},
+          {"@type":"Question","name":"What LVR avoids LMI in Australia?","acceptedAnswer":{"@type":"Answer","text":"An LVR of 80% or below avoids LMI entirely. This means a 20% deposit on the purchase price, before accounting for stamp duty and fees. For example, to avoid LMI on an $800,000 property, you need a $160,000 deposit plus stamp duty and fees — approximately $191,000 in NSW or $203,000 in VIC."}}
+      ]
+    }
+    ]
+  }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    .meth-wrap { max-width:700px; margin:0 auto; padding:2rem var(--pad-page) 5rem; }
+    .meth-eyebrow { font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem; }
+    .meth-title { font-size:clamp(1.6rem,6vw,2.4rem); font-weight:800; line-height:1.1; margin-bottom:0.5rem; }
+    .meth-version { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); letter-spacing:0.06em; margin-bottom:1.5rem; }
+    .meth-lead { font-size:0.88rem; color:var(--muted); font-family:var(--font-mono); line-height:1.7; margin-bottom:2rem; border-left:2px solid var(--border); padding:0.5rem 0.9rem; }
+    .meth-body { font-size:0.88rem; color:var(--muted); line-height:1.8; display:flex; flex-direction:column; gap:1rem; }
+    .meth-body p { margin:0; }
+    .meth-body strong { color:var(--text); }
+    .meth-body a { color:var(--dim); text-decoration:underline; text-underline-offset:2px; }
+    .meth-body a:hover { color:var(--text); }
+    .rule-box { background:rgba(0,221,56,0.04); border-left:3px solid #00b02c; padding:0.85rem 1rem; font-size:0.88rem; color:var(--text); line-height:1.65; font-weight:500; }
+    .formula { background:var(--card); border:1px solid var(--border); border-left:3px solid #555; padding:1rem 1.15rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.8; overflow-x:auto; white-space:pre; }
+    .formula .kw { color:var(--text); font-weight:700; }
+    .formula .cm { color:#444; }
+    .formula .hl { color:#f0a500; }
+    .data-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:0.73rem; }
+    .data-table th { text-align:left; color:var(--dim); font-weight:400; letter-spacing:0.06em; text-transform:uppercase; font-size:0.62rem; padding:0.4rem 0.75rem 0.4rem 0; border-bottom:1px solid var(--border); }
+    .data-table td { padding:0.5rem 0.75rem 0.5rem 0; color:var(--muted); border-bottom:1px solid #1f1f1f; vertical-align:top; }
+    .data-table td:first-child { color:var(--text); font-weight:700; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .example-box { background:var(--card); border:1px solid var(--border); padding:1rem 1.15rem; }
+    .example-label { font-family:var(--font-mono); font-size:0.6rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.6rem; }
+    .example-body { font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.75; }
+    .example-body .hl { color:var(--text); font-weight:700; }
+    .advisory { background:rgba(240,165,0,0.05); border-left:2px solid #f0a500; padding:0.7rem 0.9rem; font-family:var(--font-mono); font-size:0.72rem; color:var(--muted); line-height:1.65; }
+    .advisory strong { color:var(--text); }
+    .note-box { background:var(--card); border-left:2px solid var(--border); padding:0.65rem 0.9rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); line-height:1.65; }
+    .note-box a { color:var(--dim); text-decoration:underline; }
+    .source-link { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); text-decoration:underline; text-underline-offset:2px; letter-spacing:0.04em; }
+    .source-link:hover { color:var(--muted); }
+    .subsection-title { font-size:0.9rem; font-weight:700; color:var(--text); margin-top:0.25rem; }
+    .related-pages { border-top:1px solid var(--border); padding-top:1.5rem; margin-top:1rem; }
+    .related-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem; }
+    .related-list { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .related-list a { font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); text-decoration:none; border:1px solid var(--border); padding:0.3rem 0.7rem; }
+    .related-list a:hover { color:var(--text); border-color:var(--muted); }
+    .meth-footer { border-top:1px solid var(--border); padding-top:1.5rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--dim); line-height:1.8; margin-top:2rem; }
+  </style>
+
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="../index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="meth-wrap">
+
+  <div style="margin-bottom:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+    <a href="../index.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← Home</a>
+    <a href="../methodology.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← All methodology</a>
+  </div>
+
+  <div class="meth-eyebrow">GetReal — Methodology</div>
+  <h1 class="meth-title">LVR limits</h1>
+  <div class="meth-version">v1.0 — January 2025</div>
+
+  <div class="meth-body">
+    <div class="rule-box">
+      LVR (loan-to-value ratio) is the loan as a percentage of the purchase price. Lenders cap LVR based on property type and whether the buyer will live there. LMI is payable when LVR exceeds 80%.
+    </div>
+
+    <p>LVR determines how much of a property's value a lender will fund. The higher the LVR, the more risk the lender takes on — so they charge LMI as protection above 80%, and cap the LVR outright at a maximum. GetReal applies these limits as Ceiling 1 (deposit ceiling).</p>
+
+    <div class="formula"><span class="kw">LVR</span> = loan_amount ÷ purchase_price × 100
+
+<span class="cm">// LMI applies when LVR > 80%
+// Ceiling applied: effective LVR (incl. capitalised LMI) ≤ max_LVR</span></div>
+
+    <table class="data-table">
+      <thead><tr><th>Property type</th><th>Owner-occupier max LVR</th><th>Investor max LVR</th></tr></thead>
+      <tbody>
+        <tr><td>House</td><td>95%</td><td>90%</td></tr>
+        <tr><td>Townhouse</td><td>95%</td><td>90%</td></tr>
+        <tr><td>Apartment</td><td>90%</td><td>80%</td></tr>
+      </tbody>
+    </table>
+
+    <p>These are practical market maximums at mainstream lenders. Individual lenders may apply stricter limits — particularly for apartments in high-density postcodes, small apartments under 50m², studio apartments, or properties in regional areas with limited comparable sales.</p>
+
+    <p class="subsection-title">LMI capitalisation</p>
+    <p>When LMI is added to the loan balance (capitalised), GetReal ensures the resulting LVR including LMI does not exceed the ceiling. A 95% ceiling means the total loan including capitalised LMI is at most 95% of the purchase price.</p>
+
+    <div class="example-box">
+      <div class="example-label">Example — 90% LVR with LMI capitalised</div>
+      <div class="example-body">
+Purchase price:        $700,000
+Base deposit:          $70,000 (10%)
+Base loan:             $630,000 (90% LVR)
+LMI rate (90.01–95%):  2.77%
+LMI premium:           $630,000 × 2.77% = $17,451
+Total loan:            $647,451
+Effective LVR:         $647,451 ÷ $700,000 = <span class="hl">92.5%</span>
+
+<span class="cm">// LVR check: 92.5% ≤ 95% ceiling — viable for OO house ✓</span>
+      </div>
+    </div>
+
+    <div class="advisory">
+      <strong>First Home Guarantee:</strong> Eligible first home buyers can borrow up to 95% LVR without paying LMI, with the federal government guaranteeing the difference. GetReal does not currently model this scheme — if you're eligible, your ceiling may be higher.
+    </div>
+
+    <a class="source-link" href="https://www.housingaustralia.gov.au/support-buy-home/first-home-guarantee" target="_blank" rel="noopener">
+      ↗ First Home Guarantee — Housing Australia
+    </a>
+
+    <div class="related-pages">
+      <div class="related-label">Related methodology</div>
+      <div class="related-list">
+          <a href="borrowing-capacity">Borrowing capacity</a>
+          <a href="lmi">LMI calculation</a>
+          <a href="stamp-duty">Stamp duty</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="meth-footer">
+    <p>GetReal is an informational tool. Nothing on this page is financial advice. Consult a licensed mortgage broker before making property decisions.</p>
+    <p style="margin-top:0.5rem;">See something wrong? <a href="mailto:hello@get-real.co" style="color:var(--dim);text-decoration:underline;">hello@get-real.co</a></p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Borrowing capacity — GetReal Methodology</title>
+  <meta name="description" content="How Australian lenders calculate maximum borrowing capacity. Three ceilings: deposit (LVR), debt-to-income ratio, and serviceability stress test. GetReal calculates all three and shows which one limits you.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Borrowing capacity — GetReal Methodology">
+  <meta property="og:description" content="How Australian lenders calculate maximum borrowing capacity. Three ceilings: deposit (LVR), debt-to-income ratio, and serviceability stress test. GetReal calculates all three and shows which one limits you.">
+  <meta property="og:image" content="https://get-real.co/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://get-real.co/og-image.png">
+  <meta name="twitter:title" content="Borrowing capacity — GetReal Methodology">
+  <meta name="twitter:description" content="How Australian lenders calculate maximum borrowing capacity. Three ceilings: deposit (LVR), debt-to-income ratio, and serviceability stress test. GetReal calculates all three and shows which one limits you.">
+  <meta name="article:published_time" content="2025-01-01">
+  <meta name="article:modified_time" content="2026-08-07">
+  <link rel="canonical" href="https://get-real.co/methodology/borrowing-capacity">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+      "@type": "Article",
+      "@id": "https://get-real.co/methodology/borrowing-capacity#article",
+      "headline": "Borrowing capacity — GetReal Methodology",
+      "description": "How Australian lenders calculate maximum borrowing capacity. Three ceilings: deposit (LVR), debt-to-income ratio, and serviceability stress test. GetReal calculates all three and shows which one limits you.",
+      "url": "https://get-real.co/methodology/borrowing-capacity",
+      "datePublished": "2025-01-01",
+      "dateModified": "2026-08-07",
+      "author": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "publisher": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "inLanguage": "en-AU",
+      "isPartOf": {"@type":"WebPage","url":"https://get-real.co/methodology"}
+    },
+      {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"GetReal","item":"https://get-real.co/"},
+        {"@type":"ListItem","position":2,"name":"Methodology","item":"https://get-real.co/methodology"},
+        {"@type":"ListItem","position":3,"name":"Borrowing capacity","item":"https://get-real.co/methodology/borrowing-capacity"}
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+          {"@type":"Question","name":"How do Australian lenders calculate borrowing capacity?","acceptedAnswer":{"@type":"Answer","text":"Australian lenders assess borrowing capacity against three separate limits — called ceilings — and apply whichever is lowest. Ceiling 1 is the deposit ceiling: how much you can borrow given your available savings after stamp duty, LMI, and fees. Ceiling 2 is the debt-to-income ceiling: total debt cannot exceed 6 times gross annual income. Ceiling 3 is the serviceability ceiling: your monthly net income minus all committed expenses must cover monthly repayments at your interest rate plus a 3% APRA buffer. GetReal calculates all three and shows which one is binding."}},
+          {"@type":"Question","name":"What is the maximum borrowing capacity in Australia?","acceptedAnswer":{"@type":"Answer","text":"There is no single maximum — it depends on income, savings, debts, expenses, property type, and state. As a rough guide, a single borrower on $100,000 gross income with no debts and a 20% deposit might borrow up to $550,000–$650,000 under the serviceability ceiling (stress-tested at approximately 9.49%). GetReal calculates your specific ceilings based on your actual inputs."}},
+          {"@type":"Question","name":"Which ceiling limits most Australian borrowers?","acceptedAnswer":{"@type":"Answer","text":"For most borrowers in capital cities, the serviceability ceiling (Ceiling 3) is the binding constraint — income relative to living costs and the stress-test rate is the most common limit. For first home buyers with small deposits, the deposit ceiling (Ceiling 1) often binds first. High-income borrowers with multiple existing debts may hit the debt-to-income ceiling (Ceiling 2)."}}
+      ]
+    }
+    ]
+  }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    .meth-wrap { max-width:700px; margin:0 auto; padding:2rem var(--pad-page) 5rem; }
+    .meth-eyebrow { font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem; }
+    .meth-title { font-size:clamp(1.6rem,6vw,2.4rem); font-weight:800; line-height:1.1; margin-bottom:0.5rem; }
+    .meth-version { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); letter-spacing:0.06em; margin-bottom:1.5rem; }
+    .meth-lead { font-size:0.88rem; color:var(--muted); font-family:var(--font-mono); line-height:1.7; margin-bottom:2rem; border-left:2px solid var(--border); padding:0.5rem 0.9rem; }
+    .meth-body { font-size:0.88rem; color:var(--muted); line-height:1.8; display:flex; flex-direction:column; gap:1rem; }
+    .meth-body p { margin:0; }
+    .meth-body strong { color:var(--text); }
+    .meth-body a { color:var(--dim); text-decoration:underline; text-underline-offset:2px; }
+    .meth-body a:hover { color:var(--text); }
+    .rule-box { background:rgba(0,221,56,0.04); border-left:3px solid #00b02c; padding:0.85rem 1rem; font-size:0.88rem; color:var(--text); line-height:1.65; font-weight:500; }
+    .formula { background:var(--card); border:1px solid var(--border); border-left:3px solid #555; padding:1rem 1.15rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.8; overflow-x:auto; white-space:pre; }
+    .formula .kw { color:var(--text); font-weight:700; }
+    .formula .cm { color:#444; }
+    .formula .hl { color:#f0a500; }
+    .data-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:0.73rem; }
+    .data-table th { text-align:left; color:var(--dim); font-weight:400; letter-spacing:0.06em; text-transform:uppercase; font-size:0.62rem; padding:0.4rem 0.75rem 0.4rem 0; border-bottom:1px solid var(--border); }
+    .data-table td { padding:0.5rem 0.75rem 0.5rem 0; color:var(--muted); border-bottom:1px solid #1f1f1f; vertical-align:top; }
+    .data-table td:first-child { color:var(--text); font-weight:700; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .example-box { background:var(--card); border:1px solid var(--border); padding:1rem 1.15rem; }
+    .example-label { font-family:var(--font-mono); font-size:0.6rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.6rem; }
+    .example-body { font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.75; }
+    .example-body .hl { color:var(--text); font-weight:700; }
+    .advisory { background:rgba(240,165,0,0.05); border-left:2px solid #f0a500; padding:0.7rem 0.9rem; font-family:var(--font-mono); font-size:0.72rem; color:var(--muted); line-height:1.65; }
+    .advisory strong { color:var(--text); }
+    .note-box { background:var(--card); border-left:2px solid var(--border); padding:0.65rem 0.9rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); line-height:1.65; }
+    .note-box a { color:var(--dim); text-decoration:underline; }
+    .source-link { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); text-decoration:underline; text-underline-offset:2px; letter-spacing:0.04em; }
+    .source-link:hover { color:var(--muted); }
+    .subsection-title { font-size:0.9rem; font-weight:700; color:var(--text); margin-top:0.25rem; }
+    .related-pages { border-top:1px solid var(--border); padding-top:1.5rem; margin-top:1rem; }
+    .related-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem; }
+    .related-list { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .related-list a { font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); text-decoration:none; border:1px solid var(--border); padding:0.3rem 0.7rem; }
+    .related-list a:hover { color:var(--text); border-color:var(--muted); }
+    .meth-footer { border-top:1px solid var(--border); padding-top:1.5rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--dim); line-height:1.8; margin-top:2rem; }
+  </style>
+
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="../index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="meth-wrap">
+
+  <div style="margin-bottom:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+    <a href="../index.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← Home</a>
+    <a href="../methodology.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← All methodology</a>
+  </div>
+
+  <div class="meth-eyebrow">GetReal — Methodology</div>
+  <h1 class="meth-title">Borrowing capacity</h1>
+  <div class="meth-version">v1.0 — August 2026</div>
+
+  <div class="meth-body">
+    <div class="rule-box">
+      Australian lenders assess borrowing capacity against three separate limits. GetReal calculates all three and shows which one limits you — because optimising for the wrong ceiling is a common and costly mistake.
+    </div>
+
+    <p>Most people think of borrowing capacity as a single number. It isn't. It's the lowest of three independent ceilings, each calculated differently and each affected by different inputs. Understanding which ceiling is binding tells you which lever actually matters.</p>
+
+    <p class="subsection-title">Ceiling 1 — Deposit</p>
+    <p>How much can you buy given your savings? After stamp duty, LMI (if LVR &gt; 80%), and transfer fees are deducted from your deposit, the remainder sets your maximum purchase price via the applicable LVR limit. This ceiling is entirely about savings — income doesn't help if you don't have the deposit.</p>
+    <div class="formula"><span class="kw">Available deposit</span> = savings − stamp_duty − fees − lmi_stamp_duty
+<span class="kw">Max price</span>      = available_deposit ÷ (1 − max_LVR)
+<span class="cm">// Solved iteratively — stamp duty and LMI are both price-dependent</span></div>
+    <p>→ See <a href="lvr">LVR limits</a>, <a href="lmi">LMI calculation</a>, <a href="stamp-duty">Stamp duty</a></p>
+
+    <p class="subsection-title">Ceiling 2 — Debt-to-income ratio</p>
+    <p>Total debt across all loans cannot exceed 6 times gross annual income. Credit card limits count in full regardless of balance. HECS/HELP is excluded since 30 September 2025. This ceiling is income-driven — adding a co-borrower's income can significantly increase it.</p>
+    <div class="formula"><span class="kw">Max total debt</span>   = gross_annual_income × 6
+<span class="kw">Max new mortgage</span> = max_total_debt − existing_debts − credit_card_limits</div>
+    <p>→ See <a href="debt-to-income">Debt-to-income ratio</a></p>
+
+    <p class="subsection-title">Ceiling 3 — Serviceability</p>
+    <p>The largest loan where monthly repayments at the stress-test rate (your rate + 3%) can be covered by your monthly income surplus after living costs and committed expenses. This is the most complex ceiling and the most common binding constraint for mid-to-high income earners in capital cities.</p>
+    <div class="formula"><span class="kw">Monthly surplus</span>  = net_income − HEM − debts − hecs_repayment
+<span class="kw">Max loan</span>        = annuity_solve(surplus, stress_rate, 360_months)</div>
+    <p>→ See <a href="serviceability">Serviceability</a>, <a href="living-expenses">Living expenses (HEM)</a>, <a href="hecs-help">HECS/HELP</a></p>
+
+    <p class="subsection-title">Which ceiling binds?</p>
+    <table class="data-table">
+      <thead><tr><th>Situation</th><th>Most likely binding ceiling</th></tr></thead>
+      <tbody>
+        <tr><td>First home buyer, small deposit</td><td>Ceiling 1 — Deposit</td></tr>
+        <tr><td>Mid-income, no prior debt</td><td>Ceiling 3 — Serviceability</td></tr>
+        <tr><td>High-income, multiple debts</td><td>Ceiling 2 — DTI</td></tr>
+        <tr><td>Investor adding second property</td><td>Ceiling 2 — DTI or C3</td></tr>
+      </tbody>
+    </table>
+
+    <div class="example-box">
+      <div class="example-label">Worked example — single borrower, $120,000 income, $150,000 savings, NSW house</div>
+      <div class="example-body">
+C1 Deposit ceiling:
+  Savings: $150,000 | Stamp duty (est. $800k): ~$31,090
+  Available deposit: ~$118,910 at 90% LVR → max price ~$1,189,000
+  At 80% LVR (no LMI): max price ~$594,500
+
+C2 DTI ceiling:
+  Income: $120,000 × 6 = <span class="hl">$720,000</span> max debt (no existing debts)
+
+C3 Serviceability ceiling:
+  Net income: ~$6,650/month | HEM: $2,480 | Surplus: ~$4,170
+  Stress rate: 9.49% | Max loan: <span class="hl">≈ $516,000</span>
+
+<span class="hl">Binding ceiling: C3 — Serviceability at ~$516,000</span>
+      </div>
+    </div>
+
+    <div class="advisory">
+      <strong>Lender variation:</strong> Different lenders apply different HEM interpretations, expense floors, and appetite for high LVR. GetReal's ceilings are estimates based on mainstream lender practice.
+    </div>
+
+    <div class="related-pages">
+      <div class="related-label">Related methodology</div>
+      <div class="related-list">
+          <a href="serviceability">Serviceability</a>
+          <a href="debt-to-income">Debt-to-income</a>
+          <a href="lvr">LVR limits</a>
+          <a href="lmi">LMI</a>
+          <a href="stamp-duty">Stamp duty</a>
+          <a href="hecs-help">HECS/HELP</a>
+          <a href="living-expenses">Living expenses</a>
+          <a href="interest-rate-assumptions">Interest rates</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="meth-footer">
+    <p>GetReal is an informational tool. Nothing on this page is financial advice. Consult a licensed mortgage broker before making property decisions.</p>
+    <p style="margin-top:0.5rem;">See something wrong? <a href="mailto:hello@get-real.co" style="color:var(--dim);text-decoration:underline;">hello@get-real.co</a></p>
+  </div>
+
+</div>
+</body>
+</html>

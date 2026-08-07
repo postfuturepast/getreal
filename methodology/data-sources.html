@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data sources — GetReal Methodology</title>
+  <meta name="description" content="Every data source used by GetReal. NSW Valuer General individual sale records (146,000+), Victorian VGV quarterly reports, stamp duty brackets from state revenue offices, RBA cash rate, ATO HECS schedules, HEM benchmarks.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Data sources — GetReal Methodology">
+  <meta property="og:description" content="Every data source used by GetReal. NSW Valuer General individual sale records (146,000+), Victorian VGV quarterly reports, stamp duty brackets from state revenue offices, RBA cash rate, ATO HECS schedules, HEM benchmarks.">
+  <meta property="og:image" content="https://get-real.co/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://get-real.co/og-image.png">
+  <meta name="twitter:title" content="Data sources — GetReal Methodology">
+  <meta name="twitter:description" content="Every data source used by GetReal. NSW Valuer General individual sale records (146,000+), Victorian VGV quarterly reports, stamp duty brackets from state revenue offices, RBA cash rate, ATO HECS schedules, HEM benchmarks.">
+  <meta name="article:published_time" content="2025-01-01">
+  <meta name="article:modified_time" content="2026-08-07">
+  <link rel="canonical" href="https://get-real.co/methodology/data-sources">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+      "@type": "Article",
+      "@id": "https://get-real.co/methodology/data-sources#article",
+      "headline": "Data sources — GetReal Methodology",
+      "description": "Every data source used by GetReal. NSW Valuer General individual sale records (146,000+), Victorian VGV quarterly reports, stamp duty brackets from state revenue offices, RBA cash rate, ATO HECS schedules, HEM benchmarks.",
+      "url": "https://get-real.co/methodology/data-sources",
+      "datePublished": "2025-01-01",
+      "dateModified": "2026-08-07",
+      "author": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "publisher": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "inLanguage": "en-AU",
+      "isPartOf": {"@type":"WebPage","url":"https://get-real.co/methodology"}
+    },
+      {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"GetReal","item":"https://get-real.co/"},
+        {"@type":"ListItem","position":2,"name":"Methodology","item":"https://get-real.co/methodology"},
+        {"@type":"ListItem","position":3,"name":"Data sources","item":"https://get-real.co/methodology/data-sources"}
+      ]
+    }
+    ]
+  }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    .meth-wrap { max-width:700px; margin:0 auto; padding:2rem var(--pad-page) 5rem; }
+    .meth-eyebrow { font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem; }
+    .meth-title { font-size:clamp(1.6rem,6vw,2.4rem); font-weight:800; line-height:1.1; margin-bottom:0.5rem; }
+    .meth-version { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); letter-spacing:0.06em; margin-bottom:1.5rem; }
+    .meth-lead { font-size:0.88rem; color:var(--muted); font-family:var(--font-mono); line-height:1.7; margin-bottom:2rem; border-left:2px solid var(--border); padding:0.5rem 0.9rem; }
+    .meth-body { font-size:0.88rem; color:var(--muted); line-height:1.8; display:flex; flex-direction:column; gap:1rem; }
+    .meth-body p { margin:0; }
+    .meth-body strong { color:var(--text); }
+    .meth-body a { color:var(--dim); text-decoration:underline; text-underline-offset:2px; }
+    .meth-body a:hover { color:var(--text); }
+    .rule-box { background:rgba(0,221,56,0.04); border-left:3px solid #00b02c; padding:0.85rem 1rem; font-size:0.88rem; color:var(--text); line-height:1.65; font-weight:500; }
+    .formula { background:var(--card); border:1px solid var(--border); border-left:3px solid #555; padding:1rem 1.15rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.8; overflow-x:auto; white-space:pre; }
+    .formula .kw { color:var(--text); font-weight:700; }
+    .formula .cm { color:#444; }
+    .formula .hl { color:#f0a500; }
+    .data-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:0.73rem; }
+    .data-table th { text-align:left; color:var(--dim); font-weight:400; letter-spacing:0.06em; text-transform:uppercase; font-size:0.62rem; padding:0.4rem 0.75rem 0.4rem 0; border-bottom:1px solid var(--border); }
+    .data-table td { padding:0.5rem 0.75rem 0.5rem 0; color:var(--muted); border-bottom:1px solid #1f1f1f; vertical-align:top; }
+    .data-table td:first-child { color:var(--text); font-weight:700; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .example-box { background:var(--card); border:1px solid var(--border); padding:1rem 1.15rem; }
+    .example-label { font-family:var(--font-mono); font-size:0.6rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.6rem; }
+    .example-body { font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.75; }
+    .example-body .hl { color:var(--text); font-weight:700; }
+    .advisory { background:rgba(240,165,0,0.05); border-left:2px solid #f0a500; padding:0.7rem 0.9rem; font-family:var(--font-mono); font-size:0.72rem; color:var(--muted); line-height:1.65; }
+    .advisory strong { color:var(--text); }
+    .note-box { background:var(--card); border-left:2px solid var(--border); padding:0.65rem 0.9rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); line-height:1.65; }
+    .note-box a { color:var(--dim); text-decoration:underline; }
+    .source-link { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); text-decoration:underline; text-underline-offset:2px; letter-spacing:0.04em; }
+    .source-link:hover { color:var(--muted); }
+    .subsection-title { font-size:0.9rem; font-weight:700; color:var(--text); margin-top:0.25rem; }
+    .related-pages { border-top:1px solid var(--border); padding-top:1.5rem; margin-top:1rem; }
+    .related-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem; }
+    .related-list { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .related-list a { font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); text-decoration:none; border:1px solid var(--border); padding:0.3rem 0.7rem; }
+    .related-list a:hover { color:var(--text); border-color:var(--muted); }
+    .meth-footer { border-top:1px solid var(--border); padding-top:1.5rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--dim); line-height:1.8; margin-top:2rem; }
+  </style>
+
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="../index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="meth-wrap">
+
+  <div style="margin-bottom:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+    <a href="../index.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← Home</a>
+    <a href="../methodology.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← All methodology</a>
+  </div>
+
+  <div class="meth-eyebrow">GetReal — Methodology</div>
+  <h1 class="meth-title">Data sources</h1>
+  <div class="meth-version">v1.0 — August 2026</div>
+
+  <div class="meth-body">
+    <div class="rule-box">
+      GetReal is built on open government data. Every data source is documented here — what it is, what it's used for, how often it's updated, and under what licence.
+    </div>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>Source</th><th>Used for</th><th>Update frequency</th><th>Licence</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>NSW Valuer General — Bulk PSI</td>
+          <td>NSW individual sale records (146,000+)</td>
+          <td>Daily on VG site; weekly pipeline</td>
+          <td>Open — CC BY</td>
+        </tr>
+        <tr>
+          <td>Victorian Valuer General — Quarterly report</td>
+          <td>VIC suburb medians + annual sales volumes</td>
+          <td>Quarterly</td>
+          <td>Open</td>
+        </tr>
+        <tr>
+          <td>Ray White sold listings (API)</td>
+          <td>NSW bedroom/bathroom enrichment</td>
+          <td>Weekly pipeline</td>
+          <td>Best-effort scraping</td>
+        </tr>
+        <tr>
+          <td>McGrath sold listings (scrape)</td>
+          <td>NSW bedroom/bathroom enrichment</td>
+          <td>Weekly pipeline</td>
+          <td>Best-effort scraping</td>
+        </tr>
+        <tr>
+          <td>LJ Hooker sold listings (API)</td>
+          <td>NSW bedroom/bathroom enrichment</td>
+          <td>Weekly pipeline</td>
+          <td>Best-effort scraping</td>
+        </tr>
+        <tr>
+          <td>State revenue offices (all 8)</td>
+          <td>Stamp duty brackets and FHB concessions</td>
+          <td>On legislative change</td>
+          <td>Public</td>
+        </tr>
+        <tr>
+          <td>Melbourne Institute — HEM</td>
+          <td>Living expense benchmarks (serviceability)</td>
+          <td>Quarterly (licensed)</td>
+          <td>Licensed — indicative figures used</td>
+        </tr>
+        <tr>
+          <td>Home Loan Experts — LMI rates</td>
+          <td>LMI premium estimation</td>
+          <td>As published</td>
+          <td>Indicative</td>
+        </tr>
+        <tr>
+          <td>RBA — Cash Rate (F1 table, FIRMMCRTD)</td>
+          <td>Interest rate assumption base</td>
+          <td>Fetched automatically on each pipeline run</td>
+          <td>Public</td>
+        </tr>
+        <tr>
+          <td>ABS ASGS Edition 3</td>
+          <td>Postcode metro/regional classification</td>
+          <td>Static (2021 census)</td>
+          <td>CC BY 4.0</td>
+        </tr>
+        <tr>
+          <td>ATO — HECS repayment schedule</td>
+          <td>Estimated HECS withholding from income</td>
+          <td>Annual (July update)</td>
+          <td>Public</td>
+        </tr>
+        <tr>
+          <td>ATO — Income tax brackets + LITO</td>
+          <td>Net income estimation from gross</td>
+          <td>Annual (July update)</td>
+          <td>Public</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="subsection-title">NSW enrichment coverage</p>
+    <p>GetReal enriches NSW sale records with bedroom and bathroom data from agency-sourced sold listings. As of August 2026, approximately 12.1% of NSW records are enriched (17,709 of 146,330). Agencies: Ray White (10,955 records), McGrath (5,386), LJ Hooker (1,368). Un-enriched records use national distribution estimates as a fallback.</p>
+
+    <a class="source-link" href="../enrichment-dashboard.html">→ View live NSW enrichment coverage stats</a>
+
+    <p class="subsection-title">Open data advocacy</p>
+    <p>GetReal believes property sales data should be freely available in all Australian states and territories. NSW leads with individual sale records. Victoria, Queensland, and others publish only aggregate data. See the <a href="../manifesto.html">data freedom manifesto</a> for the full argument.</p>
+
+    <a class="source-link" href="https://www.valuergeneral.nsw.gov.au/land_values/bulk_land_value_information" target="_blank" rel="noopener">
+      ↗ NSW Valuer General — Bulk Property Sales Information
+    </a>
+
+    <div class="related-pages">
+      <div class="related-label">Related methodology</div>
+      <div class="related-list">
+          <a href="property-realism-score">Property realism score</a>
+          <a href="vic-methodology">VIC methodology</a>
+          <a href="borrowing-capacity">Borrowing capacity</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="meth-footer">
+    <p>GetReal is an informational tool. Nothing on this page is financial advice. Consult a licensed mortgage broker before making property decisions.</p>
+    <p style="margin-top:0.5rem;">See something wrong? <a href="mailto:hello@get-real.co" style="color:var(--dim);text-decoration:underline;">hello@get-real.co</a></p>
+  </div>
+
+</div>
+</body>
+</html>

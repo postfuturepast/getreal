@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interest rate assumptions — GetReal Methodology</title>
+  <meta name="description" content="What interest rate GetReal uses for borrowing capacity calculations. A representative variable rate based on the RBA cash rate plus lender margin, stress-tested at +3% per APRA requirements.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Interest rate assumptions — GetReal Methodology">
+  <meta property="og:description" content="What interest rate GetReal uses for borrowing capacity calculations. A representative variable rate based on the RBA cash rate plus lender margin, stress-tested at +3% per APRA requirements.">
+  <meta property="og:image" content="https://get-real.co/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://get-real.co/og-image.png">
+  <meta name="twitter:title" content="Interest rate assumptions — GetReal Methodology">
+  <meta name="twitter:description" content="What interest rate GetReal uses for borrowing capacity calculations. A representative variable rate based on the RBA cash rate plus lender margin, stress-tested at +3% per APRA requirements.">
+  <meta name="article:published_time" content="2025-01-01">
+  <meta name="article:modified_time" content="2026-08-07">
+  <link rel="canonical" href="https://get-real.co/methodology/interest-rate-assumptions">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+      "@type": "Article",
+      "@id": "https://get-real.co/methodology/interest-rate-assumptions#article",
+      "headline": "Interest rate assumptions — GetReal Methodology",
+      "description": "What interest rate GetReal uses for borrowing capacity calculations. A representative variable rate based on the RBA cash rate plus lender margin, stress-tested at +3% per APRA requirements.",
+      "url": "https://get-real.co/methodology/interest-rate-assumptions",
+      "datePublished": "2025-01-01",
+      "dateModified": "2026-08-07",
+      "author": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "publisher": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "inLanguage": "en-AU",
+      "isPartOf": {"@type":"WebPage","url":"https://get-real.co/methodology"}
+    },
+      {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"GetReal","item":"https://get-real.co/"},
+        {"@type":"ListItem","position":2,"name":"Methodology","item":"https://get-real.co/methodology"},
+        {"@type":"ListItem","position":3,"name":"Interest rate assumptions","item":"https://get-real.co/methodology/interest-rate-assumptions"}
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+          {"@type":"Question","name":"What interest rate does GetReal use?","acceptedAnswer":{"@type":"Answer","text":"GetReal uses a representative variable rate based on the RBA cash rate plus an average lender margin. As of August 2026, this is 6.49% per annum. The stress-test rate used in serviceability calculations is this rate plus the 3% APRA buffer — currently 9.49%. The rate is updated periodically, not in real-time."}},
+          {"@type":"Question","name":"What is the APRA serviceability buffer rate?","acceptedAnswer":{"@type":"Answer","text":"APRA's Prudential Practice Guide APG 223 (August 2022) requires lenders to add a minimum 3 percentage point buffer to the interest rate when assessing serviceability. If the loan rate is 6.49%, the stress-test rate is 9.49%. This buffer has been set at 3% since October 2021."}},
+          {"@type":"Question","name":"Can I override the interest rate in GetReal?","acceptedAnswer":{"@type":"Answer","text":"Yes. The buying ceiling calculator allows you to enter a custom interest rate — for example if you have a pre-approval from a lender at a specific rate. When overridden, the stress-test rate is still your entered rate plus 3% as required by APRA."}}
+      ]
+    }
+    ]
+  }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    .meth-wrap { max-width:700px; margin:0 auto; padding:2rem var(--pad-page) 5rem; }
+    .meth-eyebrow { font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem; }
+    .meth-title { font-size:clamp(1.6rem,6vw,2.4rem); font-weight:800; line-height:1.1; margin-bottom:0.5rem; }
+    .meth-version { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); letter-spacing:0.06em; margin-bottom:1.5rem; }
+    .meth-lead { font-size:0.88rem; color:var(--muted); font-family:var(--font-mono); line-height:1.7; margin-bottom:2rem; border-left:2px solid var(--border); padding:0.5rem 0.9rem; }
+    .meth-body { font-size:0.88rem; color:var(--muted); line-height:1.8; display:flex; flex-direction:column; gap:1rem; }
+    .meth-body p { margin:0; }
+    .meth-body strong { color:var(--text); }
+    .meth-body a { color:var(--dim); text-decoration:underline; text-underline-offset:2px; }
+    .meth-body a:hover { color:var(--text); }
+    .rule-box { background:rgba(0,221,56,0.04); border-left:3px solid #00b02c; padding:0.85rem 1rem; font-size:0.88rem; color:var(--text); line-height:1.65; font-weight:500; }
+    .formula { background:var(--card); border:1px solid var(--border); border-left:3px solid #555; padding:1rem 1.15rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.8; overflow-x:auto; white-space:pre; }
+    .formula .kw { color:var(--text); font-weight:700; }
+    .formula .cm { color:#444; }
+    .formula .hl { color:#f0a500; }
+    .data-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:0.73rem; }
+    .data-table th { text-align:left; color:var(--dim); font-weight:400; letter-spacing:0.06em; text-transform:uppercase; font-size:0.62rem; padding:0.4rem 0.75rem 0.4rem 0; border-bottom:1px solid var(--border); }
+    .data-table td { padding:0.5rem 0.75rem 0.5rem 0; color:var(--muted); border-bottom:1px solid #1f1f1f; vertical-align:top; }
+    .data-table td:first-child { color:var(--text); font-weight:700; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .example-box { background:var(--card); border:1px solid var(--border); padding:1rem 1.15rem; }
+    .example-label { font-family:var(--font-mono); font-size:0.6rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.6rem; }
+    .example-body { font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.75; }
+    .example-body .hl { color:var(--text); font-weight:700; }
+    .advisory { background:rgba(240,165,0,0.05); border-left:2px solid #f0a500; padding:0.7rem 0.9rem; font-family:var(--font-mono); font-size:0.72rem; color:var(--muted); line-height:1.65; }
+    .advisory strong { color:var(--text); }
+    .note-box { background:var(--card); border-left:2px solid var(--border); padding:0.65rem 0.9rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); line-height:1.65; }
+    .note-box a { color:var(--dim); text-decoration:underline; }
+    .source-link { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); text-decoration:underline; text-underline-offset:2px; letter-spacing:0.04em; }
+    .source-link:hover { color:var(--muted); }
+    .subsection-title { font-size:0.9rem; font-weight:700; color:var(--text); margin-top:0.25rem; }
+    .related-pages { border-top:1px solid var(--border); padding-top:1.5rem; margin-top:1rem; }
+    .related-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem; }
+    .related-list { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .related-list a { font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); text-decoration:none; border:1px solid var(--border); padding:0.3rem 0.7rem; }
+    .related-list a:hover { color:var(--text); border-color:var(--muted); }
+    .meth-footer { border-top:1px solid var(--border); padding-top:1.5rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--dim); line-height:1.8; margin-top:2rem; }
+  </style>
+
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="../index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="meth-wrap">
+
+  <div style="margin-bottom:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+    <a href="../index.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← Home</a>
+    <a href="../methodology.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← All methodology</a>
+  </div>
+
+  <div class="meth-eyebrow">GetReal — Methodology</div>
+  <h1 class="meth-title">Interest rate assumptions</h1>
+  <div class="meth-version">v1.0 — updated periodically from RBA (last reviewed August 2026)</div>
+
+  <div class="meth-body">
+    <div class="rule-box">
+      GetReal uses a single representative variable rate based on the RBA cash rate plus average lender margin. This is not a real-time feed — it is updated periodically. The stress-test rate is this rate plus the 3% APRA buffer.
+    </div>
+
+    <p>All three serviceability ceilings are sensitive to the interest rate assumption. GetReal uses a market-average variable rate rather than any lender's advertised rate — the tool is designed to give a realistic estimate across lenders, not to reflect any specific product.</p>
+
+    <table class="data-table">
+      <thead><tr><th>Rate component</th><th>Current assumption</th></tr></thead>
+      <tbody>
+        <tr><td>Representative variable rate</td><td>6.49% p.a.</td></tr>
+        <tr><td>APRA serviceability buffer</td><td>+ 3.00%</td></tr>
+        <tr><td>Stress-test rate</td><td>9.49% p.a.</td></tr>
+        <tr><td>Loan term assumed</td><td>30 years, principal and interest</td></tr>
+      </tbody>
+    </table>
+
+    <p class="subsection-title">Rate override</p>
+    <p>The buying ceiling calculator allows a custom rate override — for example, a pre-approval offer from a specific lender. When overridden, the stress-test rate is still entered_rate + 3%.</p>
+
+    <p class="subsection-title">How we track the RBA rate</p>
+    <p>GetReal's GitHub Actions pipeline fetches the RBA cash rate automatically from the RBA's F1 statistical table (series FIRMMCRTD). The representative mortgage rate is derived by adding an average lender margin to the cash rate and manually reviewed before each pipeline run.</p>
+
+    <div class="note-box">
+      Rate last reviewed: August 2026. RBA cash rate: 3.85% (as of August 2026). Representative variable rate: 6.49% (cash rate + ~2.64% average margin).
+    </div>
+
+    <div class="example-box">
+      <div class="example-label">Effect of rate on borrowing capacity — $3,000/month surplus</div>
+      <div class="example-body">
+Stress rate 8.49% (rate 5.49%):   max loan ≈ <span class="hl">$404,000</span>
+Stress rate 9.49% (rate 6.49%):   max loan ≈ <span class="hl">$370,000</span>
+Stress rate 10.49% (rate 7.49%):  max loan ≈ <span class="hl">$340,000</span>
+
+A 1% rise in the stress rate ≈ $30–35k reduction in borrowing capacity
+per $1,000/month of available surplus.
+      </div>
+    </div>
+
+    <a class="source-link" href="https://www.rba.gov.au/statistics/cash-rate/" target="_blank" rel="noopener">
+      ↗ Source: RBA — Cash Rate Target
+    </a>
+
+    <div class="related-pages">
+      <div class="related-label">Related methodology</div>
+      <div class="related-list">
+          <a href="serviceability">Serviceability</a>
+          <a href="borrowing-capacity">Borrowing capacity</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="meth-footer">
+    <p>GetReal is an informational tool. Nothing on this page is financial advice. Consult a licensed mortgage broker before making property decisions.</p>
+    <p style="margin-top:0.5rem;">See something wrong? <a href="mailto:hello@get-real.co" style="color:var(--dim);text-decoration:underline;">hello@get-real.co</a></p>
+  </div>
+
+</div>
+</body>
+</html>

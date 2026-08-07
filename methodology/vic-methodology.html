@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIC suburb methodology — GetReal Methodology</title>
+  <meta name="description" content="How GetReal estimates property realism scores for Victorian suburbs. VIC does not publish individual sale records. GetReal uses NSW-derived price distribution curves matched by property type, price bracket, and market depth.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="VIC suburb methodology — GetReal Methodology">
+  <meta property="og:description" content="How GetReal estimates property realism scores for Victorian suburbs. VIC does not publish individual sale records. GetReal uses NSW-derived price distribution curves matched by property type, price bracket, and market depth.">
+  <meta property="og:image" content="https://get-real.co/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://get-real.co/og-image.png">
+  <meta name="twitter:title" content="VIC suburb methodology — GetReal Methodology">
+  <meta name="twitter:description" content="How GetReal estimates property realism scores for Victorian suburbs. VIC does not publish individual sale records. GetReal uses NSW-derived price distribution curves matched by property type, price bracket, and market depth.">
+  <meta name="article:published_time" content="2025-01-01">
+  <meta name="article:modified_time" content="2026-08-07">
+  <link rel="canonical" href="https://get-real.co/methodology/vic-methodology">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+      "@type": "Article",
+      "@id": "https://get-real.co/methodology/vic-methodology#article",
+      "headline": "VIC suburb methodology — GetReal Methodology",
+      "description": "How GetReal estimates property realism scores for Victorian suburbs. VIC does not publish individual sale records. GetReal uses NSW-derived price distribution curves matched by property type, price bracket, and market depth.",
+      "url": "https://get-real.co/methodology/vic-methodology",
+      "datePublished": "2025-01-01",
+      "dateModified": "2026-08-07",
+      "author": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "publisher": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "inLanguage": "en-AU",
+      "isPartOf": {"@type":"WebPage","url":"https://get-real.co/methodology"}
+    },
+      {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"GetReal","item":"https://get-real.co/"},
+        {"@type":"ListItem","position":2,"name":"Methodology","item":"https://get-real.co/methodology"},
+        {"@type":"ListItem","position":3,"name":"VIC suburb methodology","item":"https://get-real.co/methodology/vic-methodology"}
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+          {"@type":"Question","name":"Why are VIC property scores estimated and not exact?","acceptedAnswer":{"@type":"Answer","text":"Victoria does not publish individual property sale records. The Victorian Valuer General publishes quarterly suburb-level median prices and annual sales volumes, but not transaction-level data. Without individual records, it is impossible to directly measure what fraction of sales fall at or below a given budget. GetReal estimates this using price distribution curves derived from NSW's 146,000+ individual sale records, matched to VIC suburbs by property type, price bracket, and market depth."}},
+          {"@type":"Question","name":"How accurate are GetReal's VIC property realism scores?","acceptedAnswer":{"@type":"Answer","text":"VIC scores are directionally useful but not precise. The estimation approach assumes VIC price distributions behave similarly to NSW markets with equivalent medians and volume. This is a reasonable assumption in most cases but will be less accurate in suburbs with unusual housing stock mix, strong recent price movements, or very thin markets. GetReal is transparent about this on every VIC result page."}}
+      ]
+    }
+    ]
+  }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    .meth-wrap { max-width:700px; margin:0 auto; padding:2rem var(--pad-page) 5rem; }
+    .meth-eyebrow { font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem; }
+    .meth-title { font-size:clamp(1.6rem,6vw,2.4rem); font-weight:800; line-height:1.1; margin-bottom:0.5rem; }
+    .meth-version { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); letter-spacing:0.06em; margin-bottom:1.5rem; }
+    .meth-lead { font-size:0.88rem; color:var(--muted); font-family:var(--font-mono); line-height:1.7; margin-bottom:2rem; border-left:2px solid var(--border); padding:0.5rem 0.9rem; }
+    .meth-body { font-size:0.88rem; color:var(--muted); line-height:1.8; display:flex; flex-direction:column; gap:1rem; }
+    .meth-body p { margin:0; }
+    .meth-body strong { color:var(--text); }
+    .meth-body a { color:var(--dim); text-decoration:underline; text-underline-offset:2px; }
+    .meth-body a:hover { color:var(--text); }
+    .rule-box { background:rgba(0,221,56,0.04); border-left:3px solid #00b02c; padding:0.85rem 1rem; font-size:0.88rem; color:var(--text); line-height:1.65; font-weight:500; }
+    .formula { background:var(--card); border:1px solid var(--border); border-left:3px solid #555; padding:1rem 1.15rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.8; overflow-x:auto; white-space:pre; }
+    .formula .kw { color:var(--text); font-weight:700; }
+    .formula .cm { color:#444; }
+    .formula .hl { color:#f0a500; }
+    .data-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:0.73rem; }
+    .data-table th { text-align:left; color:var(--dim); font-weight:400; letter-spacing:0.06em; text-transform:uppercase; font-size:0.62rem; padding:0.4rem 0.75rem 0.4rem 0; border-bottom:1px solid var(--border); }
+    .data-table td { padding:0.5rem 0.75rem 0.5rem 0; color:var(--muted); border-bottom:1px solid #1f1f1f; vertical-align:top; }
+    .data-table td:first-child { color:var(--text); font-weight:700; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .example-box { background:var(--card); border:1px solid var(--border); padding:1rem 1.15rem; }
+    .example-label { font-family:var(--font-mono); font-size:0.6rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.6rem; }
+    .example-body { font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.75; }
+    .example-body .hl { color:var(--text); font-weight:700; }
+    .advisory { background:rgba(240,165,0,0.05); border-left:2px solid #f0a500; padding:0.7rem 0.9rem; font-family:var(--font-mono); font-size:0.72rem; color:var(--muted); line-height:1.65; }
+    .advisory strong { color:var(--text); }
+    .note-box { background:var(--card); border-left:2px solid var(--border); padding:0.65rem 0.9rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); line-height:1.65; }
+    .note-box a { color:var(--dim); text-decoration:underline; }
+    .source-link { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); text-decoration:underline; text-underline-offset:2px; letter-spacing:0.04em; }
+    .source-link:hover { color:var(--muted); }
+    .subsection-title { font-size:0.9rem; font-weight:700; color:var(--text); margin-top:0.25rem; }
+    .related-pages { border-top:1px solid var(--border); padding-top:1.5rem; margin-top:1rem; }
+    .related-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem; }
+    .related-list { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .related-list a { font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); text-decoration:none; border:1px solid var(--border); padding:0.3rem 0.7rem; }
+    .related-list a:hover { color:var(--text); border-color:var(--muted); }
+    .meth-footer { border-top:1px solid var(--border); padding-top:1.5rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--dim); line-height:1.8; margin-top:2rem; }
+  </style>
+
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="../index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="meth-wrap">
+
+  <div style="margin-bottom:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+    <a href="../index.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← Home</a>
+    <a href="../methodology.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← All methodology</a>
+  </div>
+
+  <div class="meth-eyebrow">GetReal — Methodology</div>
+  <h1 class="meth-title">VIC suburb methodology</h1>
+  <div class="meth-version">v1.0 — January 2025 (VIC data: Q4 2025 VGV report)</div>
+
+  <div class="meth-body">
+    <div class="rule-box">
+      Victoria does not publish individual sale records. GetReal estimates VIC budget scores using NSW price distribution curves matched by property type, price bracket, and market depth. This is an estimation approach — not a direct count. GetReal is transparent about this on every VIC result.
+    </div>
+
+    <p>NSW has over 146,000 individual sale records, which allows direct measurement of the price distribution around the median — how many sales fall at 80%, 90%, 100%, 110% of median, and so on. This distribution shape is consistent across NSW with two meaningful variables: price bracket and market depth.</p>
+
+    <p class="subsection-title">Price brackets</p>
+    <table class="data-table">
+      <thead><tr><th>Bracket</th><th>Median price range</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Under $500,000</td></tr>
+        <tr><td>2</td><td>$500,000 – $800,000</td></tr>
+        <tr><td>3</td><td>$800,000 – $1,200,000</td></tr>
+        <tr><td>4</td><td>$1,200,000 – $1,800,000</td></tr>
+        <tr><td>5</td><td>Over $1,800,000</td></tr>
+      </tbody>
+    </table>
+
+    <p class="subsection-title">Market depth tiers</p>
+    <p>Thin markets (under 30 sales/year) have tighter price distributions — buyers compete hard for limited stock. Active markets (30+ sales/year) have wider dispersion. Three depth tiers were tested; high-volume and medium-volume suburbs were statistically indistinguishable. GetReal uses two tiers: active (≥30 sales/year) and thin (&lt;30 sales/year).</p>
+
+    <p class="subsection-title">Annual sales count — important note</p>
+    <p>The annual sales count for VIC suburbs is the rolling 12-month figure from the Q4 2025 VGV report — meaning calendar year 2025, not the trailing 12 months from today. GetReal displays "in 2025 (VGV annual data)" not "in the last 12 months" for this reason.</p>
+
+    <p class="subsection-title">Curve lookup</p>
+    <div class="formula"><span class="cm">// VIC suburb: median $750k, 45 sales/year, property type: house</span>
+
+<span class="kw">bracket</span>    = 2           <span class="cm">// $500k–$800k</span>
+<span class="kw">depth_tier</span> = active      <span class="cm">// 45 ≥ 30</span>
+
+<span class="kw">ratio</span>      = budget ÷ suburb_median
+<span class="cm">// e.g. $650k ÷ $750k = 0.867</span>
+
+<span class="kw">budget_pct</span> = interpolate(price_curves, type, bracket, depth_tier, ratio)
+<span class="cm">// Curves store percentiles at 11 ratio thresholds:
+// 0.5×, 0.6×, 0.7×, 0.8×, 0.9×, 1.0×, 1.1×, 1.2×, 1.3×, 1.4×, 1.5× median</span></div>
+
+    <div class="advisory">
+      <strong>Honest limitation:</strong> VIC scores are estimates calibrated to NSW market behaviour. Actual VIC distributions may differ — particularly in suburbs with unusual housing stock, strong recent price movements, or very thin markets. Treat VIC scores as directionally useful, not precise.
+    </div>
+
+    <a class="source-link" href="https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics" target="_blank" rel="noopener">
+      ↗ Source: Victorian Valuer General — Quarterly Property Sales Statistics
+    </a>
+
+    <div class="related-pages">
+      <div class="related-label">Related methodology</div>
+      <div class="related-list">
+          <a href="property-realism-score">Property realism score</a>
+          <a href="data-sources">Data sources</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="meth-footer">
+    <p>GetReal is an informational tool. Nothing on this page is financial advice. Consult a licensed mortgage broker before making property decisions.</p>
+    <p style="margin-top:0.5rem;">See something wrong? <a href="mailto:hello@get-real.co" style="color:var(--dim);text-decoration:underline;">hello@get-real.co</a></p>
+  </div>
+
+</div>
+</body>
+</html>

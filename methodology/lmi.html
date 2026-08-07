@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lenders mortgage insurance (LMI) — GetReal Methodology</title>
+  <meta name="description" content="How LMI (lenders mortgage insurance) is calculated in Australia. Payable when LVR exceeds 80%. Rates by LVR band and loan size. LMI stamp duty by state. GetReal uses indicative Helia/QBE rates.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Lenders mortgage insurance (LMI) — GetReal Methodology">
+  <meta property="og:description" content="How LMI (lenders mortgage insurance) is calculated in Australia. Payable when LVR exceeds 80%. Rates by LVR band and loan size. LMI stamp duty by state. GetReal uses indicative Helia/QBE rates.">
+  <meta property="og:image" content="https://get-real.co/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://get-real.co/og-image.png">
+  <meta name="twitter:title" content="Lenders mortgage insurance (LMI) — GetReal Methodology">
+  <meta name="twitter:description" content="How LMI (lenders mortgage insurance) is calculated in Australia. Payable when LVR exceeds 80%. Rates by LVR band and loan size. LMI stamp duty by state. GetReal uses indicative Helia/QBE rates.">
+  <meta name="article:published_time" content="2025-01-01">
+  <meta name="article:modified_time" content="2026-08-07">
+  <link rel="canonical" href="https://get-real.co/methodology/lmi">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+      "@type": "Article",
+      "@id": "https://get-real.co/methodology/lmi#article",
+      "headline": "Lenders mortgage insurance (LMI) — GetReal Methodology",
+      "description": "How LMI (lenders mortgage insurance) is calculated in Australia. Payable when LVR exceeds 80%. Rates by LVR band and loan size. LMI stamp duty by state. GetReal uses indicative Helia/QBE rates.",
+      "url": "https://get-real.co/methodology/lmi",
+      "datePublished": "2025-01-01",
+      "dateModified": "2026-08-07",
+      "author": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "publisher": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "inLanguage": "en-AU",
+      "isPartOf": {"@type":"WebPage","url":"https://get-real.co/methodology"}
+    },
+      {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"GetReal","item":"https://get-real.co/"},
+        {"@type":"ListItem","position":2,"name":"Methodology","item":"https://get-real.co/methodology"},
+        {"@type":"ListItem","position":3,"name":"Lenders mortgage insurance (LMI)","item":"https://get-real.co/methodology/lmi"}
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+          {"@type":"Question","name":"What is LMI in Australia?","acceptedAnswer":{"@type":"Answer","text":"LMI stands for lenders mortgage insurance. It is an insurance premium paid by the borrower that protects the lender (not the borrower) if the borrower defaults. LMI is payable when the loan-to-value ratio (LVR) exceeds 80%. The premium is a percentage of the loan amount that varies by LVR band and loan size, and is typically capitalised into the loan rather than paid upfront."}},
+          {"@type":"Question","name":"How much does LMI cost in Australia?","acceptedAnswer":{"@type":"Answer","text":"LMI varies by LVR and loan size. As indicative figures: at 80.01–85% LVR, around 0.70–0.76% of the loan amount. At 85.01–90% LVR, around 1.43%. At 90.01–95% LVR, around 2.77–3.09%. On an $800,000 loan at 90% LVR, LMI might be approximately $11,440. Most borrowers capitalise LMI into the loan rather than paying it upfront."}},
+          {"@type":"Question","name":"Is LMI tax deductible in Australia?","acceptedAnswer":{"@type":"Answer","text":"For investment properties, LMI is generally deductible over the life of the loan (not in the year paid). For owner-occupier properties, LMI is not tax deductible. GetReal does not model tax deductibility — consult a tax adviser."}}
+      ]
+    }
+    ]
+  }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    .meth-wrap { max-width:700px; margin:0 auto; padding:2rem var(--pad-page) 5rem; }
+    .meth-eyebrow { font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem; }
+    .meth-title { font-size:clamp(1.6rem,6vw,2.4rem); font-weight:800; line-height:1.1; margin-bottom:0.5rem; }
+    .meth-version { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); letter-spacing:0.06em; margin-bottom:1.5rem; }
+    .meth-lead { font-size:0.88rem; color:var(--muted); font-family:var(--font-mono); line-height:1.7; margin-bottom:2rem; border-left:2px solid var(--border); padding:0.5rem 0.9rem; }
+    .meth-body { font-size:0.88rem; color:var(--muted); line-height:1.8; display:flex; flex-direction:column; gap:1rem; }
+    .meth-body p { margin:0; }
+    .meth-body strong { color:var(--text); }
+    .meth-body a { color:var(--dim); text-decoration:underline; text-underline-offset:2px; }
+    .meth-body a:hover { color:var(--text); }
+    .rule-box { background:rgba(0,221,56,0.04); border-left:3px solid #00b02c; padding:0.85rem 1rem; font-size:0.88rem; color:var(--text); line-height:1.65; font-weight:500; }
+    .formula { background:var(--card); border:1px solid var(--border); border-left:3px solid #555; padding:1rem 1.15rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.8; overflow-x:auto; white-space:pre; }
+    .formula .kw { color:var(--text); font-weight:700; }
+    .formula .cm { color:#444; }
+    .formula .hl { color:#f0a500; }
+    .data-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:0.73rem; }
+    .data-table th { text-align:left; color:var(--dim); font-weight:400; letter-spacing:0.06em; text-transform:uppercase; font-size:0.62rem; padding:0.4rem 0.75rem 0.4rem 0; border-bottom:1px solid var(--border); }
+    .data-table td { padding:0.5rem 0.75rem 0.5rem 0; color:var(--muted); border-bottom:1px solid #1f1f1f; vertical-align:top; }
+    .data-table td:first-child { color:var(--text); font-weight:700; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .example-box { background:var(--card); border:1px solid var(--border); padding:1rem 1.15rem; }
+    .example-label { font-family:var(--font-mono); font-size:0.6rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.6rem; }
+    .example-body { font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.75; }
+    .example-body .hl { color:var(--text); font-weight:700; }
+    .advisory { background:rgba(240,165,0,0.05); border-left:2px solid #f0a500; padding:0.7rem 0.9rem; font-family:var(--font-mono); font-size:0.72rem; color:var(--muted); line-height:1.65; }
+    .advisory strong { color:var(--text); }
+    .note-box { background:var(--card); border-left:2px solid var(--border); padding:0.65rem 0.9rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); line-height:1.65; }
+    .note-box a { color:var(--dim); text-decoration:underline; }
+    .source-link { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); text-decoration:underline; text-underline-offset:2px; letter-spacing:0.04em; }
+    .source-link:hover { color:var(--muted); }
+    .subsection-title { font-size:0.9rem; font-weight:700; color:var(--text); margin-top:0.25rem; }
+    .related-pages { border-top:1px solid var(--border); padding-top:1.5rem; margin-top:1rem; }
+    .related-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem; }
+    .related-list { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .related-list a { font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); text-decoration:none; border:1px solid var(--border); padding:0.3rem 0.7rem; }
+    .related-list a:hover { color:var(--text); border-color:var(--muted); }
+    .meth-footer { border-top:1px solid var(--border); padding-top:1.5rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--dim); line-height:1.8; margin-top:2rem; }
+  </style>
+
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="../index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="meth-wrap">
+
+  <div style="margin-bottom:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+    <a href="../index.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← Home</a>
+    <a href="../methodology.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← All methodology</a>
+  </div>
+
+  <div class="meth-eyebrow">GetReal — Methodology</div>
+  <h1 class="meth-title">Lenders mortgage insurance (LMI)</h1>
+  <div class="meth-version">v1.0 — rates updated May 2026</div>
+
+  <div class="meth-body">
+    <div class="rule-box">
+      LMI is an insurance premium paid by the borrower that protects the lender if the borrower defaults. It is payable when LVR exceeds 80%. The premium varies by LVR band and loan size, and is typically capitalised into the loan.
+    </div>
+
+    <p>LMI is not optional at high LVR — it's a lender requirement. It protects the lender, not the borrower. The two main LMI providers in Australia are Helia (formerly Genworth) and QBE. GetReal uses indicative rates sourced from Home Loan Experts (May 2026).</p>
+
+    <p class="subsection-title">LMI premium rates</p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>LVR band</th><th>Loan &lt;$300k</th><th>$300k–$500k</th><th>$500k–$750k</th><th>$750k–$1M</th><th>Over $1M</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>80.01–85%</td><td>0.70%</td><td>0.70%</td><td>0.76%</td><td>0.76%</td><td>0.76%</td></tr>
+        <tr><td>85.01–90%</td><td>1.43%</td><td>1.43%</td><td>1.43%</td><td>1.43%</td><td>1.43%</td></tr>
+        <tr><td>90.01–95%</td><td>2.77%</td><td>2.77%</td><td>3.09%</td><td>3.09%</td><td>3.09%</td></tr>
+      </tbody>
+    </table>
+    <p style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);">Indicative only. Actual rates depend on lender and insurer.</p>
+
+    <div class="formula"><span class="kw">LMI premium</span>    = loan_amount × lmi_rate_pct
+<span class="kw">LMI stamp duty</span> = lmi_premium × state_lmi_sd_rate
+<span class="kw">Total LMI cost</span> = lmi_premium + lmi_stamp_duty
+
+<span class="cm">// When capitalised (most common):</span>
+<span class="kw">Total loan</span>     = base_loan + lmi_premium
+<span class="cm">// LMI stamp duty is paid upfront — not capitalised</span></div>
+
+    <p class="subsection-title">LMI stamp duty by state</p>
+    <p>Most states charge stamp duty on the LMI premium itself. This is a small additional upfront cost, not capitalised.</p>
+
+    <div class="example-box">
+      <div class="example-label">Worked example — $700,000 purchase, 10% deposit, NSW</div>
+      <div class="example-body">
+Purchase price:    $700,000
+Deposit (10%):     $70,000
+Base loan:         $630,000
+LVR:               90.0%
+
+LMI rate (85.01–90%, loan $500k–$750k): 1.43%
+LMI premium:       $630,000 × 1.43% = <span class="hl">$9,009</span>
+LMI stamp duty (NSW, 9%): $9,009 × 9% = $811
+
+Total loan (capitalised LMI): <span class="hl">$639,009</span>
+Effective LVR:     91.3%
+      </div>
+    </div>
+
+    <div class="note-box">
+      LMI can be avoided by: (1) reaching 20% deposit, (2) using a guarantor, or (3) qualifying for the First Home Guarantee (eligible FHBs only). GetReal does not currently model guarantor loans.
+    </div>
+
+    <a class="source-link" href="https://www.homeloanexperts.com.au/lenders-mortgage-insurance/lmi-rates/" target="_blank" rel="noopener">
+      ↗ Source: Home Loan Experts — indicative LMI rates (May 2026)
+    </a>
+
+    <div class="related-pages">
+      <div class="related-label">Related methodology</div>
+      <div class="related-list">
+          <a href="lvr">LVR limits</a>
+          <a href="borrowing-capacity">Borrowing capacity</a>
+          <a href="stamp-duty">Stamp duty</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="meth-footer">
+    <p>GetReal is an informational tool. Nothing on this page is financial advice. Consult a licensed mortgage broker before making property decisions.</p>
+    <p style="margin-top:0.5rem;">See something wrong? <a href="mailto:hello@get-real.co" style="color:var(--dim);text-decoration:underline;">hello@get-real.co</a></p>
+  </div>
+
+</div>
+</body>
+</html>

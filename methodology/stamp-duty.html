@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stamp duty — GetReal Methodology</title>
+  <meta name="description" content="How stamp duty (transfer duty) is calculated across all 8 Australian states and territories. Progressive bracket formula, NT quadratic formula, VIC PPR rates, and first home buyer concessions for every state.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Stamp duty — GetReal Methodology">
+  <meta property="og:description" content="How stamp duty (transfer duty) is calculated across all 8 Australian states and territories. Progressive bracket formula, NT quadratic formula, VIC PPR rates, and first home buyer concessions for every state.">
+  <meta property="og:image" content="https://get-real.co/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://get-real.co/og-image.png">
+  <meta name="twitter:title" content="Stamp duty — GetReal Methodology">
+  <meta name="twitter:description" content="How stamp duty (transfer duty) is calculated across all 8 Australian states and territories. Progressive bracket formula, NT quadratic formula, VIC PPR rates, and first home buyer concessions for every state.">
+  <meta name="article:published_time" content="2025-01-01">
+  <meta name="article:modified_time" content="2026-08-07">
+  <link rel="canonical" href="https://get-real.co/methodology/stamp-duty">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+      "@type": "Article",
+      "@id": "https://get-real.co/methodology/stamp-duty#article",
+      "headline": "Stamp duty — GetReal Methodology",
+      "description": "How stamp duty (transfer duty) is calculated across all 8 Australian states and territories. Progressive bracket formula, NT quadratic formula, VIC PPR rates, and first home buyer concessions for every state.",
+      "url": "https://get-real.co/methodology/stamp-duty",
+      "datePublished": "2025-01-01",
+      "dateModified": "2026-08-07",
+      "author": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "publisher": {"@type":"Organization","name":"GetReal","url":"https://get-real.co"},
+      "inLanguage": "en-AU",
+      "isPartOf": {"@type":"WebPage","url":"https://get-real.co/methodology"}
+    },
+      {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"GetReal","item":"https://get-real.co/"},
+        {"@type":"ListItem","position":2,"name":"Methodology","item":"https://get-real.co/methodology"},
+        {"@type":"ListItem","position":3,"name":"Stamp duty","item":"https://get-real.co/methodology/stamp-duty"}
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+          {"@type":"Question","name":"How is stamp duty calculated in Australia?","acceptedAnswer":{"@type":"Answer","text":"Stamp duty is calculated using a progressive bracket system — similar to income tax. You pay a base amount for your price bracket, plus a marginal rate on the portion above the bracket minimum. For example, in NSW at $800,000 the duty is $17,990 (base) plus 4.5% of the amount over $500,000. The Northern Territory uses a quadratic formula instead of brackets for purchases up to $525,000."}},
+          {"@type":"Question","name":"Which Australian state has the lowest stamp duty?","acceptedAnswer":{"@type":"Answer","text":"Queensland and ACT generally have lower stamp duty than NSW and VIC at most price points. At $800,000: QLD $24,525, ACT $25,200, NSW $31,090, WA $28,453, TAS $30,247, SA $38,730, VIC $43,070. Rates change frequently — use GetReal's stamp duty calculator for current figures."}},
+          {"@type":"Question","name":"Do first home buyers get stamp duty concessions in Australia?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every state and territory offers some form of first home buyer stamp duty relief. NSW exempts FHBs below $800,000 and tapers to $1,000,000. VIC exempts below $600,000, tapers to $750,000. QLD exempts below $700,000, tapers to $800,000. WA exempts below $450,000, tapers to $600,000. ACT has an income-tested full exemption. SA offers no duty concession (grant only). TAS gives a 50% discount. NT gives an $18,601 rebate."}}
+      ]
+    }
+    ]
+  }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    .meth-wrap { max-width:700px; margin:0 auto; padding:2rem var(--pad-page) 5rem; }
+    .meth-eyebrow { font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem; }
+    .meth-title { font-size:clamp(1.6rem,6vw,2.4rem); font-weight:800; line-height:1.1; margin-bottom:0.5rem; }
+    .meth-version { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); letter-spacing:0.06em; margin-bottom:1.5rem; }
+    .meth-lead { font-size:0.88rem; color:var(--muted); font-family:var(--font-mono); line-height:1.7; margin-bottom:2rem; border-left:2px solid var(--border); padding:0.5rem 0.9rem; }
+    .meth-body { font-size:0.88rem; color:var(--muted); line-height:1.8; display:flex; flex-direction:column; gap:1rem; }
+    .meth-body p { margin:0; }
+    .meth-body strong { color:var(--text); }
+    .meth-body a { color:var(--dim); text-decoration:underline; text-underline-offset:2px; }
+    .meth-body a:hover { color:var(--text); }
+    .rule-box { background:rgba(0,221,56,0.04); border-left:3px solid #00b02c; padding:0.85rem 1rem; font-size:0.88rem; color:var(--text); line-height:1.65; font-weight:500; }
+    .formula { background:var(--card); border:1px solid var(--border); border-left:3px solid #555; padding:1rem 1.15rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.8; overflow-x:auto; white-space:pre; }
+    .formula .kw { color:var(--text); font-weight:700; }
+    .formula .cm { color:#444; }
+    .formula .hl { color:#f0a500; }
+    .data-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:0.73rem; }
+    .data-table th { text-align:left; color:var(--dim); font-weight:400; letter-spacing:0.06em; text-transform:uppercase; font-size:0.62rem; padding:0.4rem 0.75rem 0.4rem 0; border-bottom:1px solid var(--border); }
+    .data-table td { padding:0.5rem 0.75rem 0.5rem 0; color:var(--muted); border-bottom:1px solid #1f1f1f; vertical-align:top; }
+    .data-table td:first-child { color:var(--text); font-weight:700; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .example-box { background:var(--card); border:1px solid var(--border); padding:1rem 1.15rem; }
+    .example-label { font-family:var(--font-mono); font-size:0.6rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.6rem; }
+    .example-body { font-family:var(--font-mono); font-size:0.75rem; color:var(--muted); line-height:1.75; }
+    .example-body .hl { color:var(--text); font-weight:700; }
+    .advisory { background:rgba(240,165,0,0.05); border-left:2px solid #f0a500; padding:0.7rem 0.9rem; font-family:var(--font-mono); font-size:0.72rem; color:var(--muted); line-height:1.65; }
+    .advisory strong { color:var(--text); }
+    .note-box { background:var(--card); border-left:2px solid var(--border); padding:0.65rem 0.9rem; font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); line-height:1.65; }
+    .note-box a { color:var(--dim); text-decoration:underline; }
+    .source-link { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.65rem; color:var(--dim); text-decoration:underline; text-underline-offset:2px; letter-spacing:0.04em; }
+    .source-link:hover { color:var(--muted); }
+    .subsection-title { font-size:0.9rem; font-weight:700; color:var(--text); margin-top:0.25rem; }
+    .related-pages { border-top:1px solid var(--border); padding-top:1.5rem; margin-top:1rem; }
+    .related-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem; }
+    .related-list { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .related-list a { font-family:var(--font-mono); font-size:0.7rem; color:var(--dim); text-decoration:none; border:1px solid var(--border); padding:0.3rem 0.7rem; }
+    .related-list a:hover { color:var(--text); border-color:var(--muted); }
+    .meth-footer { border-top:1px solid var(--border); padding-top:1.5rem; font-family:var(--font-mono); font-size:0.68rem; color:var(--dim); line-height:1.8; margin-top:2rem; }
+  </style>
+
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="../index.html">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="meth-wrap">
+
+  <div style="margin-bottom:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+    <a href="../index.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← Home</a>
+    <a href="../methodology.html" style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);text-decoration:underline;letter-spacing:0.06em;text-transform:uppercase;">← All methodology</a>
+  </div>
+
+  <div class="meth-eyebrow">GetReal — Methodology</div>
+  <h1 class="meth-title">Stamp duty</h1>
+  <div class="meth-version">v1.0 — rates verified August 2026</div>
+
+  <div class="meth-body">
+    <div class="rule-box">
+      Stamp duty (transfer duty) is a state and territory tax on property purchases. Every state uses a progressive bracket system. GetReal calculates it from bracket tables sourced directly from each state revenue office, stored in the <code>stamp_duty_brackets</code> Supabase table.
+    </div>
+
+    <p>Stamp duty is one of the largest upfront costs in a property purchase. It comes directly out of your savings before deposit — which is why it matters so much to the deposit ceiling. A $31,090 stamp duty bill on an $800,000 NSW purchase is $31,090 that can't become deposit.</p>
+
+    <p class="subsection-title">General formula (all states except NT)</p>
+    <div class="formula"><span class="kw">Duty</span> = base_amount_for_bracket
+       + (purchase_price − bracket_min) × marginal_rate
+
+<span class="cm">// VIC owner-occupier ≤$550k: PPR rate schedule applies (lower)
+// VIC $960k–$2M: is_full_price=true (rate applies to full price, not margin)</span></div>
+
+    <p class="subsection-title">NT — quadratic formula</p>
+    <div class="formula"><span class="cm">// Where V = purchase_price ÷ 1000</span>
+<span class="kw">Duty</span> = (0.06571441 × V² + 15 × V) ÷ 1000   <span class="cm">// up to $525,000</span>
+<span class="kw">Duty</span> = purchase_price × <span class="hl">0.0545</span>             <span class="cm">// above $525,000</span></div>
+
+    <p class="subsection-title">Stamp duty by state — standard, non-FHB, established property</p>
+    <table class="data-table">
+      <thead><tr><th>State</th><th>$500k</th><th>$800k</th><th>$1.0M</th><th>$1.5M</th></tr></thead>
+      <tbody>
+        <tr><td>NSW</td><td>$17,990</td><td>$31,090</td><td>$40,090</td><td>$68,215</td></tr>
+        <tr><td>VIC (standard)</td><td>$21,970</td><td>$43,070</td><td>$55,000</td><td>$82,500</td></tr>
+        <tr><td>VIC (owner-occ ≤$550k)</td><td>$5,765</td><td>$43,070</td><td>$55,000</td><td>$82,500</td></tr>
+        <tr><td>QLD</td><td>$8,750</td><td>$24,525</td><td>$34,525</td><td>$59,525</td></tr>
+        <tr><td>WA</td><td>$17,765</td><td>$28,453</td><td>$37,453</td><td>$63,453</td></tr>
+        <tr><td>SA</td><td>$21,330</td><td>$38,730</td><td>$50,730</td><td>$81,730</td></tr>
+        <tr><td>TAS</td><td>$18,247</td><td>$30,247</td><td>$38,247</td><td>$63,247</td></tr>
+        <tr><td>ACT</td><td>$12,800</td><td>$25,200</td><td>$34,200</td><td>$60,200</td></tr>
+        <tr><td>NT</td><td>$23,929</td><td>$38,422</td><td>$49,007</td><td>$82,543</td></tr>
+      </tbody>
+    </table>
+    <p style="font-family:var(--font-mono);font-size:0.68rem;color:var(--dim);">Approximate figures. Use the <a href="../stamp-duty.html">stamp duty calculator</a> for precise results.</p>
+
+    <p class="subsection-title">First home buyer concessions</p>
+    <table class="data-table">
+      <thead><tr><th>State</th><th>FHB exemption threshold</th><th>Taper / detail</th></tr></thead>
+      <tbody>
+        <tr><td>NSW</td><td>$800,000</td><td>Tapers to $1,000,000</td></tr>
+        <tr><td>VIC</td><td>$600,000</td><td>Tapers to $750,000</td></tr>
+        <tr><td>QLD</td><td>$700,000</td><td>Tapers to $800,000</td></tr>
+        <tr><td>WA</td><td>$450,000</td><td>Tapers to $600,000</td></tr>
+        <tr><td>SA</td><td>No duty concession</td><td>Grant only ($15,000)</td></tr>
+        <tr><td>TAS</td><td>50% discount on established homes</td><td>No upper limit</td></tr>
+        <tr><td>ACT</td><td>Full exemption</td><td>Income-tested (Home Buyer Concession Scheme)</td></tr>
+        <tr><td>NT</td><td>$18,601 rebate</td><td>Phaseout starts $650k, ends $723k</td></tr>
+      </tbody>
+    </table>
+
+    <a class="source-link" href="../stamp-duty.html">→ Use the stamp duty calculator</a>
+
+    <div class="related-pages">
+      <div class="related-label">Related methodology</div>
+      <div class="related-list">
+          <a href="borrowing-capacity">Borrowing capacity</a>
+          <a href="lvr">LVR limits</a>
+          <a href="lmi">LMI</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="meth-footer">
+    <p>GetReal is an informational tool. Nothing on this page is financial advice. Consult a licensed mortgage broker before making property decisions.</p>
+    <p style="margin-top:0.5rem;">See something wrong? <a href="mailto:hello@get-real.co" style="color:var(--dim);text-decoration:underline;">hello@get-real.co</a></p>
+  </div>
+
+</div>
+</body>
+</html>
