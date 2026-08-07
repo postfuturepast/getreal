@@ -13,4 +13,16 @@
     <lastmod>2026-08-07</lastmod>
   </sitemap>
 
+  <!-- Series A: How much can I borrow on $X salary? (25 pages) -->
+  <sitemap>
+    <loc>https://get-real.co/sitemap-guides-a.xml</loc>
+    <lastmod>2026-08-07</lastmod>
+  </sitemap>
+
+  <!-- Series B: Can I afford a $Y property? (55 pages) -->
+  <sitemap>
+    <loc>https://get-real.co/sitemap-guides-b.xml</loc>
+    <lastmod>2026-08-07</lastmod>
+  </sitemap>
+
 </sitemapindex>
