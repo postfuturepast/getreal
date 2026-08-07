@@ -121,7 +121,7 @@ except Exception as e:
 section("stamp_duty_brackets")
 try:
     rows = fetch("stamp_duty_brackets?select=state,bracket_set&order=state.asc")
-    states_found = sorted(set(r["state"] for r in rows))
+    states_found = sorted(set(r["state"].strip() for r in rows))
     print(f"  Rows: {len(rows)}  States: {', '.join(states_found)}")
     expected_states = ["ACT", "NSW", "QLD", "SA", "TAS", "VIC", "WA"]
     for s in expected_states:
@@ -130,7 +130,7 @@ try:
     if "NT" not in states_found:
         print(f"  {WARN} NT not in stamp_duty_brackets (expected — NT uses nt_duty_formula)")
     # VIC should have both bracket_sets
-    vic_sets = set(r["bracket_set"] for r in rows if r["state"] == "VIC")
+    vic_sets = set(r["bracket_set"] for r in rows if r["state"].strip() == "VIC")
     check("standard" in vic_sets, "VIC has 'standard' bracket_set")
     check("vic_ppr" in vic_sets, "VIC has 'vic_ppr' bracket_set")
 except Exception as e:
@@ -173,7 +173,7 @@ try:
     print(f"  Rows: {len(rows)}")
     by_state = {}
     for r in rows:
-        by_state.setdefault(r["state"], set()).add(r["fee_type"])
+        by_state.setdefault(r["state"].strip(), set()).add(r["fee_type"])
     expected_states = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"]
     for s in expected_states:
         has_transfer  = s in by_state and "transfer"  in by_state[s]
@@ -190,9 +190,9 @@ try:
     rows = fetch("lmi_rates?select=lvr_min,lvr_max,loan_max,rate_pct")
     print(f"  Rows: {len(rows)} (expected 75 = 15 LVR bands × 5 loan bands)")
     check(len(rows) == 75, f"Row count = {len(rows)}")
-    # Check LVR values are decimals
-    bad_lvr = [r for r in rows if float(r["lvr_min"]) > 1 or float(r["lvr_max"]) > 1]
-    check(len(bad_lvr) == 0, f"All LVR values are decimals (not percentages)")
+    # Check LVR values are stored as percentages (80, 90), not decimals (0.8, 0.9)
+    bad_lvr = [r for r in rows if not (0 < float(r["lvr_min"]) <= 100) or not (0 < float(r["lvr_max"]) <= 100)]
+    check(len(bad_lvr) == 0, f"All LVR values are in percentage range (0–100)")
 except Exception as e:
     print(f"  {FAIL} Fetch failed: {e}"); errors += 1
 
