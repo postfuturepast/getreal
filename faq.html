@@ -13,7 +13,104 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="GetReal: Frequently Asked Questions">
     <meta name="twitter:description" content="How GetReal works, where the data comes from, and what the scores mean.">
+    <link rel="canonical" href="https://get-real.co/faq" />
+    <meta name="article:modified_time" content="2026-08-07" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "FAQPage",
+          "@id": "https://get-real.co/faq#faqpage",
+          "name": "GetReal: Frequently Asked Questions",
+          "description": "How GetReal works, where the data comes from, and what the property realism scores mean.",
+          "url": "https://get-real.co/faq",
+          "dateModified": "2026-08-07",
+          "publisher": {
+            "@type": "Organization",
+            "name": "GetReal",
+            "url": "https://get-real.co"
+          },
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Where does GetReal's property data come from?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "GetReal uses free, open-licence government property sales data. For NSW: the NSW Valuer General bulk Property Sales Information (PSI) — a complete record of every residential property sale in New South Wales, updated daily. For VIC: the Victorian Valuer General quarterly property sales reports, which publish suburb-level median prices and annual sales volumes."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How current is GetReal's property data?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "NSW data is updated daily from the NSW Valuer General. The tool uses the last 13 months of sales, so results reflect recent market conditions. VIC data is based on the most recently published quarterly report from Valuer-General Victoria, currently covering the 12 months of 2025."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Which parts of Australia does GetReal cover?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "NSW: Full coverage across 2,456 suburbs with real individual sales data from the last 13 months. Comparable property cards show real sold addresses with Google Street View photos. VIC: 780 suburbs with median price data and real annual sales volumes. Individual sale records and Street View are not available for VIC. Queensland, WA, SA, Tasmania, ACT and NT are on the roadmap."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How is the GetReal realism score calculated?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The score estimates how many properties matching all of your criteria (suburb, property type, budget, bedrooms, bathrooms, car spaces) actually sold in that suburb last year. Each factor reduces the pool: your budget covers a certain percentile of the market, and bedrooms, bathrooms and car spaces each have a known distribution across property types. These are multiplied together, then scaled so that 25 or more matching sales per year equals 100%."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What do the GetReal grade labels mean?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Highly Realistic (75–100%): Strong supply — plenty of properties matching your criteria sold last year. Realistic (55–74%): Good supply — you'll need patience but shouldn't struggle. Competitive (35–54%): Limited supply — properties matching your full criteria are uncommon. Tight (15–34%): Very limited supply — consider relaxing at least one criterion. Very Difficult (5–14%): Rare supply — your combined criteria eliminate almost everything. Unrealistic (0–4%): This combination almost never appears in this suburb."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does GetReal calculate budget scores for Victorian suburbs?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Victoria publishes suburb median prices and annual sales volumes, but not individual sale records. GetReal uses NSW as a calibration dataset — over 146,000 individual sale records show the actual shape of property markets by price bracket and market depth. For each Victorian suburb, GetReal matches it to the right NSW-derived curve by price bracket (5 bands from under $500k to over $1.8M) and market depth (active: 30+ sales/year, thin: under 30). The budget score is estimated from this curve. GetReal is transparent that VIC scores are estimates based on comparable NSW markets, not a direct count of VIC sales."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is GetReal financial advice?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No. GetReal is an informational tool only. It does not account for your personal financial situation, borrowing capacity, legal obligations, or specific market conditions at any point in time. Before making property decisions, speak with a licensed financial advisor, mortgage broker, or conveyancer."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "GetReal",
+              "item": "https://get-real.co/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "FAQ",
+              "item": "https://get-real.co/faq"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

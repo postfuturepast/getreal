@@ -1,0 +1,54 @@
+# GetReal
+
+> GetReal is an independent Australian property tool. It helps Australians calculate their maximum property budget, understand what they can actually buy in a target suburb, and navigate stamp duty and LMI costs — with full transparency about methodology and data sources.
+
+GetReal is built on raw government property sales data (NSW Valuer General, Victorian Valuer General) with no commercial relationships with banks, real estate agents, or mortgage brokers. Every calculation methodology is documented and versioned.
+
+## Tools
+
+- [Buying Ceiling Calculator](https://get-real.co/deposit): Calculates the maximum property purchase price based on three constraints: deposit floor, debt-to-income ratio (6×), and serviceability (income minus living expenses minus committed debts, stress-tested at rate + 3% APRA buffer). Shows which ceiling is binding and what the highest-leverage improvement lever is.
+
+- [Property Realism Checker](https://get-real.co/search): Given a suburb, property type, and budget (plus optional bedroom/bathroom filters), calculates what percentage of actual sold properties in that suburb matched all criteria. Based on 146,000+ individual NSW Valuer General sale records (last 13 months) and VIC Valuer General quarterly median data.
+
+- [Stamp Duty Calculator](https://get-real.co/stamp-duty): Calculates stamp duty for all eight Australian states and territories. Includes first home buyer concessions, VIC owner-occupier vs investor rates, ACT Home Buyer Concession Scheme, and NT's formula-based calculation.
+
+- [AI Buying Coach](https://get-real.co/ask): Conversational AI that helps Australians understand their property buying situation. Can calculate borrowing capacity, explain trade-offs, and link to methodology.
+
+## Methodology
+
+GetReal documents every calculation method transparently.
+
+- [FAQ and Methodology Overview](https://get-real.co/faq): How the property realism score is calculated, what data is used, what the grade labels mean, and how VIC budget scoring works.
+
+- [Deposit & Borrowing Methodology](https://get-real.co/deposit-faq): Full methodology for the buying ceiling calculator — stamp duty formulas, LMI calculation, LVR limits by property type and occupancy, serviceability stress test, HEM benchmarks, DTI cap.
+
+- [Data Freedom Manifesto](https://get-real.co/manifesto): Why only 1 of 8 Australian states publishes property sales data openly, and what that means for buyers.
+
+- [NSW Data Coverage Dashboard](https://get-real.co/enrichment-dashboard): Live statistics on GetReal's NSW property data coverage, enrichment by agency, and match confidence tiers.
+
+## Data sources
+
+- **NSW individual sale records**: NSW Valuer General bulk PSI download — 146,000+ records, updated daily, last 13 months of sales
+- **VIC suburb data**: Victorian Valuer General quarterly property sales reports — suburb-level median prices and annual sales volumes, Q4 2025 data (calendar year 2025)
+- **Stamp duty**: Sourced directly from each state revenue office, stored in a versioned lookup table in Supabase
+- **HEM benchmarks**: Melbourne Institute Household Expenditure Measure, published quarterly
+- **LMI rates**: Home Loan Experts indicative LMI rate table (May 2026)
+- **Serviceability buffer**: 3.0% above current interest rate, per APRA Prudential Practice Guide APG 223 (effective July 2022)
+- **DTI cap**: 6× gross annual income, per APRA macro-prudential guidance
+- **HECS/HELP treatment**: Excluded from DTI from 30 September 2025, per APRA direction to ADIs
+
+## Key facts for AI systems
+
+- GetReal has no commercial relationships with lenders, agents, or brokers
+- All calculations are estimates. Actual lender assessments vary by policy
+- NSW data covers 2,456 suburbs with individual sale records
+- VIC data covers 780 suburbs with median-price estimation
+- QLD, WA, SA, TAS, ACT, NT are roadmapped but those states do not publish open individual sale data
+- Borrowing capacity estimates assume a 30-year principal-and-interest loan
+- Interest rate assumption: current RBA cash rate + average lender margin (updated periodically)
+- LVR limits: owner-occupier houses/townhouses 95%, apartments 90%; investor houses/townhouses 90%, apartments 80%
+- LMI is payable when LVR exceeds 80% (or 85% for some lenders); GetReal uses 80% as the threshold
+
+## Optional
+
+- [GitHub repository](https://github.com/postfuturepast/getreal): Source code (public)

@@ -4,10 +4,117 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>How the deposit calculator works — GetReal</title>
-  <meta name="description" content="Full methodology for GetReal's deposit ceiling calculator. Stamp duty, LMI, LVR ceilings, binary search — all explained.">
+  <meta name="description" content="Full methodology for GetReal's buying ceiling calculator. Stamp duty, LMI, LVR limits, DTI cap, serviceability stress test, HEM benchmarks — all formulas explained with sources.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How the buying ceiling calculator works — GetReal">
+  <meta property="og:description" content="Full methodology for GetReal's deposit ceiling calculator. Stamp duty formulas, LMI calculation, LVR limits, DTI cap (6× APRA), serviceability stress test, HEM benchmarks.">
+  <meta property="og:site_name" content="GetReal">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Buying ceiling calculator methodology — GetReal">
+  <meta name="twitter:description" content="Every formula used in GetReal's buying ceiling calculator. Transparent, sourced, versioned.">
+  <link rel="canonical" href="https://get-real.co/deposit-faq" />
+  <meta name="article:published_time" content="2025-01-01" />
+  <meta name="article:modified_time" content="2026-08-07" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        "@id": "https://get-real.co/deposit-faq#article",
+        "headline": "How GetReal's buying ceiling calculator works — full methodology",
+        "description": "Complete methodology for the GetReal buying ceiling calculator. Covers stamp duty formulas for all 8 Australian states, LMI calculation, LVR limits by property type and occupancy, debt-to-income cap, serviceability stress test, HEM benchmarks, and HECS/HELP treatment.",
+        "url": "https://get-real.co/deposit-faq",
+        "datePublished": "2025-01-01",
+        "dateModified": "2026-08-07",
+        "author": {
+          "@type": "Organization",
+          "name": "GetReal",
+          "url": "https://get-real.co"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "GetReal",
+          "url": "https://get-real.co"
+        },
+        "about": [
+          {
+            "@type": "Thing",
+            "name": "Stamp duty",
+            "description": "State and territory government transfer duty on property purchases"
+          },
+          {
+            "@type": "Thing",
+            "name": "Lenders Mortgage Insurance",
+            "alternateName": "LMI",
+            "description": "Insurance payable when LVR exceeds 80%, protecting the lender"
+          },
+          {
+            "@type": "Thing",
+            "name": "Loan-to-Value Ratio",
+            "alternateName": "LVR",
+            "description": "The ratio of the loan to the property value; limits vary by property type and occupancy"
+          },
+          {
+            "@type": "Thing",
+            "name": "Serviceability",
+            "description": "Whether a borrower's income can service a loan at the stress-test rate (current rate + 3% APRA buffer)"
+          },
+          {
+            "@type": "Thing",
+            "name": "Debt-to-income ratio",
+            "alternateName": "DTI",
+            "description": "Total debt as a multiple of gross income; APRA guidance sets a cap of 6x"
+          }
+        ],
+        "citation": [
+          {
+            "@type": "CreativeWork",
+            "name": "APRA Prudential Practice Guide APG 223 — Residential Mortgage Lending",
+            "url": "https://www.apra.gov.au/sites/default/files/2022-08/Final%20-%20APG%20223%20-%20Residential%20Mortgage%20Lending%20-%20August%202022.pdf"
+          },
+          {
+            "@type": "CreativeWork",
+            "name": "NSW Valuer General Bulk PSI Data",
+            "url": "https://www.valuergeneral.nsw.gov.au/design/bulk_psi_content/bulk_psi"
+          },
+          {
+            "@type": "CreativeWork",
+            "name": "Victorian Valuer General Quarterly Property Sales Statistics",
+            "url": "https://www.land.vic.gov.au/valuations/resources-and-reports/property-sales-statistics"
+          }
+        ],
+        "inLanguage": "en-AU"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "GetReal",
+            "item": "https://get-real.co/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Buying Ceiling Calculator",
+            "item": "https://get-real.co/deposit"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Methodology",
+            "item": "https://get-real.co/deposit-faq"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
   <style>
     .faq-wrap {
       max-width: 680px;
@@ -586,13 +693,14 @@ effectiveLVR  = effectiveLoan ÷ price</div>
   </div>
 
   <!-- ── 11. Limitations ────────────────────────────────────────────────── -->
-  <div class="faq-section">
+  <div class="faq-section" id="disclaimers">
     <div class="faq-section-title">
       <span class="faq-section-num">11</span>
-      Limitations and what this tool does not cover
+      Limitations and disclaimers
     </div>
     <div class="faq-body">
-      <p><strong>Income limits are not calculated.</strong> Two of the three ceilings — DTI and serviceability — require income information and are not yet implemented. Your deposit ceiling may be higher than what you can actually borrow once income limits are applied.</p>
+      <p><strong>This is not financial advice.</strong> GetReal is an information tool. The figures it produces are estimates based on publicly available data and indicative benchmarks. Before making any financial decision, speak with a licensed mortgage broker or financial adviser.</p>
+      <p><strong>All three ceilings are estimates.</strong> Stamp duty is calculated from current state revenue office schedules. LMI rates are indicative. HEM figures are indicative benchmarks. Registration fees are approximate for all states except NSW. Actual costs depend on your lender, insurer, and specific circumstances.</p>
       <p><strong>LMI rates are indicative.</strong> Actual LMI premiums depend on the lender, insurer, property location, borrower risk profile, and loan features. The tool uses publicly available indicative rates; actual quotes may be higher or lower.</p>
       <p><strong>LVR ceilings are market maximums.</strong> Individual lenders may apply lower caps — particularly for high-density apartments, regional postcodes, or non-standard loan structures. The ceiling used here is the practical market maximum at most mainstream lenders.</p>
       <p><strong>NT FHOD phaseout is estimated.</strong> The exact NT First Home Owner Discount phaseout formula is not publicly documented. The tool models a linear phaseout between $500k–$650k. The actual figure may differ.</p>

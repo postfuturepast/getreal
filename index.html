@@ -13,8 +13,81 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="GetReal — Property tools for Australians">
     <meta name="twitter:description" content="Free tools to help Australians make better decisions about property. No spin. No vested interests.">
+    <link rel="canonical" href="https://get-real.co/" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://get-real.co/#organization",
+          "name": "GetReal",
+          "url": "https://get-real.co",
+          "description": "Independent Australian property tools. No commercial relationships with lenders, agents, or brokers. Built on open government data.",
+          "foundingLocation": {
+            "@type": "Country",
+            "name": "Australia"
+          },
+          "areaServed": {
+            "@type": "Country",
+            "name": "Australia"
+          },
+          "sameAs": [
+            "https://github.com/postfuturepast/getreal"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://get-real.co/#website",
+          "url": "https://get-real.co",
+          "name": "GetReal",
+          "description": "Free tools to help Australians make better decisions about property. No spin. No vested interests.",
+          "publisher": {
+            "@id": "https://get-real.co/#organization"
+          },
+          "inLanguage": "en-AU",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://get-real.co/search?suburb={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "ItemList",
+          "name": "GetReal Property Tools",
+          "description": "Australian property affordability calculators built on government data",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Buying Ceiling Calculator",
+              "description": "Calculate your maximum property purchase price based on deposit, debt-to-income ratio, and serviceability. Covers all Australian states and territories.",
+              "url": "https://get-real.co/deposit"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Property Realism Checker",
+              "description": "Check what percentage of properties in any Australian suburb actually sold within your budget last year. Based on 146,000+ NSW Valuer General sale records.",
+              "url": "https://get-real.co/search"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Stamp Duty Calculator",
+              "description": "Calculate stamp duty for all eight Australian states and territories, including first home buyer concessions.",
+              "url": "https://get-real.co/stamp-duty"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
     <style>
         .hero { padding: 2.5rem var(--pad-page) 1.25rem; }
         .hero .eyebrow { margin-bottom: 0.85rem; }

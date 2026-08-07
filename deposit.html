@@ -8,8 +8,93 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <meta property="og:title" content="Buying ceiling calculator — GetReal">
   <meta property="og:description" content="What's the most you can buy? Enter your savings and find out.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Buying ceiling calculator — GetReal">
+  <meta name="twitter:description" content="Calculate your maximum property purchase price — deposit floor, debt-to-income cap, and serviceability limit. Three ceilings, one answer.">
+  <link rel="canonical" href="https://get-real.co/deposit" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://get-real.co/deposit#app",
+        "name": "Australian Buying Ceiling Calculator",
+        "description": "Calculates the maximum property purchase price an Australian buyer can afford, based on three constraints: (1) deposit floor after stamp duty and LMI, (2) debt-to-income ratio cap (6× gross income, per APRA), and (3) serviceability — net income minus committed expenses, stress-tested at current rate plus 3% APRA buffer. Shows which ceiling is binding.",
+        "url": "https://get-real.co/deposit",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "isAccessibleForFree": true,
+        "provider": {
+          "@type": "Organization",
+          "name": "GetReal",
+          "url": "https://get-real.co"
+        },
+        "featureList": [
+          "Stamp duty calculation for all 8 Australian states and territories",
+          "LMI estimation for LVR over 80%",
+          "LVR ceilings by property type and occupancy (owner-occupier vs investor)",
+          "Debt-to-income ratio cap at 6× gross income",
+          "Serviceability stress test at interest rate plus 3% APRA buffer",
+          "HEM living expense benchmarks by household type and location",
+          "HECS/HELP repayment deduction from net income",
+          "Rental income shading at 80%",
+          "First home buyer stamp duty concessions",
+          "Credit card limit treatment as fully drawn debt"
+        ],
+        "areaServed": {
+          "@type": "Country",
+          "name": "Australia"
+        }
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to calculate your maximum property buying ceiling in Australia",
+        "description": "Calculate the maximum property price you can buy in Australia, accounting for deposit requirements, stamp duty, LMI, debt-to-income limits, and serviceability.",
+        "url": "https://get-real.co/deposit",
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "Calculate your deposit ceiling",
+            "text": "Enter your savings. The calculator subtracts stamp duty (state-specific), accounts for LMI if your LVR exceeds 80%, and finds the maximum purchase price your deposit can support."
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Calculate your debt-to-income ceiling",
+            "text": "Enter your gross income and existing debts. APRA limits total debt to 6× gross income. The calculator subtracts your existing mortgage balances, credit card limits, and other loans from this cap."
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Calculate your serviceability ceiling",
+            "text": "Enter your take-home pay and living expenses. The calculator applies HEM benchmarks, deducts committed expenses, and determines the maximum loan your surplus income can service at a stress-tested rate (current rate + 3% APRA buffer)."
+          }
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "GetReal",
+            "item": "https://get-real.co/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Buying Ceiling Calculator",
+            "item": "https://get-real.co/deposit"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
   <style>
     .wizard-wrap {
       min-height: calc(100vh - 54px);
