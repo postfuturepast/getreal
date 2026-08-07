@@ -95,14 +95,24 @@ except Exception as e:
 # ── 3. benchmark_rates ────────────────────────────────────────
 section("benchmark_rates")
 try:
-    rows = fetch("benchmark_rates?select=loan_type,rate_pct,effective_date&order=effective_date.desc")
-    print(f"  Rows: {len(rows)}")
-    types = {r["loan_type"]: r for r in rows}
-    for lt in ["oo", "investor"]:
-        present = lt in types
-        check(present, f"loan_type '{lt}' present" + (f" → rate_pct={types[lt]['rate_pct']}%, effective={types[lt]['effective_date']}" if present else ""))
+    # Filter to the rows fetchLendingData() uses: pi repayment, new loans, no LVR/size filter
+    rows = fetch(
+        "benchmark_rates?select=purpose,rate_pct,reference_month"
+        "&repayment_type=eq.pi&loan_status=eq.new"
+        "&rate_type=is.null&lvr_band=is.null&loan_size_band=is.null"
+        "&order=reference_month.desc&limit=4"
+    )
+    print(f"  Rows returned: {len(rows)}")
+    # Most recent row per purpose
+    by_purpose = {}
+    for r in rows:
+        if r["purpose"] not in by_purpose:
+            by_purpose[r["purpose"]] = r
+    for pt in ["oo", "investor"]:
+        present = pt in by_purpose
+        check(present, f"purpose '{pt}' present" + (f" → rate_pct={by_purpose[pt]['rate_pct']}%, month={by_purpose[pt]['reference_month']}" if present else ""))
         if present:
-            check(3 <= float(types[lt]["rate_pct"]) <= 15, f"rate_pct {types[lt]['rate_pct']} in plausible range (3–15%)")
+            check(3 <= float(by_purpose[pt]["rate_pct"]) <= 15, f"rate_pct {by_purpose[pt]['rate_pct']} in plausible range (3–15%)")
 except Exception as e:
     print(f"  {FAIL} Fetch failed: {e}"); errors += 1
 
