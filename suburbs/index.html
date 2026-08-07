@@ -222,29 +222,38 @@ function mergeAnalyticsRows(rows, state) {
   return Object.values(map);
 }
 
-// Load VIC data from suburb-data.json, then NSW from Supabase
+// Load VIC from suburb-data.json and NSW from suburbs-nsw.json (both static)
 var vicLoaded = false, nswLoaded = false;
 
-fetch('../suburb-data.json')
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    var suburbs = data.suburbs || {};
-    var vicSuburbs = Object.keys(suburbs).map(function(name) {
-      return { name: name, state: suburbs[name].state || 'VIC', types: suburbs[name].types || {} };
-    });
-    allSuburbs = allSuburbs.concat(vicSuburbs);
-    vicLoaded = true;
-    if (nswLoaded) { allSuburbs.sort(function(a,b){return a.name.localeCompare(b.name);}); render(); }
-  })
-  .catch(function(e) { console.warn('suburb-data.json failed', e); vicLoaded = true; if (nswLoaded) render(); });
+function loadJsonSuburbs(url, state, onDone) {
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var suburbs = data.suburbs || {};
+      var list = Object.keys(suburbs).map(function(slug) {
+        var s = suburbs[slug];
+        return {
+          name: slug,
+          display: s.display || slug.replace(/-/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}),
+          state: s.state || state,
+          types: s.types || {}
+        };
+      });
+      allSuburbs = allSuburbs.concat(list);
+      onDone();
+    })
+    .catch(function(e) { console.warn(url + ' failed', e); onDone(); });
+}
 
-sbFetchAll('/rest/v1/suburb_analytics?state=eq.NSW&select=suburb_display,median_price,property_type,annual_sales&order=suburb_display')
-  .then(function(rows) {
-    allSuburbs = allSuburbs.concat(mergeAnalyticsRows(rows, 'NSW'));
-    nswLoaded = true;
-    if (vicLoaded) { allSuburbs.sort(function(a,b){return a.name.localeCompare(b.name);}); render(); }
-  })
-  .catch(function(e) { console.warn('NSW Supabase fetch failed', e); nswLoaded = true; if (vicLoaded) render(); });
+function checkDone() {
+  if (vicLoaded && nswLoaded) {
+    allSuburbs.sort(function(a,b){ return a.name.localeCompare(b.name); });
+    render();
+  }
+}
+
+loadJsonSuburbs('../suburb-data.json', 'VIC', function() { vicLoaded = true; checkDone(); });
+loadJsonSuburbs('../suburbs-nsw.json',  'NSW', function() { nswLoaded = true; checkDone(); });
 
 document.getElementById('suburbList').innerHTML = '<div class="no-results">Loading suburb data…</div>';
 document.getElementById('resultsMeta').textContent = 'Loading…';
