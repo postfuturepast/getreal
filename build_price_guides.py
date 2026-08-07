@@ -526,9 +526,10 @@ def generate_page(
     .toggle-row {{ display:flex; }}
     .toggle-btn {{
       font-family:monospace;font-size:0.78rem;
-      border:1px solid var(--border);padding:5px 12px;
-      cursor:pointer;background:var(--card);color:var(--muted);
+      border:1px solid var(--border);border-left:none;
+      padding:5px 12px;cursor:pointer;background:var(--card);color:var(--muted);
     }}
+    .toggle-btn:first-child {{ border-left:1px solid var(--border); }}
     .toggle-btn.active {{ background:var(--text);color:var(--bg); }}
 
     /* Assumptions */
@@ -546,10 +547,10 @@ def generate_page(
       display:flex;align-items:center;justify-content:center;
       font-size:10px;font-weight:700;color:#f59e0b;flex-shrink:0;
     }}
-    .assume-grid {{ display:grid;grid-template-columns:1fr 1fr;gap:0; }}
+    .assume-grid {{ display:flex;flex-direction:column; }}
     .assume-row {{
       display:flex;justify-content:space-between;font-size:0.8rem;
-      padding:5px 0;border-bottom:1px solid var(--border);gap:1rem;
+      padding:5px 0;border-bottom:1px solid var(--border);gap:2rem;
     }}
     .assume-key {{ color:var(--dim); }}
     .assume-val {{ color:var(--text);font-weight:500;text-align:right; }}
@@ -701,9 +702,9 @@ def generate_page(
     <div class="toggle-group">
       <label>Buyer type</label>
       <div class="toggle-row">
-        <button class="toggle-btn active" onclick="setBuyer('fhb',this)">First home buyer</button>
-        <button class="toggle-btn" onclick="setBuyer('oo',this)">Owner-occupier</button>
-        <button class="toggle-btn" onclick="setBuyer('inv',this)">Investor</button>
+        <button class="toggle-btn active" onclick="setBuyer('fhb',this)">First home</button>
+        <button class="toggle-btn" onclick="setBuyer('oo',this)">Next home</button>
+        <button class="toggle-btn" onclick="setBuyer('inv',this)">Investment</button>
       </div>
     </div>
   </div>
@@ -830,7 +831,7 @@ def generate_page(
 
   function update() {{
     state = document.getElementById('stateSelect').value;
-    var buyerLabel = buyerType === 'fhb' ? 'first home buyer' : buyerType === 'oo' ? 'owner-occupier' : 'investor';
+    var buyerLabel = buyerType === 'fhb' ? 'first home' : buyerType === 'oo' ? 'next home' : 'investment';
 
     document.getElementById('dutyLabel').textContent = 'Stamp duty — ' + state + ', ' + buyerLabel;
     document.getElementById('suburbLabel').textContent = 'What does {price_fmt} get you?';
