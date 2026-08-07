@@ -96,6 +96,9 @@ var allSuburbs = [];
 var currentFilter = 'all';
 var currentSearch = '';
 
+var SB_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
+var SB_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
+
 function fmt(n) {
   if (!n) return '—';
   if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
@@ -142,7 +145,7 @@ function render() {
       return t.charAt(0).toUpperCase() + t.slice(1) + 's ' + fmt(s.types[t].median);
     });
     var primaryType = Object.keys(s.types).reduce(function(a, b) {
-      return (s.types[a].count || s.types[a].annualSales || 0) > (s.types[b].count || s.types[b].annualSales || 0) ? a : b;
+      return (s.types[a].median || 0) > (s.types[b].median || 0) ? a : b;
     });
     var primaryMedian = s.types[primaryType].median;
     return '<a class="suburb-row" href="/suburbs/' + path + '/' + slugify(s.name) + '">' +
@@ -161,18 +164,63 @@ function render() {
   list.innerHTML = html;
 }
 
+// Fetch all rows from Supabase with pagination
+function sbFetchAll(path) {
+  var limit = 1000;
+  var results = [];
+  function fetchPage(offset) {
+    return fetch(SB_URL + path + '&limit=' + limit + '&offset=' + offset, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(rows) {
+      results = results.concat(rows);
+      if (rows.length === limit) return fetchPage(offset + limit);
+      return results;
+    });
+  }
+  return fetchPage(0);
+}
+
+// Merge suburb_analytics rows into allSuburbs format
+function mergeAnalyticsRows(rows, state) {
+  var map = {};
+  rows.forEach(function(row) {
+    var name = (row.suburb_display || '').toLowerCase();
+    if (!name) return;
+    if (!map[name]) map[name] = { name: name, state: state, types: {} };
+    var ptype = row.property_type || 'house';
+    map[name].types[ptype] = { median: row.median_price || 0, annualSales: row.annual_sales || 0 };
+  });
+  return Object.values(map);
+}
+
+// Load VIC data from suburb-data.json, then NSW from Supabase
+var vicLoaded = false, nswLoaded = false;
+
 fetch('../suburb-data.json')
   .then(function(r) { return r.json(); })
   .then(function(data) {
     var suburbs = data.suburbs || {};
-    allSuburbs = Object.keys(suburbs).map(function(name) {
-      return { name: name, state: suburbs[name].state, types: suburbs[name].types || {} };
-    }).sort(function(a, b) { return a.name.localeCompare(b.name); });
-    render();
+    var vicSuburbs = Object.keys(suburbs).map(function(name) {
+      return { name: name, state: suburbs[name].state || 'VIC', types: suburbs[name].types || {} };
+    });
+    allSuburbs = allSuburbs.concat(vicSuburbs);
+    vicLoaded = true;
+    if (nswLoaded) { allSuburbs.sort(function(a,b){return a.name.localeCompare(b.name);}); render(); }
   })
-  .catch(function() {
-    document.getElementById('suburbList').innerHTML = '<div class="no-results">Could not load suburb data.</div>';
-  });
+  .catch(function(e) { console.warn('suburb-data.json failed', e); vicLoaded = true; if (nswLoaded) render(); });
+
+sbFetchAll('/rest/v1/suburb_analytics?state=eq.NSW&select=suburb_display,median_price,property_type,annual_sales&order=suburb_display')
+  .then(function(rows) {
+    allSuburbs = allSuburbs.concat(mergeAnalyticsRows(rows, 'NSW'));
+    nswLoaded = true;
+    if (vicLoaded) { allSuburbs.sort(function(a,b){return a.name.localeCompare(b.name);}); render(); }
+  })
+  .catch(function(e) { console.warn('NSW Supabase fetch failed', e); nswLoaded = true; if (vicLoaded) render(); });
+
+document.getElementById('suburbList').innerHTML = '<div class="no-results">Loading suburb data…</div>';
+document.getElementById('resultsMeta').textContent = 'Loading…';
 
 document.getElementById('searchInput').addEventListener('input', function() {
   currentSearch = this.value;
