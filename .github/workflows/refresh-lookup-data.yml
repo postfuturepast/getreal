@@ -34,5 +34,39 @@ jobs:
           SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
         run: python3 verify_supabase_data.py
 
-      - name: Log completion
-        run: echo "Lookup data refresh complete — $(date)"
+      - name: Write job summary
+        if: always()
+        run: |
+          echo "## GetReal — Lookup Data Refresh" >> $GITHUB_STEP_SUMMARY
+          echo "**Run time:** $(date '+%A %d %b %Y %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ All steps passed — RBA rates updated, all Supabase tables verified." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ One or more steps failed — check the logs above." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Send email notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          to: ${{ secrets.GMAIL_USER }}
+          from: GetReal Pipeline <${{ secrets.GMAIL_USER }}>
+          subject: "${{ job.status == 'success' && '✅' || '❌' }} GetReal — Lookup Data Refresh (${{ job.status }})"
+          body: |
+            GetReal weekly lookup data refresh — ${{ job.status }}
+
+            Run time: ${{ github.run_id }}
+            Triggered: ${{ github.event_name }}
+
+            Steps:
+            - Fetch latest RBA benchmark rates
+            - Verify all Supabase lookup tables (lending_policy_constants, lvr_limits, benchmark_rates, stamp_duty_brackets, stamp_duty_concessions, nt_duty_formula, registration_fees, lmi_rates, hem_benchmarks)
+
+            ${{ job.status == 'success' && 'All checks passed.' || 'One or more steps failed — check GitHub Actions for details.' }}
+
+            View run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
