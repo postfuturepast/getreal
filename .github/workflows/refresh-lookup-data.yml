@@ -1,0 +1,38 @@
+name: Refresh Lookup Data
+
+on:
+  schedule:
+    # Every Sunday at 3am AEST (Sunday 17:00 UTC) — 1hr after NSW refresh
+    - cron: '0 17 * * 0'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests supabase
+
+      - name: Fetch latest RBA benchmark rates
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: python3 fetch_rba_rates.py
+
+      - name: Verify all Supabase lookup tables
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+        run: python3 verify_supabase_data.py
+
+      - name: Log completion
+        run: echo "Lookup data refresh complete — $(date)"
