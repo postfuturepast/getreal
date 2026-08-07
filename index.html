@@ -316,14 +316,18 @@
 </div>
 
 <!-- Ask sticky bar -->
+<style>
+.sticky-label { display:inline; }
+@media (max-width:500px) { .sticky-label { display:none; } }
+</style>
 <div style="
   position:fixed;bottom:0;left:0;right:0;
   background:#0f0f0f;border-top:2px solid #0000ff;
-  padding:0.9rem 1.5rem;
-  display:flex;align-items:center;gap:1rem;
+  padding:0.75rem 1rem;
+  display:flex;align-items:center;gap:0.75rem;
   z-index:9000;
 ">
-  <span style="font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#0000ff;white-space:nowrap;font-weight:700;">Ask GetReal</span>
+  <span class="sticky-label" style="font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#0000ff;white-space:nowrap;font-weight:700;">Ask GetReal</span>
   <input
     id="stickyAsk"
     type="text"
@@ -331,9 +335,9 @@
     autocomplete="off"
     spellcheck="false"
     style="
-      flex:1;background:#1a1a1a;border:1px solid #3a3a3a;
-      color:#f0f0f0;font-family:monospace;font-size:0.9rem;
-      padding:0.7rem 1rem;outline:none;
+      flex:1;min-width:0;background:#1a1a1a;border:1px solid #3a3a3a;
+      color:#f0f0f0;font-family:monospace;font-size:0.85rem;
+      padding:0.65rem 0.9rem;outline:none;
     "
     onkeydown="if(event.key==='Enter')stickySubmit()"
     onfocus="this.style.borderColor='#0000ff'"
@@ -341,9 +345,9 @@
   >
   <button onclick="stickySubmit()" style="
     background:#0000ff;border:none;color:#fff;
-    font-family:monospace;font-size:0.7rem;font-weight:700;
+    font-family:monospace;font-size:0.75rem;font-weight:700;
     letter-spacing:0.05em;text-transform:uppercase;
-    padding:0.7rem 1.25rem;cursor:pointer;white-space:nowrap;
+    padding:0.65rem 1rem;cursor:pointer;white-space:nowrap;flex-shrink:0;
   ">Ask →</button>
 </div>
 <script>
