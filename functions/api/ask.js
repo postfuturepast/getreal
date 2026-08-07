@@ -93,6 +93,51 @@ const HARDCODED_REG_FEES     = { NSW:670, VIC:1700, QLD:1250, WA:1120, SA:800, T
 const SUPABASE_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
 
+// ─── Supabase fetch helper ────────────────────────────────────────────────────
+async function sbFetch(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+  });
+  if (!res.ok) throw new Error(`Supabase ${path}: ${res.status}`);
+  return res.json();
+}
+
+// ─── Fetch all lending data from Supabase (called once per request) ───────────
+// Returns { lendingConstants, lvrLimits, sdBrackets, sdConcessions, ntFormula, benchmarkRates }
+// All fields fall back to hardcoded defaults on error.
+async function fetchLendingData() {
+  try {
+    const [lcRows, lvrRows, sdBrRows, sdCRows, ntRows, rateRows] = await Promise.all([
+      sbFetch('lending_policy_constants?select=*'),
+      sbFetch('lvr_limits?select=*'),
+      sbFetch('stamp_duty_brackets?select=*&order=state,bracket_min'),
+      sbFetch('stamp_duty_concessions?select=*'),
+      sbFetch('nt_duty_formula?select=*&limit=1'),
+      sbFetch('benchmark_rates?select=purpose,rate_pct,reference_month&repayment_type=eq.pi&loan_status=eq.new&rate_type=is.null&lvr_band=is.null&loan_size_band=is.null&order=reference_month.desc&limit=4'),
+    ]);
+    const lendingConstants = {};
+    lcRows.forEach(r => { lendingConstants[r.key] = Number(r.value); });
+    const sdConcessions = {};
+    sdCRows.forEach(r => {
+      if (!sdConcessions[r.state]) sdConcessions[r.state] = {};
+      sdConcessions[r.state][r.concession_key] = r.value;
+    });
+    const benchmarkRates = {};
+    rateRows.forEach(r => { if (!benchmarkRates[r.purpose]) benchmarkRates[r.purpose] = r; });
+    return {
+      lendingConstants,
+      lvrLimits: lvrRows,
+      sdBrackets: sdBrRows,
+      sdConcessions,
+      ntFormula: ntRows.length ? ntRows[0] : null,
+      benchmarkRates,
+    };
+  } catch (e) {
+    return { lendingConstants: {}, lvrLimits: [], sdBrackets: [], sdConcessions: {}, ntFormula: null, benchmarkRates: {} };
+  }
+}
+
+// ─── Hardcoded fallback stamp duty tables ─────────────────────────────────────
 function _br(p, tbl) { for(const b of tbl){if(p<=b.max)return b.base+(p-b.min)*b.rate;} return 0; }
 function _nsw(p){return _br(p,[{min:0,max:16000,base:0,rate:0.0125},{min:16000,max:35000,base:200,rate:0.015},{min:35000,max:93000,base:485,rate:0.0175},{min:93000,max:351000,base:1500,rate:0.035},{min:351000,max:1168000,base:10530,rate:0.045},{min:1168000,max:3505000,base:47295,rate:0.055},{min:3505000,max:Infinity,base:175830,rate:0.07}]);}
 function _vicG(p){if(p<=25000)return p*0.014;if(p<=130000)return 350+(p-25000)*0.024;if(p<=960000)return 2870+(p-130000)*0.06;if(p<=2000000)return p*0.055;return 110000+(p-2000000)*0.065;}
@@ -104,7 +149,75 @@ function _tas(p){if(p<=3000)return 50;if(p<=25000)return 50+(p-3000)*0.0175;if(p
 function _act(p){return _br(p,[{min:0,max:200000,base:0,rate:0.022},{min:200000,max:300000,base:4400,rate:0.034},{min:300000,max:500000,base:7800,rate:0.0432},{min:500000,max:750000,base:16440,rate:0.059},{min:750000,max:1000000,base:31190,rate:0.064},{min:1000000,max:1455000,base:47190,rate:0.072},{min:1455000,max:Infinity,base:80034,rate:0.0454}]);}
 function _nt(p){if(p<=525000){const V=p/1000;return 0.06571441*V*V+15*V;}return p*0.0495;}
 
-function calcStampDuty(price, ctx) {
+// ─── Supabase-aware stamp duty helpers (mirrors engine.js) ────────────────────
+function _sbBrackets(price, brackets) {
+  for (const b of brackets) {
+    const maxVal = b.bracket_max === null ? Infinity : b.bracket_max;
+    if (price <= maxVal) {
+      if (b.is_full_price) return price * b.rate;
+      return b.base_amount + (price - b.bracket_min) * b.rate;
+    }
+  }
+  return 0;
+}
+
+function _fhbHC(price, full, state) {
+  switch(state) {
+    case 'NSW': if(price<=800000)return 0; if(price<=1000000)return Math.round(full*(price-800000)/200000); return Math.round(full);
+    case 'VIC': if(price<=600000)return 0; if(price<=750000)return Math.round(full*(price-600000)/150000); return Math.round(full);
+    case 'QLD': if(price<=500000)return 0; if(price<=550000)return Math.round(full*(price-500000)/50000); return Math.round(full);
+    case 'WA':  if(price<=600000)return 0; if(price<=800000)return Math.round(full*(price-600000)/200000); return Math.round(full);
+    case 'TAS': if(price<600000)return Math.round(full*0.5); return Math.round(full);
+    default: return Math.round(full);
+  }
+}
+
+function _calcDutyFromSB(price, ctx, sdBrackets, sdConcessions, ntFormula) {
+  const { state, isFHB=false, isOO=true, isHBCS=false } = ctx;
+  if (state === 'NT') {
+    if (!ntFormula) return null;
+    const V = price / ntFormula.divisor;
+    const full = price <= ntFormula.formula_threshold
+      ? ntFormula.coeff_a * V * V + ntFormula.coeff_b * V
+      : price * ntFormula.flat_rate_above;
+    if (isFHB) {
+      const conc = sdConcessions && sdConcessions['NT'];
+      const cap = (conc && conc.fhb_price_cap) || 650000;
+      const start = (conc && conc.fhb_phaseout_start) || 500000;
+      const maxDisc = (conc && conc.fhb_max_discount) || 18601;
+      if (price < cap) {
+        const factor = price <= start ? 1 : (cap - price) / (cap - start);
+        return Math.max(0, Math.round(full - Math.min(full, maxDisc * factor)));
+      }
+    }
+    return Math.round(full);
+  }
+  const stateBrackets = sdBrackets.filter(b => b.state === state);
+  if (!stateBrackets.length) return null;
+  if (state === 'ACT') { if (isFHB || isHBCS) return 0; }
+  const bracketSet = (state === 'VIC' && !isFHB && isOO && price <= 550000) ? 'vic_ppr' : 'standard';
+  const selected = stateBrackets.filter(b => b.bracket_set === bracketSet).sort((a, b_) => a.bracket_min - b_.bracket_min);
+  if (!selected.length) return null;
+  const full = _sbBrackets(price, selected);
+  if (!isFHB) return Math.round(full);
+  const conc = sdConcessions && sdConcessions[state];
+  if (conc && conc.fhb_exempt_threshold !== undefined && conc.fhb_taper_top !== undefined) {
+    if (price <= conc.fhb_exempt_threshold) return 0;
+    if (price <= conc.fhb_taper_top) return Math.round(full * (price - conc.fhb_exempt_threshold) / (conc.fhb_taper_top - conc.fhb_exempt_threshold));
+    return Math.round(full);
+  }
+  if (conc && conc.fhb_discount_pct !== undefined && conc.fhb_price_cap !== undefined) {
+    if (price < conc.fhb_price_cap) return Math.round(full * (1 - conc.fhb_discount_pct / 100));
+    return Math.round(full);
+  }
+  return _fhbHC(price, full, state);
+}
+
+function calcStampDuty(price, ctx, sdBrackets, sdConcessions, ntFormula) {
+  if (sdBrackets && sdBrackets.length) {
+    const r = _calcDutyFromSB(price, ctx, sdBrackets, sdConcessions, ntFormula);
+    if (r !== null) return r;
+  }
   const { state, isFHB=false, isOO=true, isHBCS=false } = ctx;
   switch(state) {
     case 'NSW': { const f=_nsw(price); if(isFHB){if(price<=800000)return 0;if(price<=1000000)return Math.round(f*(price-800000)/200000);} return Math.round(f); }
@@ -126,7 +239,12 @@ function lookupLMIRate(lvrPct, baseLoan) {
   return (exact ? exact.rate_pct : rows[rows.length-1].rate_pct) / 100;
 }
 
-function getMaxLVR(propType, isOO) {
+function getMaxLVR(propType, isOO, lvrLimits) {
+  const propKey = propType === 'apartment' ? 'apartment' : 'standard';
+  if (lvrLimits && lvrLimits.length) {
+    const row = lvrLimits.find(r => r.property_type === propKey && r.is_owner_occupier === isOO);
+    if (row) return Number(row.max_lvr);
+  }
   if (propType === 'apartment') return isOO ? 0.90 : 0.80;
   return isOO ? 0.95 : 0.90;
 }
@@ -149,9 +267,9 @@ function _computeAtPrice(price, savings, maxLVR, stampDuty, regFee, lmiSdRate) {
 }
 
 function solveDepositCeiling(opts) {
-  const {savings,state,isFHB=false,isOO=true,isHBCS=false,propType='house'}=opts;
+  const {savings,state,isFHB=false,isOO=true,isHBCS=false,propType='house',lvrLimits,sdBrackets,sdConcessions,ntFormula}=opts;
   if(!savings||savings<=0)return null;
-  const maxLVR=getMaxLVR(propType,isOO);
+  const maxLVR=getMaxLVR(propType,isOO,lvrLimits);
   const regFee=HARDCODED_REG_FEES[state]||400;
   const lmiSdRate=HARDCODED_LMI_SD_RATES[state]||0;
   const ctx={state,isFHB,isOO,isHBCS,propType};
@@ -159,7 +277,7 @@ function solveDepositCeiling(opts) {
   for(let i=0;i<60;i++){
     const mid=Math.floor((lo+hi)/2);
     if(mid<=0){hi=mid-1;continue;}
-    const duty=calcStampDuty(mid,ctx);
+    const duty=calcStampDuty(mid,ctx,sdBrackets,sdConcessions,ntFormula);
     const r=_computeAtPrice(mid,savings,maxLVR,duty,regFee,lmiSdRate);
     if(r!==null){best=r;lo=mid+1;}else{hi=mid-1;}
   }
@@ -167,9 +285,9 @@ function solveDepositCeiling(opts) {
 }
 
 function findMaxPriceForLoanCap(loanCap, opts) {
-  const {savings,state,isFHB=false,isOO=true,isHBCS=false,propType='house'}=opts;
+  const {savings,state,isFHB=false,isOO=true,isHBCS=false,propType='house',lvrLimits,sdBrackets,sdConcessions,ntFormula}=opts;
   if(loanCap<=0||!savings||savings<=0)return null;
-  const maxLVR=getMaxLVR(propType,isOO);
+  const maxLVR=getMaxLVR(propType,isOO,lvrLimits);
   const regFee=HARDCODED_REG_FEES[state]||400;
   const lmiSdRate=HARDCODED_LMI_SD_RATES[state]||0;
   const ctx={state,isFHB,isOO,isHBCS,propType};
@@ -179,7 +297,7 @@ function findMaxPriceForLoanCap(loanCap, opts) {
     if(mid<=0){hi=mid-1;continue;}
     const dep=mid-loanCap; if(dep<0){lo=mid+1;continue;}
     const baseLVR=loanCap/mid; if(baseLVR>maxLVR){lo=mid+1;continue;}
-    const stamp=calcStampDuty(mid,ctx);
+    const stamp=calcStampDuty(mid,ctx,sdBrackets,sdConcessions,ntFormula);
     let lmiPrem=0,lmiSd=0;
     if(baseLVR>0.80){const rate=lookupLMIRate(baseLVR*100,loanCap);lmiPrem=Math.round(loanCap*rate);lmiSd=Math.round(lmiPrem*lmiSdRate);}
     const needed=dep+stamp+regFee+lmiSd;
@@ -204,9 +322,15 @@ function calculateBuyingPosition(inputs) {
     takeHome1=0, takeHome1Freq='monthly', takeHome2=0, takeHome2Freq='monthly',
     hemMonthly=3500, rent=0, schoolFees=0, healthInsurance=0,
     stressRateAnnual=9.0,
+    // Supabase data
+    lendingConstants={}, lvrLimits=[], sdBrackets=[], sdConcessions={}, ntFormula=null,
   } = inputs;
 
-  const baseOpts = {savings,state,isFHB:isFirstHomeBuyer,isOO:isOwnerOccupier,isHBCS,propType:propertyType};
+  const dtiMult  = lendingConstants.dti_multiplier || 6;
+  const ccRate   = lendingConstants.cc_repayment_rate || 0.03;
+  const loanTerm = lendingConstants.loan_term_months || 360;
+
+  const baseOpts = {savings,state,isFHB:isFirstHomeBuyer,isOO:isOwnerOccupier,isHBCS,propType:propertyType,lvrLimits,sdBrackets,sdConcessions,ntFormula};
 
   // C1
   const c1Result=solveDepositCeiling(baseOpts);
@@ -219,7 +343,7 @@ function calculateBuyingPosition(inputs) {
   const mortBal=mortgages.reduce((s,m)=>s+(m.balance||0),0);
   const loanBal=otherLoans.reduce((s,l)=>s+(l.amount||0),0);
   const existDebt=creditCardLimits+mortBal+loanBal;
-  const maxNewMortgage=Math.max(0,totalIncome*6-existDebt);
+  const maxNewMortgage=Math.max(0,totalIncome*dtiMult-existDebt);
 
   let c2Result=null,c2Price=0;
   if(maxNewMortgage>0){
@@ -238,20 +362,20 @@ function calculateBuyingPosition(inputs) {
 
   const mortReps=mortgages.map(m=>{
     if(m.monthlyRepayment)return m.monthlyRepayment;
-    const r=stressRateAnnual/100/12,n=360;
+    const r=stressRateAnnual/100/12,n=loanTerm;
     return r>0?(m.balance||0)*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1):(m.balance||0)/n;
   });
   const loanReps=otherLoans.map(l=>l.monthlyRepayment||0);
   const mortMo=mortReps.reduce((s,r)=>s+(r||0),0);
   const loanMo=loanReps.reduce((s,r)=>s+(r||0),0);
-  const cardMo=creditCardLimits*0.03;
+  const cardMo=creditCardLimits*ccRate;
   const existMo=mortMo+loanMo+cardMo;
   const committedMo=(rent||0)+(schoolFees||0)+(healthInsurance||0);
   const maxRepay=netMonthly-(hemMonthly||0)-committedMo-existMo;
 
   let c3Result=null,c3Price=0,maxLoan=0;
   if(maxRepay>0){
-    const r=stressRateAnnual/100/12,n=360;
+    const r=stressRateAnnual/100/12,n=loanTerm;
     maxLoan=r>0?maxRepay*(Math.pow(1+r,n)-1)/(r*Math.pow(1+r,n)):maxRepay*n;
     if(maxLoan>0){
       c3Result=findMaxPriceForLoanCap(Math.round(maxLoan),baseOpts);
@@ -275,7 +399,7 @@ function calculateBuyingPosition(inputs) {
     svc:{maxLoan:Math.round(maxLoan),maxMonthlyRepayment:maxRepay,netMonthly,hemMonthly,existingMonthly:existMo,stressRateAnnual},
     c1Result,c2Result,c3Result,
     breakdown:{
-      stampDuty:c1Result?c1Result.stampDuty:calcStampDuty(maximum||savings,{state,isFHB:isFirstHomeBuyer,isOO:isOwnerOccupier,isHBCS}),
+      stampDuty:c1Result?c1Result.stampDuty:calcStampDuty(maximum||savings,{state,isFHB:isFirstHomeBuyer,isOO:isOwnerOccupier,isHBCS},sdBrackets,sdConcessions,ntFormula),
       regFee,
       lvrTier,
       lmiPremium:c1Result?c1Result.lmiPremium:0,
@@ -284,24 +408,32 @@ function calculateBuyingPosition(inputs) {
 }
 
 // ─── DTI ceiling calculation (no AI) ─────────────────────────────────────────
-function calcDTICeiling(body) {
+function calcDTICeiling(body, lendingData={}) {
   const { savings, state, propertyType='house', isOwnerOccupier=true,
           isFirstHomeBuyer=false, income1=0, income2=0, debts={} } = body;
+  const { lendingConstants={}, lvrLimits=[], sdBrackets=[], sdConcessions={}, ntFormula=null, benchmarkRates={} } = lendingData;
 
-  const totalIncome   = (income1 || 0) + (income2 || 0);
-  const totalDebt     = Object.values(debts).reduce((s, v) => s + (v || 0), 0);
-  const maxLoan       = Math.max(0, totalIncome * 6 - totalDebt);
+  const dtiMult     = lendingConstants.dti_multiplier || 6;
+  const stressBuf   = lendingConstants.stress_rate_buffer_pct || 3;
+  const totalIncome = (income1 || 0) + (income2 || 0);
+  const totalDebt   = Object.values(debts).reduce((s, v) => s + (v || 0), 0);
+  const maxLoan     = Math.max(0, totalIncome * dtiMult - totalDebt);
 
-  const opts = { savings, state, isFHB: isFirstHomeBuyer, isOO: isOwnerOccupier, propType: propertyType };
+  const opts = { savings, state, isFHB: isFirstHomeBuyer, isOO: isOwnerOccupier, propType: propertyType, lvrLimits, sdBrackets, sdConcessions, ntFormula };
   const c2   = maxLoan > 0 ? findMaxPriceForLoanCap(Math.round(maxLoan), opts) : null;
 
   if (!c2) return { error: 'Income too low to support any loan at these debt levels.' };
 
   const effectiveLoan = c2.loanCap + (c2.lmiPremium || 0);
   const standardDuty  = isFirstHomeBuyer
-    ? calcStampDuty(c2.price, { state, isFHB: false, isOO: isOwnerOccupier, propType: propertyType })
+    ? calcStampDuty(c2.price, { state, isFHB: false, isOO: isOwnerOccupier, propType: propertyType }, sdBrackets, sdConcessions, ntFormula)
     : c2.stampDuty;
   const fhbDutySaving = Math.max(0, standardDuty - c2.stampDuty);
+
+  // Benchmark rate for repayment preview
+  const rateRow    = benchmarkRates[isOwnerOccupier ? 'oo' : 'investor'];
+  const currentPct = rateRow ? rateRow.rate_pct : 6.25;
+  const stressPct  = rateRow ? rateRow.rate_pct + stressBuf : 9.25;
 
   return {
     type:          'dti_ceiling',
@@ -316,15 +448,15 @@ function calcDTICeiling(body) {
     lmiPremium:    c2.lmiPremium || 0,
     lmiSd:         c2.lmiSd || 0,
     lvrTier:       c2.lvrTier,
-    monthlyRepay:  Math.round(calcMonthlyRepayment(effectiveLoan, 6.25)),
-    stressRepay:   Math.round(calcMonthlyRepayment(effectiveLoan, 9.25)),
+    monthlyRepay:  Math.round(calcMonthlyRepayment(effectiveLoan, currentPct)),
+    stressRepay:   Math.round(calcMonthlyRepayment(effectiveLoan, stressPct)),
     savings,
     isFirstHomeBuyer,
   };
 }
 
 // ─── Serviceability ceiling calculation (no AI) ───────────────────────────────
-async function calcServiceabilityCeiling(body) {
+async function calcServiceabilityCeiling(body, lendingData={}) {
   const {
     savings, state, propertyType = 'house',
     isOwnerOccupier = true, isFirstHomeBuyer = false,
@@ -332,6 +464,16 @@ async function calcServiceabilityCeiling(body) {
     householdType = 'single', dependants = 0, locationType = 'metro',
     debts = {},
   } = body;
+  const { lendingConstants={}, lvrLimits=[], sdBrackets=[], sdConcessions={}, ntFormula=null, benchmarkRates={} } = lendingData;
+
+  const ccRate   = lendingConstants.cc_repayment_rate || 0.03;
+  const loanTerm = lendingConstants.loan_term_months || 360;
+  const stressBuf = lendingConstants.stress_rate_buffer_pct || 3;
+
+  // Live benchmark rate → stress rate
+  const rateRow    = benchmarkRates[isOwnerOccupier ? 'oo' : 'investor'];
+  const currentPct = rateRow ? rateRow.rate_pct : 6.25;
+  const stressPct  = currentPct + stressBuf;
 
   // HEM lookup from Supabase
   const dep = Math.min(Math.max(0, Math.round(dependants)), 4);
@@ -351,10 +493,10 @@ async function calcServiceabilityCeiling(body) {
   const netMonthly = (takeHome1 || 0) + (takeHome2 || 0);
 
   // Convert debt balances to monthly commitments:
-  //   creditCard:  3% of limit per month
+  //   creditCard: cc_repayment_rate (from Supabase lending_policy_constants, default 3%) of limit per month
   //   carLoan / personalLoan / other: P&I at 9%/yr over 60 months → factor 0.02076
   //   mortgage: P&I at 6.25%/yr over 300 months → factor 0.006598
-  const ccMonthly       = (debts.creditCard   || 0) * 0.03;
+  const ccMonthly       = (debts.creditCard   || 0) * ccRate;
   const carMonthly      = (debts.carLoan      || 0) * 0.02076;
   const personalMonthly = (debts.personalLoan || 0) * 0.02076;
   const otherMonthly    = (debts.other        || 0) * 0.02076;
@@ -368,19 +510,19 @@ async function calcServiceabilityCeiling(body) {
     return { error: 'Income too low to cover living expenses and existing debts.' };
   }
 
-  // Convert max repayment to max loan at 9.25% stress rate, 30yr P&I
-  const stressR = 9.25 / 100 / 12;
-  const n = 360;
+  // Convert max repayment to max loan at stress rate, standard term
+  const stressR = stressPct / 100 / 12;
+  const n = loanTerm;
   const maxLoan = Math.round(
     maxMonthlyRepay * (Math.pow(1 + stressR, n) - 1) / (stressR * Math.pow(1 + stressR, n))
   );
 
   const opts = {
-    savings,
-    state,
+    savings, state,
     isFHB:    isFirstHomeBuyer,
     isOO:     isOwnerOccupier,
     propType: propertyType,
+    lvrLimits, sdBrackets, sdConcessions, ntFormula,
   };
 
   const c3 = findMaxPriceForLoanCap(maxLoan, opts);
@@ -389,8 +531,8 @@ async function calcServiceabilityCeiling(body) {
   }
 
   const effectiveLoan = c3.loanCap + (c3.lmiPremium || 0);
-  const monthlyRepay  = Math.round(calcMonthlyRepayment(effectiveLoan, 6.25));
-  const stressRepay   = Math.round(calcMonthlyRepayment(effectiveLoan, 9.25));
+  const monthlyRepay  = Math.round(calcMonthlyRepayment(effectiveLoan, currentPct));
+  const stressRepay   = Math.round(calcMonthlyRepayment(effectiveLoan, stressPct));
 
   return {
     type:             'svc_ceiling',
@@ -402,6 +544,7 @@ async function calcServiceabilityCeiling(body) {
     maxMonthlyRepay:  Math.round(maxMonthlyRepay),
     monthlyRepay,
     stressRepay,
+    stressRateAnnual: stressPct,
     lvrTier:          c3.lvrTier,
     stampDuty:        c3.stampDuty,
     regFee:           c3.regFee || 0,
@@ -490,9 +633,13 @@ export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
 
+    // Fetch all Supabase lookup data once — shared across all calc paths
+    const lendingData = await fetchLendingData();
+    const { lendingConstants={}, lvrLimits=[], sdBrackets=[], sdConcessions={}, ntFormula=null, benchmarkRates={} } = lendingData;
+
     // DTI ceiling — pure calc, no AI
     if (body.calcType === 'dti') {
-      const result = calcDTICeiling(body);
+      const result = calcDTICeiling(body, lendingData);
       return new Response(JSON.stringify(result), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
@@ -500,7 +647,7 @@ export async function onRequestPost(context) {
 
     // Serviceability ceiling — pure calc, no AI
     if (body.calcType === 'serviceability') {
-      const result = await calcServiceabilityCeiling(body);
+      const result = await calcServiceabilityCeiling(body, lendingData);
       return new Response(JSON.stringify(result), {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
@@ -551,15 +698,23 @@ export async function onRequestPost(context) {
           isFHB:      params.isFirstHomeBuyer || false,
           isOO:       params.isOwnerOccupier !== false,
           propType:   params.propertyType || 'house',
+          lvrLimits, sdBrackets, sdConcessions, ntFormula,
         });
         if (c1) {
-          const effectiveLoan   = c1.baseLoan + (c1.lmiPremium || 0);
-          const minDTIIncome    = Math.ceil(effectiveLoan / 6 / 1000) * 1000;
-          const monthlyRepay    = Math.round(calcMonthlyRepayment(effectiveLoan, 6.25));
-          const stressRepay     = Math.round(calcMonthlyRepayment(effectiveLoan, 9.25));
+          const isOO           = params.isOwnerOccupier !== false;
+          const effectiveLoan  = c1.baseLoan + (c1.lmiPremium || 0);
+          const dtiMult        = lendingConstants.dti_multiplier || 6;
+          const stressBuf      = lendingConstants.stress_rate_buffer_pct || 3;
+          const loanTerm       = lendingConstants.loan_term_months || 360;
+          const rateRow        = benchmarkRates[isOO ? 'oo' : 'investor'];
+          const currentPct     = rateRow ? rateRow.rate_pct : 6.25;
+          const stressPct      = currentPct + stressBuf;
+          const minDTIIncome   = Math.ceil(effectiveLoan / dtiMult / 1000) * 1000;
+          const monthlyRepay   = Math.round(calcMonthlyRepayment(effectiveLoan, currentPct, loanTerm));
+          const stressRepay    = Math.round(calcMonthlyRepayment(effectiveLoan, stressPct, loanTerm));
           // How much did the FHB concession actually save vs standard rate?
-          const standardDuty    = params.isFirstHomeBuyer
-            ? calcStampDuty(c1.price, { state: params.state, isFHB: false, isOO: params.isOwnerOccupier !== false, propType: params.propertyType || 'house' })
+          const standardDuty   = params.isFirstHomeBuyer
+            ? calcStampDuty(c1.price, { state: params.state, isFHB: false, isOO, propType: params.propertyType || 'house' }, sdBrackets, sdConcessions, ntFormula)
             : c1.stampDuty;
           const fhbDutySaving   = Math.max(0, standardDuty - c1.stampDuty);
           const targetPrice = params.targetPrice || null;

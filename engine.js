@@ -150,6 +150,25 @@
     NT:  500,
   };
 
+  // ─── Hardcoded: Lending policy constants ──────────────────────────────────
+  // Regulatory constants (APRA guidelines) that rarely change.
+  // Live values loaded from Supabase lending_policy_constants table.
+  const DEFAULT_LENDING_CONSTANTS = {
+    dti_multiplier:         6,     // Max total debt ÷ gross annual income
+    stress_rate_buffer_pct: 3,     // Percentage points above benchmark for serviceability test
+    cc_repayment_rate:      0.03,  // Monthly minimum as fraction of total credit card limit
+    loan_term_months:       360,   // Standard loan term used in repayment formula (30 years)
+  };
+
+  // ─── Hardcoded: LVR limits by property type and occupancy ─────────────────
+  // Live values loaded from Supabase lvr_limits table.
+  const DEFAULT_LVR_LIMITS = [
+    { property_type: 'standard',  is_owner_occupier: true,  max_lvr: 0.95 },
+    { property_type: 'standard',  is_owner_occupier: false, max_lvr: 0.90 },
+    { property_type: 'apartment', is_owner_occupier: true,  max_lvr: 0.90 },
+    { property_type: 'apartment', is_owner_occupier: false, max_lvr: 0.80 },
+  ];
+
   // ─── State stamp duty calculators ─────────────────────────────────────────
   function _brackets(price, tbl) {
     for (const b of tbl) {
@@ -456,12 +475,15 @@
    * Returns the maximum LVR (as decimal) for the property/purpose combination.
    *
    * @param {{ propType, isOO }} ctx
+   * @param {Array} [lvrLimits]  rows from lvr_limits Supabase table
    * @returns {number}  e.g. 0.95
    */
-  function getMaxLVR(ctx) {
+  function getMaxLVR(ctx, lvrLimits) {
     const { propType, isOO = true } = ctx;
-    if (propType === 'apartment') return isOO ? 0.90 : 0.80;
-    return isOO ? 0.95 : 0.90;
+    const propKey = (propType === 'apartment') ? 'apartment' : 'standard';
+    const rows = (lvrLimits && lvrLimits.length) ? lvrLimits : DEFAULT_LVR_LIMITS;
+    const row = rows.find(r => r.property_type === propKey && r.is_owner_occupier === isOO);
+    return row ? Number(row.max_lvr) : (propKey === 'apartment' ? (isOO ? 0.90 : 0.80) : (isOO ? 0.95 : 0.90));
   }
 
   // ─── Internal: computeAtPrice ─────────────────────────────────────────────
@@ -523,11 +545,12 @@
       isHBCS = false, isNewBuild = false, propType = 'house',
       lmiRates, regFees: regFeesMap, lmiSdRates: lmiSdRatesMap,
       sdBrackets, sdConcessions, ntDutyFormula,
+      lvrLimits, lendingConstants,
     } = opts;
 
     if (!savings || savings <= 0) return null;
 
-    const maxLVR    = getMaxLVR({ propType, isOO });
+    const maxLVR    = getMaxLVR({ propType, isOO }, lvrLimits);
     const regFee    = (regFeesMap && regFeesMap[state]) || DEFAULT_REG_FEES[state] || 400;
     const lmiSdRate = (lmiSdRatesMap && lmiSdRatesMap[state]) || DEFAULT_LMI_SD_RATES[state] || 0;
     const ctx       = { state, isFHB, isOO, isHBCS, isNewBuild, propType };
@@ -602,11 +625,12 @@
       isHBCS = false, isNewBuild = false, propType = 'house',
       lmiRates, regFees: regFeesMap, lmiSdRates: lmiSdRatesMap,
       sdBrackets, sdConcessions, ntDutyFormula,
+      lvrLimits,
     } = opts;
 
     if (loanCap <= 0 || !savings || savings <= 0) return null;
 
-    const maxLVR    = getMaxLVR({ propType, isOO });
+    const maxLVR    = getMaxLVR({ propType, isOO }, lvrLimits);
     const regFee    = (regFeesMap && regFeesMap[state]) || DEFAULT_REG_FEES[state] || 400;
     const lmiSdRate = (lmiSdRatesMap && lmiSdRatesMap[state]) || DEFAULT_LMI_SD_RATES[state] || 0;
     const ctx       = { state, isFHB, isOO, isHBCS, isNewBuild, propType };
@@ -670,6 +694,7 @@
       hasHECS      = false,
       mortgages    = [],        // [{balance, isInvestment, weeklyRent}]
       otherLoans   = [],        // [{amount}]
+      lendingConstants,
     } = opts;
 
     const newPropRental  = isOO ? 0 : rentalIncome * 52 * 0.80;
@@ -681,7 +706,8 @@
     const mortgageBalances = mortgages.reduce((s, m) => s + (m.balance || 0), 0);
     const loanBalances     = otherLoans.reduce((s, l) => s + (l.amount || 0), 0);
     const existingDebt     = creditCards + mortgageBalances + loanBalances;
-    const maxTotalDebt     = totalIncome * 6;
+    const dtiMult          = (lendingConstants && lendingConstants.dti_multiplier) || DEFAULT_LENDING_CONSTANTS.dti_multiplier;
+    const maxTotalDebt     = totalIncome * dtiMult;
     const maxNewMortgage   = Math.max(0, maxTotalDebt - existingDebt);
 
     return {
@@ -724,6 +750,7 @@
       loanRepayments    = [],
       creditCards       = 0,
       stressRateAnnual  = 9.0,
+      lendingConstants,
     } = opts;
 
     const toMonthly = (amt, freq) => {
@@ -740,7 +767,8 @@
     const committedMonthly = (rent || 0) + (schoolFees || 0) + (healthInsurance || 0);
     const mortgageMonthly  = mortgageRepayments.reduce((s, r) => s + (r || 0), 0);
     const loanMonthly      = loanRepayments.reduce((s, r) => s + (r || 0), 0);
-    const cardMonthly      = creditCards * 0.03;
+    const CC_RATE          = (lendingConstants && lendingConstants.cc_repayment_rate) || DEFAULT_LENDING_CONSTANTS.cc_repayment_rate;
+    const cardMonthly      = creditCards * CC_RATE;
     const existingMonthly  = mortgageMonthly + loanMonthly + cardMonthly;
 
     const maxMonthlyRepayment = netMonthly - hemMonthly - committedMonthly - existingMonthly;
@@ -752,7 +780,7 @@
     }
 
     const r = stressRateAnnual / 100 / 12;
-    const n = 360;
+    const n = (lendingConstants && lendingConstants.loan_term_months) || DEFAULT_LENDING_CONSTANTS.loan_term_months;
     const maxLoan = r > 0
       ? maxMonthlyRepayment * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n))
       : maxMonthlyRepayment * n;
@@ -771,9 +799,9 @@
    * @param {number} annualRatePct  e.g. 6.5
    * @returns {number}
    */
-  function calcMonthlyRepayment(loan, annualRatePct) {
+  function calcMonthlyRepayment(loan, annualRatePct, loanTermMonths) {
     const r = annualRatePct / 100 / 12;
-    const n = 360;
+    const n = loanTermMonths || DEFAULT_LENDING_CONSTANTS.loan_term_months;
     if (r === 0) return loan / n;
     return loan * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
   }
@@ -861,6 +889,8 @@
       sdBrackets,
       sdConcessions,
       ntDutyFormula,
+      lvrLimits,
+      lendingConstants,
     } = inputs;
 
     const baseOpts = {
@@ -876,6 +906,8 @@
       sdBrackets,
       sdConcessions,
       ntDutyFormula,
+      lvrLimits,
+      lendingConstants,
     };
 
     // ── C1: Deposit ceiling ──
@@ -888,6 +920,7 @@
       rentalIncome, isOO: isOwnerOccupier,
       creditCards: creditCardLimits,
       mortgages, otherLoans,
+      lendingConstants,
     });
 
     let c2Result = null, c2Price = 0;
@@ -898,11 +931,12 @@
 
     // ── C3: Serviceability ceiling ──
     // Build mortgage and loan repayment arrays from inputs
+    const _loanTerm = (lendingConstants && lendingConstants.loan_term_months) || DEFAULT_LENDING_CONSTANTS.loan_term_months;
     const mortgageRepayments = mortgages.map(m => {
       if (m.monthlyRepayment) return m.monthlyRepayment;
       // Estimate from balance at stress rate if not provided
       const r = stressRateAnnual / 100 / 12;
-      const n = 360;
+      const n = _loanTerm;
       return r > 0 ? (m.balance || 0) * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1) : (m.balance || 0) / n;
     });
     const loanRepayments = otherLoans.map(l => l.monthlyRepayment || 0);
@@ -919,6 +953,7 @@
       mortgageRepayments, loanRepayments,
       creditCards: creditCardLimits,
       stressRateAnnual,
+      lendingConstants,
     });
 
     let c3Result = null, c3Price = 0;
@@ -962,5 +997,7 @@
     DEFAULT_LMI_RATES,
     DEFAULT_LMI_SD_RATES,
     DEFAULT_REG_FEES,
+    DEFAULT_LENDING_CONSTANTS,
+    DEFAULT_LVR_LIMITS,
   };
 }));
