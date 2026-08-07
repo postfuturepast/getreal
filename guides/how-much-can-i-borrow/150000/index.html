@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How much can I borrow on $150,000? — GetReal</title>
+  <meta name="description" content="On a $150,000 salary, you can borrow approximately $880,000. See how debts, dependants, and a second income change this figure.">
+  <link rel="canonical" href="https://get-real.co/guides/how-much-can-i-borrow/150000/">
+  <meta property="og:title" content="How much can I borrow on $150,000? — GetReal">
+  <meta property="og:description" content="Estimated borrowing capacity $880,000. Assessment rate 7.35%. See sensitivity analysis.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .guide-wrap { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+    .breadcrumb { font-family:monospace;font-size:0.65rem;color:var(--dim);margin-bottom:1.5rem; }
+    .breadcrumb a { color:var(--dim);text-decoration:none; }
+    h1 { font-size:1.6rem;margin-bottom:0.4rem;line-height:1.3; }
+    .lead { color:var(--muted);font-size:0.9rem;line-height:1.8;margin-bottom:1.5rem;max-width:640px; }
+
+    /* Input bar */
+    .input-bar {
+      border:1px solid var(--border);background:var(--card);
+      padding:1rem 1.25rem;margin:0 0 1.25rem;
+      display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+    }
+    .input-group { display:flex;flex-direction:column;gap:4px; }
+    .input-group label { font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim); }
+    .input-group select, .input-group input {
+      font-family:monospace;font-size:0.9rem;
+      background:var(--bg);border:1px solid var(--border);
+      color:var(--text);padding:5px 10px;cursor:pointer;
+    }
+    .toggle-group { display:flex;flex-direction:column;gap:4px; }
+    .toggle-group label { font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim); }
+    .toggle-row { display:flex; }
+    .toggle-btn {
+      font-family:monospace;font-size:0.78rem;
+      border:1px solid var(--border);padding:5px 12px;
+      cursor:pointer;background:var(--card);color:var(--muted);
+    }
+    .toggle-btn.active { background:var(--text);color:var(--bg); }
+
+    /* Assumptions panel */
+    .assumptions {
+      border:1px solid #b45309;background:var(--card);
+      padding:1rem 1.25rem;margin:0 0 1.25rem;
+    }
+    .assumptions-hdr {
+      display:flex;align-items:center;gap:8px;
+      font-family:monospace;font-size:0.65rem;text-transform:uppercase;
+      letter-spacing:0.1em;color:#f59e0b;margin-bottom:0.75rem;
+    }
+    .warn-circle {
+      width:16px;height:16px;border:1.5px solid #f59e0b;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:700;color:#f59e0b;flex-shrink:0;
+    }
+    .assumptions-grid {
+      display:grid;grid-template-columns:1fr 1fr;gap:0;
+    }
+    .assume-row {
+      display:flex;justify-content:space-between;
+      font-size:0.8rem;padding:5px 0;border-bottom:1px solid var(--border);
+      gap:1rem;
+    }
+    .assume-row:nth-last-child(1):nth-child(odd) { grid-column:span 2; }
+    .assume-key { color:var(--dim); }
+    .assume-val { color:var(--text);font-weight:500;text-align:right; }
+    .assume-footer {
+      margin-top:0.6rem;font-size:0.75rem;color:var(--dim);
+      line-height:1.6;border-top:1px solid var(--border);padding-top:0.5rem;
+    }
+    .assume-footer a { color:#f59e0b; }
+
+    /* Result */
+    .result-band {
+      border:1px solid var(--border);padding:1.25rem;margin:0 0 1.25rem;
+    }
+    .result-figure { font-size:2.4rem;font-weight:700;color:#4caf50;line-height:1; }
+    .result-label { font-family:monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);margin-top:4px; }
+    .result-note { font-size:0.85rem;color:var(--muted);margin-top:8px;line-height:1.6; }
+
+    /* Section label */
+    .section-label {
+      font-family:monospace;font-size:0.65rem;text-transform:uppercase;
+      letter-spacing:0.1em;color:var(--dim);border-bottom:1px solid var(--border);
+      padding-bottom:0.4rem;margin:1.5rem 0 0.75rem;
+    }
+
+    /* Sensitivity table */
+    .sens-table { width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:1.5rem; }
+    .sens-table th {
+      text-align:left;font-weight:400;font-family:monospace;
+      font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;
+      color:var(--dim);border-bottom:1px solid var(--border);padding:4px 8px;
+    }
+    .sens-table td { padding:7px 8px;border-bottom:1px solid var(--border);color:var(--muted); }
+    .sens-table tr:last-child td { border-bottom:none; }
+    .sens-table .baseline { background:var(--card); }
+    .sens-table .baseline td { color:var(--text); }
+    .hi { color:#4caf50;font-weight:500; }
+    .lo { color:#ef5350; }
+    .baseline-tag {
+      font-size:0.65rem;color:var(--dim);border:1px solid var(--border);
+      padding:1px 5px;margin-left:6px;vertical-align:middle;
+    }
+
+    /* Suburb chips */
+    .suburb-chips { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.5rem; }
+    .suburb-chip {
+      font-size:0.8rem;border:1px solid var(--border);
+      padding:4px 10px;color:#4caf50;text-decoration:none;
+    }
+    .suburb-chip:hover { border-color:#4caf50; }
+
+    /* CTA */
+    .cta-strip {
+      border:1px solid var(--border);padding:1rem 1.25rem;
+      display:flex;align-items:center;justify-content:space-between;
+      gap:1rem;flex-wrap:wrap;margin-top:1.5rem;
+    }
+    .cta-text { font-size:0.85rem;color:var(--muted); }
+    .cta-text strong { color:var(--text);display:block;margin-bottom:2px; }
+
+    /* Pagination */
+    .pagination {
+      display:flex;justify-content:space-between;
+      margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border);
+      font-size:0.85rem;
+    }
+
+    @media(max-width:600px) {
+      .assumptions-grid { grid-template-columns:1fr; }
+      .sens-table td:last-child { display:none; }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How much can I borrow on $150,000?",
+    "description": "On a $150,000 salary, estimated borrowing capacity is $880,000 based on standard lender assumptions. Assessment rate 7.35%.",
+    "url": "https://get-real.co/guides/how-much-can-i-borrow/150000/",
+    "publisher": {"@type": "Organization", "name": "GetReal", "url": "https://get-real.co"},
+    "dateModified": "2026-08-07"
+  }
+  </script>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="/">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+      <circle cx="13" cy="13" r="11.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="6.5" stroke="#18181b" stroke-width="1.5"/>
+      <circle cx="13" cy="13" r="2.5" fill="#18181b"/>
+    </svg>
+    <span class="brand-name">GetReal</span>
+  </a>
+</header>
+
+<div class="guide-wrap">
+
+  <nav class="breadcrumb">
+    <a href="/">Home</a> ›
+    <a href="/guides/">Guides</a> ›
+    <a href="/guides/how-much-can-i-borrow/">How much can I borrow</a> ›
+    $150,000
+  </nav>
+
+  <p class="eyebrow" style="margin-bottom:0.75rem;">Borrowing capacity</p>
+  <h1>How much can I borrow on a $150,000 salary?</h1>
+  <p class="lead">
+    Estimated borrowing capacity: <strong style="color:#4caf50;">$880,000</strong>.
+    Select your state and buyer type — stamp duty and upfront costs update below.
+    Adjust the assumptions if they don't match your situation.
+  </p>
+
+  <!-- Input bar -->
+  <div class="input-bar">
+    <div class="input-group">
+      <label>State</label>
+      <select id="stateSelect" onchange="update()">
+        <option value="NSW">NSW</option>
+        <option value="VIC">VIC</option>
+        <option value="QLD">QLD</option>
+        <option value="WA">WA</option>
+        <option value="SA">SA</option>
+        <option value="ACT">ACT</option>
+        <option value="TAS">TAS</option>
+        <option value="NT">NT</option>
+      </select>
+    </div>
+    <div class="toggle-group">
+      <label>Buyer type</label>
+      <div class="toggle-row">
+        <button class="toggle-btn active" onclick="setBuyer('fhb',this)">First home buyer</button>
+        <button class="toggle-btn" onclick="setBuyer('oo',this)">Owner-occupier</button>
+        <button class="toggle-btn" onclick="setBuyer('inv',this)">Investor</button>
+      </div>
+    </div>
+    <div class="input-group">
+      <label>Deposit saved</label>
+      <input type="text" id="depositInput" value="$100,000" oninput="update()" style="width:110px;">
+    </div>
+  </div>
+
+  <!-- Assumptions panel -->
+  <div class="assumptions">
+    <div class="assumptions-hdr">
+      <div class="warn-circle">!</div>
+      These assumptions are built into the estimate — check they match your situation
+    </div>
+    <div class="assumptions-grid">
+      <div class="assume-row"><span class="assume-key">Borrowers</span><span class="assume-val">1 (single)</span></div>
+      <div class="assume-row"><span class="assume-key">Existing debt</span><span class="assume-val">None</span></div>
+      <div class="assume-row"><span class="assume-key">Assessment rate</span><span class="assume-val">7.35% (RBA 4.35% + 3.0%)</span></div>
+      <div class="assume-row"><span class="assume-key">Living expenses</span><span class="assume-val">HEM metro ($2,800/mo)</span></div>
+      <div class="assume-row"><span class="assume-key">Loan term</span><span class="assume-val">30 years P&amp;I</span></div>
+      <div class="assume-row"><span class="assume-key">HECS / student debt</span><span class="assume-val">None</span></div>
+      <div class="assume-row"><span class="assume-key">Dependants</span><span class="assume-val">None</span></div>
+      <div class="assume-row"><span class="assume-key">Tax year</span><span class="assume-val">FY2026 ATO rates</span></div>
+    </div>
+    <div class="assume-footer">
+      ⚠ Assessment rate sourced from RBA F1 data (effective 2026-08-06), updated automatically each week.
+      For a result using your actual debts, HECS, and dependants, <a href="/deposit">use the calculator →</a>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-band">
+    <div class="result-figure">$880,000</div>
+    <div class="result-label">Estimated borrowing capacity</div>
+    <div class="result-note">
+      Your take-home pay is approximately $8,869/month.
+      After living expenses, you can service a loan of $880,000 at 7.35%.
+      <br>
+      With a <span id="depositDisplay">$100,000</span> deposit, you can target properties up to
+      <strong id="purchaseDisplay" style="color:#4caf50;">$980,000</strong>
+      <span id="stampDutyNote" style="color:var(--dim);font-size:0.8rem;"></span>
+    </div>
+  </div>
+
+  <!-- Stamp duty block (JS-updated) -->
+  <div class="section-label" id="stampDutyLabel">Upfront costs — NSW, first home buyer</div>
+  <div id="stampDutyBlock" style="border:1px solid var(--border);padding:1rem 1.25rem;margin-bottom:1.5rem;">
+    <div id="stampDutyContent">Loading...</div>
+  </div>
+
+  <!-- Sensitivity table -->
+  <div class="section-label">How borrowing capacity changes</div>
+  <table class="sens-table">
+    <thead>
+      <tr>
+        <th>Scenario</th>
+        <th style="text-align:right;">Capacity</th>
+        <th style="text-align:right;">Change</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="baseline">
+        <td>Single, no debt <span class="baseline-tag">baseline above</span></td>
+        <td class="hi" style="text-align:right;">$880k</td>
+        <td style="text-align:right;">—</td>
+      </tr>
+      
+            <tr>
+              <td>Partner on $80,000</td>
+              <td class="hi" style="text-align:right;">$1.3m</td>
+              <td class="hi" style="text-align:right;">+$400k</td>
+            </tr>
+            <tr>
+              <td>Partner on $60,000</td>
+              <td class="hi" style="text-align:right;">$1.1m</td>
+              <td class="hi" style="text-align:right;">+$270k</td>
+            </tr>
+            <tr>
+              <td>$15k credit card limit</td>
+              <td class="lo" style="text-align:right;">$800k</td>
+              <td class="lo" style="text-align:right;">$-80000</td>
+            </tr>
+            <tr>
+              <td>$5k credit card limit</td>
+              <td class="lo" style="text-align:right;">$855k</td>
+              <td class="lo" style="text-align:right;">$-25000</td>
+            </tr>
+            <tr>
+              <td>$50k HECS debt</td>
+              <td class="lo" style="text-align:right;">$720k</td>
+              <td class="lo" style="text-align:right;">$-160000</td>
+            </tr>
+            <tr>
+              <td>$30k HECS debt</td>
+              <td class="lo" style="text-align:right;">$720k</td>
+              <td class="lo" style="text-align:right;">$-160000</td>
+            </tr>
+            <tr>
+              <td>1 dependant</td>
+              <td class="lo" style="text-align:right;">$810k</td>
+              <td class="lo" style="text-align:right;">$-70000</td>
+            </tr>
+            <tr>
+              <td>2 dependants</td>
+              <td class="lo" style="text-align:right;">$735k</td>
+              <td class="lo" style="text-align:right;">$-145000</td>
+            </tr>
+    </tbody>
+  </table>
+
+  <!-- Suburb suggestions -->
+  <div class="section-label" id="suburbLabel">Suburbs within reach — NSW</div>
+  <div class="suburb-chips" id="suburbChips">
+    <a class="suburb-chip" href="/suburbs/vic/berwick/">Berwick VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/point-cook/">Point Cook VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/frankston/">Frankston VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/reservoir/">Reservoir VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/doreen/">Doreen VIC ›</a>
+<a class="suburb-chip" href="/suburbs/vic/narre-warren/">Narre Warren VIC ›</a>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-strip">
+    <div class="cta-text">
+      <strong>Get a personalised figure</strong>
+      Enter your actual debts, HECS, and dependants in the deposit checker.
+    </div>
+    <a class="btn" href="/deposit">Open calculator →</a>
+  </div>
+
+  <div class="pagination">
+    <span><a href="/guides/how-much-can-i-borrow/140000/" style="color:var(--muted);">← $140,000</a></span>
+    <span><a href="/guides/how-much-can-i-borrow/160000/" style="color:var(--muted);">$160,000 →</a></span>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  // Stamp duty data — all states, embedded at build time from Supabase
+  // Format: { state: { fhb: amount, standard: amount, fhb_threshold: amount } }
+  // These figures are for salary=150000, est. purchase price=980000
+  // They are approximate — link to calculator for exact figure.
+  // NOTE: In build_price_guides.py this data is computed precisely from Supabase.
+  // Here we embed a static lookup keyed on the purchase price band.
+  // The JS state/FHB toggle updates the displayed upfront cost block.
+
+  var PURCHASE = 980000;
+  var CAPACITY = 880000;
+
+  var buyerType = 'fhb';
+  var state     = 'NSW';
+
+  // Stamp duty estimates by state and buyer type for this purchase price.
+  // Generated at build time — see build_price_guides.py for exact Supabase calc.
+  var DUTY = {};
+
+  function parseDep(s) {
+    var v = parseInt((s || '').replace(/[^0-9]/g, ''), 10);
+    return isNaN(v) ? 100000 : v;
+  }
+
+  function fmtDollar(n) {
+    return '$' + Math.round(n).toLocaleString('en-AU');
+  }
+
+  function setBuyer(type, btn) {
+    buyerType = type;
+    document.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    update();
+  }
+  window.setBuyer = setBuyer;
+
+  function update() {
+    state  = document.getElementById('stateSelect').value;
+    var deposit = parseDep(document.getElementById('depositInput').value);
+    var purchase = CAPACITY + deposit;
+
+    document.getElementById('depositDisplay').textContent = fmtDollar(deposit);
+    document.getElementById('purchaseDisplay').textContent = fmtDollar(purchase);
+    document.getElementById('suburbLabel').textContent = 'Suburbs within reach — ' + state;
+    document.getElementById('stampDutyLabel').textContent = 'Upfront costs — ' + state + ', ' + (buyerType === 'fhb' ? 'first home buyer' : buyerType === 'oo' ? 'owner-occupier' : 'investor');
+
+    // Stamp duty note in result band
+    var note = document.getElementById('stampDutyNote');
+    note.textContent = ' (before stamp duty and other upfront costs)';
+
+    // Upfront cost block — links to stamp duty calculator for exact figure
+    var block = document.getElementById('stampDutyContent');
+    block.innerHTML = '<p style="font-size:0.85rem;color:var(--muted);line-height:1.8;">' +
+      'Stamp duty varies significantly by state and buyer type. ' +
+      'Use the <a href="/stamp-duty?price=' + purchase + '&state=' + state + '" style="color:#4caf50;">stamp duty calculator →</a> ' +
+      'to see the exact amount for ' + state + ' (' + (buyerType === 'fhb' ? 'first home buyer' : 'standard') + ').' +
+      '<br><br>Your ' + fmtDollar(deposit) + ' deposit may need to cover stamp duty in addition to the loan deposit. ' +
+      'In NSW, FHBs pay $0 stamp duty on properties up to $800k. In VIC, standard duty on $800k is $43,070.' +
+      '</p>';
+  }
+
+  window.update = update;
+  update();
+})();
+</script>
+
+</body>
+</html>

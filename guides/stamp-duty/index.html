@@ -14,14 +14,16 @@
     .guides-container { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
     .guides-intro { margin-bottom: 2.5rem; }
     .guides-intro h1 { font-size: 1.8rem; margin-bottom: 0.75rem; }
-    .guides-intro p { color: var(--muted); max-width: 620px; line-height: 1.75; font-size: 0.9rem; }
-    .calc-cta {
-      background: var(--card); border: 1px solid var(--green);
-      padding: 1.25rem 1.5rem; margin-bottom: 2.5rem;
-      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    .guides-intro p { color: var(--muted); max-width: 680px; line-height: 1.8; font-size: 0.9rem; margin-bottom: 1rem; }
+    .history-block {
+      border-left: 3px solid var(--border);
+      padding: 1.25rem 1.5rem;
+      margin: 2rem 0 2.5rem;
+      background: var(--card);
     }
-    .calc-cta-text { font-size: 0.9rem; color: var(--muted); }
-    .calc-cta-text strong { color: var(--text); display: block; font-size: 1rem; margin-bottom: 0.2rem; }
+    .history-block p { color: var(--muted); font-size: 0.85rem; line-height: 1.8; margin: 0 0 0.75rem; }
+    .history-block p:last-child { margin: 0; }
+    .history-block strong { color: var(--text); }
     .section-label { font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
       letter-spacing: 0.1em; color: var(--muted); margin-bottom: 1rem;
       padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
@@ -34,13 +36,13 @@
     .guide-row-title { font-size: 0.95rem; font-weight: 500; flex: 1; }
     .guide-row-meta { font-size: 0.8rem; color: var(--muted); flex: 2; line-height: 1.5; }
     .guide-row-arrow { color: var(--green); flex-shrink: 0; }
-    .explainer { background: var(--card); border: 1px solid var(--border); padding: 1.5rem; }
-    .explainer h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.75rem; }
-    .explainer p { font-size: 0.85rem; color: var(--muted); line-height: 1.75; margin: 0 0 0.75rem; }
-    .explainer p:last-child { margin: 0; }
-    @media (max-width: 600px) {
-      .guide-row-meta { display: none; }
+    .calc-cta {
+      border: 1px solid var(--border); padding: 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
     }
+    .calc-cta-text { font-size: 0.88rem; color: var(--muted); }
+    .calc-cta-text strong { color: var(--text); display: block; margin-bottom: 0.2rem; }
+    @media (max-width: 600px) { .guide-row-meta { display: none; } }
   </style>
   <script type="application/ld+json">
   {
@@ -75,80 +77,75 @@
 
   <div class="guides-intro">
     <h1>Stamp duty in Australia</h1>
-    <p>Stamp duty (transfer duty) is a state tax on property purchases. Every state sets its own rates, thresholds, and concessions — and they vary significantly. Pick your state below to see exactly what applies to you, or use the calculator to get a number instantly.</p>
+    <p>Stamp duty is a state government tax on property purchases. It's one of the largest upfront costs of buying — and unlike your deposit, it can't be borrowed. You need to have it in cash at settlement.</p>
+    <p>Every state sets its own rates, brackets, and concessions, which is why the numbers vary so wildly depending on where you buy.</p>
   </div>
 
-  <div class="calc-cta">
-    <div class="calc-cta-text">
-      <strong>Stamp duty calculator</strong>
-      All 8 states and territories. First home buyer concessions included.
-    </div>
-    <a class="btn" href="/stamp-duty" style="white-space:nowrap;">Calculate now →</a>
+  <div class="history-block">
+    <p><strong>The tax that was supposed to disappear.</strong> When the GST was introduced in July 2000, state governments signed an intergovernmental agreement committing to abolish a list of "inefficient" taxes — stamp duty on property was explicitly on that list. The deal was straightforward: the Commonwealth hands over all GST revenue, the states phase out the old nuisance taxes in return.</p>
+    <p>That was 26 years ago. Stamp duty is still here. In the intervening decades it has ballooned into one of state governments' biggest revenue streams — NSW alone collects over $8 billion a year from it. The ACT is the only jurisdiction that has actually started phasing it out, replacing it with a broad-based land tax from 2012. Every other state has quietly shelved the commitment and hopes you've forgotten it was ever made.</p>
+    <p>You haven't. Now you know.</p>
   </div>
 
-  <div class="section-label">By state and territory</div>
+  <div class="section-label">Rates by state and territory — 2026</div>
 
   <div class="guide-list">
     <a class="guide-row" href="/guides/stamp-duty/nsw">
       <span class="guide-row-state">NSW</span>
       <span class="guide-row-title">New South Wales</span>
-      <span class="guide-row-meta">Transfer duty. FHB exemption up to $800k, concession to $1M.</span>
+      <span class="guide-row-meta">FHB exemption up to $800k, concession to $1M. ~$30,735 on an $800k purchase.</span>
       <span class="guide-row-arrow">›</span>
     </a>
     <a class="guide-row" href="/guides/stamp-duty/vic">
       <span class="guide-row-state">VIC</span>
       <span class="guide-row-title">Victoria</span>
-      <span class="guide-row-meta">Land transfer duty. PPR concession. FHB waiver up to $600k.</span>
+      <span class="guide-row-meta">Dual PPR/standard rates. FHB waiver under $600k. ~$43,070 on $800k.</span>
       <span class="guide-row-arrow">›</span>
     </a>
     <a class="guide-row" href="/guides/stamp-duty/qld">
       <span class="guide-row-state">QLD</span>
       <span class="guide-row-title">Queensland</span>
-      <span class="guide-row-meta">Transfer duty. FHB concession. Home concession for owner-occupiers.</span>
+      <span class="guide-row-meta">Home concession for owner-occupiers. FHB exemption under $500k. ~$29,025 on $800k.</span>
       <span class="guide-row-arrow">›</span>
     </a>
     <a class="guide-row" href="/guides/stamp-duty/wa">
       <span class="guide-row-state">WA</span>
       <span class="guide-row-title">Western Australia</span>
-      <span class="guide-row-meta">Transfer duty. FHB concession up to $430k. PPR concession.</span>
+      <span class="guide-row-meta">FHB exemption under $430k. One of the lower regimes among mainland states.</span>
       <span class="guide-row-arrow">›</span>
     </a>
     <a class="guide-row" href="/guides/stamp-duty/sa">
       <span class="guide-row-state">SA</span>
       <span class="guide-row-title">South Australia</span>
-      <span class="guide-row-meta">Stamp duty. No dedicated FHB concession — grant instead.</span>
+      <span class="guide-row-meta">No FHB stamp duty concession — unique among all states. ~$37,830 on $800k.</span>
       <span class="guide-row-arrow">›</span>
     </a>
     <a class="guide-row" href="/guides/stamp-duty/act">
       <span class="guide-row-state">ACT</span>
       <span class="guide-row-title">Australian Capital Territory</span>
-      <span class="guide-row-meta">Conveyance duty. Home Buyer Concession Scheme.</span>
+      <span class="guide-row-meta">The only state actually phasing stamp duty out. Home Buyer Concession Scheme for eligible buyers.</span>
       <span class="guide-row-arrow">›</span>
     </a>
     <a class="guide-row" href="/guides/stamp-duty/tas">
       <span class="guide-row-state">TAS</span>
       <span class="guide-row-title">Tasmania</span>
-      <span class="guide-row-meta">Duty on transfers. FHB concession of 50% on homes up to $600k.</span>
+      <span class="guide-row-meta">50% FHB concession on homes under $600k.</span>
       <span class="guide-row-arrow">›</span>
     </a>
     <a class="guide-row" href="/guides/stamp-duty/nt">
       <span class="guide-row-state">NT</span>
       <span class="guide-row-title">Northern Territory</span>
-      <span class="guide-row-meta">Stamp duty with a formula-based calculation. FHB discount available.</span>
+      <span class="guide-row-meta">Unique quadratic formula. $18,601 FHB rebate phasing out between $500k–$650k.</span>
       <span class="guide-row-arrow">›</span>
     </a>
   </div>
 
-  <div class="section-label">What is stamp duty?</div>
-
-  <div class="explainer">
-    <h3>A tax on buying property</h3>
-    <p>Stamp duty is a one-off state government tax paid when you purchase real estate. It's calculated on the purchase price (or market value, whichever is higher) and must be paid at or before settlement — typically within 30 days of signing the contract.</p>
-    <p>It's one of the largest upfront costs of buying property and is not included in your mortgage. You need to have this money available as part of your deposit.</p>
-    <h3>Why does it vary by state?</h3>
-    <p>Each state and territory sets its own legislation, rates, and concessions. There's no national standard. NSW and VIC are two of the most expensive. The ACT has been transitioning away from stamp duty toward an annual land tax since 2012. NT uses a formula-based calculation rather than a bracket table.</p>
-    <h3>First home buyer concessions</h3>
-    <p>Most states offer stamp duty discounts or exemptions for first home buyers, usually subject to price caps and residency requirements. These can be worth tens of thousands of dollars — but the thresholds are often lower than current median prices in capital cities. See your state's guide for the exact rules.</p>
+  <div class="calc-cta">
+    <div class="calc-cta-text">
+      <strong>Just want a number?</strong>
+      Enter a price and state in the calculator — it handles all the brackets, concessions, and FHB rules automatically.
+    </div>
+    <a class="btn" href="/stamp-duty">Open calculator →</a>
   </div>
 
 </div>
