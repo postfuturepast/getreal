@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "GetReal Property API",
+  "name_for_model": "getreal_property_api",
+  "description_for_human": "Free Australian property data API. Calculates stamp duty for all states, LMI, mortgage ceilings, repayments, and suburb realism scores.",
+  "description_for_model": "GetReal Property API provides Australian property calculations including: stamp duty for all 8 states and territories (with FHB concessions), LMI estimates, monthly repayment calculations, mortgage ceiling calculators (deposit floor, DTI cap, serviceability), and suburb realism scores showing what share of a suburb's market is within a given budget. Data sourced from NSW Valuer General (146,000+ individual sale records) and Victorian Valuer General quarterly reports. All endpoints are GET with query parameters. No authentication required.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://get-real.co/openapi.json"
+  },
+  "logo_url": "https://get-real.co/favicon.svg",
+  "contact_email": "hello@get-real.co",
+  "legal_info_url": "https://get-real.co/faq.html"
+}
