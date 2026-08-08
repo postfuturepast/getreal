@@ -388,10 +388,10 @@ function getPricePercentile(ratio, ptype, median, annualSales, priceCurves) {
   return interpolateCurve(FALLBACK_CURVE, ratio);
 }
 
-function calcScore(median, annualSales, budget, priceCurves) {
-  if (!median || !annualSales) return null;
+function calcScore(median, annualSales, budget, priceCurves, propertyType=null) {
+  if (!median) return null;
   const ratio = budget / median;
-  const pricePct = getPricePercentile(ratio, null, median, annualSales, priceCurves);
+  const pricePct = getPricePercentile(ratio, propertyType, median, annualSales || 1, priceCurves);
   const score = Math.round(pricePct * 100);
   return { score, ratio, pricePct, annualSales, median };
 }
@@ -852,7 +852,9 @@ async function handleScore(body) {
   ]);
   if (!suburbRow) return err(404, `No data found for ${suburb} ${state} ${property_type}`, 'SUBURB_NOT_FOUND');
   const { median_price, annual_sales, suburb_display, data_year } = suburbRow;
-  const scoreResult = calcScore(median_price, annual_sales, budget, priceCurves);
+  if (!median_price) return err(404, `No median price data for ${suburb} ${state} ${property_type}`, 'NO_PRICE_DATA');
+  const scoreResult = calcScore(median_price, annual_sales || 1, budget, priceCurves, property_type);
+  if (!scoreResult) return err(500, 'Score calculation failed — missing suburb data', 'SCORE_FAILED');
   const { label, description } = scoreLabel(scoreResult.score);
   const isVIC = state === 'VIC';
   return ok({
