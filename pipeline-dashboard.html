@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Pipeline Status — GetReal</title>
+<meta name="description" content="Live status of GetReal's data pipeline — GitHub Actions workflow runs, lookup source monitoring, and Supabase table health.">
+<meta property="og:title" content="Data Pipeline Status — GetReal">
+<meta property="og:description" content="Transparency dashboard showing how GetReal's data is collected, updated, and monitored.">
+<meta property="og:image" content="https://get-real.co/og-image.png">
+<meta property="og:site_name" content="GetReal">
+<link rel="canonical" href="https://get-real.co/pipeline-dashboard" />
+<style>
+  :root {
+    --bg: #f2f2f0;
+    --surface: #ffffff;
+    --border: #d0d0cc;
+    --text: #111111;
+    --muted: #666660;
+    --accent: #1a1a1a;
+    --green: #1a7a3c;
+    --red: #b00020;
+    --orange: #b85c00;
+    --blue: #1a3a7a;
+    font-size: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', Courier, monospace;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  h1 { font-size: 18px; font-weight: bold; letter-spacing: 0.05em; }
+  .controls { display: flex; align-items: center; gap: 12px; }
+  #last-updated { color: var(--muted); font-size: 12px; }
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+  button:hover { opacity: 0.75; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th {
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding: 4px 8px 6px;
+    white-space: nowrap;
+  }
+  td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--bg);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 7px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  .pill-green  { background: #d4edda; color: var(--green); }
+  .pill-red    { background: #f8d7da; color: var(--red); }
+  .pill-orange { background: #fde8cc; color: var(--orange); }
+  .pill-grey   { background: #e8e8e6; color: var(--muted); }
+  .pill-blue   { background: #d0dff5; color: var(--blue); }
+
+  .muted { color: var(--muted); }
+  .source-link { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--border); }
+  .source-link:hover { color: var(--text); }
+
+  .section-intro {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .loading { color: var(--muted); font-size: 12px; padding: 12px 0; }
+  .error-msg { color: var(--red); font-size: 12px; padding: 12px 0; }
+
+  td.desc { max-width: 260px; white-space: normal; line-height: 1.4; color: var(--muted); font-size: 11px; }
+  td.name { font-weight: bold; white-space: nowrap; }
+
+  .run-link { color: var(--muted); font-size: 10px; text-decoration: none; border-bottom: 1px dotted var(--border); }
+  .run-link:hover { color: var(--text); }
+
+  footer {
+    margin-top: 32px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  footer a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--border); }
+  footer a:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>GETREAL — DATA PIPELINE STATUS</h1>
+  <div class="controls">
+    <span id="last-updated"></span>
+    <button id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</header>
+
+<p class="section-intro">
+  Live status of GetReal's data pipeline. GitHub Actions workflows run automatically each week.
+  Lookup sources are monitored for changes — some auto-update, others alert for manual review.
+  All data flows through Supabase and is read live by the calculators.
+</p>
+
+<!-- SECTION 1: GitHub Actions workflows -->
+<div class="panel">
+  <h2>GitHub Actions — Weekly Workflow Runs</h2>
+  <table id="workflows-table">
+    <thead>
+      <tr>
+        <th>Workflow</th>
+        <th>Schedule</th>
+        <th>Last Run</th>
+        <th>Result</th>
+        <th>Triggered</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="workflows-tbody">
+      <tr><td colspan="6" class="loading">Loading workflow runs...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 2: Lookup source monitor -->
+<div class="panel">
+  <h2>Lookup Source Monitor — Rate &amp; Policy Data</h2>
+  <table id="monitor-table">
+    <thead>
+      <tr>
+        <th>Source</th>
+        <th>Description</th>
+        <th>URL</th>
+        <th>Update method</th>
+        <th>Last checked</th>
+        <th>Last changed</th>
+        <th>Status</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody id="monitor-tbody">
+      <tr><td colspan="8" class="loading">Loading monitor state...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 3: All lookup tables -->
+<div class="panel">
+  <h2>Supabase Lookup Tables</h2>
+  <table id="tables-table">
+    <thead>
+      <tr>
+        <th>Table</th>
+        <th>Description</th>
+        <th>Source</th>
+        <th>Update method</th>
+        <th>Volatility</th>
+        <th>Supabase</th>
+      </tr>
+    </thead>
+    <tbody id="tables-tbody"></tbody>
+  </table>
+</div>
+
+<footer>
+  <a href="/">← GetReal</a>
+  <a href="/faq.html">Methodology</a>
+  <a href="/enrichment-dashboard.html">Enrichment dashboard</a>
+  <a href="https://github.com/postfuturepast/getreal" target="_blank">GitHub →</a>
+</footer>
+
+<script>
+const SB_URL = 'https://lkxzxeeeqfiymunpqvgt.supabase.co';
+const SB_KEY = 'sb_publishable_1jyBD0hVdHX2ieqFIlC51A_A3ep39Bc';
+const GH_REPO = 'postfuturepast/getreal';
+const SB_TABLE_URL = 'https://supabase.com/dashboard/project/lkxzxeeeqfiymunpqvgt/editor';
+
+// Known workflows with human-readable metadata
+const WORKFLOW_META = {
+  'Refresh NSW Data':        { schedule: 'Sunday 2am AEST', desc: 'Download + load NSW Valuer General property sales' },
+  'Refresh VIC Data':        { schedule: 'Monday 2am UTC',  desc: 'Check for new VGV quarterly data; process if new' },
+  'Sourced Sales Refresh':   { schedule: 'Sunday 2am AEST', desc: 'All agency scrapers: McGrath, LJ Hooker, Harcourts, etc.' },
+  'Refresh Lookup Data':     { schedule: 'Sunday 3am AEST', desc: 'RBA rates fetch + verify all lookup tables' },
+  'NSW Enrichment':          { schedule: 'Sunday 4am AEST', desc: 'Match sourced sales to property_sales (bedrooms/bathrooms)' },
+  'Build Suburb Pages':      { schedule: 'Sunday 6am AEST', desc: 'Rebuild static suburb + guide pages → deploy' },
+  'Ray White Incremental':   { schedule: 'Monday 3am AEST', desc: 'Ray White sold listings incremental fetch, all states' },
+  'Monitor Lookup Sources':  { schedule: 'Monday 4am AEST', desc: 'Check all lookup sources for changes; auto-update where possible' },
+};
+
+// Static lookup table definitions
+const LOOKUP_TABLES = [
+  { table: 'benchmark_rates',        desc: 'RBA cash rate and assessment rate buffer',           source: 'RBA Statistical Tables',        method: 'Auto (weekly)',     vol: 'High' },
+  { table: 'stamp_duty_brackets',    desc: 'Stamp duty rate brackets for all 8 states',          source: 'State Revenue Offices',         method: 'Alert + manual',   vol: 'Medium' },
+  { table: 'stamp_duty_concessions', desc: 'FHB and other concession thresholds by state',       source: 'State Revenue Offices',         method: 'Alert + manual',   vol: 'Medium' },
+  { table: 'newbuild_concessions',   desc: 'New build stamp duty concessions by state',           source: 'State Revenue Offices',         method: 'Manual',           vol: 'Medium' },
+  { table: 'lmi_rates',              desc: 'LMI premium rates by LVR band and loan size',        source: 'Home Loan Experts (indicative)', method: 'Auto-update',      vol: 'Low' },
+  { table: 'lmi_stamp_duty_rates',   desc: 'State stamp duty on LMI premium',                    source: 'State legislation',             method: 'Alert + manual',   vol: 'Very low' },
+  { table: 'hem_benchmarks',         desc: 'Household Expenditure Measure by type and location', source: 'JMD Mortgages (indicative)',    method: 'Auto-update',      vol: 'Low' },
+  { table: 'registration_fees',      desc: 'Transfer and mortgage registration fees by state',    source: 'State land registries',         method: 'Manual',           vol: 'Very low' },
+  { table: 'nt_duty_formula',        desc: 'NT stamp duty polynomial formula coefficients',       source: 'NT Revenue Office',             method: 'Auto-verify',      vol: 'Very low' },
+  { table: 'lvr_limits',             desc: 'LVR limits by borrower and property type',            source: 'APRA / lender policy',          method: 'Alert + manual',   vol: 'Low' },
+  { table: 'lending_policy_constants', desc: 'DTI cap, assessment buffer, serviceability rules', source: 'APRA prudential standards',     method: 'Alert + manual',   vol: 'Low' },
+  { table: 'postcode_locations',     desc: 'Postcode → state + metro/regional classification',   source: 'ABS ASGS Edition 3',            method: 'Alert + manual',   vol: 'Very low' },
+  { table: 'pipeline_monitor_state', desc: 'Internal monitor state — hashes and timestamps',     source: 'Internal (monitor script)',      method: 'Auto (written by monitor)', vol: 'n/a' },
+];
+
+// Monitor source descriptions
+const MONITOR_DESCS = {
+  hem_jmd:              { label: 'HEM Benchmarks',        method: 'Auto-update', url_label: 'JMD Mortgages' },
+  lmi_rates_hle:        { label: 'LMI Rates',             method: 'Auto-update', url_label: 'Home Loan Experts' },
+  nt_duty_formula:      { label: 'NT Duty Formula',       method: 'Auto-verify', url_label: 'NT Revenue Office' },
+  stamp_duty_nsw:       { label: 'Stamp Duty NSW',        method: 'Alert only',  url_label: 'NSW OSR' },
+  stamp_duty_vic:       { label: 'Stamp Duty VIC',        method: 'Alert only',  url_label: 'VIC SRO' },
+  stamp_duty_qld:       { label: 'Stamp Duty QLD',        method: 'Alert only',  url_label: 'QLD OSR' },
+  stamp_duty_wa:        { label: 'Stamp Duty WA',         method: 'Alert only',  url_label: 'WA RevenueWA' },
+  stamp_duty_sa:        { label: 'Stamp Duty SA',         method: 'Alert only',  url_label: 'RevenueSA' },
+  stamp_duty_tas:       { label: 'Stamp Duty TAS',        method: 'Alert only',  url_label: 'State Revenue TAS' },
+  stamp_duty_act:       { label: 'Stamp Duty ACT',        method: 'Alert only',  url_label: 'ACT Revenue' },
+  stamp_duty_nt_conc:   { label: 'Stamp Duty NT Conc.',   method: 'Alert only',  url_label: 'NT Revenue' },
+  apra_releases:        { label: 'APRA Media Releases',   method: 'Alert only',  url_label: 'APRA' },
+  abs_asgs:             { label: 'ABS ASGS Remoteness',   method: 'Alert only',  url_label: 'ABS' },
+  lmi_stamp_duty_vic:   { label: 'LMI Stamp Duty VIC',   method: 'Alert only',  url_label: 'VIC SRO' },
+};
+
+function fmtTime(iso) {
+  if (!iso) return '<span class="muted">—</span>';
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffDays = Math.floor(diffMs / 86400000);
+  const time = d.toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+  if (diffDays === 0) return `<span title="${time}">Today</span>`;
+  if (diffDays === 1) return `<span title="${time}">Yesterday</span>`;
+  if (diffDays < 8)  return `<span title="${time}">${diffDays}d ago</span>`;
+  return `<span title="${time}">${time}</span>`;
+}
+
+function statusPill(status, conclusion) {
+  if (!status) return '<span class="pill pill-grey">never run</span>';
+  if (status === 'in_progress') return '<span class="pill pill-blue">running</span>';
+  if (status === 'queued')      return '<span class="pill pill-grey">queued</span>';
+  if (conclusion === 'success') return '<span class="pill pill-green">success</span>';
+  if (conclusion === 'failure') return '<span class="pill pill-red">failed</span>';
+  if (conclusion === 'skipped') return '<span class="pill pill-grey">skipped</span>';
+  return `<span class="pill pill-grey">${conclusion || status}</span>`;
+}
+
+function monitorPill(status) {
+  if (!status) return '<span class="pill pill-grey">not yet run</span>';
+  if (status === 'ok')      return '<span class="pill pill-green">ok</span>';
+  if (status === 'updated') return '<span class="pill pill-green">auto-updated</span>';
+  if (status === 'changed') return '<span class="pill pill-orange">changed — review</span>';
+  if (status === 'error')   return '<span class="pill pill-red">error</span>';
+  return `<span class="pill pill-grey">${status}</span>`;
+}
+
+function methodPill(method) {
+  if (method === 'Auto-update')  return '<span class="pill pill-green">auto-update</span>';
+  if (method === 'Auto-verify')  return '<span class="pill pill-blue">auto-verify</span>';
+  if (method === 'Alert only')   return '<span class="pill pill-orange">alert only</span>';
+  if (method === 'Alert + manual') return '<span class="pill pill-orange">alert + manual</span>';
+  if (method === 'Auto (weekly)') return '<span class="pill pill-green">auto weekly</span>';
+  if (method.startsWith('Auto')) return '<span class="pill pill-green">auto</span>';
+  if (method === 'Manual')       return '<span class="pill pill-grey">manual</span>';
+  return `<span class="muted">${method}</span>`;
+}
+
+function volBadge(vol) {
+  if (vol === 'High')      return '<span style="color:var(--red)">High</span>';
+  if (vol === 'Medium')    return '<span style="color:var(--orange)">Medium</span>';
+  if (vol === 'Low')       return '<span class="muted">Low</span>';
+  if (vol === 'Very low')  return '<span class="muted">Very low</span>';
+  return `<span class="muted">${vol}</span>`;
+}
+
+async function loadWorkflows() {
+  const tbody = document.getElementById('workflows-tbody');
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_REPO}/actions/runs?per_page=100`, {
+      headers: { 'Accept': 'application/vnd.github+json' }
+    });
+    if (!r.ok) throw new Error(`GitHub API ${r.status}`);
+    const data = await r.json();
+
+    // Latest run per workflow name
+    const latest = {};
+    for (const run of data.workflow_runs) {
+      if (!latest[run.name]) latest[run.name] = run;
+    }
+
+    // Known order
+    const order = [
+      'Refresh NSW Data',
+      'Sourced Sales Refresh',
+      'Refresh Lookup Data',
+      'NSW Enrichment',
+      'Build Suburb Pages',
+      'Ray White Incremental',
+      'Monitor Lookup Sources',
+      'Refresh VIC Data',
+    ];
+
+    // Include any unknown workflows too
+    const names = [...new Set([...order, ...Object.keys(latest)])].filter(n => n !== 'Vic Sourced Sales');
+
+    tbody.innerHTML = names.map(name => {
+      const run = latest[name];
+      const meta = WORKFLOW_META[name] || {};
+      if (!run) {
+        return `<tr>
+          <td class="name">${name}</td>
+          <td class="muted">${meta.schedule || '—'}</td>
+          <td class="muted">—</td>
+          <td>${statusPill(null, null)}</td>
+          <td class="muted">—</td>
+          <td></td>
+        </tr>`;
+      }
+      const trigger = run.event === 'schedule' ? 'Scheduled' : run.event === 'workflow_dispatch' ? 'Manual' : run.event;
+      return `<tr>
+        <td class="name" title="${meta.desc || ''}">${name}</td>
+        <td class="muted">${meta.schedule || '—'}</td>
+        <td>${fmtTime(run.updated_at)}</td>
+        <td>${statusPill(run.status, run.conclusion)}</td>
+        <td class="muted">${trigger}</td>
+        <td><a class="run-link" href="${run.html_url}" target="_blank">view →</a></td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="error-msg">Failed to load GitHub Actions data: ${e.message}</td></tr>`;
+  }
+}
+
+async function loadMonitor() {
+  const tbody = document.getElementById('monitor-tbody');
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/pipeline_monitor_state?select=*&order=source_key.asc`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+    });
+    if (!r.ok) throw new Error(`Supabase ${r.status}`);
+    const rows = await r.json();
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="8" class="muted" style="padding:12px 8px;">
+        No monitor data yet — first run is next Monday 4am AEST.
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(row => {
+      const meta = MONITOR_DESCS[row.source_key] || {};
+      const hostname = (() => { try { return new URL(row.url).hostname.replace('www.',''); } catch(e) { return row.url; } })();
+      return `<tr>
+        <td class="name">${meta.label || row.source_key}</td>
+        <td class="desc">${row.description || '—'}</td>
+        <td><a class="source-link" href="${row.url}" target="_blank">${hostname}</a></td>
+        <td>${methodPill(meta.method || '—')}</td>
+        <td>${fmtTime(row.last_checked_at)}</td>
+        <td>${fmtTime(row.last_changed_at)}</td>
+        <td>${monitorPill(row.last_status)}</td>
+        <td class="muted" style="text-align:right">${row.change_count ?? 0}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="8" class="error-msg">Failed to load monitor state: ${e.message}</td></tr>`;
+  }
+}
+
+function loadTables() {
+  const tbody = document.getElementById('tables-tbody');
+  tbody.innerHTML = LOOKUP_TABLES.map(t => `<tr>
+    <td class="name"><a class="source-link" href="${SB_TABLE_URL}" target="_blank">${t.table}</a></td>
+    <td class="desc">${t.desc}</td>
+    <td class="muted">${t.source}</td>
+    <td>${methodPill(t.method)}</td>
+    <td>${volBadge(t.vol)}</td>
+    <td><a class="source-link" href="${SB_TABLE_URL}" target="_blank">Supabase →</a></td>
+  </tr>`).join('');
+}
+
+async function loadAll() {
+  document.getElementById('refresh-btn').disabled = true;
+  document.getElementById('last-updated').textContent = 'Loading...';
+  await Promise.all([loadWorkflows(), loadMonitor()]);
+  loadTables();
+  document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('refresh-btn').disabled = false;
+}
+
+loadAll();
+</script>
+</body>
+</html>
