@@ -532,7 +532,7 @@ function ok(data) {
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
@@ -997,16 +997,20 @@ export async function onRequest(context) {
   // Strip leading 'v1' if present
   const route = segments.filter(s => s !== 'v1').join('/');
 
-  if (request.method !== 'POST') {
-    return err(405, 'Method not allowed. All API endpoints accept POST with a JSON body.', 'METHOD_NOT_ALLOWED');
+  if (request.method !== 'GET') {
+    return err(405, 'Method not allowed. All API endpoints accept GET with query parameters.', 'METHOD_NOT_ALLOWED');
   }
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return err(400, 'Request body must be valid JSON.', 'INVALID_JSON');
+  // Parse query params with automatic type coercion:
+  // numbers, booleans, and JSON arrays/objects are coerced; plain strings stay as strings.
+  function parseQueryBody(searchParams) {
+    const obj = {};
+    for (const [k, v] of searchParams) {
+      try { obj[k] = JSON.parse(v); } catch { obj[k] = v; }
+    }
+    return obj;
   }
+  const body = parseQueryBody(url.searchParams);
 
   try {
     switch (route) {
