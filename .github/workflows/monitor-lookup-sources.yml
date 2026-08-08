@@ -1,0 +1,73 @@
+name: Monitor Lookup Sources
+
+on:
+  schedule:
+    # Every Monday at 4am AEST (Monday 18:00 UTC) — after lookup refresh on Sunday
+    - cron: '0 18 * * 1'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions tab
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests supabase beautifulsoup4
+
+      - name: Run monitor
+        id: monitor
+        env:
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python3 monitor_lookup_data.py
+
+      - name: Write job summary
+        if: always()
+        run: |
+          echo "## GetReal — Lookup Source Monitor" >> $GITHUB_STEP_SUMMARY
+          echo "**Run time:** $(date '+%A %d %b %Y %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Monitor completed — check email for any change alerts or auto-updates." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Monitor failed — check the logs above." >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Sources monitored" >> $GITHUB_STEP_SUMMARY
+          echo "- HEM benchmarks (JMD Mortgages) — auto-update" >> $GITHUB_STEP_SUMMARY
+          echo "- LMI rates (Home Loan Experts) — auto-update" >> $GITHUB_STEP_SUMMARY
+          echo "- NT duty formula (NT Revenue Office) — auto-update" >> $GITHUB_STEP_SUMMARY
+          echo "- Stamp duty pages: NSW, VIC, QLD, WA, SA, TAS, ACT, NT — alert on change" >> $GITHUB_STEP_SUMMARY
+          echo "- APRA media releases — alert on change" >> $GITHUB_STEP_SUMMARY
+          echo "- ABS ASGS (postcode remoteness) — alert on change" >> $GITHUB_STEP_SUMMARY
+          echo "- LMI stamp duty (Victoria SRO) — alert on change" >> $GITHUB_STEP_SUMMARY
+
+      - name: Send failure notification
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          to: ${{ secrets.GMAIL_USER }}
+          from: GetReal Pipeline <${{ secrets.GMAIL_USER }}>
+          subject: "❌ GetReal — Lookup Monitor FAILED"
+          body: |
+            The lookup source monitor workflow failed before completing.
+
+            This means some sources may not have been checked this week.
+            Check the logs and re-run manually if needed.
+
+            View run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
