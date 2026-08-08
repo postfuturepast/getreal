@@ -14,6 +14,35 @@ GetReal is built on raw government property sales data (NSW Valuer General, Vict
 
 - [AI Buying Coach](https://get-real.co/ask): Conversational AI that helps Australians understand their property buying situation. Can calculate borrowing capacity, explain trade-offs, and link to methodology.
 
+## API
+
+GetReal exposes its calculation engine as a free HTTP API. No authentication required. All endpoints accept GET with query parameters and return JSON.
+
+- [Developer hub](https://get-real.co/developer.html): Overview, endpoint list, quick-start examples, and data source notes.
+- [Full API reference](https://get-real.co/api-docs.html): Interactive OpenAPI documentation for all 15 endpoints.
+- [OpenAPI spec](https://get-real.co/openapi.json): Machine-readable OpenAPI 3.1 specification.
+
+Base URL: `https://get-real.co/api/v1/`
+
+Endpoints:
+- `GET /api/v1/stamp-duty` — Stamp duty for any Australian state and buyer type (FHB, owner-occupier, investor). Applies 2026 concession rules.
+- `GET /api/v1/lmi` — LMI estimate when deposit is below 20%. Returns premium, stamp duty on LMI, and capitalised loan amount.
+- `GET /api/v1/repayments` — Monthly P&I repayment for a loan amount. Returns actual and stress-tested (APRA +3%) repayments.
+- `GET /api/v1/ceiling/deposit` — Maximum purchase price for a given savings amount, after stamp duty, LMI, and registration fees.
+- `GET /api/v1/ceiling/deposit/min-income` — Minimum income needed to borrow the loan implied by a deposit ceiling.
+- `GET /api/v1/ceiling/dti` — Maximum loan under the 6× gross income DTI cap.
+- `GET /api/v1/ceiling/serviceability` — Maximum loan under the APRA stress-test serviceability ceiling.
+- `GET /api/v1/ceiling/all` — All three ceilings in one call, with the binding constraint identified.
+- `GET /api/v1/ceiling/check` — Affordability check for a specific target price.
+- `GET /api/v1/ceiling/deposit/sensitivity` — How the deposit ceiling changes at multiple savings levels.
+- `GET /api/v1/score` — Budget realism score (0–100%) for one suburb: what share of properties sold there are within budget.
+- `GET /api/v1/score/batch` — Score multiple suburbs in one call (up to 20).
+- `GET /api/v1/score/budget-for-score` — What budget is needed to reach a target score in a suburb.
+- `GET /api/v1/score/suburbs-in-range` — All suburbs in a state where the budget reaches a minimum score threshold.
+- `GET /api/v1/score/ceiling` — Realism score at the user's calculated ceiling price.
+
+Score methodology: NSW scores use actual sale record distributions (146k+ records). VIC scores are estimated using NSW-derived price distribution curves matched by property type, price bracket, and market depth — labelled `methodology: "vic_estimated"` in responses.
+
 ## Methodology
 
 GetReal documents every calculation method transparently.

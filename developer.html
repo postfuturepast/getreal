@@ -13,6 +13,45 @@
     <link rel="canonical" href="https://get-real.co/developer.html" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebAPI",
+      "name": "GetReal Property API",
+      "description": "Free Australian property data API. Calculates stamp duty for all 8 states and territories, LMI estimates, monthly repayments, mortgage ceiling calculators (deposit, DTI, serviceability), and suburb realism scores showing what share of a suburb's market is within a given budget. No authentication required.",
+      "url": "https://get-real.co/developer.html",
+      "documentation": "https://get-real.co/api-docs.html",
+      "termsOfService": "https://get-real.co/faq.html",
+      "provider": {
+        "@type": "Organization",
+        "name": "GetReal",
+        "url": "https://get-real.co",
+        "description": "Independent Australian property tools. No commercial relationships with lenders, agents, or brokers."
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "AUD",
+        "description": "Free to use. No API key required."
+      },
+      "availableLanguage": "en-AU",
+      "keywords": "Australian property, stamp duty, LMI, mortgage calculator, borrowing capacity, suburb prices, property realism score",
+      "encodingFormat": "application/json",
+      "license": "https://get-real.co/manifesto.html",
+      "isBasedOn": [
+        {
+          "@type": "Dataset",
+          "name": "NSW Valuer General Property Sales",
+          "description": "146,000+ individual residential sale records"
+        },
+        {
+          "@type": "Dataset",
+          "name": "Victorian Valuer General Quarterly Property Sales Statistics",
+          "description": "Suburb-level median prices and annual sales volumes, Q4 2025"
+        }
+      ]
+    }
+    </script>
     <style>
         .dev-hero {
             padding: 3rem 1.5rem 2rem;
