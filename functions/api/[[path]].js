@@ -360,17 +360,20 @@ function getPriceBracket(median) {
 }
 
 function buildPriceCurves(rows) {
-  // rows from price_curves table: property_type, price_bracket, depth_tier, ratio_thresholds (JSON array)
-  // Build: curves[ptype][bracket][tier] = [[ratio, pct], ...]
+  // price_curves table uses flat columns: pct_at_05x...pct_at_15x (values are percentages 0-100)
+  // Build: curves[ptype][bracket][tier] = [[ratio, fraction], ...]
   const curves = {};
   for (const row of rows) {
     if (!curves[row.property_type]) curves[row.property_type] = {};
     if (!curves[row.property_type][row.price_bracket]) curves[row.property_type][row.price_bracket] = {};
-    // ratio_thresholds is an array of {ratio, pct} objects from the table
-    const pairs = Array.isArray(row.ratio_thresholds)
-      ? row.ratio_thresholds.map(t => [t.ratio, t.pct])
-      : Object.entries(row.ratio_thresholds || {}).map(([k,v]) => [Number(k), v]);
-    curves[row.property_type][row.price_bracket][row.depth_tier] = pairs.sort((a,b)=>a[0]-b[0]);
+    const pairs = [
+      [0.5, row.pct_at_05x], [0.6, row.pct_at_06x], [0.7, row.pct_at_07x],
+      [0.8, row.pct_at_08x], [0.9, row.pct_at_09x], [1.0, row.pct_at_10x],
+      [1.1, row.pct_at_11x], [1.2, row.pct_at_12x], [1.5, row.pct_at_15x],
+    ]
+      .filter(([, pct]) => pct != null)
+      .map(([ratio, pct]) => [ratio, pct / 100]);  // convert % to fraction
+    curves[row.property_type][row.price_bracket][row.depth_tier] = pairs;
   }
   return curves;
 }
