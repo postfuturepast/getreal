@@ -383,9 +383,9 @@ function barRow(pct) {
 async function loadHistoricalStats() {
   // Promoted historical matches — query property_sales directly (public read)
   const [histTotal, histRw, histMc] = await Promise.all([
-    getCount('state=eq.NSW&match_confidence=eq.historical'),
-    getCount('state=eq.NSW&match_confidence=eq.historical&enriched_source=eq.raywhite'),
-    getCount('state=eq.NSW&match_confidence=eq.historical&enriched_source=eq.mcgrath'),
+    getCount('match_confidence=eq.historical'),
+    getCount('match_confidence=eq.historical&enriched_source=eq.raywhite'),
+    getCount('match_confidence=eq.historical&enriched_source=eq.mcgrath'),
   ]);
   document.getElementById('h-total').textContent = fmt(histTotal);
   document.getElementById('h-rw').textContent = fmt(histRw);
@@ -432,11 +432,11 @@ async function loadHistoricalStats() {
 async function loadOverall() {
   const [total, exact, hist, rw, mc, ljh] = await Promise.all([
     getCount('state=eq.NSW'),
-    getCount('state=eq.NSW&match_confidence=eq.exact'),
-    getCount('state=eq.NSW&match_confidence=eq.historical'),
-    getCount('state=eq.NSW&enriched_source=eq.raywhite'),
-    getCount('state=eq.NSW&enriched_source=eq.mcgrath'),
-    getCount('state=eq.NSW&enriched_source=eq.ljhooker'),
+    getCount('match_confidence=eq.exact'),
+    getCount('match_confidence=eq.historical'),
+    getCount('enriched_source=eq.raywhite'),
+    getCount('enriched_source=eq.mcgrath'),
+    getCount('enriched_source=eq.ljhooker'),
   ]);
   const enriched = exact + hist;
   document.getElementById('s-total').textContent = fmt(total);
@@ -448,10 +448,10 @@ async function loadOverall() {
 
 async function loadPropertyTypes() {
   const [hTotal, hEnriched, uTotal, uEnriched] = await Promise.all([
-    getCount('state=eq.NSW&street_number=not.like.*%2F*'),
-    getCount('state=eq.NSW&match_confidence=eq.exact&street_number=not.like.*%2F*'),
-    getCount('state=eq.NSW&street_number=like.*%2F*'),
-    getCount('state=eq.NSW&match_confidence=eq.exact&street_number=like.*%2F*'),
+    getCount('street_number=not.like.*%2F*'),
+    getCount('match_confidence=eq.exact&street_number=not.like.*%2F*'),
+    getCount('street_number=like.*%2F*'),
+    getCount('match_confidence=eq.exact&street_number=like.*%2F*'),
   ]);
 
   const rows = [
@@ -475,7 +475,7 @@ async function loadPropertyTypes() {
 async function loadEnrichedRecords({ enriched, exact, hist, rw, mc, ljh }) {
   // Fetch all enriched records (suburb + source + confidence + bedrooms)
   const records = await fetchAll(
-    'state=eq.NSW&match_confidence=in.(exact,historical)&select=suburb,enriched_source,match_confidence,bedrooms'
+    'match_confidence=in.(exact,historical)&select=suburb,enriched_source,match_confidence,bedrooms'
   );
 
   // Per-source exact + historical counts
@@ -530,7 +530,7 @@ async function loadEnrichedRecords({ enriched, exact, hist, rw, mc, ljh }) {
   // Fetch total counts for those 25 suburbs in parallel
   const totalCounts = await Promise.all(
     top25.map(([sub]) =>
-      getCount(`state=eq.NSW&suburb=eq.${encodeURIComponent(sub)}`)
+      getCount(`suburb=eq.${encodeURIComponent(sub)}`)
     )
   );
 
