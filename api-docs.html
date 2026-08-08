@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference — GetReal</title>
+    <meta name="description" content="Full API reference for the GetReal property data API. 15 endpoints covering stamp duty, mortgage ceilings, LMI, repayments, and suburb realism scores.">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="API Reference — GetReal">
+    <meta property="og:description" content="Full API reference: stamp duty, ceiling calculators, LMI, repayments, and realism scores.">
+    <meta name="robots" content="noindex">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: monospace;
+            background: #0a0a0a;
+        }
+        .api-topbar {
+            background: #0a0a0a;
+            border-bottom: 2px solid #0000ff;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+        }
+        .api-topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+        .api-topbar-logo {
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f0f0f0;
+            text-decoration: none;
+            letter-spacing: 0.05em;
+        }
+        .api-topbar-logo span {
+            color: #0000ff;
+        }
+        .api-topbar-sep {
+            color: #333;
+            font-size: 1.2rem;
+        }
+        .api-topbar-title {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+        .api-topbar-links {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .api-topbar-links a {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #888;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: color 0.15s;
+        }
+        .api-topbar-links a:hover {
+            color: #0000ff;
+        }
+        .disclaimer-banner {
+            background: #110011;
+            border-bottom: 1px solid #330033;
+            padding: 0.6rem 1.5rem;
+            text-align: center;
+        }
+        .disclaimer-banner span {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #886688;
+        }
+        .disclaimer-banner strong {
+            color: #cc88cc;
+        }
+        #redoc-container {
+            min-height: calc(100vh - 100px);
+        }
+        /* Override Redoc dark theme elements to better fit brutalist aesthetic */
+        .redoc-wrap {
+            background: #0a0a0a !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="api-topbar">
+    <div class="api-topbar-left">
+        <a class="api-topbar-logo" href="/">Get<span>Real</span></a>
+        <span class="api-topbar-sep">/</span>
+        <span class="api-topbar-title">API Reference</span>
+    </div>
+    <div class="api-topbar-links">
+        <a href="/developer.html">Developer hub</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="https://github.com/postfuturepast/getreal" target="_blank">GitHub</a>
+    </div>
+</div>
+
+<div class="disclaimer-banner">
+    <span><strong>Best-efforts side project.</strong> Data is indicative only — not financial advice. Always verify with a licensed mortgage broker before making property decisions.</span>
+</div>
+
+<div id="redoc-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>
+<script>
+    Redoc.init('/openapi.json', {
+        theme: {
+            colors: {
+                primary: {
+                    main: '#0000ff'
+                },
+                text: {
+                    primary: '#f0f0f0',
+                    secondary: '#a0a0a0'
+                },
+                background: {
+                    main: '#0a0a0a',
+                    secondary: '#111111'
+                },
+                border: {
+                    main: '#2a2a2a',
+                    light: '#1a1a1a'
+                },
+                http: {
+                    get: '#0066ff',
+                    post: '#00aa44',
+                    put: '#cc8800',
+                    delete: '#cc0000',
+                    patch: '#8800cc'
+                },
+                responses: {
+                    success: {
+                        color: '#00aa44',
+                        backgroundColor: '#001a0a'
+                    },
+                    error: {
+                        color: '#cc0000',
+                        backgroundColor: '#1a0000'
+                    }
+                },
+                tonalOffset: 0.2
+            },
+            typography: {
+                fontSize: '14px',
+                fontFamily: 'monospace',
+                headings: {
+                    fontFamily: 'monospace',
+                    fontWeight: '700'
+                },
+                code: {
+                    fontSize: '13px',
+                    fontFamily: 'monospace',
+                    backgroundColor: '#111111',
+                    color: '#f0f0f0'
+                }
+            },
+            sidebar: {
+                width: '280px',
+                backgroundColor: '#0a0a0a',
+                textColor: '#c0c0c0',
+                activeTextColor: '#0000ff',
+                groupItems: {
+                    textTransform: 'uppercase'
+                },
+                level1Items: {
+                    textTransform: 'none'
+                }
+            },
+            rightPanel: {
+                backgroundColor: '#111111',
+                textColor: '#c0c0c0'
+            },
+            schema: {
+                requirePropertiesAsIs: true
+            }
+        },
+        scrollYOffset: 90,
+        hideDownloadButton: false,
+        expandDefaultServerVariables: true,
+        pathInMiddlePanel: false,
+        nativeScrollbars: false,
+        showExtensions: false,
+        sortPropsAlphabetically: false,
+        enumSkipQuotes: false
+    }, document.getElementById('redoc-container'));
+</script>
+
+</body>
+</html>

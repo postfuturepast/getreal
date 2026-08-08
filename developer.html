@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer API — GetReal</title>
+    <meta name="description" content="Free Australian property data API. Stamp duty, mortgage ceilings, LMI, repayments, suburb realism scores. 15 endpoints. No auth required.">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Developer API — GetReal">
+    <meta property="og:description" content="Free Australian property data API. Stamp duty, mortgage ceilings, LMI, repayments, suburb realism scores.">
+    <meta property="og:site_name" content="GetReal">
+    <link rel="canonical" href="https://get-real.co/developer.html" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .dev-hero {
+            padding: 3rem 1.5rem 2rem;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+        .dev-hero-tag {
+            font-family: monospace;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #0000ff;
+            margin-bottom: 1rem;
+        }
+        .dev-hero h1 {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin: 0 0 1rem;
+            color: #f0f0f0;
+        }
+        .dev-hero-lead {
+            font-size: 1rem;
+            color: #a0a0a0;
+            line-height: 1.7;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+        .dev-hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            background: #0000ff;
+            color: #fff;
+            font-family: monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.15s;
+        }
+        .btn-primary:hover { background: #0000cc; }
+        .btn-outline {
+            background: transparent;
+            color: #888;
+            font-family: monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            display: inline-block;
+            border: 1px solid #333;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .btn-outline:hover { border-color: #888; color: #f0f0f0; }
+
+        .dev-section {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            border-top: 1px solid #1e1e1e;
+        }
+        .dev-section h2 {
+            font-family: monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #555;
+            margin: 0 0 1.5rem;
+        }
+
+        /* Stat pills */
+        .stat-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .stat-pill {
+            background: #111;
+            border: 1px solid #222;
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            min-width: 130px;
+        }
+        .stat-pill-val {
+            font-family: monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #f0f0f0;
+        }
+        .stat-pill-label {
+            font-family: monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #555;
+        }
+
+        /* Endpoint list */
+        .endpoint-group {
+            margin-bottom: 2rem;
+        }
+        .endpoint-group-label {
+            font-family: monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #444;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .endpoint-row {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #111;
+        }
+        .endpoint-method {
+            font-family: monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #00aa44;
+            text-transform: uppercase;
+            width: 36px;
+            flex-shrink: 0;
+        }
+        .endpoint-path {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #c0c0c0;
+            flex: 1;
+        }
+        .endpoint-path span {
+            color: #0000ff;
+        }
+        .endpoint-desc {
+            font-family: monospace;
+            font-size: 0.72rem;
+            color: #555;
+            text-align: right;
+        }
+        @media (max-width: 600px) {
+            .endpoint-desc { display: none; }
+        }
+
+        /* Code block */
+        .code-block {
+            background: #0d0d0d;
+            border: 1px solid #222;
+            padding: 1.25rem 1.5rem;
+            font-family: monospace;
+            font-size: 0.78rem;
+            color: #c0c0c0;
+            line-height: 1.7;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .code-label {
+            font-family: monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #444;
+            margin-bottom: 0.5rem;
+        }
+        .code-ex {
+            margin-bottom: 1.5rem;
+        }
+        .code-string { color: #88cc88; }
+        .code-num    { color: #88aaff; }
+        .code-key    { color: #f0d080; }
+        .code-comment{ color: #555; }
+
+        /* Data sources */
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+        .source-card {
+            background: #0d0d0d;
+            border: 1px solid #1e1e1e;
+            padding: 1rem 1.25rem;
+        }
+        .source-card-name {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #f0f0f0;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+        .source-card-desc {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #666;
+            line-height: 1.6;
+        }
+        .source-card-tag {
+            display: inline-block;
+            font-family: monospace;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #0000ff;
+            border: 1px solid #0000ff;
+            padding: 0.15rem 0.4rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Disclaimer box */
+        .disclaimer-box {
+            background: #0d0008;
+            border: 1px solid #330022;
+            padding: 1.25rem 1.5rem;
+        }
+        .disclaimer-box p {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #886688;
+            line-height: 1.8;
+            margin: 0 0 0.75rem;
+        }
+        .disclaimer-box p:last-child { margin-bottom: 0; }
+        .disclaimer-box strong { color: #bb99bb; }
+
+        /* Footer */
+        .dev-footer {
+            max-width: 860px;
+            margin: 3rem auto 0;
+            padding: 1.5rem;
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .dev-footer-left {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #444;
+        }
+        .dev-footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        .dev-footer-links a {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #555;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .dev-footer-links a:hover { color: #f0f0f0; }
+
+        /* Nav */
+        .dev-nav {
+            padding: 0.85rem 1.5rem;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dev-nav-logo {
+            font-family: monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #f0f0f0;
+            text-decoration: none;
+        }
+        .dev-nav-logo span { color: #0000ff; }
+        .dev-nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        .dev-nav-links a {
+            font-family: monospace;
+            font-size: 0.72rem;
+            color: #666;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .dev-nav-links a:hover { color: #f0f0f0; }
+        .dev-nav-links a.active { color: #0000ff; }
+    </style>
+</head>
+<body style="background:#0a0a0a; color:#f0f0f0; margin:0; padding:0; padding-bottom:4rem;">
+
+<nav class="dev-nav">
+    <a class="dev-nav-logo" href="/">Get<span>Real</span></a>
+    <div class="dev-nav-links">
+        <a href="/developer.html" class="active">Developer</a>
+        <a href="/api-docs.html">API reference</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="https://github.com/postfuturepast/getreal" target="_blank">GitHub</a>
+    </div>
+</nav>
+
+<!-- Hero -->
+<div class="dev-hero">
+    <div class="dev-hero-tag">Developer API</div>
+    <h1>Australian property data,<br>as an API.</h1>
+    <p class="dev-hero-lead">
+        GetReal's calculation engine as a free API. Stamp duty for every state, mortgage ceiling calculators, LMI estimates, repayment figures, and suburb-level realism scores — all from the same data that powers get-real.co.
+    </p>
+    <div class="dev-hero-actions">
+        <a class="btn-primary" href="/api-docs.html">Full API reference →</a>
+        <a class="btn-outline" href="https://github.com/postfuturepast/getreal" target="_blank">View on GitHub</a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="dev-section">
+    <h2>At a glance</h2>
+    <div class="stat-row">
+        <div class="stat-pill">
+            <div class="stat-pill-val">15</div>
+            <div class="stat-pill-label">Endpoints</div>
+        </div>
+        <div class="stat-pill">
+            <div class="stat-pill-val">Free</div>
+            <div class="stat-pill-label">No auth, no key</div>
+        </div>
+        <div class="stat-pill">
+            <div class="stat-pill-val">All states</div>
+            <div class="stat-pill-label">Stamp duty coverage</div>
+        </div>
+        <div class="stat-pill">
+            <div class="stat-pill-val">146k+</div>
+            <div class="stat-pill-label">NSW sale records</div>
+        </div>
+        <div class="stat-pill">
+            <div class="stat-pill-val">NSW + VIC</div>
+            <div class="stat-pill-label">Suburb scores</div>
+        </div>
+    </div>
+    <p style="font-family:monospace;font-size:0.72rem;color:#555;line-height:1.8;">
+        Base URL: <span style="color:#c0c0c0;">https://get-real.co/api/v1</span>
+        &nbsp;·&nbsp; All requests: <span style="color:#c0c0c0;">GET with query params</span>
+        &nbsp;·&nbsp; All responses: <span style="color:#c0c0c0;">JSON</span>
+        &nbsp;·&nbsp; CORS: <span style="color:#c0c0c0;">open (*)</span>
+    </p>
+</div>
+
+<!-- Endpoints -->
+<div class="dev-section">
+    <h2>Endpoints</h2>
+
+    <div class="endpoint-group">
+        <div class="endpoint-group-label">Stamp Duty &amp; Costs</div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>stamp-duty</span></div>
+            <div class="endpoint-desc">Stamp duty by state + buyer type</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>lmi</span></div>
+            <div class="endpoint-desc">LMI estimate for deposit &lt; 20%</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>repayments</span></div>
+            <div class="endpoint-desc">Monthly repayment at a given rate</div>
+        </div>
+    </div>
+
+    <div class="endpoint-group">
+        <div class="endpoint-group-label">Ceiling Calculator</div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>ceiling/deposit</span></div>
+            <div class="endpoint-desc">Max purchase price for a given deposit</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>ceiling/deposit/min-income</span></div>
+            <div class="endpoint-desc">Minimum income to reach a target price</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>ceiling/dti</span></div>
+            <div class="endpoint-desc">DTI ceiling (6× gross income cap)</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>ceiling/serviceability</span></div>
+            <div class="endpoint-desc">Serviceability ceiling (APRA stress test)</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>ceiling/all</span></div>
+            <div class="endpoint-desc">All three ceilings + binding constraint</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>ceiling/check</span></div>
+            <div class="endpoint-desc">Can you afford a specific price?</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>ceiling/deposit/sensitivity</span></div>
+            <div class="endpoint-desc">Max price at multiple deposit levels</div>
+        </div>
+    </div>
+
+    <div class="endpoint-group">
+        <div class="endpoint-group-label">Realism Score</div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>score</span></div>
+            <div class="endpoint-desc">Budget realism score for one suburb</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>score/batch</span></div>
+            <div class="endpoint-desc">Score multiple suburbs in one call</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>score/budget-for-score</span></div>
+            <div class="endpoint-desc">Budget needed to reach a target score</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>score/suburbs-in-range</span></div>
+            <div class="endpoint-desc">All suburbs within budget across a state</div>
+        </div>
+        <div class="endpoint-row">
+            <div class="endpoint-method">GET</div>
+            <div class="endpoint-path">/api/v1/<span>score/ceiling</span></div>
+            <div class="endpoint-desc">Realism score at each ceiling level</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick start -->
+<div class="dev-section">
+    <h2>Quick start</h2>
+
+    <div class="code-ex">
+        <div class="code-label">Stamp duty — NSW first home buyer, $750,000</div>
+        <div class="code-block">curl "https://get-real.co/api/v1/stamp-duty?state=NSW&price=750000&buyer_type=fhb"</div>
+    </div>
+
+    <div class="code-ex">
+        <div class="code-label">Response</div>
+        <div class="code-block">{
+  <span class="code-key">"state"</span>: <span class="code-string">"NSW"</span>,
+  <span class="code-key">"price"</span>: <span class="code-num">750000</span>,
+  <span class="code-key">"buyer_type"</span>: <span class="code-string">"fhb"</span>,
+  <span class="code-key">"duty"</span>: <span class="code-num">0</span>,           <span class="code-comment">// exempt under FHB threshold</span>
+  <span class="code-key">"lmi"</span>: <span class="code-num">0</span>,
+  <span class="code-key">"registration"</span>: <span class="code-num">1318</span>,
+  <span class="code-key">"total_upfront"</span>: <span class="code-num">1318</span>
+}</div>
+    </div>
+
+    <div class="code-ex">
+        <div class="code-label">Suburb realism score — Fitzroy, VIC, house, $1,200,000</div>
+        <div class="code-block">curl "https://get-real.co/api/v1/score?suburb=fitzroy&state=VIC&property_type=house&budget=1200000"</div>
+    </div>
+
+    <div class="code-ex">
+        <div class="code-label">Response</div>
+        <div class="code-block">{
+  <span class="code-key">"suburb"</span>: <span class="code-string">"fitzroy"</span>,
+  <span class="code-key">"suburb_display"</span>: <span class="code-string">"Fitzroy"</span>,
+  <span class="code-key">"state"</span>: <span class="code-string">"VIC"</span>,
+  <span class="code-key">"property_type"</span>: <span class="code-string">"house"</span>,
+  <span class="code-key">"budget"</span>: <span class="code-num">1200000</span>,
+  <span class="code-key">"median_price"</span>: <span class="code-num">1650000</span>,
+  <span class="code-key">"annual_sales"</span>: <span class="code-num">58</span>,
+  <span class="code-key">"score_pct"</span>: <span class="code-num">18</span>,
+  <span class="code-key">"score_label"</span>: <span class="code-string">"very_tight"</span>,
+  <span class="code-key">"methodology"</span>: <span class="code-string">"estimated_curve"</span>  <span class="code-comment">// VIC uses NSW-derived curves</span>
+}</div>
+    </div>
+
+    <div class="code-ex">
+        <div class="code-label">All ceilings — $180k income, $120k deposit, VIC FHB, owner-occupier</div>
+        <div class="code-block">curl "https://get-real.co/api/v1/ceiling/all?state=VIC&gross_income=180000&deposit_savings=120000&buyer_type=fhb&household_type=single&dependants=0&postcode=3000"</div>
+    </div>
+
+    <div class="code-ex">
+        <div class="code-label">JavaScript fetch</div>
+        <div class="code-block">const res = await fetch(
+  'https://get-real.co/api/v1/score/suburbs-in-range' +
+  '?state=NSW&property_type=house&budget=900000&min_score_pct=40'
+);
+const { suburbs } = await res.json();
+<span class="code-comment">// suburbs → array sorted by score desc, all NSW houses where</span>
+<span class="code-comment">// $900k budget gives ≥40% of market access</span></div>
+    </div>
+</div>
+
+<!-- Data sources -->
+<div class="dev-section">
+    <h2>Data sources</h2>
+    <div class="source-grid">
+        <div class="source-card">
+            <div class="source-card-name">NSW Valuer General</div>
+            <div class="source-card-desc">146,285+ individual residential sale records. Used for exact price distribution curves and suburb-level statistics.</div>
+            <div class="source-card-tag">NSW scores</div>
+        </div>
+        <div class="source-card">
+            <div class="source-card-name">Victorian Valuer General</div>
+            <div class="source-card-desc">Quarterly property sales reports with suburb-level median prices and annual sales volumes. Q4 2025 data (calendar year 2025).</div>
+            <div class="source-card-tag">VIC scores</div>
+        </div>
+        <div class="source-card">
+            <div class="source-card-name">State Revenue Offices</div>
+            <div class="source-card-desc">Stamp duty brackets and FHB concession rules for all states and territories. Updated manually when legislation changes.</div>
+            <div class="source-card-tag">Stamp duty</div>
+        </div>
+        <div class="source-card">
+            <div class="source-card-name">Home Loan Experts</div>
+            <div class="source-card-desc">Indicative LMI rate table (15 LVR bands × 5 loan amount bands). Sourced May 2026.</div>
+            <div class="source-card-tag">LMI</div>
+        </div>
+        <div class="source-card">
+            <div class="source-card-name">JMD Mortgages</div>
+            <div class="source-card-desc">HEM (Household Expenditure Measure) benchmark table used for serviceability calculations. March 2026 figures.</div>
+            <div class="source-card-tag">Serviceability</div>
+        </div>
+        <div class="source-card">
+            <div class="source-card-name">RBA / APRA</div>
+            <div class="source-card-desc">RBA benchmark rates and APRA 3% serviceability buffer, used for stress-test calculations.</div>
+            <div class="source-card-tag">Repayments</div>
+        </div>
+    </div>
+    <p style="font-family:monospace;font-size:0.68rem;color:#444;margin-top:1rem;line-height:1.8;">
+        Data update schedules and pipeline health: <a href="/pipeline-dashboard.html" style="color:#666;text-decoration:underline;text-underline-offset:2px;">data pipeline status →</a>
+    </p>
+</div>
+
+<!-- Disclaimer -->
+<div class="dev-section">
+    <h2>Important disclaimer</h2>
+    <div class="disclaimer-box">
+        <p>
+            <strong>GetReal is a best-efforts side project, not a licensed financial service.</strong> The API is built on open government data and publicly available rate information, but the calculations are indicative only.
+        </p>
+        <p>
+            Stamp duty figures, LMI estimates, HEM benchmarks, and serviceability calculations are based on data sourced at the dates listed above. They may be out of date. Individual lender policies vary significantly and change frequently.
+        </p>
+        <p>
+            <strong>Do not rely solely on this API for major financial decisions.</strong> Always verify figures with a licensed mortgage broker before committing to a purchase.
+        </p>
+        <p>
+            VIC suburb scores are estimated using NSW market distribution curves matched by property type, price bracket, and market depth. They are explicitly labelled <code>methodology: "estimated_curve"</code> in API responses. NSW scores are derived from actual sale record distributions and are labelled <code>"actual_distribution"</code>.
+        </p>
+        <p>
+            The API is free to use. Please be reasonable with request volumes. No SLA is provided or implied.
+        </p>
+    </div>
+</div>
+
+<!-- Error format -->
+<div class="dev-section">
+    <h2>Errors</h2>
+    <div class="code-ex">
+        <div class="code-label">Error response format</div>
+        <div class="code-block">{
+  <span class="code-key">"error"</span>: <span class="code-string">"suburb not found"</span>,
+  <span class="code-key">"code"</span>: <span class="code-string">"SUBURB_NOT_FOUND"</span>
+}</div>
+    </div>
+    <p style="font-family:monospace;font-size:0.72rem;color:#666;line-height:1.8;">
+        HTTP status matches the error type: 400 for bad input, 404 for missing data, 500 for server errors. Machine-readable <code>code</code> field is safe to switch on.
+    </p>
+</div>
+
+<div class="dev-footer">
+    <div class="dev-footer-left">get-real.co · free for Australians</div>
+    <div class="dev-footer-links">
+        <a href="/api-docs.html">Full API reference</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/pipeline-dashboard.html">Pipeline status</a>
+        <a href="/manifesto.html">Manifesto</a>
+        <a href="https://github.com/postfuturepast/getreal" target="_blank">GitHub</a>
+    </div>
+</div>
+
+</body>
+</html>
