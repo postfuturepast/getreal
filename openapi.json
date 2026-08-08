@@ -7,314 +7,1095 @@
       "name": "GetReal",
       "url": "https://get-real.co"
     },
-    "description": "## About this API\n\nGetReal is a free, open data project that helps Australians assess whether their property search is realistic. This API exposes the same calculations powering the GetReal tools — stamp duty, LMI, borrowing ceilings, and suburb realism scores.\n\n## Data sources\n\n- **NSW property sales:** NSW Valuer General bulk PSI data — 146,000+ individual sale records, updated weekly.\n- **VIC property sales:** Victorian Valuer General quarterly suburb median reports. VIC scores are estimated using NSW-derived price distribution curves (see [methodology](/faq.html)).\n- **Stamp duty:** State Revenue Offices for all 8 states and territories, including 2026 FHB concessions.\n- **LMI rates:** Indicative Helia/QBE rates sourced from Home Loan Experts (May 2026).\n- **HEM benchmarks:** Indicative Household Expenditure Measure figures sourced from JMD Mortgages (March 2026).\n- **RBA benchmark rates:** Reserve Bank of Australia Statistical Tables, updated weekly.\n\n## Important disclaimer\n\n**This API is a best-efforts side project, not a licensed financial service.** Results are indicative only and should not be relied upon as the sole basis for financial decisions. Always verify stamp duty, LMI, and borrowing capacity with a licensed mortgage broker and check current market conditions.\n\nRate data is updated regularly but may lag real-world changes. Stamp duty rates reflect legislation as of mid-2026 — verify current rates with your state revenue office before transacting.\n\n## Rate limits and cost\n\nThis API is free to use. Please be reasonable — batch endpoints exist for multi-suburb queries so you don't need to hammer individual endpoints. If you're building something commercial on top of this, reach out.\n\n## Base URL\n\n`https://get-real.co/api/v1/`\n\n## Authentication\n\nNo authentication required. All data is public.\n\n## Request format\n\nAll endpoints accept `POST` with a JSON body. Set `Content-Type: application/json`.\n\n## Error format\n\n```json\n{ \"error\": \"Human-readable message\", \"code\": \"MACHINE_CODE\" }\n```\n\nError codes: `MISSING_PARAM`, `INVALID_INPUT`, `SUBURB_NOT_FOUND`, `INSUFFICIENT_SAVINGS`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `INTERNAL_ERROR`."
+    "description": "## About this API\n\nGetReal is a free, open data project that helps Australians assess whether their property search is realistic. This API exposes the same calculations powering the GetReal tools \u2014 stamp duty, LMI, borrowing ceilings, and suburb realism scores.\n\n## Data sources\n\n- **NSW property sales:** NSW Valuer General bulk PSI data \u2014 146,000+ individual sale records, updated weekly.\n- **VIC property sales:** Victorian Valuer General quarterly suburb median reports. VIC scores are estimated using NSW-derived price distribution curves (see [methodology](/faq.html)).\n- **Stamp duty:** State Revenue Offices for all 8 states and territories, including 2026 FHB concessions.\n- **LMI rates:** Indicative Helia/QBE rates sourced from Home Loan Experts (May 2026).\n- **HEM benchmarks:** Indicative Household Expenditure Measure figures sourced from JMD Mortgages (March 2026).\n- **RBA benchmark rates:** Reserve Bank of Australia Statistical Tables, updated weekly.\n\n## Important disclaimer\n\n**This API is a best-efforts side project, not a licensed financial service.** Results are indicative only and should not be relied upon as the sole basis for financial decisions. Always verify stamp duty, LMI, and borrowing capacity with a licensed mortgage broker and check current market conditions.\n\nRate data is updated regularly but may lag real-world changes. Stamp duty rates reflect legislation as of mid-2026 \u2014 verify current rates with your state revenue office before transacting.\n\n## Rate limits and cost\n\nThis API is free to use. Please be reasonable \u2014 batch endpoints exist for multi-suburb queries so you don't need to hammer individual endpoints. If you're building something commercial on top of this, reach out.\n\n## Base URL\n\n`https://get-real.co/api/v1/`\n\n## Authentication\n\nNo authentication required. All data is public.\n\n## Request format\n\nAll endpoints accept `GET` with query parameters.\n\n## Error format\n\n```json\n{ \"error\": \"Human-readable message\", \"code\": \"MACHINE_CODE\" }\n```\n\nError codes: `MISSING_PARAM`, `INVALID_INPUT`, `SUBURB_NOT_FOUND`, `INSUFFICIENT_SAVINGS`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `INTERNAL_ERROR`."
   },
-  "servers": [{ "url": "https://get-real.co/api/v1", "description": "Production" }],
+  "servers": [
+    {
+      "url": "https://get-real.co/api/v1",
+      "description": "Production"
+    }
+  ],
   "tags": [
-    { "name": "Stamp Duty & Costs", "description": "Upfront government costs and LMI" },
-    { "name": "Ceiling Calculator", "description": "Maximum purchase price under deposit, DTI, and serviceability constraints" },
-    { "name": "Realism Score", "description": "What share of a suburb's market is within a given budget" }
+    {
+      "name": "Stamp Duty & Costs",
+      "description": "Upfront government costs and LMI"
+    },
+    {
+      "name": "Ceiling Calculator",
+      "description": "Maximum purchase price under deposit, DTI, and serviceability constraints"
+    },
+    {
+      "name": "Realism Score",
+      "description": "What share of a suburb's market is within a given budget"
+    }
   ],
   "paths": {
     "/stamp-duty": {
-      "post": {
-        "tags": ["Stamp Duty & Costs"],
+      "get": {
+        "tags": [
+          "Stamp Duty & Costs"
+        ],
         "summary": "Calculate stamp duty",
         "description": "Calculates stamp duty for any Australian state and buyer type. Applies FHB concessions and 2026 rates. Includes registration fees.\n\nData source: state revenue offices. Rates reflect legislation as of mid-2026.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/StampDutyRequest" },
-              "example": { "price": 750000, "state": "NSW", "buyer_type": "fhb", "is_owner_occupier": true, "is_new_build": false }
+        "responses": {
+          "200": {
+            "description": "Stamp duty calculation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StampDutyResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Stamp duty calculation", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/StampDutyResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "price",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Purchase price in dollars"
+            },
+            "description": "Purchase price in dollars",
+            "example": 750000
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StateCode"
+            },
+            "example": "NSW"
+          },
+          {
+            "in": "query",
+            "name": "buyer_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BuyerType"
+            },
+            "example": "fhb"
+          },
+          {
+            "in": "query",
+            "name": "is_owner_occupier",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "is_new_build",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "example": false
+          }
+        ]
       }
     },
     "/lmi": {
-      "post": {
-        "tags": ["Stamp Duty & Costs"],
+      "get": {
+        "tags": [
+          "Stamp Duty & Costs"
+        ],
         "summary": "Estimate LMI premium",
         "description": "Estimates Lenders Mortgage Insurance (LMI) for a given purchase price and deposit. LMI applies when LVR exceeds 80%.\n\nRates are indicative Helia/QBE figures sourced from Home Loan Experts (May 2026). Actual LMI varies by lender.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/LMIRequest" },
-              "example": { "purchase_price": 900000, "deposit": 100000, "state": "VIC" }
+        "responses": {
+          "200": {
+            "description": "LMI estimate",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LMIResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "LMI estimate", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LMIResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "purchase_price",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 900000
+          },
+          {
+            "in": "query",
+            "name": "deposit",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 100000
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StateCode"
+            },
+            "example": "VIC"
+          }
+        ]
       }
     },
     "/repayments": {
-      "post": {
-        "tags": ["Ceiling Calculator"],
+      "get": {
+        "tags": [
+          "Ceiling Calculator"
+        ],
         "summary": "Calculate monthly repayments",
         "description": "Standard P&I monthly repayment for a given loan amount. Omit `rate_pct` to use the current RBA benchmark rate. Always returns the stress-tested repayment (benchmark + 3%) alongside the actual repayment.\n\nUseful for sanity-checking a loan size before using the full ceiling endpoints.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/RepaymentsRequest" },
-              "example": { "loan_amount": 750000 }
+        "responses": {
+          "200": {
+            "description": "Repayment calculation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepaymentsResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Repayment calculation", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RepaymentsResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "loan_amount",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 750000
+          },
+          {
+            "in": "query",
+            "name": "rate_pct",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "description": "Annual interest rate (%). Omit to use current RBA benchmark rate."
+            },
+            "description": "Annual interest rate (%). Omit to use current RBA benchmark rate."
+          },
+          {
+            "in": "query",
+            "name": "term_years",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 30
+            }
+          }
+        ]
       }
     },
     "/ceiling/deposit": {
-      "post": {
-        "tags": ["Ceiling Calculator"],
-        "summary": "Ceiling 1 — deposit ceiling",
-        "description": "Given a savings amount and property context, returns the maximum purchase price the deposit can reach after accounting for stamp duty, LMI, and registration fees.\n\nThis answers the 'what can I buy with what I've saved?' question — without needing income details.\n\nThe calculation binary-searches for the highest price at which savings cover the required upfront costs and deposit component under the maximum LVR.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CeilingDepositRequest" },
-              "example": { "savings": 150000, "state": "NSW", "property_type": "house", "buyer_type": "fhb", "is_owner_occupier": true, "is_new_build": false }
+      "get": {
+        "tags": [
+          "Ceiling Calculator"
+        ],
+        "summary": "Ceiling 1 \u2014 deposit ceiling",
+        "description": "Given a savings amount and property context, returns the maximum purchase price the deposit can reach after accounting for stamp duty, LMI, and registration fees.\n\nThis answers the 'what can I buy with what I've saved?' question \u2014 without needing income details.\n\nThe calculation binary-searches for the highest price at which savings cover the required upfront costs and deposit component under the maximum LVR.",
+        "responses": {
+          "200": {
+            "description": "Deposit ceiling result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CeilingDepositResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Deposit ceiling result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CeilingDepositResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" },
-          "422": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "savings",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Total savings available for deposit and upfront costs"
+            },
+            "description": "Total savings available for deposit and upfront costs",
+            "example": 150000
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StateCode"
+            },
+            "example": "NSW"
+          },
+          {
+            "in": "query",
+            "name": "property_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PropertyType"
+            },
+            "example": "house"
+          },
+          {
+            "in": "query",
+            "name": "buyer_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BuyerType"
+            },
+            "example": "fhb"
+          },
+          {
+            "in": "query",
+            "name": "is_owner_occupier",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "example": true
+          },
+          {
+            "in": "query",
+            "name": "is_new_build",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "example": false
+          }
+        ]
       }
     },
     "/ceiling/deposit/min-income": {
-      "post": {
-        "tags": ["Ceiling Calculator"],
+      "get": {
+        "tags": [
+          "Ceiling Calculator"
+        ],
         "summary": "Ceiling 1 + minimum income to qualify",
-        "description": "Extends the deposit ceiling to also return the minimum gross income (DTI) and minimum net monthly income (serviceability at HEM floor) needed to actually borrow the resulting loan.\n\nAnswers 'I know my savings — tell me the max price AND whether I can qualify.'",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CeilingDepositMinIncomeRequest" },
-              "example": { "savings": 150000, "state": "NSW", "property_type": "house", "buyer_type": "fhb", "is_owner_occupier": true, "is_new_build": false, "household_type": "single", "dependants": 0, "location_type": "metro" }
+        "description": "Extends the deposit ceiling to also return the minimum gross income (DTI) and minimum net monthly income (serviceability at HEM floor) needed to actually borrow the resulting loan.\n\nAnswers 'I know my savings \u2014 tell me the max price AND whether I can qualify.'",
+        "responses": {
+          "200": {
+            "description": "Deposit ceiling with income thresholds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CeilingDepositMinIncomeResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Deposit ceiling with income thresholds", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CeilingDepositMinIncomeResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": []
       }
     },
     "/ceiling/dti": {
-      "post": {
-        "tags": ["Ceiling Calculator"],
-        "summary": "Ceiling 2 — debt-to-income ceiling",
-        "description": "Returns the maximum new mortgage loan allowed under the 6× DTI rule (per APRA guidelines), accounting for existing debt obligations.\n\nCredit cards are counted at their full limit. Existing investment mortgages are partially offset by rental income (80% of weekly rent × 52). HECS debt is not counted directly but note lenders vary in their treatment.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CeilingDTIRequest" },
-              "example": { "gross_income_1": 120000, "gross_income_2": 0, "credit_card_limit": 10000, "existing_mortgages": [{ "balance": 350000, "is_rental": true, "weekly_rent": 550 }], "other_loans": [] }
+      "get": {
+        "tags": [
+          "Ceiling Calculator"
+        ],
+        "summary": "Ceiling 2 \u2014 debt-to-income ceiling",
+        "description": "Returns the maximum new mortgage loan allowed under the 6\u00d7 DTI rule (per APRA guidelines), accounting for existing debt obligations.\n\nCredit cards are counted at their full limit. Existing investment mortgages are partially offset by rental income (80% of weekly rent \u00d7 52). HECS debt is not counted directly but note lenders vary in their treatment.",
+        "responses": {
+          "200": {
+            "description": "DTI ceiling result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CeilingDTIResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "DTI ceiling result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CeilingDTIResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "gross_income_1",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Annual gross income, person 1"
+            },
+            "description": "Annual gross income, person 1",
+            "example": 120000
+          },
+          {
+            "in": "query",
+            "name": "gross_income_2",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            },
+            "example": 0
+          },
+          {
+            "in": "query",
+            "name": "credit_card_limit",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0,
+              "description": "Total approved credit card limits"
+            },
+            "description": "Total approved credit card limits",
+            "example": 10000
+          },
+          {
+            "in": "query",
+            "name": "is_owner_occupier",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "in": "query",
+            "name": "existing_mortgages",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "balance": {
+                    "type": "number"
+                  },
+                  "is_rental": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "weekly_rent": {
+                    "type": "number",
+                    "default": 0
+                  }
+                }
+              }
+            },
+            "example": [
+              {
+                "balance": 350000,
+                "is_rental": true,
+                "weekly_rent": 550
+              }
+            ]
+          },
+          {
+            "in": "query",
+            "name": "other_loans",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "balance": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "example": []
+          }
+        ]
       }
     },
     "/ceiling/serviceability": {
-      "post": {
-        "tags": ["Ceiling Calculator"],
-        "summary": "Ceiling 3 — serviceability ceiling",
+      "get": {
+        "tags": [
+          "Ceiling Calculator"
+        ],
+        "summary": "Ceiling 3 \u2014 serviceability ceiling",
         "description": "Returns the maximum loan supportable from take-home pay under the APRA serviceability test (repayment at benchmark + 3% stress rate).\n\nThe HEM (Household Expenditure Measure) floor is applied based on household type, dependants, and location. Source: indicative JMD Mortgages figures.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CeilingServiceabilityRequest" },
-              "example": { "takehome_monthly": 7800, "household_type": "couple", "dependants": 1, "location_type": "metro", "rent_monthly": 2400, "health_insurance_monthly": 180 }
+        "responses": {
+          "200": {
+            "description": "Serviceability ceiling result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CeilingServiceabilityResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Serviceability ceiling result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CeilingServiceabilityResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "takehome_monthly",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 7800
+          },
+          {
+            "in": "query",
+            "name": "household_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/HouseholdType"
+            },
+            "example": "couple"
+          },
+          {
+            "in": "query",
+            "name": "dependants",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "example": 1
+          },
+          {
+            "in": "query",
+            "name": "location_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LocationType"
+            },
+            "example": "metro"
+          },
+          {
+            "in": "query",
+            "name": "rent_monthly",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            },
+            "example": 2400
+          },
+          {
+            "in": "query",
+            "name": "school_fees_annual",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "health_insurance_monthly",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            },
+            "example": 180
+          },
+          {
+            "in": "query",
+            "name": "existing_loan_repayments_monthly",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "assessment_rate_pct",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "description": "Override assessment rate. Omit to use benchmark + 3%."
+            },
+            "description": "Override assessment rate. Omit to use benchmark + 3%."
+          }
+        ]
       }
     },
     "/ceiling/all": {
-      "post": {
-        "tags": ["Ceiling Calculator"],
+      "get": {
+        "tags": [
+          "Ceiling Calculator"
+        ],
         "summary": "All three ceilings in one call",
         "description": "Runs deposit (C1), DTI (C2), and serviceability (C3) ceilings together and identifies the binding constraint (lowest of the three).\n\nThis is the complete affordability picture in a single request.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CeilingAllRequest" },
-              "example": { "savings": 150000, "state": "NSW", "property_type": "house", "buyer_type": "fhb", "gross_income_1": 130000, "takehome_monthly": 7800, "household_type": "single", "dependants": 0, "location_type": "metro" }
+        "responses": {
+          "200": {
+            "description": "All ceilings result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CeilingAllResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "All ceilings result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CeilingAllResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "savings",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 150000
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StateCode"
+            },
+            "example": "NSW"
+          },
+          {
+            "in": "query",
+            "name": "property_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PropertyType"
+            },
+            "example": "house"
+          },
+          {
+            "in": "query",
+            "name": "buyer_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/BuyerType"
+            },
+            "example": "fhb"
+          },
+          {
+            "in": "query",
+            "name": "is_owner_occupier",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "in": "query",
+            "name": "is_new_build",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "in": "query",
+            "name": "gross_income_1",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 130000
+          },
+          {
+            "in": "query",
+            "name": "gross_income_2",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "credit_card_limit",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "existing_mortgages",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "other_loans",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "takehome_monthly",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 7800
+          },
+          {
+            "in": "query",
+            "name": "household_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/HouseholdType"
+            },
+            "example": "single"
+          },
+          {
+            "in": "query",
+            "name": "dependants",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "example": 0
+          },
+          {
+            "in": "query",
+            "name": "location_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LocationType"
+            },
+            "example": "metro"
+          },
+          {
+            "in": "query",
+            "name": "rent_monthly",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "school_fees_annual",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "health_insurance_monthly",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 0
+            }
+          }
+        ]
       }
     },
     "/ceiling/check": {
-      "post": {
-        "tags": ["Ceiling Calculator"],
+      "get": {
+        "tags": [
+          "Ceiling Calculator"
+        ],
         "summary": "Can I afford a target price?",
         "description": "Given a target price and full financial inputs, returns a yes/no with a breakdown per ceiling showing where any shortfall is and what levers are available to close it.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CeilingCheckRequest" },
-              "example": { "target_price": 900000, "savings": 120000, "state": "NSW", "property_type": "house", "buyer_type": "fhb", "gross_income_1": 110000, "takehome_monthly": 6800, "household_type": "single", "dependants": 0, "location_type": "metro" }
+        "responses": {
+          "200": {
+            "description": "Affordability check result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CeilingCheckResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Affordability check result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CeilingCheckResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": []
       }
     },
     "/ceiling/deposit/sensitivity": {
-      "post": {
-        "tags": ["Ceiling Calculator"],
-        "summary": "Savings sensitivity — what if I saved more?",
+      "get": {
+        "tags": [
+          "Ceiling Calculator"
+        ],
+        "summary": "Savings sensitivity \u2014 what if I saved more?",
         "description": "Returns how the deposit ceiling changes at different savings amounts. Shows whether additional saving crosses the 80% LVR threshold (avoiding LMI) and at what point.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CeilingSensitivityRequest" },
-              "example": { "savings": 120000, "state": "NSW", "property_type": "apartment", "buyer_type": "fhb", "scenarios": [25000, 50000, 100000, 150000] }
+        "responses": {
+          "200": {
+            "description": "Sensitivity scenarios",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CeilingSensitivityResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Sensitivity scenarios", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CeilingSensitivityResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": []
       }
     },
     "/score": {
-      "post": {
-        "tags": ["Realism Score"],
+      "get": {
+        "tags": [
+          "Realism Score"
+        ],
         "summary": "Score a budget in one suburb",
-        "description": "Returns the percentage of properties that sold in a suburb at or below a given budget. This is GetReal's core realism score.\n\n**NSW:** Score based on actual Valuer General sale records.\n\n**VIC:** Score estimated from NSW-derived price distribution curves matched by property type, price bracket (5 bands), and market depth (active ≥30 sales/yr, thin <30). Individual sale records are not publicly available in VIC.\n\nScore labels: `very_strong` (≥75), `strong` (≥55), `comfortable` (≥35), `tight` (≥15), `very_tight` (≥5), `out_of_range` (<5).",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ScoreRequest" },
-              "example": { "suburb": "fitzroy", "state": "VIC", "property_type": "apartment", "budget": 650000 }
+        "description": "Returns the percentage of properties that sold in a suburb at or below a given budget. This is GetReal's core realism score.\n\n**NSW:** Score based on actual Valuer General sale records.\n\n**VIC:** Score estimated from NSW-derived price distribution curves matched by property type, price bracket (5 bands), and market depth (active \u226530 sales/yr, thin <30). Individual sale records are not publicly available in VIC.\n\nScore labels: `very_strong` (\u226575), `strong` (\u226555), `comfortable` (\u226535), `tight` (\u226515), `very_tight` (\u22655), `out_of_range` (<5).",
+        "responses": {
+          "200": {
+            "description": "Realism score",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreResponse"
+                }
+              }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Realism score", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScoreResponse" } } } },
-          "404": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "suburb",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Suburb name (case-insensitive)"
+            },
+            "description": "Suburb name (case-insensitive)",
+            "example": "fitzroy"
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StateCode"
+            },
+            "example": "VIC"
+          },
+          {
+            "in": "query",
+            "name": "property_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PropertyType"
+            },
+            "example": "apartment"
+          },
+          {
+            "in": "query",
+            "name": "budget",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 650000
+          }
+        ]
       }
     },
     "/score/batch": {
-      "post": {
-        "tags": ["Realism Score"],
+      "get": {
+        "tags": [
+          "Realism Score"
+        ],
         "summary": "Score a budget across multiple suburbs",
         "description": "Score a single budget across up to 20 suburbs in one call. Results sorted by score descending. Answers 'where can my budget go furthest?'",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ScoreBatchRequest" },
-              "example": { "suburbs": [{ "suburb": "fitzroy", "state": "VIC", "property_type": "apartment" }, { "suburb": "footscray", "state": "VIC", "property_type": "apartment" }], "budget": 650000 }
+        "responses": {
+          "200": {
+            "description": "Batch score results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreBatchResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Batch score results", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScoreBatchResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "suburbs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "required": [
+                  "suburb",
+                  "state"
+                ],
+                "properties": {
+                  "suburb": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "$ref": "#/components/schemas/StateCode"
+                  },
+                  "property_type": {
+                    "$ref": "#/components/schemas/PropertyType"
+                  }
+                }
+              }
+            },
+            "example": [
+              {
+                "suburb": "fitzroy",
+                "state": "VIC",
+                "property_type": "apartment"
+              },
+              {
+                "suburb": "footscray",
+                "state": "VIC",
+                "property_type": "apartment"
+              }
+            ]
+          },
+          {
+            "in": "query",
+            "name": "budget",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 650000
+          }
+        ]
       }
     },
     "/score/budget-for-score": {
-      "post": {
-        "tags": ["Realism Score"],
+      "get": {
+        "tags": [
+          "Realism Score"
+        ],
         "summary": "Budget needed to hit a target score",
-        "description": "Reverse lookup. Given a suburb and a target score percentile, returns the budget required to reach it.\n\nAnswers 'I want to be comfortable in Fitzroy — what do I need to spend?'",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ScoreBudgetForScoreRequest" },
-              "example": { "suburb": "fitzroy", "state": "VIC", "property_type": "apartment", "target_score_pct": 60 }
+        "description": "Reverse lookup. Given a suburb and a target score percentile, returns the budget required to reach it.\n\nAnswers 'I want to be comfortable in Fitzroy \u2014 what do I need to spend?'",
+        "responses": {
+          "200": {
+            "description": "Required budget",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreBudgetForScoreResponse"
+                }
+              }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Required budget", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScoreBudgetForScoreResponse" } } } },
-          "404": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "suburb",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "fitzroy"
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StateCode"
+            },
+            "example": "VIC"
+          },
+          {
+            "in": "query",
+            "name": "property_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PropertyType"
+            },
+            "example": "apartment"
+          },
+          {
+            "in": "query",
+            "name": "target_score_pct",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 99
+            },
+            "example": 60
+          }
+        ]
       }
     },
     "/score/suburbs-in-range": {
-      "post": {
-        "tags": ["Realism Score"],
+      "get": {
+        "tags": [
+          "Realism Score"
+        ],
         "summary": "Which suburbs can I compete in?",
-        "description": "Returns all suburbs in a state where a given budget scores above a minimum threshold. Sorted by score descending.\n\nUse `min_score_pct` to filter — default 30 (comfortable or better). Use `limit` to cap results — default 20.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ScoreSuburbsInRangeRequest" },
-              "example": { "state": "VIC", "property_type": "house", "budget": 900000, "min_score_pct": 30, "limit": 20 }
+        "description": "Returns all suburbs in a state where a given budget scores above a minimum threshold. Sorted by score descending.\n\nUse `min_score_pct` to filter \u2014 default 30 (comfortable or better). Use `limit` to cap results \u2014 default 20.",
+        "responses": {
+          "200": {
+            "description": "Qualifying suburbs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreSuburbsInRangeResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Qualifying suburbs", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScoreSuburbsInRangeResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StateCode"
+            },
+            "example": "VIC"
+          },
+          {
+            "in": "query",
+            "name": "property_type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PropertyType"
+            },
+            "example": "house"
+          },
+          {
+            "in": "query",
+            "name": "budget",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "example": 900000
+          },
+          {
+            "in": "query",
+            "name": "min_score_pct",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30,
+              "minimum": 0,
+              "maximum": 100
+            },
+            "example": 30
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "example": 20
+          }
+        ]
       }
     },
     "/score/ceiling": {
-      "post": {
-        "tags": ["Realism Score"],
+      "get": {
+        "tags": [
+          "Realism Score"
+        ],
         "summary": "Score a ceiling against a suburb",
         "description": "Runs the full ceiling calculation for a user's situation, then immediately scores that ceiling against a target suburb.\n\nSingle call for the end-to-end question: 'Can I actually afford to buy in [suburb] given my financial situation?'",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ScoreCeilingRequest" },
-              "example": { "suburb": "fitzroy", "state": "VIC", "property_type": "apartment", "savings": 150000, "buyer_type": "fhb", "gross_income_1": 130000, "takehome_monthly": 7800, "household_type": "single", "dependants": 0, "location_type": "metro" }
+        "responses": {
+          "200": {
+            "description": "Ceiling scored against suburb",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreCeilingResponse"
+                }
+              }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
           }
         },
-        "responses": {
-          "200": { "description": "Ceiling scored against suburb", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScoreCeilingResponse" } } } },
-          "400": { "$ref": "#/components/responses/Error" }
-        }
+        "parameters": []
       }
     }
   },
@@ -322,118 +1103,336 @@
     "responses": {
       "Error": {
         "description": "Error",
-        "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" }, "code": { "type": "string" } } } } }
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "schemas": {
-      "StateCode": { "type": "string", "enum": ["NSW","VIC","QLD","WA","SA","TAS","ACT","NT"], "description": "Australian state or territory code" },
-      "PropertyType": { "type": "string", "enum": ["house","apartment","townhouse"], "description": "Property type" },
-      "BuyerType": { "type": "string", "enum": ["fhb","owner","investor"], "description": "fhb = first home buyer, owner = owner-occupier (not FHB), investor = investment purchase" },
-      "HouseholdType": { "type": "string", "enum": ["single","couple"], "description": "Household composition for HEM benchmarks" },
-      "LocationType": { "type": "string", "enum": ["metro","regional"], "description": "metro = capital city; regional = rest of state" },
-      "ScoreLabel": { "type": "string", "enum": ["very_strong","strong","comfortable","tight","very_tight","out_of_range"] },
+      "StateCode": {
+        "type": "string",
+        "enum": [
+          "NSW",
+          "VIC",
+          "QLD",
+          "WA",
+          "SA",
+          "TAS",
+          "ACT",
+          "NT"
+        ],
+        "description": "Australian state or territory code"
+      },
+      "PropertyType": {
+        "type": "string",
+        "enum": [
+          "house",
+          "apartment",
+          "townhouse"
+        ],
+        "description": "Property type"
+      },
+      "BuyerType": {
+        "type": "string",
+        "enum": [
+          "fhb",
+          "owner",
+          "investor"
+        ],
+        "description": "fhb = first home buyer, owner = owner-occupier (not FHB), investor = investment purchase"
+      },
+      "HouseholdType": {
+        "type": "string",
+        "enum": [
+          "single",
+          "couple"
+        ],
+        "description": "Household composition for HEM benchmarks"
+      },
+      "LocationType": {
+        "type": "string",
+        "enum": [
+          "metro",
+          "regional"
+        ],
+        "description": "metro = capital city; regional = rest of state"
+      },
+      "ScoreLabel": {
+        "type": "string",
+        "enum": [
+          "very_strong",
+          "strong",
+          "comfortable",
+          "tight",
+          "very_tight",
+          "out_of_range"
+        ]
+      },
       "StampDutyRequest": {
-        "type": "object", "required": ["price","state"],
+        "type": "object",
+        "required": [
+          "price",
+          "state"
+        ],
         "properties": {
-          "price": { "type": "number", "description": "Purchase price in dollars" },
-          "state": { "$ref": "#/components/schemas/StateCode" },
-          "buyer_type": { "$ref": "#/components/schemas/BuyerType" },
-          "is_owner_occupier": { "type": "boolean", "default": true },
-          "is_new_build": { "type": "boolean", "default": false }
+          "price": {
+            "type": "number",
+            "description": "Purchase price in dollars"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateCode"
+          },
+          "buyer_type": {
+            "$ref": "#/components/schemas/BuyerType"
+          },
+          "is_owner_occupier": {
+            "type": "boolean",
+            "default": true
+          },
+          "is_new_build": {
+            "type": "boolean",
+            "default": false
+          }
         }
       },
       "StampDutyResponse": {
         "type": "object",
         "properties": {
-          "gross_stamp_duty": { "type": "number" },
-          "concession_applied": { "type": "string" },
-          "concession_amount": { "type": "number" },
-          "net_stamp_duty": { "type": "number" },
-          "registration_fees": { "type": "number" },
-          "total_upfront_government_costs": { "type": "number" },
-          "state": { "type": "string" },
-          "price": { "type": "number" }
+          "gross_stamp_duty": {
+            "type": "number"
+          },
+          "concession_applied": {
+            "type": "string"
+          },
+          "concession_amount": {
+            "type": "number"
+          },
+          "net_stamp_duty": {
+            "type": "number"
+          },
+          "registration_fees": {
+            "type": "number"
+          },
+          "total_upfront_government_costs": {
+            "type": "number"
+          },
+          "state": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          }
         }
       },
       "LMIRequest": {
-        "type": "object", "required": ["purchase_price","deposit","state"],
+        "type": "object",
+        "required": [
+          "purchase_price",
+          "deposit",
+          "state"
+        ],
         "properties": {
-          "purchase_price": { "type": "number" },
-          "deposit": { "type": "number" },
-          "state": { "$ref": "#/components/schemas/StateCode" }
+          "purchase_price": {
+            "type": "number"
+          },
+          "deposit": {
+            "type": "number"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateCode"
+          }
         }
       },
       "LMIResponse": {
         "type": "object",
         "properties": {
-          "lvr_pct": { "type": "number" },
-          "loan_amount": { "type": "number" },
-          "lmi_premium": { "type": "number" },
-          "lmi_stamp_duty": { "type": "number" },
-          "total_lmi_cost": { "type": "number" },
-          "lmi_capitalised_loan": { "type": "number" },
-          "notes": { "type": "array", "items": { "type": "string" } }
+          "lvr_pct": {
+            "type": "number"
+          },
+          "loan_amount": {
+            "type": "number"
+          },
+          "lmi_premium": {
+            "type": "number"
+          },
+          "lmi_stamp_duty": {
+            "type": "number"
+          },
+          "total_lmi_cost": {
+            "type": "number"
+          },
+          "lmi_capitalised_loan": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       },
       "RepaymentsRequest": {
-        "type": "object", "required": ["loan_amount"],
+        "type": "object",
+        "required": [
+          "loan_amount"
+        ],
         "properties": {
-          "loan_amount": { "type": "number" },
-          "rate_pct": { "type": "number", "description": "Annual interest rate (%). Omit to use current RBA benchmark rate." },
-          "term_years": { "type": "number", "default": 30 }
+          "loan_amount": {
+            "type": "number"
+          },
+          "rate_pct": {
+            "type": "number",
+            "description": "Annual interest rate (%). Omit to use current RBA benchmark rate."
+          },
+          "term_years": {
+            "type": "number",
+            "default": 30
+          }
         }
       },
       "RepaymentsResponse": {
         "type": "object",
         "properties": {
-          "monthly_repayment": { "type": "number" },
-          "annual_repayment": { "type": "number" },
-          "stress_rate_pct": { "type": "number" },
-          "monthly_repayment_stress_tested": { "type": "number" },
-          "total_interest": { "type": "number" },
-          "rate_used": { "type": "number" },
-          "term_years": { "type": "number" },
-          "rate_source": { "type": "string" }
+          "monthly_repayment": {
+            "type": "number"
+          },
+          "annual_repayment": {
+            "type": "number"
+          },
+          "stress_rate_pct": {
+            "type": "number"
+          },
+          "monthly_repayment_stress_tested": {
+            "type": "number"
+          },
+          "total_interest": {
+            "type": "number"
+          },
+          "rate_used": {
+            "type": "number"
+          },
+          "term_years": {
+            "type": "number"
+          },
+          "rate_source": {
+            "type": "string"
+          }
         }
       },
       "CeilingDepositRequest": {
-        "type": "object", "required": ["savings","state"],
+        "type": "object",
+        "required": [
+          "savings",
+          "state"
+        ],
         "properties": {
-          "savings": { "type": "number", "description": "Total savings available for deposit and upfront costs" },
-          "state": { "$ref": "#/components/schemas/StateCode" },
-          "property_type": { "$ref": "#/components/schemas/PropertyType" },
-          "buyer_type": { "$ref": "#/components/schemas/BuyerType" },
-          "is_owner_occupier": { "type": "boolean", "default": true },
-          "is_new_build": { "type": "boolean", "default": false }
+          "savings": {
+            "type": "number",
+            "description": "Total savings available for deposit and upfront costs"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateCode"
+          },
+          "property_type": {
+            "$ref": "#/components/schemas/PropertyType"
+          },
+          "buyer_type": {
+            "$ref": "#/components/schemas/BuyerType"
+          },
+          "is_owner_occupier": {
+            "type": "boolean",
+            "default": true
+          },
+          "is_new_build": {
+            "type": "boolean",
+            "default": false
+          }
         }
       },
       "CeilingDepositResponse": {
         "type": "object",
         "properties": {
-          "max_price": { "type": "number" },
-          "stamp_duty": { "type": "number", "description": "Stamp duty after concessions" },
-          "stamp_duty_full": { "type": "number", "description": "Gross stamp duty before concessions" },
-          "concession_applied": { "type": "string" },
-          "lmi_premium": { "type": "number" },
-          "lmi_stamp_duty": { "type": "number" },
-          "registration_fees": { "type": "number" },
-          "net_deposit": { "type": "number" },
-          "loan_amount": { "type": "number" },
-          "lvr_pct": { "type": "number" },
-          "max_lvr_ceiling": { "type": "number" },
-          "monthly_repayment_estimate": { "type": "number", "description": "Monthly P&I at the stress-tested rate" },
-          "assessment_rate_used": { "type": "number" },
-          "notes": { "type": "array", "items": { "type": "string" } }
+          "max_price": {
+            "type": "number"
+          },
+          "stamp_duty": {
+            "type": "number",
+            "description": "Stamp duty after concessions"
+          },
+          "stamp_duty_full": {
+            "type": "number",
+            "description": "Gross stamp duty before concessions"
+          },
+          "concession_applied": {
+            "type": "string"
+          },
+          "lmi_premium": {
+            "type": "number"
+          },
+          "lmi_stamp_duty": {
+            "type": "number"
+          },
+          "registration_fees": {
+            "type": "number"
+          },
+          "net_deposit": {
+            "type": "number"
+          },
+          "loan_amount": {
+            "type": "number"
+          },
+          "lvr_pct": {
+            "type": "number"
+          },
+          "max_lvr_ceiling": {
+            "type": "number"
+          },
+          "monthly_repayment_estimate": {
+            "type": "number",
+            "description": "Monthly P&I at the stress-tested rate"
+          },
+          "assessment_rate_used": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       },
       "CeilingDepositMinIncomeRequest": {
         "allOf": [
-          { "$ref": "#/components/schemas/CeilingDepositRequest" },
+          {
+            "$ref": "#/components/schemas/CeilingDepositRequest"
+          },
           {
             "properties": {
-              "household_type": { "$ref": "#/components/schemas/HouseholdType" },
-              "dependants": { "type": "integer", "minimum": 0, "maximum": 4 },
-              "location_type": { "$ref": "#/components/schemas/LocationType" }
+              "household_type": {
+                "$ref": "#/components/schemas/HouseholdType"
+              },
+              "dependants": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+              },
+              "location_type": {
+                "$ref": "#/components/schemas/LocationType"
+              }
             }
           }
         ]
@@ -441,240 +1440,633 @@
       "CeilingDepositMinIncomeResponse": {
         "type": "object",
         "properties": {
-          "ceiling_price": { "type": "number" },
-          "loan_at_ceiling": { "type": "number" },
-          "stamp_duty": { "type": "number" },
-          "lmi_premium": { "type": "number" },
-          "net_deposit": { "type": "number" },
-          "lvr_pct": { "type": "number" },
-          "min_gross_income_dti": { "type": "number" },
-          "min_net_income_serviceability": { "type": "number" },
-          "min_net_income_note": { "type": "string" },
-          "hem_floor_monthly": { "type": "number" },
-          "stress_rate_used": { "type": "number" }
+          "ceiling_price": {
+            "type": "number"
+          },
+          "loan_at_ceiling": {
+            "type": "number"
+          },
+          "stamp_duty": {
+            "type": "number"
+          },
+          "lmi_premium": {
+            "type": "number"
+          },
+          "net_deposit": {
+            "type": "number"
+          },
+          "lvr_pct": {
+            "type": "number"
+          },
+          "min_gross_income_dti": {
+            "type": "number"
+          },
+          "min_net_income_serviceability": {
+            "type": "number"
+          },
+          "min_net_income_note": {
+            "type": "string"
+          },
+          "hem_floor_monthly": {
+            "type": "number"
+          },
+          "stress_rate_used": {
+            "type": "number"
+          }
         }
       },
       "CeilingDTIRequest": {
-        "type": "object", "required": ["gross_income_1"],
+        "type": "object",
+        "required": [
+          "gross_income_1"
+        ],
         "properties": {
-          "gross_income_1": { "type": "number", "description": "Annual gross income, person 1" },
-          "gross_income_2": { "type": "number", "default": 0 },
-          "credit_card_limit": { "type": "number", "default": 0, "description": "Total approved credit card limits" },
-          "is_owner_occupier": { "type": "boolean", "default": true },
+          "gross_income_1": {
+            "type": "number",
+            "description": "Annual gross income, person 1"
+          },
+          "gross_income_2": {
+            "type": "number",
+            "default": 0
+          },
+          "credit_card_limit": {
+            "type": "number",
+            "default": 0,
+            "description": "Total approved credit card limits"
+          },
+          "is_owner_occupier": {
+            "type": "boolean",
+            "default": true
+          },
           "existing_mortgages": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "balance": { "type": "number" },
-                "is_rental": { "type": "boolean", "default": false },
-                "weekly_rent": { "type": "number", "default": 0 }
+                "balance": {
+                  "type": "number"
+                },
+                "is_rental": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "weekly_rent": {
+                  "type": "number",
+                  "default": 0
+                }
               }
             }
           },
           "other_loans": {
             "type": "array",
-            "items": { "type": "object", "properties": { "balance": { "type": "number" } } }
+            "items": {
+              "type": "object",
+              "properties": {
+                "balance": {
+                  "type": "number"
+                }
+              }
+            }
           }
         }
       },
       "CeilingDTIResponse": {
         "type": "object",
         "properties": {
-          "max_new_loan": { "type": "number" },
-          "gross_income_total": { "type": "number" },
-          "dti_cap": { "type": "number" },
-          "existing_debt_total": { "type": "number" },
-          "credit_card_counted": { "type": "number" },
-          "dti_ratio_if_max_borrowed": { "type": "number" },
-          "dti_multiplier": { "type": "number" },
-          "binding": { "type": "boolean" }
+          "max_new_loan": {
+            "type": "number"
+          },
+          "gross_income_total": {
+            "type": "number"
+          },
+          "dti_cap": {
+            "type": "number"
+          },
+          "existing_debt_total": {
+            "type": "number"
+          },
+          "credit_card_counted": {
+            "type": "number"
+          },
+          "dti_ratio_if_max_borrowed": {
+            "type": "number"
+          },
+          "dti_multiplier": {
+            "type": "number"
+          },
+          "binding": {
+            "type": "boolean"
+          }
         }
       },
       "CeilingServiceabilityRequest": {
-        "type": "object", "required": ["takehome_monthly"],
+        "type": "object",
+        "required": [
+          "takehome_monthly"
+        ],
         "properties": {
-          "takehome_monthly": { "type": "number" },
-          "household_type": { "$ref": "#/components/schemas/HouseholdType" },
-          "dependants": { "type": "integer", "default": 0 },
-          "location_type": { "$ref": "#/components/schemas/LocationType" },
-          "rent_monthly": { "type": "number", "default": 0 },
-          "school_fees_annual": { "type": "number", "default": 0 },
-          "health_insurance_monthly": { "type": "number", "default": 0 },
-          "existing_loan_repayments_monthly": { "type": "number", "default": 0 },
-          "assessment_rate_pct": { "type": "number", "description": "Override assessment rate. Omit to use benchmark + 3%." }
+          "takehome_monthly": {
+            "type": "number"
+          },
+          "household_type": {
+            "$ref": "#/components/schemas/HouseholdType"
+          },
+          "dependants": {
+            "type": "integer",
+            "default": 0
+          },
+          "location_type": {
+            "$ref": "#/components/schemas/LocationType"
+          },
+          "rent_monthly": {
+            "type": "number",
+            "default": 0
+          },
+          "school_fees_annual": {
+            "type": "number",
+            "default": 0
+          },
+          "health_insurance_monthly": {
+            "type": "number",
+            "default": 0
+          },
+          "existing_loan_repayments_monthly": {
+            "type": "number",
+            "default": 0
+          },
+          "assessment_rate_pct": {
+            "type": "number",
+            "description": "Override assessment rate. Omit to use benchmark + 3%."
+          }
         }
       },
       "CeilingServiceabilityResponse": {
         "type": "object",
         "properties": {
-          "max_loan": { "type": "number" },
-          "monthly_repayment_at_max": { "type": "number" },
-          "hem_floor_monthly": { "type": "number" },
-          "committed_expenses_monthly": { "type": "number" },
-          "available_for_repayment": { "type": "number" },
-          "stress_rate_used": { "type": "number" },
-          "hem_was_binding": { "type": "boolean" }
+          "max_loan": {
+            "type": "number"
+          },
+          "monthly_repayment_at_max": {
+            "type": "number"
+          },
+          "hem_floor_monthly": {
+            "type": "number"
+          },
+          "committed_expenses_monthly": {
+            "type": "number"
+          },
+          "available_for_repayment": {
+            "type": "number"
+          },
+          "stress_rate_used": {
+            "type": "number"
+          },
+          "hem_was_binding": {
+            "type": "boolean"
+          }
         }
       },
       "CeilingAllRequest": {
-        "type": "object", "required": ["savings","state","gross_income_1","takehome_monthly"],
+        "type": "object",
+        "required": [
+          "savings",
+          "state",
+          "gross_income_1",
+          "takehome_monthly"
+        ],
         "properties": {
-          "savings": { "type": "number" },
-          "state": { "$ref": "#/components/schemas/StateCode" },
-          "property_type": { "$ref": "#/components/schemas/PropertyType" },
-          "buyer_type": { "$ref": "#/components/schemas/BuyerType" },
-          "is_owner_occupier": { "type": "boolean", "default": true },
-          "is_new_build": { "type": "boolean", "default": false },
-          "gross_income_1": { "type": "number" },
-          "gross_income_2": { "type": "number", "default": 0 },
-          "credit_card_limit": { "type": "number", "default": 0 },
-          "existing_mortgages": { "type": "array", "items": { "type": "object" } },
-          "other_loans": { "type": "array", "items": { "type": "object" } },
-          "takehome_monthly": { "type": "number" },
-          "household_type": { "$ref": "#/components/schemas/HouseholdType" },
-          "dependants": { "type": "integer", "default": 0 },
-          "location_type": { "$ref": "#/components/schemas/LocationType" },
-          "rent_monthly": { "type": "number", "default": 0 },
-          "school_fees_annual": { "type": "number", "default": 0 },
-          "health_insurance_monthly": { "type": "number", "default": 0 }
+          "savings": {
+            "type": "number"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateCode"
+          },
+          "property_type": {
+            "$ref": "#/components/schemas/PropertyType"
+          },
+          "buyer_type": {
+            "$ref": "#/components/schemas/BuyerType"
+          },
+          "is_owner_occupier": {
+            "type": "boolean",
+            "default": true
+          },
+          "is_new_build": {
+            "type": "boolean",
+            "default": false
+          },
+          "gross_income_1": {
+            "type": "number"
+          },
+          "gross_income_2": {
+            "type": "number",
+            "default": 0
+          },
+          "credit_card_limit": {
+            "type": "number",
+            "default": 0
+          },
+          "existing_mortgages": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "other_loans": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "takehome_monthly": {
+            "type": "number"
+          },
+          "household_type": {
+            "$ref": "#/components/schemas/HouseholdType"
+          },
+          "dependants": {
+            "type": "integer",
+            "default": 0
+          },
+          "location_type": {
+            "$ref": "#/components/schemas/LocationType"
+          },
+          "rent_monthly": {
+            "type": "number",
+            "default": 0
+          },
+          "school_fees_annual": {
+            "type": "number",
+            "default": 0
+          },
+          "health_insurance_monthly": {
+            "type": "number",
+            "default": 0
+          }
         }
       },
       "CeilingAllResponse": {
         "type": "object",
         "properties": {
-          "ceiling_1_deposit": { "type": "object" },
-          "ceiling_2_dti": { "type": "object" },
-          "ceiling_3_serviceability": { "type": "object" },
-          "binding_ceiling": { "type": "integer" },
-          "binding_ceiling_label": { "type": "string" },
-          "effective_max_price": { "type": "number" },
-          "effective_max_loan": { "type": "number" },
-          "stress_rate_used": { "type": "number" },
-          "notes": { "type": "array", "items": { "type": "string" } }
+          "ceiling_1_deposit": {
+            "type": "object"
+          },
+          "ceiling_2_dti": {
+            "type": "object"
+          },
+          "ceiling_3_serviceability": {
+            "type": "object"
+          },
+          "binding_ceiling": {
+            "type": "integer"
+          },
+          "binding_ceiling_label": {
+            "type": "string"
+          },
+          "effective_max_price": {
+            "type": "number"
+          },
+          "effective_max_loan": {
+            "type": "number"
+          },
+          "stress_rate_used": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       },
       "CeilingCheckRequest": {
         "allOf": [
-          { "$ref": "#/components/schemas/CeilingAllRequest" },
-          { "required": ["target_price"], "properties": { "target_price": { "type": "number" } } }
+          {
+            "$ref": "#/components/schemas/CeilingAllRequest"
+          },
+          {
+            "required": [
+              "target_price"
+            ],
+            "properties": {
+              "target_price": {
+                "type": "number"
+              }
+            }
+          }
         ]
       },
       "CeilingCheckResponse": {
         "type": "object",
         "properties": {
-          "target_price": { "type": "number" },
-          "can_afford": { "type": "boolean" },
-          "shortfalls": { "type": "array", "items": { "type": "object" } },
-          "ceiling_results": { "type": "object" }
+          "target_price": {
+            "type": "number"
+          },
+          "can_afford": {
+            "type": "boolean"
+          },
+          "shortfalls": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "ceiling_results": {
+            "type": "object"
+          }
         }
       },
       "CeilingSensitivityRequest": {
         "allOf": [
-          { "$ref": "#/components/schemas/CeilingDepositRequest" },
-          { "properties": { "scenarios": { "type": "array", "items": { "type": "number" }, "description": "Additional savings amounts to test (added to base savings)", "example": [25000, 50000, 100000, 150000] } } }
+          {
+            "$ref": "#/components/schemas/CeilingDepositRequest"
+          },
+          {
+            "properties": {
+              "scenarios": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "description": "Additional savings amounts to test (added to base savings)",
+                "example": [
+                  25000,
+                  50000,
+                  100000,
+                  150000
+                ]
+              }
+            }
+          }
         ]
       },
       "CeilingSensitivityResponse": {
         "type": "object",
         "properties": {
-          "base": { "type": "object" },
-          "scenarios": { "type": "array", "items": { "type": "object" } },
-          "lmi_escape_savings": { "type": "number", "nullable": true },
-          "lmi_escape_note": { "type": "string", "nullable": true }
+          "base": {
+            "type": "object"
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "lmi_escape_savings": {
+            "type": "number",
+            "nullable": true
+          },
+          "lmi_escape_note": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "ScoreRequest": {
-        "type": "object", "required": ["suburb","state","budget"],
+        "type": "object",
+        "required": [
+          "suburb",
+          "state",
+          "budget"
+        ],
         "properties": {
-          "suburb": { "type": "string", "description": "Suburb name (case-insensitive)" },
-          "state": { "$ref": "#/components/schemas/StateCode" },
-          "property_type": { "$ref": "#/components/schemas/PropertyType" },
-          "budget": { "type": "number" }
+          "suburb": {
+            "type": "string",
+            "description": "Suburb name (case-insensitive)"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateCode"
+          },
+          "property_type": {
+            "$ref": "#/components/schemas/PropertyType"
+          },
+          "budget": {
+            "type": "number"
+          }
         }
       },
       "ScoreResponse": {
         "type": "object",
         "properties": {
-          "score_pct": { "type": "integer", "minimum": 0, "maximum": 100 },
-          "label": { "$ref": "#/components/schemas/ScoreLabel" },
-          "label_description": { "type": "string" },
-          "suburb": { "type": "string" },
-          "median_price": { "type": "number" },
-          "budget_to_median_ratio": { "type": "number" },
-          "annual_sales": { "type": "integer" },
-          "methodology": { "type": "string", "enum": ["nsw_direct","vic_estimated"] },
-          "methodology_note": { "type": "string" },
-          "data_vintage": { "type": "string" }
+          "score_pct": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "label": {
+            "$ref": "#/components/schemas/ScoreLabel"
+          },
+          "label_description": {
+            "type": "string"
+          },
+          "suburb": {
+            "type": "string"
+          },
+          "median_price": {
+            "type": "number"
+          },
+          "budget_to_median_ratio": {
+            "type": "number"
+          },
+          "annual_sales": {
+            "type": "integer"
+          },
+          "methodology": {
+            "type": "string",
+            "enum": [
+              "nsw_direct",
+              "vic_estimated"
+            ]
+          },
+          "methodology_note": {
+            "type": "string"
+          },
+          "data_vintage": {
+            "type": "string"
+          }
         }
       },
       "ScoreBatchRequest": {
-        "type": "object", "required": ["suburbs","budget"],
+        "type": "object",
+        "required": [
+          "suburbs",
+          "budget"
+        ],
         "properties": {
-          "suburbs": { "type": "array", "maxItems": 20, "items": { "type": "object", "required": ["suburb","state"], "properties": { "suburb": { "type": "string" }, "state": { "$ref": "#/components/schemas/StateCode" }, "property_type": { "$ref": "#/components/schemas/PropertyType" } } } },
-          "budget": { "type": "number" }
+          "suburbs": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": [
+                "suburb",
+                "state"
+              ],
+              "properties": {
+                "suburb": {
+                  "type": "string"
+                },
+                "state": {
+                  "$ref": "#/components/schemas/StateCode"
+                },
+                "property_type": {
+                  "$ref": "#/components/schemas/PropertyType"
+                }
+              }
+            }
+          },
+          "budget": {
+            "type": "number"
+          }
         }
       },
       "ScoreBatchResponse": {
         "type": "object",
         "properties": {
-          "budget": { "type": "number" },
-          "results": { "type": "array", "items": { "type": "object" } },
-          "sorted_by": { "type": "string" }
+          "budget": {
+            "type": "number"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "sorted_by": {
+            "type": "string"
+          }
         }
       },
       "ScoreBudgetForScoreRequest": {
-        "type": "object", "required": ["suburb","state","target_score_pct"],
+        "type": "object",
+        "required": [
+          "suburb",
+          "state",
+          "target_score_pct"
+        ],
         "properties": {
-          "suburb": { "type": "string" },
-          "state": { "$ref": "#/components/schemas/StateCode" },
-          "property_type": { "$ref": "#/components/schemas/PropertyType" },
-          "target_score_pct": { "type": "integer", "minimum": 1, "maximum": 99 }
+          "suburb": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StateCode"
+          },
+          "property_type": {
+            "$ref": "#/components/schemas/PropertyType"
+          },
+          "target_score_pct": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99
+          }
         }
       },
       "ScoreBudgetForScoreResponse": {
         "type": "object",
         "properties": {
-          "target_score_pct": { "type": "integer" },
-          "required_budget": { "type": "number" },
-          "current_median": { "type": "number" },
-          "budget_vs_median": { "type": "string" },
-          "methodology": { "type": "string" }
+          "target_score_pct": {
+            "type": "integer"
+          },
+          "required_budget": {
+            "type": "number"
+          },
+          "current_median": {
+            "type": "number"
+          },
+          "budget_vs_median": {
+            "type": "string"
+          },
+          "methodology": {
+            "type": "string"
+          }
         }
       },
       "ScoreSuburbsInRangeRequest": {
-        "type": "object", "required": ["state","budget"],
+        "type": "object",
+        "required": [
+          "state",
+          "budget"
+        ],
         "properties": {
-          "state": { "$ref": "#/components/schemas/StateCode" },
-          "property_type": { "$ref": "#/components/schemas/PropertyType" },
-          "budget": { "type": "number" },
-          "min_score_pct": { "type": "integer", "default": 30, "minimum": 0, "maximum": 100 },
-          "limit": { "type": "integer", "default": 20, "minimum": 1, "maximum": 100 }
+          "state": {
+            "$ref": "#/components/schemas/StateCode"
+          },
+          "property_type": {
+            "$ref": "#/components/schemas/PropertyType"
+          },
+          "budget": {
+            "type": "number"
+          },
+          "min_score_pct": {
+            "type": "integer",
+            "default": 30,
+            "minimum": 0,
+            "maximum": 100
+          },
+          "limit": {
+            "type": "integer",
+            "default": 20,
+            "minimum": 1,
+            "maximum": 100
+          }
         }
       },
       "ScoreSuburbsInRangeResponse": {
         "type": "object",
         "properties": {
-          "budget": { "type": "number" },
-          "state": { "type": "string" },
-          "property_type": { "type": "string" },
-          "total_qualifying": { "type": "integer" },
-          "suburbs": { "type": "array", "items": { "type": "object" } }
+          "budget": {
+            "type": "number"
+          },
+          "state": {
+            "type": "string"
+          },
+          "property_type": {
+            "type": "string"
+          },
+          "total_qualifying": {
+            "type": "integer"
+          },
+          "suburbs": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
         }
       },
       "ScoreCeilingRequest": {
         "allOf": [
-          { "$ref": "#/components/schemas/CeilingAllRequest" },
-          { "required": ["suburb"], "properties": { "suburb": { "type": "string" } } }
+          {
+            "$ref": "#/components/schemas/CeilingAllRequest"
+          },
+          {
+            "required": [
+              "suburb"
+            ],
+            "properties": {
+              "suburb": {
+                "type": "string"
+              }
+            }
+          }
         ]
       },
       "ScoreCeilingResponse": {
         "type": "object",
         "properties": {
-          "ceiling": { "type": "object" },
-          "suburb_score": { "type": "object" },
-          "verdict": { "type": "string" },
-          "methodology": { "type": "string" }
+          "ceiling": {
+            "type": "object"
+          },
+          "suburb_score": {
+            "type": "object"
+          },
+          "verdict": {
+            "type": "string"
+          },
+          "methodology": {
+            "type": "string"
+          }
         }
       }
     }
